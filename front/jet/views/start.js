@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import header from "../views/header";
 import footer from "../views/footer";
-import center from "../views/body";
+import body from "../views/body";
 
 export default class StartView extends JetView{
     config() {
@@ -12,7 +12,7 @@ export default class StartView extends JetView{
             id: "main_ui",
             rows: [
                 { $subview: header },
-                { $subview: center },
+                { $subview: body },
                 { $subview: footer },
                 ],
             };

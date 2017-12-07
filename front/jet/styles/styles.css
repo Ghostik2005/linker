@@ -1,5 +1,7 @@
 .webix_message_area{width: 800px;}
 
+/*http://webix.com/skin-builder/15f2c99c*/
+
 .header {
     background-color: transparent !important;
     border-bottom: 1px solid #ffffff;
@@ -18,17 +20,8 @@
 
 .ms-logo-text {
     color: #404040 !important;
-    font-size: 12px;
+    font-size: 15px !important;
 }
-
-.serv_info {
-    font-size: small;
-}
-
-.bottom-bar {
-    margin-top: 0 !important;
-    border-bottom: 1px solid #ffffff;
-    }
 
 .margin-zero {
     margin-top: 0 !important;
@@ -41,8 +34,21 @@
 
 button {
     text-transform: uppercase !important;
+    font-weight: 600 !important;
     }
 
+.webix_input_icon.fa-angle-down {
+    background-color: #e6e6e6 !important;
+    }
+
+.menu_button {
+    font-size: 8px !important;
+    }
+
+.borders {
+    border-left: 1px solid #3498db !important;
+    border-top: 0px !important;
+    }
 
 
 

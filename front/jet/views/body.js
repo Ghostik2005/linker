@@ -1,19 +1,20 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-//import left_col from "../views/left";
-//import right_col from "../views/right";
+import topmenu from "../views/top-menu";
+import sprdt from "../views/spr_dt";
 
-export default class center extends JetView{
+export default class body extends JetView{
     config(){
         return {view: "layout",
             css: 'margin-zero',
             rows:[
-                //{},
-                {template: "qqww"},
+                {$subview: topmenu, name: "top_menu"},
+                {$subview: sprdt, name: "sprdt"},
+                //{template: "qqww"},
                 //{$subview: left_col, name: "left_col"},
-                {view: "resizer", width: 5, borderless: true},
-                {template: "qqww"},
+                //{view: "resizer", width: 5, borderless: true},
+                //{template: "qqww"},
                 //{$subview: right_col, name: "right_col"},
                 //{}
                 ]

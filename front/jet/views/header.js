@@ -11,10 +11,11 @@ export default class header extends JetView{
             cols: [
                 {view: "label", label: "<a href='http://ms71.org'><span class='ms-logo'></span></a>",
                     width: 44, align: 'center', height: 36},
-                {view: "label",
-                    label: "Манускрипт солюшн: linker", css: 'ms-logo-text',
+                {view: "label", label: "Манускрипт солюшн: linker", css: 'ms-logo-text',
                     height: 36},
                 {},
+                {view: "label", label: "Текущий пользователь:  " + "user", css: 'ms-logo-text',
+                    width: 300, height: 36},
                 {view:"button", id: '_exit', type: 'form',
                     label: "Выйти", width: 80},
             ]}

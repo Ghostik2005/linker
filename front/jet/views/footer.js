@@ -5,10 +5,10 @@ import {JetView} from "webix-jet";
 export default class footer extends JetView{
     config(){
         return {view: 'toolbar',
-            css: 'bottom-bar',
+            css: 'header',
             cols: [
                 {view: "label",
-                    label: "Вы находитесь на сервере:  " + " saas", //css: 'ms-logo-text',
+                    label: "Вы находитесь на сервере:  " + " saas", css: 'ms-logo-text',
                     height: 36},
                 {},
                 {view:"button", id: '__b41', type: 'form',
