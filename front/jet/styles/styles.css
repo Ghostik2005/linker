@@ -1,0 +1,49 @@
+.webix_message_area{width: 800px;}
+
+.header {
+    background-color: transparent !important;
+    border-bottom: 1px solid #ffffff;
+    margin-top: 0 !important;
+    color: #404040 !important;
+    }
+
+.ms-logo {
+    width: 36px;
+    height: 36px;
+    margin-top: -3px;
+    background-image: url(/codebase/addons/img/ms_logo.jpg);
+    display: block;
+    background-repeat: round;
+    }
+
+.ms-logo-text {
+    color: #404040 !important;
+    font-size: 12px;
+}
+
+.serv_info {
+    font-size: small;
+}
+
+.bottom-bar {
+    margin-top: 0 !important;
+    border-bottom: 1px solid #ffffff;
+    }
+
+.margin-zero {
+    margin-top: 0 !important;
+    }
+
+:active, :hover, :focus {
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    }
+
+button {
+    text-transform: uppercase !important;
+    }
+
+
+
+
+
