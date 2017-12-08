@@ -1,9 +1,9 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import newform from "../views/new_form";
+import NewformView from "../views/new_form";
 
-export default class topmenu extends JetView{
+export default class TopmenuView extends JetView{
     config(){
         return {
             rows: [
@@ -30,8 +30,8 @@ export default class topmenu extends JetView{
                         {view: "text", label: "", value: "", labelWidth: 1},
                         {view:"button", type: 'form',
                             label: "Добавить (<Ins>)", width: 180,
-                            click: function() {
-                                this.$scope.popnew.show();
+                            click: () => {
+                                this.popnew.show();
                                 }
                             },
                         {view:"button", type: 'form',
@@ -47,6 +47,6 @@ export default class topmenu extends JetView{
             }
         }
     init() {
-        this.popnew = this.ui(newform);
+        this.popnew = this.ui(NewformView);
         }
     }

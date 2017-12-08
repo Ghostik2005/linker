@@ -14,27 +14,31 @@ webix.ready(() => {
             webix.extend(config, {
                 head: {
                     view: "toolbar",
-                    cols: [{},
-                    {view: "button",
-                        type: "icon",
-                        icon: "times",
-                        css: "times",
-                        height: 26,
-                        width:26,
-                        click: function () {
-                            this.getTopParentView().hide();
+                    cols: [
+                        {view: "label", label: "Название окна"},
+                        {view: "button",
+                            type: "icon",
+                            icon: "times",
+                            css: "times",
+                            height: 26,
+                            width:26,
+                            click: function () {
+                                this.getTopParentView().hide();
                                 }
-                        }]
+                            }
+                        ]
                     }
                 })
             }
         }, webix.ui.window);
+
     var app = new JetApp({
         id:         "mainApp",
-        name:       "superwizard",
+        name:       "linker",
         version:    '2017.334.1230',
-        start:      "/start/",
-        //router: UrlRouter,
+        //start:      "/start/body",
+        start:      "/start/body",
+        route: UrlRouter,
         debug:true
     });
     //setLang();

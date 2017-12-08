@@ -1,32 +1,48 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
+import NewstriView from "../views/new_stri";
 
 
-export default class newform extends JetView{
+export default class NewformView extends JetView{
     config(){
         return {view: "cWindow",
             modal: true,
             body: { view: "form",
-                localid: "new_form",
+                //localid: "new_form",
                 margin: 0,
                 elements: [
                     {rows: [
-                        {view: "text", label: "Название товара:   " + "Название 1", labelPosition:"top", value: "Название 1"},
+                        {view: "label", label:"Название товара:   " + "Название 1"},
+                        {view: "text", label: "", value: "Название 1"},
                         {height: 10, width: 600},
                         {cols: [
                             {rows: [
-                                {view:"combo", label: "Страна:", labelPosition:"top", value: "", width: 400},
-                                {view:"combo", label: "Производитель:" + "Китай", labelPosition:"top", value: ""},
-                                {view:"combo", label: "Действующее вещество:", labelPosition:"top", value: ""},
-                                {view: "textarea", label: "Описание:", labelPosition:"top", value: "", height: 150}
+                                {view: "label", label:"Страна:"},
+                                {view:"combo", value: "", width: 400},
+                                {view: "label", label:"Производитель:" + "Китай"},
+                                {cols: [
+                                    {view:"combo", label: "", value: ""},
+                                    {view: "button", type: "base", label: "+", width: 30,
+                                        click: () => {
+                                            this.popstri.show();
+                                            //console.log(this.popstri.getValues());
+                                            }
+                                        },
+                                    ]},
+                                {view: "label", label:"Действующее вещество:"},
+                                {cols: [
+                                    {view:"combo", label: "", value: ""},
+                                    {view: "button", type: "base", label: "+", width: 30},
+                                    ]},
+                                {view: "textarea", label: "Описание:", labelPosition:"top", value: "", height: 120}
                                 ]},
                             {width: 5,},
                             {rows: [
                                 {view: "form", css: "borders",
                                     elements: [
-                                        {view:"label", label: "Рецептурный"},
-                                        {view:"label", label: "Обязательный"},
+                                        {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
+                                        {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
                                         {view:"combo", label: "Сезон:", labelPosition:"top", value: ""},
                                         {view:"combo", label: "Условия хранения:", labelPosition:"top", value: ""},
                                         {view:"combo", label: "Группа:", labelPosition:"top", value: ""},
@@ -50,6 +66,9 @@ export default class newform extends JetView{
         }
     hide(){
         this.getRoot().hide()
+        }
+    init() {
+        this.popstri = this.ui(NewstriView);
         }
     }
 

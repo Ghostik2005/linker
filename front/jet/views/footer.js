@@ -2,7 +2,7 @@
 import {JetView} from "webix-jet";
 //import locals from "../views/local";
 
-export default class footer extends JetView{
+export default class FooterView extends JetView{
     config(){
         return {view: 'toolbar',
             css: 'header',

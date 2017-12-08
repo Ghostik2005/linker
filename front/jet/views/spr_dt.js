@@ -1,9 +1,9 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import newform from "../views/new_form";
+import NewformView from "../views/new_form";
 
-export default class sprdt extends JetView{
+export default class SprView extends JetView{
     config(){
         return {view: "datatable",
             id: "__dt",
@@ -58,6 +58,6 @@ export default class sprdt extends JetView{
             }
         }
     init() {
-        this.popnew = this.ui(newform);
+        this.popnew = this.ui(NewformView);
         }
     }

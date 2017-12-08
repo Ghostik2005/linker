@@ -2,15 +2,16 @@
 
 import {JetView} from "webix-jet";
 import TopmenuView from "../views/top-menu";
-import SprView from "../views/spr_dt";
+import GrTopView from "../views/gr-top";
+import GrSprView from "../views/gr-body";
 
-export default class BodyView extends JetView{
+export default class GrouperView extends JetView{
     config(){
         return {view: "layout",
             css: 'margin-zero',
             rows:[
-                {$subview: TopmenuView, name: "top_menu"},
-                {$subview: SprView, name: "spr_dt"},
+                {$subview: GrTopView, name: "gr_top"},
+                {$subview: GrSprView, name: "gr_spr"},
                 ]
             }
         }
