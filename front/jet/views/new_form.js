@@ -25,7 +25,7 @@ export default class NewformView extends JetView{
                                     {view:"combo", label: "", value: ""},
                                     {view: "button", type: "base", label: "+", width: 30,
                                         click: () => {
-                                            this.popstri.show();
+                                            this.popstri.show("Добавление производителя");
                                             //console.log(this.popstri.getValues());
                                             }
                                         },
@@ -33,7 +33,12 @@ export default class NewformView extends JetView{
                                 {view: "label", label:"Действующее вещество:"},
                                 {cols: [
                                     {view:"combo", label: "", value: ""},
-                                    {view: "button", type: "base", label: "+", width: 30},
+                                    {view: "button", type: "base", label: "+", width: 30,
+                                        click: () => {
+                                            this.popstri.show("Добавление д.вещества");
+                                            //console.log(this.popstri.getValues());
+                                            }
+                                        },
                                     ]},
                                 {view: "textarea", label: "Описание:", labelPosition:"top", value: "", height: 120}
                                 ]},
@@ -61,7 +66,11 @@ export default class NewformView extends JetView{
             }
             }
         }
-    show(){
+    show(new_head, item){
+        if (item) {
+            console.log(item)
+            }
+        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()
         }
     hide(){

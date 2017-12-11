@@ -16,6 +16,8 @@ export default class HeaderView extends JetView{
                 {view: "label", label: "Текущий пользователь:  " + "user", css: 'ms-logo-text',
                     width: 300, height: 36},
                 {},
+                {view:"button", id: '_adm', type: 'form',
+                    label: "Админка", width: 120},
                 {view:"button", id: '_merge', type: 'form', //disabled: true,
                     label: "Merger", width: 80,
                     click: () => {

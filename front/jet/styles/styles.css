@@ -50,6 +50,18 @@ button {
     border-top: 0px !important;
     }
 
+.green {
+    color: green;
+    }
 
+.red {
+    color: red;
+    }
 
+.webix_el_htmlbutton.webixtype_base {
+    background-color: #27ae60;
+}
 
+.right {
+    text-align: right;
+    }

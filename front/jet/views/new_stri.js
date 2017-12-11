@@ -26,10 +26,10 @@ export default class NewstriView extends JetView{
             }
             }
         }
-    show(){
-        this.getRoot().getHead().getChildViews()[0].setValue("Ввод новго значение");
+    show(new_head){
+        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
-        console.log(this.getRoot().getHead().getChildViews())
+        //console.log(this.getRoot().getHead().getChildViews())
         }
     hide(){
         this.getRoot().hide()

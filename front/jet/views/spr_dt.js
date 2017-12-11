@@ -5,6 +5,16 @@ import NewformView from "../views/new_form";
 
 export default class SprView extends JetView{
     config(){
+        function mnn_func(obj) {
+            var ret = obj.mnn;
+            if (ret === 'есть') {
+                ret = "<div> <span class='green'>есть</span></div>"
+                };
+            if (ret === 'нет') {
+                ret = "<div> <span class='red'>нет</span></div>"
+                };
+            return ret
+            }
         return {view: "datatable",
             id: "__dt",
             navigation: "row",
@@ -17,7 +27,7 @@ export default class SprView extends JetView{
             footer: true,
             headermenu:true,
             columns: [
-                {id: "mnn", width: 75,
+                {id: "mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
                         ],
                     footer: {text:"Всего:", colspan:5, rowspan: 1, height: 24}
@@ -46,13 +56,14 @@ export default class SprView extends JetView{
                     }
                 ],
             on: {
-                onItemDblClick: function() {
-                    this.$scope.popnew.show();
-                    }
+                onItemDblClick: (item) => {
+                    item = $$("__dt").getItem(item.row)
+                    this.popnew.show("Редактирование записи", item);
+                    },
                 },
             data: [
                 {mnn: "есть", idspr: "11223", name: "Название  препарата № 1", vendor: "завод - Производитель 1", country: "Россия"},
-                {mnn: "нет", idspr: "21223", name: "Название  препарата № 2", vendor: "завод - Производитель 2", country: "США"},
+                {mnn: "нет", idspr: "21223", name: "Название  препарата № 2", vendor: "завод - Производитель 2", country: "Китай"},
                 ]
 
             }
