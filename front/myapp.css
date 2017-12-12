@@ -43,5 +43,17 @@ button {
   border-left: 1px solid #3498db !important;
   border-top: 0px !important;
 }
+.green {
+  color: green;
+}
+.red {
+  color: red;
+}
+/*.webix_el_htmlbutton.webixtype_base {
+    background-color: #27ae60;
+    }*/
+.right {
+  text-align: right;
+}
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/
