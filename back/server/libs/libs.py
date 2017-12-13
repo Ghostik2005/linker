@@ -34,7 +34,7 @@ class API:
         self.lock = Lock
         self.exec = sys.executable
         self.log = log
-        self.con = fb_local(self.log)
+        self.db = fb_local(self.log)
 
 
     def _check(self, x_hash):
@@ -44,16 +44,41 @@ class API:
             ret = True
         return ret
 
-
-    def get_version(self, params=None, x_hash=None):
+    def getVersion(self, params=None, x_hash=None):
         user = params.get('user')
         if self._check(x_hash):
-            ret = {"result": True, "return": self.log.version}
+            ret = {"result": True, "ret_val": self.log.version}
         else:
-            ret = {"result": False, "return": "access denied"}
-
+            ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getSupplUnlnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select v.id_vnd, v.c_vnd, v.dt_prc, v.n_sum, v.n_sum2, v.n_sum3
+            from vnd v
+            inner join user_vnd on (v.id_vnd = user_vnd.id_vnd)
+            inner join users on (user_vnd.id_user = users.id)
+            where users."USER" = ?"""
+            opt = ('admin',)
+            result = self.db.request({"sql": sql, "options": opt})
+            _return = []
+            for row in result:
+                tmp = row[4].split('/')[0]
+                if str(tmp) == '0':
+                    continue
+                r = {
+                    "id_vnd" : row[0],
+                    "c_vnd": row[1],
+                    "dt_prc": row[2],
+                    "n_sum": row[3],
+                    "n_sum2": row[4],
+                    "n_sum3": row[5]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def get_topics(self, params=None, x_hash=None):
         user = params.get('user')

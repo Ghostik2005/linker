@@ -13,7 +13,7 @@
     width: 36px;
     height: 36px;
     margin-top: -3px;
-    background-image: url(/codebase/addons/img/ms_logo.jpg);
+    /*background-image: url(/codebase/addons/img/ms_logo.jpg);*/
     display: block;
     background-repeat: round;
     }
@@ -58,10 +58,14 @@ button {
     color: red;
     }
 
-.webix_el_htmlbutton.webixtype_base {
+/*.webix_el_htmlbutton.webixtype_base {
     background-color: #27ae60;
-}
+    }*/
 
 .right {
     text-align: right;
+    }
+
+.webix_el_combo input {
+    font-size: large !important;
     }

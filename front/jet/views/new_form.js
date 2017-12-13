@@ -54,6 +54,21 @@ export default class NewformView extends JetView{
                                         {view:"combo", label: "НДС:", labelPosition:"top", value: ""},
                                     ]}
                                 ]}
+                            ]},
+                        {cols: [
+                            {view: "button", type: "base", label: "Нет", width: 120, height: 32,
+                                click: () => {
+                                    webix.message("Очищаем форму и закрываем");
+                                    this.hide();
+                                    }
+                                },
+                            {},
+                            {view: "button", type: "base", label: "Да (Enter)", width: 120, height: 32,
+                                click: () => {
+                                    webix.message("Очищаем форму, отправляем данные на сервер и закрываем");
+                                    this.hide();
+                                    }
+                                }
                             ]}
                         ]}
                     ],

@@ -12,7 +12,7 @@
   width: 36px;
   height: 36px;
   margin-top: -3px;
-  background-image: url(/codebase/addons/img/ms_logo.jpg);
+  /*background-image: url(/codebase/addons/img/ms_logo.jpg);*/
   display: block;
   background-repeat: round;
 }
@@ -54,6 +54,9 @@ button {
     }*/
 .right {
   text-align: right;
+}
+.webix_el_combo input {
+  font-size: large !important;
 }
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/

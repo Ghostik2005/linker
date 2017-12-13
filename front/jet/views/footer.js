@@ -11,8 +11,8 @@ export default class FooterView extends JetView{
                     label: "Вы находитесь на сервере:  " + " saas", css: 'ms-logo-text',
                     height: 36},
                 {},
-                {view:"button", id: '__b41', type: 'form',
-                    label: "Инфо", width: 56},
+                {view:"button", type: "htmlbutton", width: 32,
+                    label: "<span class='webix_icon fa-info', style='color: #666666;'></span>"},
             ]}
         }
     }

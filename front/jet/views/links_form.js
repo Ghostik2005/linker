@@ -26,7 +26,8 @@ export default class LinksView extends JetView{
                                 {cols: [
                                     {view: "text", label: "", placeholder: "поиск", width: 500},
                                     {view: "checkbox", labelRight: "Поиск по словарю", labelWidth: 0},
-                                    {view: "button", label: "Разорвать <Ctrl>+D", width: 160}
+                                    {view:"button", type: 'htmlbutton',
+                                        label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220},
                                     ]},
                                 {height: 10, width: 900},
                                 {view: "treetable",
@@ -61,7 +62,22 @@ export default class LinksView extends JetView{
                                             ]},
 
                                         ]
-                                    }
+                                    },
+                                {cols: [
+                                    {view: "button", type: "base", label: "Нет", width: 120, height: 32,
+                                        click: () => {
+                                            webix.message("Очищаем форму и закрываем")
+                                            this.hide();
+                                            }
+                                        },
+                                    {},
+                                    {view: "button", type: "base", label: "Да (Enter)", width: 120, height: 32,
+                                        click: () => {
+                                            webix.message("Очищаем форму, отправляем данные на сервер и закрываем");
+                                            this.hide();
+                                            }
+                                        }
+                                    ]}
                                 ]}
                             ],
                         }

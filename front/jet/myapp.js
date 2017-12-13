@@ -1,6 +1,5 @@
 import "./styles/styles.css";
 import {JetApp, JetView, UrlRouter} from "webix-jet";
-//import {setLang} from "./views/globals";
 
 webix.ready(() => {
     webix.protoUI({
@@ -35,13 +34,13 @@ webix.ready(() => {
     var app = new JetApp({
         id:         "mainApp",
         name:       "linker",
-        version:    '2017.334.1230',
-        //start:      "/start/body",
+        version:    "2017.334.1230",
         start:      "/start/body",
+        user:       "admin",
+        r_url:      "/linker_logic",
         route: UrlRouter,
         debug:true
     });
-    //setLang();
     app.render();
 
 

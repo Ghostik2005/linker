@@ -8,50 +8,117 @@ import fdb
 class fb_local:
 
     def __init__(self, log):
-        self.con = None
         self.log = log
-        try:
-            print('Connect')
-            self.con = fdb.connect(
-                dsn='localhost:spr',
-                user='SYSDBA', password='masterkey'#, charset = 'WIN1251'
-              )
+        self.connect_params = {
+                "host": "localhost",
+                "database": "spr",
+                #"dsn": 'localhost:spr',
+                #"dsn": 'localhost:sklad',
+                "user": 'SYSDBA',
+                "password":'masterkey',
+                "charset" : 'WIN1251'
+                #"charset" : 'UTF8'
+            }
 
-        except Exception as Err:
-            print(traceback.format_exc())
-            #self.log(traceback.format_exc(), kind="error:connection")
+    def _log(self, message, kind=''):
+        if callable(self.log):
+            self.log(message, kind=kind)
+        else:
+            print(message, flush=True)
 
     def request(self, params = None):
-        #делаем селекты
-        cur = self.con.cursor()
-        sql = params.get('sql')
-        cur.execute(sql)
-        ret = cur.fetchall()
-        cur.close()
+        """
+        делаем селекты
+        sql - строка sql  с символами ? вместо параметров
+        options - список или кортеж опций для подстановки в sql строку
+        """
+        ret = -1
+        try:
+            con = fdb.connect(**self.connect_params)
+        except:
+            self._log(traceback.format_exc(), kind="error:connection")
+        else:
+            cur = con.cursor()
+            sql = params.get('sql')
+            options = params.get('options')
+            try:
+                cur.execute(sql, options)
+                ret = cur.fetchall()
+            except:
+                ret = -2
+                self._log(traceback.format_exc(), kind="error:sql")
+            finally:
+                cur.close()
+                con.close()
         return ret
 
     def execute(self, params = None):
-        #делаем инсерты, апдейты и делиты - одна команда на транзакцию
-        cur = self.con.cursor()
-        sql = params.get('sql')
-        cur.execute(sql)
-        ret = cur.fetchall()
-        cur.close()
+        """
+        делаем инсерты, апдейты и делиты - одна команда на транзакцию
+        sql - строка sql  с символами ? вместо параметров
+        options - список или кортеж опций для подстановки в sql строку
+        """
+        ret = -1
+        try:
+            con = fdb.connect(**self.connect_params)
+        except:
+            self._log(traceback.format_exc(), kind="error:connection")
+        else:
+            cur = con.cursor()
+            sql = params.get('sql')
+            options = params.get('options')
+            try:
+                cur.execute(sql, options)
+                con.commit()
+                ret = cur.fetchall()
+            except:
+                ret = -2
+                self._log(traceback.format_exc(), kind="error:sql")
+            finally:
+                cur.close()
+                con.close()
         return ret
 
     def executemany(self, params = None):
-        #делаем инсерты, апдейты и делиты -  много команд на транзакцию
-        cur = self.con.cursor()
-        sql = params.get('sql')
-        cur.execute(sql)
-        ret = cur.fetchall()
-        cur.close()
+        """
+        делаем инсерты, апдейты и делиты -  много команд на транзакцию
+        sql - строка sql  с символами ? вместо параметров
+        options - список списков или кортежей опций для подстановки в sql строку
+        """
+        ret = -1
+        try:
+            con = fdb.connect(**self.connect_params)
+        except:
+            self._log(traceback.format_exc(), kind="error:connection")
+        else:
+            cur = con.cursor()
+            sql = params.get('sql')
+            options = params.get('options')
+            try:
+                ret = []
+                for i in options:
+                    cur.execute(sql, options)
+                    con.commit()
+                    reti = cur.fetchall()
+                    ret.append(reti[0])
+            except:
+                ret = -2
+                self._log(traceback.format_exc(), kind="error:sql")
+            finally:
+                cur.close()
+                con.close()
         return ret
 
-
-def main():
-    qq = fb_local('l')
-
 if "__main__" == __name__:
-    main()
+    fb = fb_local('l')
+    sql ="select count(*) from spr where id_spr < ?"
+    opt = ("100",)
+    rr = fb.request({"sql": sql, "options": opt})
+    if rr == -1:
+        print("sql connection error")
+    elif rr == -2:
+        print("sql script error")
+    else:
+        for i in rr:
+            print(i)
 
