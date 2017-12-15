@@ -35,6 +35,8 @@ class API:
         self.exec = sys.executable
         self.log = log
         self.db = fb_local(self.log)
+        self.start = 1
+        self.count = 50
 
 
     def _check(self, x_hash):
@@ -54,10 +56,11 @@ class API:
 
     def getSupplUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select v.id_vnd, v.c_vnd, v.dt_prc, v.n_sum, v.n_sum2, v.n_sum3
+            sql = """select distinct(v.id_vnd), v.c_vnd, v.dt_prc, v.n_sum, v.n_sum2, v.n_sum3
             from vnd v
             inner join user_vnd on (v.id_vnd = user_vnd.id_vnd)
             inner join users on (user_vnd.id_user = users.id)
+            inner join (select id_vnd from prc where prc.n_fg = 0) p on ( v.id_vnd = p.id_vnd)
             where users."USER" = ?"""
             opt = ('admin',)
             result = self.db.request({"sql": sql, "options": opt})
@@ -80,74 +83,206 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def get_topics(self, params=None, x_hash=None):
-        user = params.get('user')
-        sql = "select uid, name from topics where uid > 0 order by name asc;"
-        cur = self._make_sql_ex(user, sql, ())
-        rl = []
-        for row in cur:
-            re_dict = {}
-            re_dict["id"]  = row[0]
-            re_dict["name"] = row[1]
-            rl.append(re_dict)
-        cur.close()
-        ret_value = json.dumps(rl, ensure_ascii=False)
-        return ret_value
-
-    def get_item(self, params=None, x_hash=None):
-        """
-        get single item for mass
-        """
-        user = params.get('user')
-        num = int(params.get('num'))
-        sql = """select num, alerts.name, r.create_date, r.to_work_date, status.name, users.display_name, points.display_name,
-                            topics.name, uu.display_name, r.description, r.change_date, current_date, r.res_desc, r.mass,
-                            customers.display_name, points.phone_num, r.to_date, r.description_bin, r.res_desc_bin
-from requests as r
-join alerts
-    on alerts.uid = r.alert
-join users
-    on users.uid = r.create_user
-join status
-    on status.uid = r.status
-join points
-    on points.uid = r.client
-join customers
-    on customers.uid = points.customer_id
-join topics
-    on topics.uid = r.topic
-join users as uu
-    on uu.uid = r.ordered
-where num = %s;"""
-        cur = self._make_sql_ex(user, sql, (num, ))
-        ret = []
-        row = cur.fetchone()
-        cur.close()
-        if not row:
-            return json.dumps('error', ensure_ascii=False)
-        if row[3] < row[2]:
-            work_date = ''
-            in_work_d = ''
+    def getPrcs(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_vnd = params.get('id_vnd')
+            not_link = params.get('not_link')
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX from prc r where r.id_vnd = ? and r.n_fg = ?"""
+            opt = (id_vnd, not_link)
+            result = self.db.request({"sql": sql, "options": opt})
+            _return = []
+            for row in result:
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
         else:
-            in_work_d = (row[11] - row[3]).days
-            work_date = self._f_date(row[3])
-        cli = '' if row[14] == 'empty' else row[14]
-        poi = '' if row[6] == 'empty' else row[6]
-        to_date = str(row[16])
-        to_date = to_date.split('-')
-        to_date.reverse()
-        to_date = '.'.join(to_date)
-        if to_date == '01.01.1971':
-            to_date = ''
-        desc = row[17].tobytes().decode() if row[17] else row[9]
-        res_desc = row[18].tobytes().decode() if row[18] else row[12]
-        qw = {"alert": row[1], "num": row[0], "create_date": self._f_date(row[2]), "to_work_date": work_date,
-              "status": row[4], "create_user": row[5], "client": cli, "in_work": str(in_work_d), "topic": row[7],
-              "ordered": row[8], "description" : desc, "change_date": self._f_date(row[10]), "res_desc": res_desc, "mass": row[13],
-              "point": poi, "phone_num": row[15], "to_date": to_date}
-        ret.append(qw)
-        ret_value = json.dumps(ret, ensure_ascii=False)
-        return ret_value
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getStranaAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = "select c_strana, id_spr from spr_strana where flag=1 order by c_strana"
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[1],
+                    "c_strana"       : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getVendorAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = "select c_zavod, id_spr from spr_zavod where flag=1 order by c_zavod"
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[1],
+                    "c_zavod"       : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getDvAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = "select r.ID, r.ACT_INGR from dv r where flag=1 order by r.ACT_INGR"
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[0],
+                    "act_ingr"       : row[1]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getSprSearch(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            search_re = params.get('search')
+            t1 = search_re.strip()
+            if len(t1) > 0:
+                search_re = search_re.split()
+                stri = []
+                for i in range(len(search_re)):
+                    ts = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                    if i == 0:
+                        stri.append(ts)
+                    else:
+                        stri.append('and %s' % ts)
+                stri = ' '.join(stri)
+                sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
+                FROM SPR r
+                inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
+                WHERE %s ORDER by r.C_TOVAR ASC ROWS ? to ?
+                """ % stri
+                opt = (start_p, end_p)
+                _return = []
+                result = self.db.request({"sql": sql, "options": opt})
+                for row in result:
+                    r = {
+                        "id_spr"        : row[0],
+                        "c_tovar"       : row[1],
+                        "id_dv"         : row[2],
+                        "id_zavod"      : row[3],
+                        "id_strana"     : row[4],
+                    }
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "string error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getSpr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = int(params.get('id_spr'))
+            if id_spr:
+                sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.C_OPISANIE, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV
+    FROM SPR r where r.id_spr = ?
+                """
+                opt = (id_spr,)
+                _return = []
+                result = self.db.request({"sql": sql, "options": opt})
+                for row in result:
+                    r = {
+                        "id_spr"        : row[0],
+                        "c_tovar"       : row[1],
+                        "c_dv"          : '',
+                        "c_zavod"       : '',
+                        "c_strana"      : '',
+                        "c_opisanie"    : row[2],
+                        "id_strana"     : row[3],
+                        "id_zavod"      : row[4],
+                        "id_dv"         : row[5],
+                        "barcode"       : "",
+                        "_prescr"       : 0,
+                        "_mandat"       : 0,
+                    }
+                    sql = "select r.barcode from spr_barcode r where r.id_spr = ?"
+                    t = self.db.request({"sql": sql, "options": opt})
+                    b_code = []
+                    for row in t:
+                        b_code.append(row[0])
+                    r['barcode'] = ", ".join(b_code)
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                        where ( classifier.idx_group = 5 and groups.cd_code = ?)"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        tt = t[0][0]
+                        if tt:
+                            r["_prescr"] = 1
+                    except:
+                        pass
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                        where ( classifier.idx_group = 4 and groups.cd_code = ?)"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        tt = t[0][0]
+                        if tt:
+                            r["_mandat"] = 1
+                    except:
+                        pass
+                        
+                    
+                    sql = "select c_zavod from spr_zavod where id_spr = ? and flag = 1"
+                    opt = (row[4],)
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r['c_zavod'] = t[0][0]
+                    except:
+                        pass
+                    sql = "select c_strana from spr_strana where id_spr = ? and flag = 1"
+                    opt = (row[3],)
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r['c_strana'] = t[0][0]
+                    except:
+                        pass
+                    sql = "select ACT_INGR from dv where id = ? and flag = 1"
+                    opt = (row[5],)
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r['c_dv'] = t[0][0]
+                    except:
+                        pass
+
+
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "id_spr error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
 
 class fLock:

@@ -1,8 +1,6 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-//import locals from "../views/local.js";
-//import {switchLang} from "../views/globals";
 
 export default class HeaderView extends JetView{
     config(){

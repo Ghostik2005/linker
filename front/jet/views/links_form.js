@@ -5,13 +5,9 @@ import {JetView} from "webix-jet";
 export default class LinksView extends JetView{
     config(){
         function linksTempl(obj, common, value) {
-            //console.log(obj);
-            //console.log(common);
-            //console.log(value);
             let ni = "<div>" + obj.name;
             ni = (obj.sprvendor) ? ni   + "<br>" + obj.sprvendor + "</div>" : ni  + "</div>";
             let ret = common.treetable(obj, common) + ni;
-            console.log(ret);
             return ret
             }
         return {view: "cWindow",
@@ -24,7 +20,7 @@ export default class LinksView extends JetView{
                         elements: [
                             {rows: [
                                 {cols: [
-                                    {view: "text", label: "", placeholder: "поиск", width: 500},
+                                    {view: "text", label: "", placeholder: "Строка поиска", width: 500},
                                     {view: "checkbox", labelRight: "Поиск по словарю", labelWidth: 0},
                                     {view:"button", type: 'htmlbutton',
                                         label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220},
@@ -64,16 +60,10 @@ export default class LinksView extends JetView{
                                         ]
                                     },
                                 {cols: [
-                                    {view: "button", type: "base", label: "Нет", width: 120, height: 32,
-                                        click: () => {
-                                            webix.message("Очищаем форму и закрываем")
-                                            this.hide();
-                                            }
-                                        },
                                     {},
-                                    {view: "button", type: "base", label: "Да (Enter)", width: 120, height: 32,
+                                    {view: "button", type: "base", label: "Закрыть", width: 120, height: 32,
                                         click: () => {
-                                            webix.message("Очищаем форму, отправляем данные на сервер и закрываем");
+                                            webix.message("Закрываем форму");
                                             this.hide();
                                             }
                                         }

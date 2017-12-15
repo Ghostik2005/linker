@@ -73,20 +73,25 @@ def application(env):
     _rm = env["HTTP_METHOD"].upper()
     args=None
     if 'POST' == _rm:
-        args = env['scgi.rfile'].read(env['CONTENT_LENGTH'])
+        arg = env.get('HTTP_PARAMS')[0]
+        _p_http = env.get('HTTP_KWARGS')
+        _param = env['scgi.rfile'].read(env['CONTENT_LENGTH'])
         try:
-            args = zlib.decompress(args)
+            _param = zlib.decompress(_param)
         except Exception as Err:
             pass
         try:
-            args = json.loads(args)
-            sys.APPCONF["log"](args)
+            _param = json.loads(_param)
         except Exception as Err:
-            sys.APPCONF["log"](args, kind='error')
-            content = u'not applicable format. use JSON-formated string'
+            _param = _p_http
+            #sys.APPCONF["log"](_param, kind='error')
+            #content = u'not applicable format. use JSON-formated string'
         else:
-            arg, _param = args.popitem()
-            content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
+            _param.update(_p_http)
+        sys.APPCONF["log"](arg)
+        sys.APPCONF["log"](_param)
+        #arg, _param = args.popitem()
+        content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
 
     # три обязательных вызова yield: статус, заголовки, содержание
     ret_value = content.encode()
