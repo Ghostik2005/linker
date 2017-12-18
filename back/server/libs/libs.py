@@ -160,6 +160,90 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getSezonAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
+                from groups 
+                inner join classifier on (groups.cd_group = classifier.cd_group) 
+                where classifier.idx_group = 6
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[1],
+                    "sezon"       : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getHranAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
+                from groups 
+                inner join classifier on (groups.cd_group = classifier.cd_group) 
+                where classifier.idx_group = 3
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"               : row[1],
+                    "usloviya"         : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getGroupAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
+                from groups 
+                inner join classifier on (groups.cd_group = classifier.cd_group) 
+                where classifier.idx_group = 1
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"            : row[1],
+                    "group"         : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getNdsAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
+                from groups 
+                inner join classifier on (groups.cd_group = classifier.cd_group) 
+                where classifier.idx_group = 2
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"          : row[1],
+                    "nds"         : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getSprSearch(self, params=None, x_hash=None):
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
@@ -213,6 +297,7 @@ class API:
                 _return = []
                 result = self.db.request({"sql": sql, "options": opt})
                 for row in result:
+                    print(row)
                     r = {
                         "id_spr"        : row[0],
                         "c_tovar"       : row[1],
@@ -226,12 +311,20 @@ class API:
                         "barcode"       : "",
                         "_prescr"       : 0,
                         "_mandat"       : 0,
+                        "sezon"         : "",
+                        "id_sezon"      : "",
+                        "usloviya"      : "",
+                        "id_usloviya"   : "",
+                        "group"         : "",
+                        "id_group"      : "",
+                        "id_nds"        : "",
+                        "nds"           : ""
                     }
                     sql = "select r.barcode from spr_barcode r where r.id_spr = ?"
                     t = self.db.request({"sql": sql, "options": opt})
                     b_code = []
-                    for row in t:
-                        b_code.append(row[0])
+                    for row_b in t:
+                        b_code.append(row_b[0])
                     r['barcode'] = ", ".join(b_code)
                     sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
                         where ( classifier.idx_group = 5 and groups.cd_code = ?)"""
@@ -252,7 +345,42 @@ class API:
                     except:
                         pass
                         
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                        where ( classifier.idx_group = 6 and groups.cd_code = ? )"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r["sezon"] = t[0][0]
+                        r["id_sezon"] = t[0][1]
+                    except:
+                        pass
+
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                            where ( classifier.idx_group = 3 and groups.cd_code = ?)"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r["usloviya"] = t[0][0]
+                        r["id_usloviya"] = t[0][1]
+                    except:
+                        pass
+
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                            where ( classifier.idx_group = 1 and groups.cd_code = ? )"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r["group"] = t[0][0]
+                        r["id_group"] = t[0][1]
+                    except:
+                        pass
                     
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                            where ( classifier.idx_group = 2 and groups.cd_code = ? )"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        r["nds"] = t[0][0]
+                        r["id_nds"] = t[0][1]
+                    except:
+                        pass
+
                     sql = "select c_zavod from spr_zavod where id_spr = ? and flag = 1"
                     opt = (row[4],)
                     t = self.db.request({"sql": sql, "options": opt})
@@ -274,7 +402,6 @@ class API:
                         r['c_dv'] = t[0][0]
                     except:
                         pass
-
 
                     _return.append(r)
                 ret = {"result": True, "ret_val": _return}

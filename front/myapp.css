@@ -56,7 +56,13 @@ button {
   text-align: right;
 }
 .webix_el_combo input {
-  font-size: medium !important;
+  /*font-size: medium !important;*/
+}
+.small {
+  /*font-size: small !important;*/
+}
+.comboList {
+  word-break: break-all;
 }
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/

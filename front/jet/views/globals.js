@@ -38,6 +38,41 @@ export var dv = new webix.DataCollection({
             }
         });
 
+export var nds = new webix.DataCollection({
+        id: "nds_dc",
+        on: {
+            onAfterLoad: function() {
+                //console.log(this)
+                }
+            }
+        });
+
+export var sezon = new webix.DataCollection({
+        id: "sezon_dc",
+        on: {
+            onAfterLoad: function() {
+                //console.log(this)
+                }
+            }
+        });
+
+export var hran = new webix.DataCollection({
+        id: "hran_dc",
+        on: {
+            onAfterLoad: function() {
+                //console.log(this)
+                }
+            }
+        });
+
+export var group = new webix.DataCollection({
+        id: "group_dc",
+        on: {
+            onAfterLoad: function() {
+                //console.log(this)
+                }
+            }
+        });
 
 export function get_spr_search(th, re) {
     let user = (th) ? th.app.config.user : "user";
@@ -100,6 +135,16 @@ export function get_spr(th, id_spr) {
         webix.message('error');
         return 'error';
         };
+    }
+
+export function init_first(app) {
+    get_strana_all(app);
+    get_vendor_all(app);
+    get_dv_all(app);
+    get_nds_all(app);
+    get_hran_all(app);
+    get_sezon_all(app);
+    get_group_all(app);
     }
 
 export function get_prcs(th, id_vnd) {
@@ -165,6 +210,71 @@ export function get_dv_all(app) {
             };
         })
     }
+
+export function get_nds_all(app) {
+    let user = app.config.user;
+    let url = app.config.r_url + "?getNdsAll"
+    let params = {"user": user};
+    request(url, params).then(function(data) {
+        data = data.json();
+        if (data.result) {
+            data = data.ret_val
+            $$("nds_dc").clearAll();
+            $$("nds_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
+    }
+
+export function get_hran_all(app) {
+    let user = app.config.user;
+    let url = app.config.r_url + "?getHranAll"
+    let params = {"user": user};
+    request(url, params).then(function(data) {
+        data = data.json();
+        if (data.result) {
+            data = data.ret_val
+            $$("hran_dc").clearAll();
+            $$("hran_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
+    }
+
+export function get_sezon_all(app) {
+    let user = app.config.user;
+    let url = app.config.r_url + "?getSezonAll"
+    let params = {"user": user};
+    request(url, params).then(function(data) {
+        data = data.json();
+        if (data.result) {
+            data = data.ret_val
+            $$("sezon_dc").clearAll();
+            $$("sezon_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
+    }
+
+export function get_group_all(app) {
+    let user = app.config.user;
+    let url = app.config.r_url + "?getGroupAll"
+    let params = {"user": user};
+    request(url, params).then(function(data) {
+        data = data.json();
+        if (data.result) {
+            data = data.ret_val
+            $$("group_dc").clearAll();
+            $$("group_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
+    }
+    
 
 export function get_suppl(view, th) {
     let user = th.app.config.user;
