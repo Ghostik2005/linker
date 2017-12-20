@@ -20,7 +20,7 @@ export default class TopmenuView extends JetView{
                                 filter: filter_1,
                                 body: {
                                     css: "big-combo",
-                                    template: "#c_vnd# - #n_sum2#",
+                                    template: "#c_vnd# - #count#",
                                     yCount: 10
                                     }
                                 },
@@ -79,12 +79,13 @@ export default class TopmenuView extends JetView{
                     height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search",
-                            keyPressTimeout: 900,
+                            keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
                             on: {
                                 onTimedKeyPress: function(code, event) {
-                                    let value = this.getValue();
+                                    //let value = this.getValue();
                                     let th = this.$scope;
-                                    get_spr_search(th, value);
+                                    let count = $$("__dt").config.posPpage;
+                                    get_spr_search(th, 1, count);
                                     }
                                 },
                             },
@@ -92,7 +93,12 @@ export default class TopmenuView extends JetView{
                             label: "Добавить (Ins)", width: 140,
                             hotkey: "insert", disabled: !true,
                             click: () => {
-                                this.popnew.show("Добавление в справочник");
+                                let item = {}
+                                let name = $$("_names_bar").getValues().p_name;
+                                console.log(name);
+                                item['t_name'] = "Название товара:   " + name;
+                                item['c_tovar'] = name.toUpperCase();
+                                this.popnew.show("Добавление в справочник", item);
                                 }
                             },
                         {view:"button", type: 'htmlbutton', id: "_link",

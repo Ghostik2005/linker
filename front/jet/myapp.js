@@ -1,7 +1,8 @@
 import "./styles/styles.css";
+//import "./libs/webix/webix.js";
+//import "./libs/webix/skin.js";
 import {JetApp, JetView} from "webix-jet";
 import {StoreRouter} from "webix-jet";
-import {init_first} from "./views/globals";;
 
 webix.ready(() => {
     webix.protoUI({
@@ -37,11 +38,11 @@ webix.ready(() => {
         name:       "linker",
         version:    "2017.334.1230",
         start:      "/start/body",
-        user:       "admin",
+        user:       "stasya",
         r_url:      "/linker_logic",
         router:     StoreRouter,
         x_api:      "api-key",
-        debug:true
+        debug:      true
     });
     app.render();
 
@@ -51,7 +52,6 @@ webix.ready(() => {
             }
         );
     //console.log(app);
-    init_first(app);
 
     app.attachEvent("app:error:resolve", function(name, error){
         window.console.error(error);

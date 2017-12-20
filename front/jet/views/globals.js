@@ -1,5 +1,6 @@
 "use strict";
 
+
 export var prcs = new webix.DataCollection({
         id: "prcs_dc",
         on: {
@@ -74,16 +75,33 @@ export var group = new webix.DataCollection({
             }
         });
 
-export function get_spr_search(th, re) {
+function form_navi() {
+    //console.log($$("__dt").config);
+    let c_page = $$("__dt").config.startPos / $$("__dt").config.posPpage;
+    c_page = Math.ceil(c_page);
+    let total_page = $$("__dt").config.totalPos / $$("__dt").config.posPpage;
+    total_page = Math.ceil(total_page);
+    $$("__pager").define('label', "Страница " + c_page + " из " + total_page);
+    $$("__pager").refresh();
+    $$("__count").define('label', "Всего " + $$("__dt").config.totalPos + " записей");
+    $$("__count").refresh();
+    console.log(c_page, total_page);
+    //console.log($$("__pager"));
+    }
+
+export function get_spr_search(th, start, count) {
+    let search_str = $$("_spr_search").getValue();
     let user = (th) ? th.app.config.user : "user";
     let url = (th) ? th.app.config.r_url + "?getSprSearch" : "/linker_logic?getSprSearch";
-    let params = {"user": user, "search": re};
+    let params = {"user": user, "search": search_str, "start": start, "count": count};
     request(url, params).then(function(data) {
         data = data.json();
         if (data.result) {
-            data = data.ret_val
             $$("__dt").clearAll();
-            $$("__dt").parse(data);
+            $$("__dt").parse(data.ret_val);
+            $$("__dt").config.startPos = data.start;
+            $$("__dt").config.totalPos = data.total;
+            form_navi();
         } else {
             webix.message('error');
             };
@@ -92,12 +110,20 @@ export function get_spr_search(th, re) {
 
 export function parse_unlinked_item(th) {
     let c_item = $$("prcs_dc").getItem($$("prcs_dc").getCursor());
-    $$("_names_bar").elements._vendor.setValue(c_item.c_zavod);
+    let n_item = {} 
+
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
     let count = "<span style='color: #666666;'>Осталось свести: </span><span style='color: red; font-weight: bold;'>"+ $$("prcs_dc").count() + "</span>";
-    $$("_names_bar").elements._name.setValue(name);
-    $$("_names_bar").elements._count.setValue(count);
+    n_item['_name'] = name;
+    n_item['_count'] = count;
+    n_item['_vendor'] = c_item.c_zavod;
+    n_item['p_name'] = c_item.c_tovar;
+    $$("_names_bar").parse(n_item);
+    //$$("_names_bar").elements._name.setValue(name);
+    //$$("_names_bar").elements._count.setValue(count);
+    //$$("_names_bar").elements._vendor.setValue(c_item.c_zavod);
+    
     let buf = c_item.c_tovar.split(' ');
     let sta = 0;
     if (buf[sta].length < 4) sta += 1;
@@ -113,6 +139,7 @@ export function parse_unlinked_item(th) {
             }
         }
     s_stri = s_stri.replace('"', " ");
+    s_stri = s_stri.replace('!', " ");
     s_stri = s_stri.replace("-", " ");
     s_stri = s_stri.replace(".", " ");
     s_stri = s_stri.replace("*", " ");
@@ -120,7 +147,8 @@ export function parse_unlinked_item(th) {
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
-    get_spr_search(th, s_stri);
+    count = $$("__dt").config.posPpage;
+    get_spr_search(th, 1, count);
     }
 
 export function get_spr(th, id_spr) {
@@ -291,6 +319,8 @@ export function get_suppl(view, th) {
         } else {
             webix.message('error');
             };
+        }).then(function() {
+            init_first(th.app)
         })
     }
     

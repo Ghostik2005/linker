@@ -21,6 +21,13 @@ import zlib
 from io import BytesIO
 from libs.connect import fb_local
 
+"""
+create ASC 
+INDEX IDX_ID_WORK on PRC 
+(IN_WORK);
+COMMIT;
+"""
+
 class API:
     """
     API class for http access to reloader
@@ -36,7 +43,7 @@ class API:
         self.log = log
         self.db = fb_local(self.log)
         self.start = 1
-        self.count = 50
+        self.count = 20
 
 
     def _check(self, x_hash):
@@ -56,26 +63,24 @@ class API:
 
     def getSupplUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select distinct(v.id_vnd), v.c_vnd, v.dt_prc, v.n_sum, v.n_sum2, v.n_sum3
-            from vnd v
-            inner join user_vnd on (v.id_vnd = user_vnd.id_vnd)
-            inner join users on (user_vnd.id_user = users.id)
-            inner join (select id_vnd from prc where prc.n_fg = 0) p on ( v.id_vnd = p.id_vnd)
-            where users."USER" = ?"""
-            opt = ('admin',)
+            user = params.get('user')
+            sql = """select r1, v.C_VND, r2 from (
+                select p.ID_VND as r1, count(p.ID_VND) as r2 from PRC p 
+                inner join USERS u on (u."GROUP" = p.ID_ORG)
+                WHERE p.N_FG = 0 and u."USER" = ?
+                GROUP BY p.ID_VND
+                )
+            inner join VND v on (v.ID_VND = r1)
+            order by v.C_VND ASC
+            """
+            opt = (user,)
             result = self.db.request({"sql": sql, "options": opt})
             _return = []
             for row in result:
-                tmp = row[4].split('/')[0]
-                if str(tmp) == '0':
-                    continue
                 r = {
                     "id_vnd" : row[0],
                     "c_vnd": row[1],
-                    "dt_prc": row[2],
-                    "n_sum": row[3],
-                    "n_sum2": row[4],
-                    "n_sum3": row[5]
+                    "count": row[2]
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -87,11 +92,28 @@ class API:
         if self._check(x_hash):
             id_vnd = params.get('id_vnd')
             not_link = params.get('not_link')
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX from prc r where r.id_vnd = ? and r.n_fg = ?"""
-            opt = (id_vnd, not_link)
+            user = params.get('user')
+            '''
+            #сбрасываем все настройки в работе
+            sql = """UPDATE PRC r
+            SET r.IN_WORK = -1
+            where r.IN_WORK <> -1;
+            """
+            opt = ()
+            res = self.db.execute({"sql": sql, "options": opt})
+            '''
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
+            from prc r
+            inner join USERS u on (u."GROUP" = r.ID_ORG)
+            WHERE r.id_vnd = ? and r.n_fg = ? and u."USER" = ? and r.IN_WORK = -1
+            ROWS 1 to 20
+            """
+            opt = (id_vnd, not_link, user)
             result = self.db.request({"sql": sql, "options": opt})
             _return = []
+            in_work = []
             for row in result:
+                in_work.append(row[0])
                 r = {
                     "sh_prc"  : row[0],
                     "id_vnd"  : row[1],
@@ -105,6 +127,15 @@ class API:
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
+            if len(in_work) > 0:
+                #ins = tuple(in_work)
+                sql = """UPDATE PRC r
+                    SET r.IN_WORK = (SELECT u."GROUP" FROM USERS u WHERE u."USER" = ?)
+                    where r.SH_PRC in (%s)""" %(', '.join([f'\'{q}\'' for q in in_work]))
+                opt = (user,)
+                print(sql)
+                print(opt)
+                res = self.db.execute({"sql": sql, "options": opt})
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -226,9 +257,9 @@ class API:
     def getNdsAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
-                from groups 
-                inner join classifier on (groups.cd_group = classifier.cd_group) 
-                where classifier.idx_group = 2
+            from groups 
+            inner join classifier on (groups.cd_group = classifier.cd_group) 
+            where classifier.idx_group = 2
             """
             opt = ()
             _return = []
@@ -252,14 +283,36 @@ class API:
             search_re = params.get('search')
             t1 = search_re.strip()
             if len(t1) > 0:
+                zavod = []
+                exclude = []
+                for i in range(search_re.count('!')):
+                    ns = search_re.find('!')
+                    ne = search_re.find(' ', ns)
+                    te = search_re[ns+1: ne if ne > 0 else None]
+                    exclude.append(te)
+                    search_re = search_re.replace("!" + te, '')
+                for i in range(search_re.count('+')):
+                    ns = search_re.find('+')
+                    ne = search_re.find(' ', ns)
+                    te = search_re[ns+1: ne if ne > 0 else None]
+                    zavod.append(te)
+                    search_re = search_re.replace("+" + te, '')
                 search_re = search_re.split()
                 stri = []
                 for i in range(len(search_re)):
-                    ts = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                    ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
                     if i == 0:
-                        stri.append(ts)
+                        stri.append(ts1)
                     else:
-                        stri.append('and %s' % ts)
+                        stri.append('and %s' % ts1)
+                if len(zavod) > 0:
+                    for i in range(len(zavod)):
+                        ts2 = "lower(z.C_ZAVOD) like lower('%" + zavod[i].strip() + "%')"
+                        stri.append('and %s' % ts2)
+                if len(exclude) > 0:
+                    for i in range(len(exclude)):
+                        ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                        stri.append('and %s' % ts3)
                 stri = ' '.join(stri)
                 sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
                 FROM SPR r
@@ -268,6 +321,8 @@ class API:
                 WHERE %s ORDER by r.C_TOVAR ASC ROWS ? to ?
                 """ % stri
                 opt = (start_p, end_p)
+                #print(sql)
+                #print(opt)
                 _return = []
                 result = self.db.request({"sql": sql, "options": opt})
                 for row in result:
@@ -279,7 +334,13 @@ class API:
                         "id_strana"     : row[4],
                     }
                     _return.append(r)
-                ret = {"result": True, "ret_val": _return}
+                sql = """SELECT count(*)
+                        FROM SPR r
+                        inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                        WHERE %s""" % stri
+                opt = ()
+                tot = self.db.request({"sql": sql, "options": opt})[0][0]
+                ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
             else:
                 ret = {"result": False, "ret_val": "string error"}
         else:
@@ -291,7 +352,7 @@ class API:
             id_spr = int(params.get('id_spr'))
             if id_spr:
                 sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.C_OPISANIE, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV
-    FROM SPR r where r.id_spr = ?
+                FROM SPR r where r.id_spr = ?
                 """
                 opt = (id_spr,)
                 _return = []
@@ -326,8 +387,9 @@ class API:
                     for row_b in t:
                         b_code.append(row_b[0])
                     r['barcode'] = ", ".join(b_code)
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                        where ( classifier.idx_group = 5 and groups.cd_code = ?)"""
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                    where ( classifier.idx_group = 5 and groups.cd_code = ?)"""
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         tt = t[0][0]
@@ -335,8 +397,9 @@ class API:
                             r["_prescr"] = 1
                     except:
                         pass
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                        where ( classifier.idx_group = 4 and groups.cd_code = ?)"""
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                    where ( classifier.idx_group = 4 and groups.cd_code = ?)"""
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         tt = t[0][0]
@@ -345,8 +408,9 @@ class API:
                     except:
                         pass
                         
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                        where ( classifier.idx_group = 6 and groups.cd_code = ? )"""
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                    where ( classifier.idx_group = 6 and groups.cd_code = ? )"""
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r["sezon"] = t[0][0]
@@ -354,8 +418,9 @@ class API:
                     except:
                         pass
 
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                            where ( classifier.idx_group = 3 and groups.cd_code = ?)"""
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                    where ( classifier.idx_group = 3 and groups.cd_code = ?)"""
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r["usloviya"] = t[0][0]
@@ -363,8 +428,9 @@ class API:
                     except:
                         pass
 
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                            where ( classifier.idx_group = 1 and groups.cd_code = ? )"""
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                    where ( classifier.idx_group = 1 and groups.cd_code = ? )"""
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r["group"] = t[0][0]
@@ -372,8 +438,9 @@ class API:
                     except:
                         pass
                     
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                            where ( classifier.idx_group = 2 and groups.cd_code = ? )"""
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
+                    where ( classifier.idx_group = 2 and groups.cd_code = ? )"""
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r["nds"] = t[0][0]
@@ -402,7 +469,6 @@ class API:
                         r['c_dv'] = t[0][0]
                     except:
                         pass
-
                     _return.append(r)
                 ret = {"result": True, "ret_val": _return}
             else:

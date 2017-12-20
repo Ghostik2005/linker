@@ -12,6 +12,21 @@ export default class NewformView extends JetView{
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
             return item.c_strana.toString().toLowerCase().search(value) != -1;
             };
+        function zavod_filter(item, value) {
+            value = value.toString().toLowerCase()
+            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            return item.c_zavod.toString().toLowerCase().search(value) != -1;
+            };
+        function dv_filter(item, value) {
+            value = value.toString().toLowerCase()
+            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            return item.act_ingr.toString().toLowerCase().search(value) != -1;
+            };
+        function gr_filter(item, value) {
+            value = value.toString().toLowerCase()
+            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            return item.group.toString().toLowerCase().search(value) != -1;
+            };
         return {view: "cWindow",
             modal: true,
             body: { view: "form",
@@ -40,11 +55,11 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     },
-                                {view: "label", label:"Производитель:" + "Китай", name: "v_name"},
+                                {view: "label", label:"Производитель:", name: "v_name"},
                                 {cols: [
                                     {view:"combo", label: "", value: "", name: "id_zavod",
                                         options:  {
-                                            //filter: strana_filter,
+                                            filter: zavod_filter,
                                             body: {
                                                 template:"#c_zavod#",
                                                 yCount:10,
@@ -67,13 +82,13 @@ export default class NewformView extends JetView{
                                 {cols: [
                                     {view:"combo", label: "", value: "", name: "id_dv",
                                         options:  {
-                                            //filter: strana_filter,
+                                            filter: dv_filter,
                                             body: {
                                                 autoheight:false,
                                                 view:"list",
                                                 type:{ height:"auto" },
                                                 template: "<div class='comboList'>#act_ingr#</div>",
-                                                height: 400,
+                                                height: 250,
                                                 yCount:0,
                                                 data: dv
                                                 }
@@ -148,12 +163,13 @@ export default class NewformView extends JetView{
                                             },
                                         {view:"combo", label: "Группа:", labelPosition:"top", value: "", name: "id_group", css: "small",
                                             options:  {
+                                                filter: gr_filter,
                                                 body: {
                                                     autoheight:false,
                                                     view:"list",
                                                     type:{ height:"auto" },
                                                     template: "<div class='comboList'>#group#</div>",
-                                                    height: 400,
+                                                    height: 200,
                                                     yCount:0,
                                                     data: group
                                                     }
