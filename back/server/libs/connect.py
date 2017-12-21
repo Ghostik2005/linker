@@ -12,12 +12,9 @@ class fb_local:
         self.connect_params = {
                 "host": "localhost",
                 "database": "spr",
-                #"dsn": 'localhost:spr',
-                #"dsn": 'localhost:sklad',
                 "user": 'SYSDBA',
                 "password":'masterkey',
                 "charset" : 'WIN1251'
-                #"charset" : 'UTF8'
             }
 
     def _log(self, message, kind=''):
@@ -35,7 +32,7 @@ class fb_local:
         ret = -1
         try:
             con = fdb.connect(**self.connect_params)
-        except:
+        except Exception as Err:
             self._log(traceback.format_exc(), kind="error:connection")
         else:
             cur = con.cursor()
@@ -46,7 +43,8 @@ class fb_local:
                 ret = cur.fetchall()
             except:
                 ret = -2
-                self._log(traceback.format_exc(), kind="error:sql")
+                #self._log(traceback.format_exc(), kind="error:sql")
+                self._log(Err, kind="error:sql")
             finally:
                 cur.close()
                 con.close()
@@ -71,9 +69,10 @@ class fb_local:
                 cur.execute(sql, options)
                 con.commit()
                 ret = cur.fetchall()
-            except:
+            except Exception as Err:
                 ret = -2
-                self._log(traceback.format_exc(), kind="error:sql")
+                #self._log(traceback.format_exc(), kind="error:sql")
+                self._log(Err, kind="error:sql")
             finally:
                 cur.close()
                 con.close()
@@ -101,9 +100,10 @@ class fb_local:
                     con.commit()
                     reti = cur.fetchall()
                     ret.append(reti[0])
-            except:
+            except Exception as Err:
                 ret = -2
-                self._log(traceback.format_exc(), kind="error:sql")
+                #self._log(traceback.format_exc(), kind="error:sql")
+                self._log(Err, kind="error:sql")
             finally:
                 cur.close()
                 con.close()

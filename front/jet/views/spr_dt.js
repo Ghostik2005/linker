@@ -3,22 +3,17 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
-import {get_spr_search} from "../views/globals";
+import {get_data} from "../views/globals";
+import {last_page} from "../views/globals";
 
 export default class SprView extends JetView{
     config(){
+
         function mnn_func(obj) {
             var ret = obj.id_mnn;
             ret = (+ret !== 0) ? "<div> <span class='green'>есть</span></div>" : "<div> <span class='red'>нет</span></div>"
             return ret
             }
-        function last_page() {
-            let total = $$("__dt").config.totalPos;
-            let ppp = $$("__dt").config.posPpage;
-            let lp = (Math.ceil(total/ppp) - 1) * ppp + 1
-            return lp
-            }
-        
 
         var bottom = {
             view: "toolbar",
@@ -28,10 +23,17 @@ export default class SprView extends JetView{
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                     click: () => {
-                        let th = this;
                         let start = 1;
                         let count = $$("__dt").config.posPpage;
-                        get_spr_search(th, start, count)
+                        get_data({
+                            th: this,
+                            view: "__dt",
+                            navBar: "__nav",
+                            start: start,
+                            count: count,
+                            searchBar: "_spr_search",
+                            method: "getSprSearch"
+                            });
                         }
                     },
                 {view: "button", type: 'htmlbutton',
@@ -41,36 +43,61 @@ export default class SprView extends JetView{
                         let start = $$("__dt").config.startPos - $$("__dt").config.posPpage;
                         start = (start < 0) ? 1 : start;
                         let count = $$("__dt").config.posPpage;
-                        get_spr_search(th, start, count)
+                        get_data({
+                            th: this,
+                            view: "__dt",
+                            navBar: "__nav",
+                            start: start,
+                            count: count,
+                            searchBar: "_spr_search",
+                            method: "getSprSearch"
+                            });
                         }
                     },
-                {view: "label", label: "Страница 1 из 1", width: 150, id: "__pager"},
+                {view: "label", label: "Страница 1 из 1", width: 200, id: "__pager"},
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
                     click: () => {
                         let th = this;
                         let start = $$("__dt").config.startPos + $$("__dt").config.posPpage;
-                        start = (start > $$("__dt").config.totalPos) ? last_page(): start;
+                        start = (start > $$("__dt").config.totalPos) ? last_page("__dt"): start;
                         let count = $$("__dt").config.posPpage;
-                        get_spr_search(th, start, count)
+                        get_data({
+                            th: this,
+                            view: "__dt",
+                            navBar: "__nav",
+                            start: start,
+                            count: count,
+                            searchBar: "_spr_search",
+                            method: "getSprSearch"
+                            });
                         }
                     },
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                     click: () => {
                         let th = this;
-                        let start = last_page();
+                        let start = last_page("__dt");
                         let count = $$("__dt").config.posPpage;
-                        get_spr_search(th, start, count)
+                        get_data({
+                            th: this,
+                            view: "__dt",
+                            navBar: "__nav",
+                            start: start,
+                            count: count,
+                            searchBar: "_spr_search",
+                            method: "getSprSearch"
+                            });
                         }
                     },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-refresh'></span>", width: 50
-                    },
+                //{view: "button", type: 'htmlbutton',
+                    //label: "<span class='webix_icon fa-refresh'></span>", width: 50
+                    //},
                 {},
-                {view: "label", label: "Всего 0 записей", width: 150, id: "__count"},
+                {view: "label", label: "Всего записей: 0", width: 180, id: "__count"},
                 ]
             };
+
         var sprv = {view: "datatable",
             id: "__dt",
             navigation: "row",
@@ -85,12 +112,6 @@ export default class SprView extends JetView{
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
-            ready:function(){
-                if (!this.count()){
-                    webix.extend(this, webix.OverlayBox);
-                    this.showOverlay("<div>Loading</div>");
-                    }
-                },
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
@@ -110,13 +131,13 @@ export default class SprView extends JetView{
                 { id: "id_zavod", sort: "text",
                     width: 400,
                     header: [{text: "Производитель"},
-                        {content:"textFilter"}
+                        //{content:"textFilter"}
                         ]
                     },
                 { id: "id_strana", sort: "text",
                     width: 250,
                     header: [{text: "Страна"},
-                        {content:"textFilter"}
+                        //{content:"textFilter"}
                         ]
                     }
                 ],
@@ -128,7 +149,15 @@ export default class SprView extends JetView{
                     $$("_link").disable();
                     //this.data.url = "data/data.php";
                     },
-                //onAfterRender: form_navi,
+                onBeforeRender: function() {
+                    webix.extend(this, webix.ProgressBar);
+                    if (!this.count) {
+                        this.showProgress({
+                            type: "icon",
+                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            });
+                        }
+                    },
                 onItemDblClick: function(item) {
                     item = this.getItem(item.row);
                     item = item.id_spr;
@@ -137,8 +166,10 @@ export default class SprView extends JetView{
                     item["t_name"] = "Название товара: " + item.c_tovar;
                     item["v_name"] = "Производитель: " + item.c_zavod;
                     item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                    
                     this.$scope.popnew.show("Редактирование записи " + item.id_spr, item);
+                    },
+                onAfterLoad: function() {
+                    this.hideProgress();
                     },
                 onBeforeSelect: () => {
                     $$("_link").enable();

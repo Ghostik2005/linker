@@ -58,9 +58,9 @@ button {
     color: red;
     }
 
-/*.webix_el_htmlbutton.webixtype_base {
-    background-color: #27ae60;
-    }*/
+.butt {
+    color: #3498db;
+    }
 
 .right {
     text-align: right;

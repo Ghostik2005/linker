@@ -22,6 +22,17 @@ from io import BytesIO
 from libs.connect import fb_local
 
 """
+ALTER TABLE PRC ADD 
+IN_WORK Integer NOT NULL;
+
+COMMIT;
+UPDATE PRC 
+SET IN_WORK = '-1' 
+WHERE IN_WORK IS NULL;
+
+commit;
+
+
 create ASC 
 INDEX IDX_ID_WORK on PRC 
 (IN_WORK);
@@ -61,13 +72,77 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getPrcsSkip(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            search_re = params.get('search')
+            user = params.get('user')
+            stri = ""
+            if search_re:
+                search_re = search_re.replace("'", "").replace('"', "")
+                t1 = search_re.strip()
+                if len(t1) > 0:
+                    exclude = []
+                    for i in range(search_re.count('!')):
+                        ns = search_re.find('!')
+                        ne = search_re.find(' ', ns)
+                        te = search_re[ns+1: ne if ne > 0 else None]
+                        exclude.append(te)
+                        search_re = search_re.replace("!" + te, '')
+                    search_re = search_re.split()
+                    stri = []
+                    for i in range(len(search_re)):
+                        ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                        stri.append('and %s' % ts1)
+                    if len(exclude) > 0:
+                        for i in range(len(exclude)):
+                            ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                            stri.append('and %s' % ts3)
+                    stri = ' '.join(stri)
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
+            from prc r
+            inner join USERS u on (u."GROUP" = r.ID_ORG)
+            WHERE r.n_fg = 1 and u."USER" = ? %s
+            ROWS ? to ?
+            """ % stri
+            opt = (user, start_p, end_p)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8]
+                }
+                _return.append(r)
+            sql = """select count(*)
+                from prc r
+                inner join USERS u on (u."GROUP" = r.ID_ORG)
+                WHERE r.n_fg = 1 and u."USER" = ? %s
+                """ % stri
+            opt = (user,)
+            tot = self.db.request({"sql": sql, "options": opt})[0][0]
+            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+
+        return json.dumps(ret, ensure_ascii=False)
+
     def getSupplUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
             sql = """select r1, v.C_VND, r2 from (
                 select p.ID_VND as r1, count(p.ID_VND) as r2 from PRC p 
                 inner join USERS u on (u."GROUP" = p.ID_ORG)
-                WHERE p.N_FG = 0 and u."USER" = ?
+                WHERE p.N_FG <> 1 and u."USER" = ?
                 GROUP BY p.ID_VND
                 )
             inner join VND v on (v.ID_VND = r1)
@@ -89,27 +164,27 @@ class API:
         return json.dumps(ret, ensure_ascii=False)
 
     def getPrcs(self, params=None, x_hash=None):
+        st_t = time.time()
         if self._check(x_hash):
             id_vnd = params.get('id_vnd')
-            not_link = params.get('not_link')
             user = params.get('user')
-            '''
-            #сбрасываем все настройки в работе
+            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
             sql = """UPDATE PRC r
             SET r.IN_WORK = -1
-            where r.IN_WORK <> -1;
+            where r.IN_WORK = (select u."GROUP" from USERS u where u."USER" = ?)
             """
-            opt = ()
+            opt = (user,)
             res = self.db.execute({"sql": sql, "options": opt})
-            '''
+            t1 = time.time() - st_t
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
-            WHERE r.id_vnd = ? and r.n_fg = ? and u."USER" = ? and r.IN_WORK = -1
+            WHERE r.id_vnd = ? and r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1
             ROWS 1 to 20
             """
-            opt = (id_vnd, not_link, user)
+            opt = (id_vnd, user)
             result = self.db.request({"sql": sql, "options": opt})
+            t2 = time.time() - st_t
             _return = []
             in_work = []
             for row in result:
@@ -126,16 +201,16 @@ class API:
                     "c_index" : row[8]
                 }
                 _return.append(r)
-            ret = {"result": True, "ret_val": _return}
+            t3 = 0
             if len(in_work) > 0:
                 #ins = tuple(in_work)
                 sql = """UPDATE PRC r
                     SET r.IN_WORK = (SELECT u."GROUP" FROM USERS u WHERE u."USER" = ?)
                     where r.SH_PRC in (%s)""" %(', '.join([f'\'{q}\'' for q in in_work]))
                 opt = (user,)
-                print(sql)
-                print(opt)
                 res = self.db.execute({"sql": sql, "options": opt})
+                t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "time": (t1, t2, t3)}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -276,11 +351,13 @@ class API:
         return json.dumps(ret, ensure_ascii=False)
 
     def getSprSearch(self, params=None, x_hash=None):
+        st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
             search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
             t1 = search_re.strip()
             if len(t1) > 0:
                 zavod = []
@@ -320,11 +397,11 @@ class API:
                 inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
                 WHERE %s ORDER by r.C_TOVAR ASC ROWS ? to ?
                 """ % stri
+                t1 = time.time() - st_t
                 opt = (start_p, end_p)
-                #print(sql)
-                #print(opt)
                 _return = []
                 result = self.db.request({"sql": sql, "options": opt})
+                st_t = time.time()
                 for row in result:
                     r = {
                         "id_spr"        : row[0],
@@ -334,13 +411,15 @@ class API:
                         "id_strana"     : row[4],
                     }
                     _return.append(r)
+                t2 = time.time() - st_t
                 sql = """SELECT count(*)
                         FROM SPR r
                         inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
                         WHERE %s""" % stri
                 opt = ()
                 tot = self.db.request({"sql": sql, "options": opt})[0][0]
-                ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
+                t3 = time.time() - st_t
+                ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p, "time": (t1, t2, t3)}
             else:
                 ret = {"result": False, "ret_val": "string error"}
         else:
@@ -473,6 +552,48 @@ class API:
                 ret = {"result": True, "ret_val": _return}
             else:
                 ret = {"result": False, "ret_val": "id_spr error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getSprLnks(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select r.id_spr, r.c_tovar, r.c_zavod
+                    from spr r order by r.id_spr asc
+                    rows 1 to 21
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"          : row[0],
+                    "c_tovar"     : row[1],
+                    "c_zavod_s"     : row[1],
+                    "data"        : []
+                }
+                sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER
+                        FROM LNK r 
+                        JOIN VND v on (v.ID_VND = r.ID_VND)
+                        WHERE r.ID_SPR = ?
+                """
+                opt = (row[0],)
+                #_ret = []
+                res = self.db.request({"sql": sql, "options": opt})
+                for rrr in res:
+                    rr = {
+                        "id"        : rrr[0],
+                        "c_vnd"     : rrr[1],
+                        "id_tovar"  : rrr[2],
+                        "c_tovar"   : rrr[3],
+                        "c_zavod"   : rrr[4],
+                        "dt"        : rrr[5],
+                        "owner"     : rrr[6]
+                    }
+                    r['data'].append(rr)
+                #r['data'] = _ret
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)

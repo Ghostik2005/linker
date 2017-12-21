@@ -75,33 +75,51 @@ export var group = new webix.DataCollection({
             }
         });
 
-function form_navi() {
-    //console.log($$("__dt").config);
-    let c_page = $$("__dt").config.startPos / $$("__dt").config.posPpage;
-    c_page = Math.ceil(c_page);
-    let total_page = $$("__dt").config.totalPos / $$("__dt").config.posPpage;
-    total_page = Math.ceil(total_page);
-    $$("__pager").define('label', "Страница " + c_page + " из " + total_page);
-    $$("__pager").refresh();
-    $$("__count").define('label', "Всего " + $$("__dt").config.totalPos + " записей");
-    $$("__count").refresh();
-    console.log(c_page, total_page);
-    //console.log($$("__pager"));
+export function last_page(view) {
+    let total = $$(view).config.totalPos;
+    let ppp = $$(view).config.posPpage;
+    let lp = (Math.ceil(total/ppp) - 1) * ppp + 1
+    return lp
     }
 
-export function get_spr_search(th, start, count) {
-    let search_str = $$("_spr_search").getValue();
+export function form_navi(view, pager) {
+    let c_page = $$(view).config.startPos / $$(view).config.posPpage;
+    c_page = Math.ceil(c_page);
+    let total_page = $$(view).config.totalPos / $$(view).config.posPpage;
+    total_page = Math.ceil(total_page);
+    let pa = $$(pager).getChildViews()[2]
+    let co = $$(pager).getChildViews()[6]
+    pa.define('label', "Страница " + c_page + " из " + total_page);
+    pa.refresh();
+    co.define('label', "Всего записей: " + $$(view).config.totalPos);
+    co.refresh();
+    console.log(c_page, total_page);
+    }
+
+export function get_data(inp_params) {
+    let th = inp_params.th;
+    let view = inp_params.view;
+    let nav = inp_params.navBar;
+    let start = inp_params.start;
+    let count = inp_params.count;
+    let se_s = inp_params.searchBar;
+    let method = inp_params.method;
+    let search_str = $$(se_s).getValue();
     let user = (th) ? th.app.config.user : "user";
-    let url = (th) ? th.app.config.r_url + "?getSprSearch" : "/linker_logic?getSprSearch";
+    let url = (th) ? th.app.config.r_url + "?" +method: "/linker_logic?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count};
+    $$(view).showProgress({
+        type: "icon",
+        icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+        });
     request(url, params).then(function(data) {
         data = data.json();
         if (data.result) {
-            $$("__dt").clearAll();
-            $$("__dt").parse(data.ret_val);
-            $$("__dt").config.startPos = data.start;
-            $$("__dt").config.totalPos = data.total;
-            form_navi();
+            $$(view).clearAll();
+            $$(view).parse(data.ret_val);
+            $$(view).config.startPos = data.start;
+            $$(view).config.totalPos = data.total;
+            form_navi(view, nav);
         } else {
             webix.message('error');
             };
@@ -111,7 +129,6 @@ export function get_spr_search(th, start, count) {
 export function parse_unlinked_item(th) {
     let c_item = $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
-
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
     let count = "<span style='color: #666666;'>Осталось свести: </span><span style='color: red; font-weight: bold;'>"+ $$("prcs_dc").count() + "</span>";
@@ -148,7 +165,15 @@ export function parse_unlinked_item(th) {
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
     count = $$("__dt").config.posPpage;
-    get_spr_search(th, 1, count);
+    get_data({
+        th: th,
+        view: "__dt",
+        navBar: "__nav",
+        start: 1,
+        count: count,
+        searchBar: "_spr_search",
+        method: "getSprSearch"
+        });
     }
 
 export function get_spr(th, id_spr) {
@@ -166,29 +191,39 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    get_strana_all(app);
-    get_vendor_all(app);
-    get_dv_all(app);
-    get_nds_all(app);
-    get_hran_all(app);
-    get_sezon_all(app);
-    get_group_all(app);
+    setTimeout(get_strana_all, 4000, app)
+    setTimeout(get_vendor_all, 4000, app)
+    setTimeout(get_dv_all, 4000, app)
+    setTimeout(get_nds_all, 5000, app)
+    setTimeout(get_hran_all, 5000, app)
+    setTimeout(get_sezon_all, 6000, app)
+    setTimeout(get_group_all, 6000, app)
     }
 
 export function get_prcs(th, id_vnd) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getPrcs"
-    let params = {"user": user, "id_vnd": +id_vnd, "not_link": 0};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("prcs_dc").clearAll();
-            $$("prcs_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
+    let params = {"user": user, "id_vnd": +id_vnd};
+    
+    let data = request(url, params, !0).response;
+    data = JSON.parse(data);
+    if (data.result) {
+        data = data.ret_val
+        $$("prcs_dc").clearAll();
+        $$("prcs_dc").parse(data);
+    } else {
+        webix.message('error');
+        };
+    //request(url, params).then(function(data) {
+        //data = data.json();
+        //if (data.result) {
+            //data = data.ret_val
+            //$$("prcs_dc").clearAll();
+            //$$("prcs_dc").parse(data);
+        //} else {
+            //webix.message('error');
+            //};
+        //})
     }
 
 export function get_strana_all(app) {

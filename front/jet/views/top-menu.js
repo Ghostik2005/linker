@@ -5,7 +5,9 @@ import NewformView from "../views/new_form";
 import LinksView from "../views/links_form";
 import ConfirmView from "../views/yes-no";
 import {filter_1, get_suppl, get_prcs} from "../views/globals";
-import {parse_unlinked_item, get_spr_search} from "../views/globals";
+import {parse_unlinked_item, get_data} from "../views/globals";
+import UnlinkedView from "../views/unlinked";
+import SkippedView from "../views/skipped";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -32,7 +34,7 @@ export default class TopmenuView extends JetView{
                                 },
                             },
                         {},
-                        {view:"button", type: 'form',
+                        {view:"button", type: 'base',
                             label: "TEST", width: 150,
                             click: () => {
                                 webix.message({
@@ -44,6 +46,15 @@ export default class TopmenuView extends JetView{
                                     //console.log('answer', answer);
                                     //console.log('XMLHttpRequest', XMLHttpRequest);
                                     //}, "post->/linker_logic?getSprSearch&search=аспирин")
+                                }
+                            },
+                        {view:"button", id: '_skip', type: 'htmlbutton',
+                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210,
+                            click: () => {
+
+                                this.popskipped.show("Пропущенные товары")
+
+                                webix.message("Пропущенные товары");
                                 }
                             },
                         {view:"button", id: '_links', type: 'htmlbutton',
@@ -66,11 +77,14 @@ export default class TopmenuView extends JetView{
                         {cols: [
                             {view: "label", label: "", css: "header", name: "_vendor"},
                             {},
-                            {view: "button", type: "form",
-                                label: "Посмотреть все", width: 190,
+                            {view: "button", type: "htmlbutton",
+                                label: "<span class='butt'>Посмотреть все</span>", width: 190,
                                 click: () => {
                                     //выводим новое окно с текущей таблицей "prcs_dc"
-                                    webix.message('просмотр всех несвязанных товаров поставщика');
+                                    let suppl = $$("_suppl").getValue();
+                                    suppl = $$("_suppl").getList().getItem(suppl).c_vnd
+                                    this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
+                                    //webix.message('просмотр всех несвязанных товаров поставщика');
                                     }
                                 },
                             ]},
@@ -85,7 +99,16 @@ export default class TopmenuView extends JetView{
                                     //let value = this.getValue();
                                     let th = this.$scope;
                                     let count = $$("__dt").config.posPpage;
-                                    get_spr_search(th, 1, count);
+                                    get_data({
+                                        th: th,
+                                        view: "__dt",
+                                        navBar: "__nav",
+                                        start: 1,
+                                        count: count,
+                                        searchBar: "_spr_search",
+                                        method: "getSprSearch"
+                                        });
+                                    //get_spr_search(th, 1, count);
                                     }
                                 },
                             },
@@ -160,5 +183,8 @@ export default class TopmenuView extends JetView{
         this.popconfirm = this.ui(ConfirmView);
         this.popnew = this.ui(NewformView);
         this.poplinks = this.ui(LinksView);
+        this.popunlink = this.ui(UnlinkedView);
+        this.popskipped = this.ui(SkippedView);
+        
         }
     }

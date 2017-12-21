@@ -88,8 +88,8 @@ def application(env):
             #content = u'not applicable format. use JSON-formated string'
         else:
             _param.update(_p_http)
-        sys.APPCONF["log"](arg)
-        sys.APPCONF["log"](_param)
+        sys.APPCONF["log"](arg, kind='info:method:')
+        sys.APPCONF["log"](_param, kind='info:params:')
         #arg, _param = args.popitem()
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
 
