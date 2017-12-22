@@ -39,7 +39,7 @@ webix.ready(() => {
         version:    "2017.334.1230",
         start:      "/start/body",
         user:       "admin",
-        r_url:      "/linker_logic",
+        r_url:      "http://saas.local/linker_logic",
         router:     StoreRouter,
         x_api:      "api-key",
         debug:      true
@@ -49,6 +49,8 @@ webix.ready(() => {
     webix.attachEvent("onBeforeAjax", 
         function(mode, url, data, request, headers, files, promise){
             headers["x-api-key"] = app.config.x_api;
+            //headers["Access-Control-Allow-Origin"] = '*';
+            
             }
         );
     //console.log(app);

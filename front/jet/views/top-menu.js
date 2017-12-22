@@ -29,6 +29,7 @@ export default class TopmenuView extends JetView{
                             on: {
                                 onChange: () => {
                                     let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
+                                    
                                     get_prcs(this, id_vnd);
                                     }
                                 },
@@ -125,7 +126,7 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                         {view:"button", type: 'htmlbutton', id: "_link",
-                            label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Объединить (Ctrl+Home)</span>", width: 220,
+                            label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", width: 200,
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
                                 this.popconfirm.show('Связать?');

@@ -358,70 +358,67 @@ class API:
             start_p = 1 if start_p == 0 else start_p
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-            t1 = search_re.strip()
-            if len(t1) > 0:
-                zavod = []
-                exclude = []
-                for i in range(search_re.count('!')):
-                    ns = search_re.find('!')
-                    ne = search_re.find(' ', ns)
-                    te = search_re[ns+1: ne if ne > 0 else None]
-                    exclude.append(te)
-                    search_re = search_re.replace("!" + te, '')
-                for i in range(search_re.count('+')):
-                    ns = search_re.find('+')
-                    ne = search_re.find(' ', ns)
-                    te = search_re[ns+1: ne if ne > 0 else None]
-                    zavod.append(te)
-                    search_re = search_re.replace("+" + te, '')
-                search_re = search_re.split()
-                stri = []
-                for i in range(len(search_re)):
-                    ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
-                    if i == 0:
-                        stri.append(ts1)
-                    else:
-                        stri.append('and %s' % ts1)
-                if len(zavod) > 0:
-                    for i in range(len(zavod)):
-                        ts2 = "lower(z.C_ZAVOD) like lower('%" + zavod[i].strip() + "%')"
-                        stri.append('and %s' % ts2)
-                if len(exclude) > 0:
-                    for i in range(len(exclude)):
-                        ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
-                        stri.append('and %s' % ts3)
-                stri = ' '.join(stri)
-                sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
-                FROM SPR r
-                inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-                inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
-                WHERE %s ORDER by r.C_TOVAR ASC ROWS ? to ?
-                """ % stri
-                t1 = time.time() - st_t
-                opt = (start_p, end_p)
-                _return = []
-                result = self.db.request({"sql": sql, "options": opt})
-                st_t = time.time()
-                for row in result:
-                    r = {
-                        "id_spr"        : row[0],
-                        "c_tovar"       : row[1],
-                        "id_dv"         : row[2],
-                        "id_zavod"      : row[3],
-                        "id_strana"     : row[4],
-                    }
-                    _return.append(r)
-                t2 = time.time() - st_t
-                sql = """SELECT count(*)
-                        FROM SPR r
-                        inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-                        WHERE %s""" % stri
-                opt = ()
-                tot = self.db.request({"sql": sql, "options": opt})[0][0]
-                t3 = time.time() - st_t
-                ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p, "time": (t1, t2, t3)}
-            else:
-                ret = {"result": False, "ret_val": "string error"}
+            sti = "lower(r.C_TOVAR) like lower('%%')"
+            zavod = []
+            exclude = []
+            for i in range(search_re.count('!')):
+                ns = search_re.find('!')
+                ne = search_re.find(' ', ns)
+                te = search_re[ns+1: ne if ne > 0 else None]
+                exclude.append(te)
+                search_re = search_re.replace("!" + te, '')
+            for i in range(search_re.count('+')):
+                ns = search_re.find('+')
+                ne = search_re.find(' ', ns)
+                te = search_re[ns+1: ne if ne > 0 else None]
+                zavod.append(te)
+                search_re = search_re.replace("+" + te, '')
+            search_re = search_re.split()
+            stri = []
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            if len(zavod) > 0:
+                for i in range(len(zavod)):
+                    ts2 = "lower(z.C_ZAVOD) like lower('%" + zavod[i].strip() + "%')"
+                    stri.append('and %s' % ts2)
+            if len(exclude) > 0:
+                for i in range(len(exclude)):
+                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    stri.append('and %s' % ts3)
+            stri = ' '.join(stri) if len(stri) > 0 else sti
+            sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
+            FROM SPR r
+            inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+            inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
+            WHERE %s ORDER by r.C_TOVAR ASC ROWS ? to ?
+            """ % stri
+            t1 = time.time() - st_t
+            opt = (start_p, end_p)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            st_t = time.time()
+            for row in result:
+                r = {
+                    "id_spr"        : row[0],
+                    "c_tovar"       : row[1],
+                    "id_dv"         : row[2],
+                    "id_zavod"      : row[3],
+                    "id_strana"     : row[4],
+                }
+                _return.append(r)
+            t2 = time.time() - st_t
+            sql = """SELECT count(*)
+                    FROM SPR r
+                    inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                    WHERE %s""" % stri
+            opt = ()
+            tot = self.db.request({"sql": sql, "options": opt})[0][0]
+            t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p, "time": (t1, t2, t3)}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -557,19 +554,62 @@ class API:
         return json.dumps(ret, ensure_ascii=False)
 
     def getSprLnks(self, params=None, x_hash=None):
+        st_t = time.time()
         if self._check(x_hash):
-            sql = """select r.id_spr, r.c_tovar, r.c_zavod
-                    from spr r order by r.id_spr asc
-                    rows 1 to 21
-            """
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
+            sti = "lower(r.C_TOVAR) like lower('%%')"
+            exclude = []
+            for i in range(search_re.count('!')):
+                ns = search_re.find('!')
+                ne = search_re.find(' ', ns)
+                te = search_re[ns+1: ne if ne > 0 else None]
+                exclude.append(te)
+                search_re = search_re.replace("!" + te, '')
+            search_re = search_re.split()
+            stri = []
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            if len(exclude) > 0:
+                for i in range(len(exclude)):
+                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    stri.append('and %s' % ts3)
+            stri = ' '.join(stri) if len(stri) > 0 else sti
+            sql = """select count(*)
+                    from spr r
+                    WHERE %s 
+            """ % stri
+            print(sql)
             opt = ()
+            count = self.db.request({"sql": sql, "options": opt})[0][0]
+            sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
+                    from spr r
+                    inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                    inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
+                    WHERE %s 
+                    order by r.id_spr asc
+                    ROWS ? to ?
+            """ % stri
+            t1 = time.time() - st_t
+            opt = (start_p, end_p)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
+            st_t = time.time()
             for row in result:
+                st1 = ' | '.join([str(row[0]), row[1]])
                 r = {
                     "id"          : row[0],
-                    "c_tovar"     : row[1],
-                    "c_zavod_s"     : row[1],
+                    "$row"        : "c_tovar",
+                    "open"        : False,
+                    "c_tovar"     :  st1 if len(row[2]) < 1 else ' | '.join([st1, row[2]]),
+                    #"c_zavod_s"   : row[2],
                     "data"        : []
                 }
                 sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER
@@ -578,7 +618,6 @@ class API:
                         WHERE r.ID_SPR = ?
                 """
                 opt = (row[0],)
-                #_ret = []
                 res = self.db.request({"sql": sql, "options": opt})
                 for rrr in res:
                     rr = {
@@ -587,13 +626,13 @@ class API:
                         "id_tovar"  : rrr[2],
                         "c_tovar"   : rrr[3],
                         "c_zavod"   : rrr[4],
-                        "dt"        : rrr[5],
+                        "dt"        : str(rrr[5]),
                         "owner"     : rrr[6]
                     }
                     r['data'].append(rr)
-                #r['data'] = _ret
                 _return.append(r)
-            ret = {"result": True, "ret_val": _return}
+            t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "time": (t1, t3), "total": count, "start": start_p}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -823,7 +862,35 @@ class SCGIServer:
         #return 403;
         #}
 
-        limit_except POST HEAD{
+         if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            #add_header 'Access-Control-Allow-Credentials' 'true';
+            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+         }
+         if ($request_method = 'POST') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            #add_header 'Access-Control-Allow-Credentials' 'true';
+            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+         }
+         
+         if ($request_method = 'HEAD') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            #add_header 'Access-Control-Allow-Credentials' 'true';
+            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+         }
+
+
+        limit_except POST HEAD OPTIONS GET{
             deny all;
         }
         include scgi_params;

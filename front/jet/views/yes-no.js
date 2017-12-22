@@ -15,7 +15,7 @@ export default class ConfirmView extends JetView{
                         }
                     },
                 elements: [
-                    {height: 66},
+                    {height: 44},
                     //{view: "label", label: "Подтвердите действие", width: 320, height: 44},
                     {cols: [
                         {view: "button", type: "base", label: "Нет", width: 120, height: 44,
@@ -25,7 +25,7 @@ export default class ConfirmView extends JetView{
                                 }
                             },
                         {},
-                        {view: "button", type: "base", label: "Да (Enter)", width: 120, height: 44, id: "_yes",
+                        {view: "button", type: "base", label: "Да (Enter)", width: 120, height: 44, localId: "_yes",
                             click: () => {
                                 webix.message("Очищаем форму, отправляем данные на сервер и закрываем");
                                 console.log(this.hide())

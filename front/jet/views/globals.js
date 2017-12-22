@@ -1,6 +1,5 @@
 "use strict";
 
-
 export var prcs = new webix.DataCollection({
         id: "prcs_dc",
         on: {
@@ -16,7 +15,6 @@ export var strana = new webix.DataCollection({
         id: "strana_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -25,7 +23,6 @@ export var vendor = new webix.DataCollection({
         id: "vendor_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -34,7 +31,6 @@ export var dv = new webix.DataCollection({
         id: "dv_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -43,7 +39,6 @@ export var nds = new webix.DataCollection({
         id: "nds_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -52,7 +47,6 @@ export var sezon = new webix.DataCollection({
         id: "sezon_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -61,7 +55,6 @@ export var hran = new webix.DataCollection({
         id: "hran_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -70,7 +63,6 @@ export var group = new webix.DataCollection({
         id: "group_dc",
         on: {
             onAfterLoad: function() {
-                //console.log(this)
                 }
             }
         });
@@ -84,16 +76,15 @@ export function last_page(view) {
 
 export function form_navi(view, pager) {
     let c_page = $$(view).config.startPos / $$(view).config.posPpage;
-    c_page = Math.ceil(c_page);
     let total_page = $$(view).config.totalPos / $$(view).config.posPpage;
     total_page = Math.ceil(total_page);
     let pa = $$(pager).getChildViews()[2]
     let co = $$(pager).getChildViews()[6]
+    c_page = (total_page !== 0) ? Math.ceil(c_page) : 0;
     pa.define('label', "Страница " + c_page + " из " + total_page);
     pa.refresh();
     co.define('label', "Всего записей: " + $$(view).config.totalPos);
     co.refresh();
-    console.log(c_page, total_page);
     }
 
 export function get_data(inp_params) {
@@ -106,7 +97,7 @@ export function get_data(inp_params) {
     let method = inp_params.method;
     let search_str = $$(se_s).getValue();
     let user = (th) ? th.app.config.user : "user";
-    let url = (th) ? th.app.config.r_url + "?" +method: "/linker_logic?" + method;
+    let url = (th) ? th.app.config.r_url + "?" +method: "http://saas.local/linker_logic?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count};
     $$(view).showProgress({
         type: "icon",
@@ -137,10 +128,6 @@ export function parse_unlinked_item(th) {
     n_item['_vendor'] = c_item.c_zavod;
     n_item['p_name'] = c_item.c_tovar;
     $$("_names_bar").parse(n_item);
-    //$$("_names_bar").elements._name.setValue(name);
-    //$$("_names_bar").elements._count.setValue(count);
-    //$$("_names_bar").elements._vendor.setValue(c_item.c_zavod);
-    
     let buf = c_item.c_tovar.split(' ');
     let sta = 0;
     if (buf[sta].length < 4) sta += 1;
@@ -191,13 +178,13 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    setTimeout(get_strana_all, 4000, app)
-    setTimeout(get_vendor_all, 4000, app)
-    setTimeout(get_dv_all, 4000, app)
-    setTimeout(get_nds_all, 5000, app)
-    setTimeout(get_hran_all, 5000, app)
-    setTimeout(get_sezon_all, 6000, app)
-    setTimeout(get_group_all, 6000, app)
+    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    setTimeout(get_refs, 6000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    setTimeout(get_refs, 6000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
     }
 
 export function get_prcs(th, id_vnd) {
@@ -226,118 +213,37 @@ export function get_prcs(th, id_vnd) {
         //})
     }
 
-export function get_strana_all(app) {
+export function get_refs(inp_params){
+    let app = inp_params.app;
+    let method = inp_params.method;
+    let store = inp_params.store;
     let user = app.config.user;
-    let url = app.config.r_url + "?getStranaAll"
+    let url = app.config.r_url + "?" + method
     let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
+    let type = inp_params.type;
+    if (type !== "sync") {
+        request(url, params).then(function(data) {
+            data = data.json();
+            if (data.result) {
+                data = data.ret_val
+                $$(store).clearAll();
+                $$(store).parse(data);
+            } else {
+                webix.message('error');
+                };
+            })
+    } else {
+        let data = request(url, params, !0).response;
+        data = JSON.parse(data);
         if (data.result) {
             data = data.ret_val
-            $$("strana_dc").clearAll();
-            $$("strana_dc").parse(data);
+            $$(store).clearAll();
+            $$(store).parse(data);
         } else {
             webix.message('error');
             };
-        })
+        };
     }
-
-export function get_vendor_all(app) {
-    let user = app.config.user;
-    let url = app.config.r_url + "?getVendorAll"
-    let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("vendor_dc").clearAll();
-            $$("vendor_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
-    }
-
-export function get_dv_all(app) {
-    let user = app.config.user;
-    let url = app.config.r_url + "?getDvAll"
-    let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("dv_dc").clearAll();
-            $$("dv_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
-    }
-
-export function get_nds_all(app) {
-    let user = app.config.user;
-    let url = app.config.r_url + "?getNdsAll"
-    let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("nds_dc").clearAll();
-            $$("nds_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
-    }
-
-export function get_hran_all(app) {
-    let user = app.config.user;
-    let url = app.config.r_url + "?getHranAll"
-    let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("hran_dc").clearAll();
-            $$("hran_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
-    }
-
-export function get_sezon_all(app) {
-    let user = app.config.user;
-    let url = app.config.r_url + "?getSezonAll"
-    let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("sezon_dc").clearAll();
-            $$("sezon_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
-    }
-
-export function get_group_all(app) {
-    let user = app.config.user;
-    let url = app.config.r_url + "?getGroupAll"
-    let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
-            $$("group_dc").clearAll();
-            $$("group_dc").parse(data);
-        } else {
-            webix.message('error');
-            };
-        })
-    }
-    
 
 export function get_suppl(view, th) {
     let user = th.app.config.user;
@@ -408,39 +314,3 @@ export function deleteCookie (name) {
         })
     }
 
-
-/*
-        var base = 0;
-
-        function loadNext(){
-            base += 10;
-            grida.loadNext(10, base);
-        }
-        function loadPrev(){
-            if (base<=0) return;
-            base -= 10;
-            grida.loadNext(10, base);
-        }
-
-        var grida = webix.ui({
-            container:"testA",
-            view:"datatable",
-            columns:[
-                { id:"id", header:"", css:{"text-align":"center"}, width:50 },
-                { id:"package", header:"Name",          width:200 },
-                { id:"section", header:"Section",       width:120 },
-                { id:"size",    header:"Size" ,         width:80  },
-                { id:"architecture",    header:"PC",    width:60  }
-            ],
-            on:{
-                //clear self before data loading
-                "data->onParse":function(){
-                    this.clearAll();
-                    this.data.url = "data/data.php";
-                }
-            },
-            yCount:10,
-            autowidth:true
-        });
-        grida.loadNext(10,0,null,"data/data_dyn.php");
-*/

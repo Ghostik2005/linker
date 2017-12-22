@@ -37,6 +37,11 @@ export default class UnlinkedView extends JetView{
                     parse_unlinked_item(this);
                     this.getRoot().hide();
                     },
+                onKeyPress: function(code, e){
+                    if (13 === code) {
+                        this.callEvent("onItemDblClick");
+                        }
+                    },
                 onBeforeSelect: () => {
                     }
                 }

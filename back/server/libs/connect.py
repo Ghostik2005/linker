@@ -41,7 +41,7 @@ class fb_local:
             try:
                 cur.execute(sql, options)
                 ret = cur.fetchall()
-            except:
+            except Exception as Err:
                 ret = -2
                 #self._log(traceback.format_exc(), kind="error:sql")
                 self._log(Err, kind="error:sql")
@@ -59,7 +59,7 @@ class fb_local:
         ret = -1
         try:
             con = fdb.connect(**self.connect_params)
-        except:
+        except Exception as Err:
             self._log(traceback.format_exc(), kind="error:connection")
         else:
             cur = con.cursor()
@@ -87,7 +87,7 @@ class fb_local:
         ret = -1
         try:
             con = fdb.connect(**self.connect_params)
-        except:
+        except Exception as Err:
             self._log(traceback.format_exc(), kind="error:connection")
         else:
             cur = con.cursor()

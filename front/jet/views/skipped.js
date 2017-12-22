@@ -152,6 +152,8 @@ export default class SkippedView extends JetView{
                         }
                     },
                 onItemDblClick: function(item) {
+                    webix.message({"type": "debug", "text": "Выполняем какое-то действие"});
+                    webix.message({"type": "debug", "text": "Например - возврат позиции на сведение"});
                     //item = this.getItem(item.row);
                     //item = item.id_spr;
                     //item = get_spr(this.$scope, item);
@@ -160,6 +162,11 @@ export default class SkippedView extends JetView{
                     //item["v_name"] = "Производитель: " + item.c_zavod;
                     //item["dv_name"] = "Действующее вещество: " + item.c_dv;
                     //this.$scope.popnew.show("Редактирование записи " + item.id_spr, item);
+                    },
+                onKeyPress: function(code, e){
+                    if (13 === code) {
+                        this.callEvent("onItemDblClick");
+                        }
                     },
                 onAfterLoad: function() {
                     this.hideProgress();

@@ -174,7 +174,12 @@ export default class SprView extends JetView{
                 onBeforeSelect: () => {
                     $$("_link").enable();
                     $$("_add").enable();
-                    }
+                    },
+                onKeyPress: function(code, e){
+                    if (13 === code) {
+                        this.callEvent("onItemDblClick");
+                        }
+                    },
                 }
             }
         var dt = {
