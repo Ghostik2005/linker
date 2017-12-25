@@ -39,6 +39,7 @@ webix.ready(() => {
         version:    "2017.334.1230",
         start:      "/start/body",
         user:       "admin",
+        //user:       "stasya",
         r_url:      "http://saas.local/linker_logic",
         router:     StoreRouter,
         x_api:      "api-key",

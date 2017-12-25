@@ -67,12 +67,16 @@ class fb_local:
             options = params.get('options')
             try:
                 cur.execute(sql, options)
-                con.commit()
-                ret = cur.fetchall()
+                try:
+                    ret = cur.fetchall()
+                except Exception as Err:
+                    print(Err)
+                finally:
+                    con.commit()
             except Exception as Err:
                 ret = -2
-                #self._log(traceback.format_exc(), kind="error:sql")
-                self._log(Err, kind="error:sql")
+                self._log(traceback.format_exc(), kind="error:sql")
+                #self._log(Err, kind="error:sql")
             finally:
                 cur.close()
                 con.close()
@@ -97,8 +101,13 @@ class fb_local:
                 ret = []
                 for i in options:
                     cur.execute(sql, options)
-                    con.commit()
-                    reti = cur.fetchall()
+                    try:
+                        reti = cur.fetchall()
+                    except Exception as Err:
+                        reti = -2
+                        print(Err)
+                    finally:
+                        con.commit()
                     ret.append(reti[0])
             except Exception as Err:
                 ret = -2

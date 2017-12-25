@@ -8,6 +8,7 @@ import {filter_1, get_suppl, get_prcs} from "../views/globals";
 import {parse_unlinked_item, get_data} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import SkippedView from "../views/skipped";
+import {prcs, delPrc} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -29,7 +30,6 @@ export default class TopmenuView extends JetView{
                             on: {
                                 onChange: () => {
                                     let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
-                                    
                                     get_prcs(this, id_vnd);
                                     }
                                 },
@@ -52,9 +52,7 @@ export default class TopmenuView extends JetView{
                         {view:"button", id: '_skip', type: 'htmlbutton',
                             label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210,
                             click: () => {
-
                                 this.popskipped.show("Пропущенные товары")
-
                                 webix.message("Пропущенные товары");
                                 }
                             },
@@ -78,6 +76,12 @@ export default class TopmenuView extends JetView{
                         {cols: [
                             {view: "label", label: "", css: "header", name: "_vendor"},
                             {},
+                            {view: "button", type: "htmlbutton",
+                                label: "<span class='butt'>Обновить</span>", width: 190,
+                                click: () => {
+                                    webix.message('Обновить списки');
+                                    }
+                                },
                             {view: "button", type: "htmlbutton",
                                 label: "<span class='butt'>Посмотреть все</span>", width: 190,
                                 click: () => {
@@ -115,7 +119,12 @@ export default class TopmenuView extends JetView{
                             },
                         {view:"button", type: 'htmlbutton',id: "_add",
                             label: "Добавить (Ins)", width: 140,
-                            hotkey: "insert", disabled: !true,
+                            hotkey: "insert", disabled: true,
+                            on: {
+                                onAfterRender: () => {
+                                    if (this.app.config.user === "admin") $$("_add").enable();
+                                    }
+                                },
                             click: () => {
                                 let item = {}
                                 let name = $$("_names_bar").getValues().p_name;
@@ -153,7 +162,14 @@ export default class TopmenuView extends JetView{
                             label: "Пропустить (Ctrl+M)", width: 160,
                             hotkey: "m+ctrl", disabled: !true,
                             click: () => {
-                                this.popconfirm.show('Пропустить?');
+                                console.log('prcs', prcs);
+                                let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
+                                let params = {"1": "one"};
+                                params["command"] = "?skipLnk";
+                                params["sh_prc"] = sh_prc;
+                                params["type"] = "async";
+                                params["callback"] = delPrc;
+                                this.popconfirm.show('Пропустить?', params);
                                 }
                             },
                         {view:"button", type: 'htmlbutton',

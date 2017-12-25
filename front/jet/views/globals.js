@@ -97,7 +97,7 @@ export function get_data(inp_params) {
     let method = inp_params.method;
     let search_str = $$(se_s).getValue();
     let user = (th) ? th.app.config.user : "user";
-    let url = (th) ? th.app.config.r_url + "?" +method: "http://saas.local/linker_logic?" + method;
+    let url = (th) ? th.app.config.r_url + "?" + method: "http://saas.local/linker_logic?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count};
     $$(view).showProgress({
         type: "icon",
@@ -263,6 +263,19 @@ export function get_suppl(view, th) {
         }).then(function() {
             init_first(th.app)
         })
+    }
+
+export function delPrc(data) {
+    console.log('call', data);
+    let sh_prc = data.sh_prc;
+    prcs.remove(prcs.getCursor());
+    //установить курсор на следующую позицию и распарсить
+    if (prcs.count() < 1){
+        console.log("удаляем из списков");
+    } else {
+        console.log('parse', prcs);
+        parse_unlinked_item();
+        };
     }
     
 export function filter_1(item, value) {

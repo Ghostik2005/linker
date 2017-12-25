@@ -106,18 +106,23 @@ export default class LinksView extends JetView{
                                                 }
                                             },
                                         onItemDblClick: function (item, ii, iii) {
-                                            console.log(item);
+                                            //console.log(item);
                                             let level = this.getSelectedItem().$level;
                                             if (level === 1) {
-                                                item = item.row;
-                                                item = get_spr(this.$scope, item);
-                                                item["s_name"] = "Страна: " + item.c_strana;
-                                                item["t_name"] = "Название товара: " + item.c_tovar;
-                                                item["v_name"] = "Производитель: " + item.c_zavod;
-                                                item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                                                this.$scope.popnew.show("Редактирование записи " + item.id_spr, item);
+                                                if (this.$scope.app.config.user === 'admin') {
+                                                    webix.message('admin');
+                                                    item = item.row;
+                                                    item = get_spr(this.$scope, item);
+                                                    item["s_name"] = "Страна: " + item.c_strana;
+                                                    item["t_name"] = "Название товара: " + item.c_tovar;
+                                                    item["v_name"] = "Производитель: " + item.c_zavod;
+                                                    item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                                                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, item);
+                                                } else {
+                                                    webix.message({"type": "error", "text": "Редактирование запрещено"})
+                                                    };
                                             } else if (level === 2) {
-                                                this.$scope.popconfirm.show('Разорвать?');
+                                                this.$scope.popconfirm.show('Разорвать связку?');
                                                 };
                                             },
                                         onKeyPress: function(code, e){

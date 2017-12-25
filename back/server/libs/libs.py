@@ -637,6 +637,59 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def delLnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sh_prc = params.get('sh_prc')
+            if sh_prc:
+                sql = """delete from lnk r WHERE sh_prc = ? returning r.SH_PRC, r.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT,
+    r.OWNER, r.NEWFLAG"""
+                opt = (sh_prc,)
+                _return = []
+                result = self.db.execute({"sql": sql, "options": opt})
+                for row in result:
+                    _ret = []
+                    res = self.db.execute({"sql": sql, "options": row})
+                    r = {
+                        "id"          : row[1],
+                        "nds"         : row[0]
+                    }
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "hash absent"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def skipLnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sh_prc = params.get('sh_prc')
+            user = params.get('user')
+            sql = """SELECT r."GROUP" FROM USERS r where r."USER" = ?"""
+            opt = (user,)
+            user_id = self.db.request({"sql": sql, "options": opt})[0][0]
+            iid = 1 if user_id == 0 else user_id
+            if sh_prc:
+                sql = """update PRC r set r.N_FG = ?, r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG"""
+                opt = (iid, sh_prc)
+                print(sql)
+                print(opt)
+                _return = []
+                result = self.db.execute({"sql": sql, "options": opt})
+                print(result)
+                for row in result:
+                    r = {
+                        "sh_prc"    : row[0]
+                    }
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "hash error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
 
 class fLock:
     """
