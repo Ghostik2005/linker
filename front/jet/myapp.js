@@ -3,6 +3,7 @@ import "./styles/styles.css";
 //import "./libs/webix/skin.js";
 import {JetApp, JetView} from "webix-jet";
 import {StoreRouter} from "webix-jet";
+import {init_first} from "./views/globals";
 
 webix.ready(() => {
     webix.protoUI({
@@ -46,15 +47,14 @@ webix.ready(() => {
         debug:      true
     });
     app.render();
-
+    
+    init_first(app);
+    
     webix.attachEvent("onBeforeAjax", 
         function(mode, url, data, request, headers, files, promise){
             headers["x-api-key"] = app.config.x_api;
-            //headers["Access-Control-Allow-Origin"] = '*';
-            
             }
         );
-    //console.log(app);
 
     app.attachEvent("app:error:resolve", function(name, error){
         window.console.error(error);

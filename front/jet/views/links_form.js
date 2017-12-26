@@ -7,6 +7,7 @@ import {prcs} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
 import ConfirmView from "../views/yes-no";
+import UnlinkView from "../views/unlink";
 
 export default class LinksView extends JetView{
     config(){
@@ -14,10 +15,15 @@ export default class LinksView extends JetView{
             let ni = "<div>" + value + "</div>";
             //ni = (obj.c_zavod_s) ? ni   + "<br>" + obj.c_zavod_s + "</div>" : ni  + "</div>";
             let ret = common.treetable(obj, common) + ni;
-            console.log(obj, value);
+            //console.log(obj, value);
             return ret
             }
-            
+        
+        function delLnk() {
+            let cid = $$("__tt").getSelectedItem().id;
+            $$("__tt").remove(cid);
+            }
+        
         return {view: "cWindow",
             width: document.documentElement.clientWidth * 0.8,
             height: document.documentElement.clientHeight * 0.8,
@@ -66,11 +72,11 @@ export default class LinksView extends JetView{
                                                 }
                                             },
                                         },
-                                    {view: "checkbox", labelRight: "Поиск по словарю", labelWidth: 0},
+                                    {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1},
                                     {view:"button", type: 'htmlbutton', id: "_break", disabled: true,
                                         label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
                                         click: () => {
-                                            this.popconfirm.show('Разорвать?');
+                                            $$("__tt").callEvent("onItemDblClick");
                                             }
                                         },
                                     ]},
@@ -84,10 +90,10 @@ export default class LinksView extends JetView{
                                     borderless: true,
                                     rowHeight: 30,
                                     fixedRowHeight:false,
+                                    old_stri: " ",
                                     columns: [
                                         {id: "c_tovar", header: "Наименование" , fillspace: true,
                                             template:"<span>{common.treetable()} #c_tovar#</span>" 
-                                            //template: linksTempl
                                             },
                                         {id: "c_zavod", header: "Производитель", width: 250},
                                         {id: "c_vnd", header: "Поставщик", width: 200},
@@ -106,11 +112,10 @@ export default class LinksView extends JetView{
                                                 }
                                             },
                                         onItemDblClick: function (item, ii, iii) {
-                                            //console.log(item);
                                             let level = this.getSelectedItem().$level;
                                             if (level === 1) {
                                                 if (this.$scope.app.config.user === 'admin') {
-                                                    webix.message('admin');
+                                                    //webix.message('admin');
                                                     item = item.row;
                                                     item = get_spr(this.$scope, item);
                                                     item["s_name"] = "Страна: " + item.c_strana;
@@ -122,7 +127,14 @@ export default class LinksView extends JetView{
                                                     webix.message({"type": "error", "text": "Редактирование запрещено"})
                                                     };
                                             } else if (level === 2) {
-                                                this.$scope.popconfirm.show('Разорвать связку?');
+                                                let sh_prc = $$("__tt").getSelectedItem().id;
+                                                let params = {};
+                                                params["action"] = "return";
+                                                params["command"] = "?delLnk";
+                                                params["sh_prc"] = sh_prc;
+                                                params["type"] = "async";
+                                                params["callback"] = delLnk; //обновление списка
+                                                this.$scope.popunlink.show("Причина разрыва связкии?", params);
                                                 };
                                             },
                                         onKeyPress: function(code, e){
@@ -235,6 +247,7 @@ export default class LinksView extends JetView{
     init() {
         this.popnew = this.ui(NewformView);
         this.popconfirm = this.ui(ConfirmView);
+        this.popunlink = this.ui(UnlinkView);
         }
     }
 

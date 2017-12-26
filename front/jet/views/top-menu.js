@@ -49,11 +49,16 @@ export default class TopmenuView extends JetView{
                                     //}, "post->/linker_logic?getSprSearch&search=аспирин")
                                 }
                             },
+                        {view: "button", type: "htmlbutton",
+                            label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
+                            click: () => {
+                                get_suppl("_suppl", this)
+                                }
+                            },
                         {view:"button", id: '_skip', type: 'htmlbutton',
                             label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210,
                             click: () => {
                                 this.popskipped.show("Пропущенные товары")
-                                webix.message("Пропущенные товары");
                                 }
                             },
                         {view:"button", id: '_links', type: 'htmlbutton',
@@ -69,27 +74,26 @@ export default class TopmenuView extends JetView{
                     css: "header",
                     rows: [
                         {cols: [
-                            {view: "label", label: "", name: "_name"},
-                            {},
+                            {view: "label", label: "", name: "_name", fillspace: 1},
+                            {width: 100},
                             {view: "label", label: "", css: 'right', name: "_count"},
                             ]},
                         {cols: [
                             {view: "label", label: "", css: "header", name: "_vendor"},
                             {},
                             {view: "button", type: "htmlbutton",
-                                label: "<span class='butt'>Обновить</span>", width: 190,
+                                label: "<span class='butt'>Обновить сессию</span>", width: 230,
                                 click: () => {
-                                    webix.message('Обновить списки');
+                                    let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
+                                    get_prcs(this, id_vnd);
                                     }
                                 },
                             {view: "button", type: "htmlbutton",
-                                label: "<span class='butt'>Посмотреть все</span>", width: 190,
+                                label: "<span class='butt'>Посмотреть все из сессии</span>", width: 230,
                                 click: () => {
-                                    //выводим новое окно с текущей таблицей "prcs_dc"
                                     let suppl = $$("_suppl").getValue();
                                     suppl = $$("_suppl").getList().getItem(suppl).c_vnd
                                     this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
-                                    //webix.message('просмотр всех несвязанных товаров поставщика');
                                     }
                                 },
                             ]},
@@ -101,7 +105,6 @@ export default class TopmenuView extends JetView{
                             keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
                             on: {
                                 onTimedKeyPress: function(code, event) {
-                                    //let value = this.getValue();
                                     let th = this.$scope;
                                     let count = $$("__dt").config.posPpage;
                                     get_data({
@@ -113,7 +116,6 @@ export default class TopmenuView extends JetView{
                                         searchBar: "_spr_search",
                                         method: "getSprSearch"
                                         });
-                                    //get_spr_search(th, 1, count);
                                     }
                                 },
                             },
@@ -121,14 +123,13 @@ export default class TopmenuView extends JetView{
                             label: "Добавить (Ins)", width: 140,
                             hotkey: "insert", disabled: true,
                             on: {
-                                onAfterRender: () => {
-                                    if (this.app.config.user === "admin") $$("_add").enable();
+                                onAfterRender: function () {
+                                    if (this.$scope.app.config.user === "admin") this.enable();
                                     }
                                 },
                             click: () => {
                                 let item = {}
                                 let name = $$("_names_bar").getValues().p_name;
-                                console.log(name);
                                 item['t_name'] = "Название товара:   " + name;
                                 item['c_tovar'] = name.toUpperCase();
                                 this.popnew.show("Добавление в справочник", item);
@@ -138,7 +139,17 @@ export default class TopmenuView extends JetView{
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", width: 200,
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
-                                this.popconfirm.show('Связать?');
+                                let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
+                                let id_spr = $$("__dt").getSelectedItem().id_spr
+                                let params = {};
+                                params["th"] = this;
+                                params["command"] = "?setLnk";
+                                params["sh_prc"] = sh_prc;
+                                params["id_spr"] = id_spr;
+                                params["type"] = "async";
+                                params["callback"] = delPrc; //удаляем из базы, обновляем списки
+                                this.popconfirm.show('Связать?', params);
+
                                 }
                             },
                         {view:"button", type: 'htmlbutton',
@@ -162,9 +173,9 @@ export default class TopmenuView extends JetView{
                             label: "Пропустить (Ctrl+M)", width: 160,
                             hotkey: "m+ctrl", disabled: !true,
                             click: () => {
-                                console.log('prcs', prcs);
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
-                                let params = {"1": "one"};
+                                let params = {};
+                                params["th"] = this;
                                 params["command"] = "?skipLnk";
                                 params["sh_prc"] = sh_prc;
                                 params["type"] = "async";
@@ -195,8 +206,6 @@ export default class TopmenuView extends JetView{
         }
     init() {
         get_suppl("_suppl", this);
-        //console.log(this);
-        //console.log($$("_suppl"))
         this.popconfirm = this.ui(ConfirmView);
         this.popnew = this.ui(NewformView);
         this.poplinks = this.ui(LinksView);

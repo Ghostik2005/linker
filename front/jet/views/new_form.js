@@ -72,7 +72,12 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         },
-                                    {view: "button", type: "base", label: "+", width: 30,
+                                    {view: "button", type: "base", label: "+", width: 30, disabled: true,
+                                        on: {
+                                            onAfterRender: function () {
+                                                if (this.$scope.app.config.user === "admin") this.enable();
+                                                }
+                                            },
                                         click: () => {
                                             this.popstri.show("Добавление производителя");
                                             }
@@ -99,7 +104,12 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         },
-                                    {view: "button", type: "base", label: "+", width: 30,
+                                    {view: "button", type: "base", label: "+", width: 30, disabled: true,
+                                        on: {
+                                            onAfterRender: function () {
+                                                if (this.$scope.app.config.user === "admin") this.enable();
+                                                }
+                                            },
                                         click: () => {
                                             this.popstri.show("Добавление д.вещества");
                                             }
@@ -108,7 +118,12 @@ export default class NewformView extends JetView{
                                 {view: "label", label:"Штрих-код:"},
                                 {cols: [
                                     {view:"text", label: "", value: "", readonly: true, name: "barcode"},
-                                    {view: "button", type: "base", label: "+", width: 30,
+                                    {view: "button", type: "base", label: "+", width: 30, disabled: true,
+                                    on: {
+                                        onAfterRender: function () {
+                                            if (this.$scope.app.config.user === "admin") this.enable();
+                                            }
+                                        },
                                         click: () => {
                                             this.popstri.show("Добавление ш.кода");
                                             }
@@ -213,9 +228,31 @@ export default class NewformView extends JetView{
                                     //console.log('root/body/child', this.getRoot().getBody().getChildViews()[0].getChildViews());
                                     }
                                 },
-                            {view: "button", type: "base", label: "Сохранить", width: 120, height: 32,
+                            {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
+                                on: {
+                                    onAfterRender: function () {
+                                        if (this.$scope.app.config.user === "admin") this.enable();
+                                        }
+                                    },
                                 click: () => {
-                                    webix.message("Очищаем форму, отправляем данные на сервер и закрываем");
+                                    let left_f = this.$$("new_form").getValues();
+                                    let right_f = this.$$("new_f_right").getValues();
+                                    let item = {};
+                                    item["id_spr"] = (left_f.id_spr) ? left_f.id_spr : -1;
+                                    item["barcode"] = left_f.barcode;
+                                    item["c_tovar"] = left_f.c_tovar;
+                                    item["id_strana"] = left_f.id_strana;
+                                    item["id_zavid"] = left_f.id_zavod;
+                                    item["id_dv"] = left_f.id_dv;
+                                    item["c_opisanie"] = left_f.c_opisanie;
+                                    item["prescr"] = (right_f._prescr ===  1) ? true : false;
+                                    item["mandat"] = (right_f._mandat ===  1) ? true : false;
+                                    item["id_sezon"] = right_f.id_sezon;
+                                    item["id_usloviya"] = right_f.id_usloviya;
+                                    item["id_group"] = right_f.id_group;
+                                    item["id_nds"] = right_f.id_nds;
+                                    console.log('item', item);
+                                    webix.message("Очищаем форму, отправляем данные на сервер и закрываем если все в порядке");
                                     this.hide();
                                     }
                                 }

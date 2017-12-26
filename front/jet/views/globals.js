@@ -99,22 +99,28 @@ export function get_data(inp_params) {
     let user = (th) ? th.app.config.user : "user";
     let url = (th) ? th.app.config.r_url + "?" + method: "http://saas.local/linker_logic?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count};
-    $$(view).showProgress({
-        type: "icon",
-        icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-        });
-    request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            $$(view).clearAll();
-            $$(view).parse(data.ret_val);
-            $$(view).config.startPos = data.start;
-            $$(view).config.totalPos = data.total;
-            form_navi(view, nav);
+    let old_stri = $$(view).config.old_stri;
+    if (old_stri !== search_str) {
+        $$(view).config.old_stri = search_str;
+        $$(view).showProgress({
+            type: "icon",
+            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+            });
+        request(url, params).then(function(data) {
+            data = data.json();
+            if (data.result) {
+                $$(view).clearAll();
+                $$(view).parse(data.ret_val);
+                $$(view).config.startPos = data.start;
+                $$(view).config.totalPos = data.total;
+                form_navi(view, nav);
+            } else {
+                webix.message('error');
+                };
+            });
         } else {
-            webix.message('error');
+            console.log('yes');
             };
-        })
     }
 
 export function parse_unlinked_item(th) {
@@ -122,7 +128,7 @@ export function parse_unlinked_item(th) {
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
-    let count = "<span style='color: #666666;'>Осталось свести: </span><span style='color: red; font-weight: bold;'>"+ $$("prcs_dc").count() + "</span>";
+    let count = "<span style='color: #666666;'>Осталось свести в текущей сессии: </span><span style='color: red; font-weight: bold;'>"+ $$("prcs_dc").count() + "</span>";
     n_item['_name'] = name;
     n_item['_count'] = count;
     n_item['_vendor'] = c_item.c_zavod;
@@ -150,6 +156,7 @@ export function parse_unlinked_item(th) {
     s_stri = s_stri.replace("+", " ");
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
+    $$("prcs_dc").config.old_stri = s_stri;
     $$("_spr_search").setValue(s_stri);
     count = $$("__dt").config.posPpage;
     get_data({
@@ -178,39 +185,38 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    setTimeout(get_refs, 6000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    setTimeout(get_refs, 6000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    setTimeout(get_refs, 5500, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    setTimeout(get_refs, 4500, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
     }
 
 export function get_prcs(th, id_vnd) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getPrcs"
     let params = {"user": user, "id_vnd": +id_vnd};
-    
-    let data = request(url, params, !0).response;
-    data = JSON.parse(data);
-    if (data.result) {
-        data = data.ret_val
-        $$("prcs_dc").clearAll();
-        $$("prcs_dc").parse(data);
-    } else {
-        webix.message('error');
-        };
-    //request(url, params).then(function(data) {
-        //data = data.json();
-        //if (data.result) {
-            //data = data.ret_val
-            //$$("prcs_dc").clearAll();
-            //$$("prcs_dc").parse(data);
-        //} else {
-            //webix.message('error');
-            //};
-        //})
+    //let data = request(url, params, !0).response;
+    //data = JSON.parse(data);
+    //if (data.result) {
+        //data = data.ret_val
+        //$$("prcs_dc").clearAll();
+        //$$("prcs_dc").parse(data);
+    //} else {
+        //webix.message('error');
+        //};
+    request(url, params).then(function(data) {
+        data = data.json();
+        if (data.result) {
+            data = data.ret_val
+            $$("prcs_dc").clearAll();
+            $$("prcs_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
     }
 
 export function get_refs(inp_params){
@@ -261,19 +267,26 @@ export function get_suppl(view, th) {
             webix.message('error');
             };
         }).then(function() {
-            init_first(th.app)
+            //init_first(th.app)
         })
     }
 
-export function delPrc(data) {
-    console.log('call', data);
-    let sh_prc = data.sh_prc;
-    prcs.remove(prcs.getCursor());
-    //установить курсор на следующую позицию и распарсить
+export function delPrc(inp_data, th) {
+    let sh_prc = inp_data.sh_prc;
+    let cursor =prcs.getCursor() 
+    let data = prcs.data.order;
+    let _c;
+    data.forEach(function(item, i, data) {
+        if (item === cursor) _c = i
+        });
+    _c = _c + 1;
+    if (_c === prcs.count()-1) _c = 0;
+    prcs.remove(cursor);
+    cursor = prcs.data.order[+_c]
+    prcs.setCursor(cursor);
     if (prcs.count() < 1){
-        console.log("удаляем из списков");
+        get_suppl("_suppl", th)
     } else {
-        console.log('parse', prcs);
         parse_unlinked_item();
         };
     }

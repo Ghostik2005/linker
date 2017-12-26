@@ -90,9 +90,6 @@ export default class SprView extends JetView{
                             });
                         }
                     },
-                //{view: "button", type: 'htmlbutton',
-                    //label: "<span class='webix_icon fa-refresh'></span>", width: 50
-                    //},
                 {},
                 {view: "label", label: "Всего записей: 0", width: 180, id: "__count"},
                 ]
@@ -112,13 +109,14 @@ export default class SprView extends JetView{
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
+            old_stri: "",
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
                         ],
                     //footer: {text:"Всего:", colspan:5, rowspan: 1, height: 24}
                     },
-                {id: "id_spr", width: 80, sort: "int",
+                {id: "id_spr", width: 80, //sort: "int",
                     header: [{text: "IDSPR"},
                         //{content:"textFilter"}
                         ],
@@ -128,13 +126,13 @@ export default class SprView extends JetView{
                         //{content:"textFilter"}
                         ]
                     },
-                { id: "id_zavod", sort: "text",
+                { id: "id_zavod", //sort: "text",
                     width: 400,
                     header: [{text: "Производитель"},
                         //{content:"textFilter"}
                         ]
                     },
-                { id: "id_strana", sort: "text",
+                { id: "id_strana", //sort: "text",
                     width: 250,
                     header: [{text: "Страна"},
                         //{content:"textFilter"}

@@ -1,12 +1,16 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-//import {get_prc_skipped} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
+import ConfirmView from "../views/yes-no";
 
 export default class SkippedView extends JetView{
     config(){
+        function delSkip () {
+            let item_id = $$("__dt_s").getSelectedId()
+            $$("__dt_s").remove(item_id)
+            }
         var top = {view: 'toolbar',
                     height: 40,
                     cols: [
@@ -24,7 +28,6 @@ export default class SkippedView extends JetView{
                                         searchBar: "_search_skip",
                                         method: "getPrcsSkip"
                                         });
-                                    //get_spr_skipped(this, "__dt_s", "__nav_s", 1, count);
                                     }
                                 },
                             },
@@ -50,7 +53,6 @@ export default class SkippedView extends JetView{
                             searchBar: "_search_skip",
                             method: "getPrcsSkip"
                             });
-                        //get_prc_skipped(this, "__dt_s", "__nav_s", start, count)
                         }
                     },
                 {view: "button", type: 'htmlbutton',
@@ -118,11 +120,11 @@ export default class SkippedView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            //footer: true,
             headermenu:true,
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
+            old_stri: " ",
             columns: [
                 {id: "id_tovar", width: 80, sort: "int",
                     header: [{text: "ID товара"},
@@ -152,16 +154,16 @@ export default class SkippedView extends JetView{
                         }
                     },
                 onItemDblClick: function(item) {
-                    webix.message({"type": "debug", "text": "Выполняем какое-то действие"});
-                    webix.message({"type": "debug", "text": "Например - возврат позиции на сведение"});
-                    //item = this.getItem(item.row);
-                    //item = item.id_spr;
-                    //item = get_spr(this.$scope, item);
-                    //item["s_name"] = "Страна: " + item.c_strana;
-                    //item["t_name"] = "Название товара: " + item.c_tovar;
-                    //item["v_name"] = "Производитель: " + item.c_zavod;
-                    //item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                    //this.$scope.popnew.show("Редактирование записи " + item.id_spr, item);
+                    let user = this.$scope.app.config.user
+                    if (user === 'admin') {
+                        let sh_prc = this.getSelectedItem().sh_prc
+                        let params = {};
+                        params["command"] = "?returnLnk";
+                        params["sh_prc"] = sh_prc;
+                        params["type"] = "async";
+                        params["callback"] = delSkip;
+                        this.$scope.popconfirm.show('Вернуть на сведение?', params);
+                        }
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -209,5 +211,8 @@ export default class SkippedView extends JetView{
         }
     hide(){
         this.getRoot().hide()
+        }
+    init() {
+        this.popconfirm = this.ui(ConfirmView);
         }
     }

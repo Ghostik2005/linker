@@ -22,39 +22,38 @@ export default class ConfirmView extends JetView{
                     {cols: [
                         {view: "button", type: "base", label: "Нет", width: 120, height: 44,
                             click: () => {
-                                webix.message("Очищаем форму и закрываем");
+                                //webix.message("Очищаем форму и закрываем");
                                 this.getRoot().getBody().config._params = {};
                                 this.hide()
                                 }
                             },
                         {},
-                        {view: "button", type: "base", label: "Да (Enter)", width: 120, height: 44, localId: "_yes",
+                        {view: "button", type: "base", label: "Да", width: 120, height: 44, localId: "_yes",
                             click: () => {
                                 let pars = this.getRoot().getBody().config._params;
                                 let sh_prc = pars.sh_prc;
                                 let user = this.app.config.user;
                                 let url = this.app.config.r_url + pars.command;
                                 let type = pars.type;
+                                let action = (pars.action) ? pars.action : "no_action";
+                                let id_spr = (pars.id_spr) ? pars.id_spr : NaN;
                                 var callback = pars.callback;
-                                let params = {"user": user, "sh_prc": sh_prc};
+                                var th = pars.th
+                                let params = {"user": user, "sh_prc": sh_prc, "action": action, "id_spr": id_spr};
                                 this.hide()
                                 if (type === "sync") {
-                                    console.log('sync');
+                                    ///////////console.log('sync'); //синхронный запрос
                                 } else {
-                                    console.log('async');
                                     request(url, params).then(function(data) {
                                         data = data.json();
-                                        console.log('req', data);
                                         if (data.result) {
-                                            if (callback) callback(data)
-                                            else console.log('ecall', data);
+                                            if (callback) callback(data, th)
+                                            else console.log('error callback', data);
                                         } else {
                                             webix.message('error');
                                             };
                                         })
                                     }
-                                webix.message("Очищаем форму, отправляем данные на сервер и закрываем");
-                                //console.log("params", params);
                                 }
                             }
                         ]}
@@ -71,7 +70,6 @@ export default class ConfirmView extends JetView{
     show(quest, params){
         this.getRoot().getHead().getChildViews()[0].setValue("Подтвердите действие");
         if (params) this.getRoot().getBody().config._params = params;
-        //console.log("root", this.getRoot());
         this.getRoot().getBody().getChildViews()[0].setValue(quest);
         this.getRoot().show();
         }

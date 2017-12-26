@@ -40,7 +40,11 @@ class fb_local:
             options = params.get('options')
             try:
                 cur.execute(sql, options)
-                ret = cur.fetchall()
+                try:
+                    ret = cur.fetchall()
+                except Exception as Err:
+                    ret = -3 #empty return
+                    self._log(Err, kind="error:sql return")
             except Exception as Err:
                 ret = -2
                 #self._log(traceback.format_exc(), kind="error:sql")
@@ -56,7 +60,7 @@ class fb_local:
         sql - строка sql  с символами ? вместо параметров
         options - список или кортеж опций для подстановки в sql строку
         """
-        ret = -1
+        ret = -1 #connection error
         try:
             con = fdb.connect(**self.connect_params)
         except Exception as Err:
@@ -70,13 +74,14 @@ class fb_local:
                 try:
                     ret = cur.fetchall()
                 except Exception as Err:
-                    print(Err)
+                    ret = -3 #empty return
+                    self._log(Err, kind="error:sql return")
                 finally:
                     con.commit()
             except Exception as Err:
-                ret = -2
-                self._log(traceback.format_exc(), kind="error:sql")
-                #self._log(Err, kind="error:sql")
+                ret = -2 # transaction error
+                #self._log(traceback.format_exc(), kind="error:sql")
+                self._log(Err, kind="error:sql")
             finally:
                 cur.close()
                 con.close()
@@ -104,8 +109,8 @@ class fb_local:
                     try:
                         reti = cur.fetchall()
                     except Exception as Err:
-                        reti = -2
-                        print(Err)
+                        reti = -3 #empty return
+                        self._log(Err, kind="error:sql return")
                     finally:
                         con.commit()
                     ret.append(reti[0])

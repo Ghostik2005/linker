@@ -24,12 +24,10 @@ from libs.connect import fb_local
 """
 ALTER TABLE PRC ADD 
 IN_WORK Integer NOT NULL;
-
 COMMIT;
 UPDATE PRC 
 SET IN_WORK = '-1' 
 WHERE IN_WORK IS NULL;
-
 commit;
 
 
@@ -37,6 +35,30 @@ create ASC
 INDEX IDX_ID_WORK on PRC 
 (IN_WORK);
 COMMIT;
+
+
+CREATE TABLE R_LNK
+(
+  SH_PRC TSTR32 NOT NULL,
+  ID_SPR TINT32,
+  ID_VND TINT32,
+  ID_TOVAR TSTR32,
+  C_TOVAR TSTR255,
+  C_ZAVOD TSTR255,
+  DT TDATETIME,
+  OWNER TSTR255,
+  DT_R TDATETIME,
+  USER_R TINT32,
+  CONSTRAINT PK_R_LNK PRIMARY KEY (SH_PRC)
+);
+
+CREATE INDEX R_LNK_IDX1 ON R_LNK (ID_SPR);
+CREATE INDEX R_LNK_IDX2 ON R_LNK (ID_VND,ID_TOVAR);
+CREATE DESCENDING INDEX R_LNK_IDX3 ON R_LNK (DT);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON R_LNK TO  SYSDBA WITH GRANT OPTION;
+
+
 """
 
 class API:
@@ -251,7 +273,7 @@ class API:
 
     def getDvAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = "select r.ID, r.ACT_INGR from dv r where flag=1 order by r.ACT_INGR"
+            sql = "select r.ID, r.ACT_INGR from dv r where r.flag=1 order by r.ACT_INGR"
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -268,10 +290,9 @@ class API:
 
     def getSezonAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
-                from groups 
-                inner join classifier on (groups.cd_group = classifier.cd_group) 
-                where classifier.idx_group = 6
+            sql = """select classifier.nm_group, classifier.cd_group
+            from classifier 
+            where classifier.idx_group = 6
             """
             opt = ()
             _return = []
@@ -289,10 +310,9 @@ class API:
 
     def getHranAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
-                from groups 
-                inner join classifier on (groups.cd_group = classifier.cd_group) 
-                where classifier.idx_group = 3
+            sql = """select classifier.nm_group, classifier.cd_group
+            from classifier 
+            where classifier.idx_group = 3
             """
             opt = ()
             _return = []
@@ -310,10 +330,9 @@ class API:
 
     def getGroupAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
-                from groups 
-                inner join classifier on (groups.cd_group = classifier.cd_group) 
-                where classifier.idx_group = 1
+            sql = """select classifier.nm_group, classifier.cd_group
+            from classifier 
+            where classifier.idx_group = 1
             """
             opt = ()
             _return = []
@@ -331,9 +350,8 @@ class API:
 
     def getNdsAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select DISTINCT (classifier.nm_group), classifier.cd_group
-            from groups 
-            inner join classifier on (groups.cd_group = classifier.cd_group) 
+            sql = """select classifier.nm_group, classifier.cd_group
+            from classifier 
             where classifier.idx_group = 2
             """
             opt = ()
@@ -390,6 +408,12 @@ class API:
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri) if len(stri) > 0 else sti
+            sql = """SELECT count(*)
+                    FROM SPR r
+                    inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                    WHERE %s""" % stri
+            opt = ()
+            tot = self.db.request({"sql": sql, "options": opt})[0][0]
             sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
             FROM SPR r
             inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
@@ -411,14 +435,7 @@ class API:
                 }
                 _return.append(r)
             t2 = time.time() - st_t
-            sql = """SELECT count(*)
-                    FROM SPR r
-                    inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-                    WHERE %s""" % stri
-            opt = ()
-            tot = self.db.request({"sql": sql, "options": opt})[0][0]
-            t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p, "time": (t1, t2, t3)}
+            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p, "time": (t1, t2)}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -434,7 +451,7 @@ class API:
                 _return = []
                 result = self.db.request({"sql": sql, "options": opt})
                 for row in result:
-                    print(row)
+                    #print(row)
                     r = {
                         "id_spr"        : row[0],
                         "c_tovar"       : row[1],
@@ -586,7 +603,7 @@ class API:
                     from spr r
                     WHERE %s 
             """ % stri
-            print(sql)
+            #print(sql)
             opt = ()
             count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
@@ -615,7 +632,7 @@ class API:
                 sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER
                         FROM LNK r 
                         JOIN VND v on (v.ID_VND = r.ID_VND)
-                        WHERE r.ID_SPR = ?
+                        WHERE r.ID_SPR = ? order by r.C_TOVAR ASC
                 """
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
@@ -637,29 +654,78 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def delLnk(self, params=None, x_hash=None):
+    def setLnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             sh_prc = params.get('sh_prc')
-            if sh_prc:
-                sql = """delete from lnk r WHERE sh_prc = ? returning r.SH_PRC, r.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT,
-    r.OWNER, r.NEWFLAG"""
+            id_spr = params.get('id_spr')
+            user = params.get('user')
+            if sh_prc and id_spr:
+                sql = """delete from PRC r WHERE r.sh_prc = ? returning r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT"""
                 opt = (sh_prc,)
-                _return = []
-                result = self.db.execute({"sql": sql, "options": opt})
-                for row in result:
-                    _ret = []
-                    res = self.db.execute({"sql": sql, "options": row})
-                    r = {
-                        "id"          : row[1],
-                        "nds"         : row[0]
-                    }
-                    _return.append(r)
-                ret = {"result": True, "ret_val": _return}
+                result = self.db.execute({"sql": sql, "options": opt})[0]
+
+                sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
+                         values (?, ?, ?, ?, ?, ?, ?, ?) """
+                opt = (result[0], id_spr, result[1], result[2], result[3], result[4], result[5], user)
+                res = self.db.execute({"sql": sql, "options": opt})
+                ret = {"result": True, "ret_val": result[0]}
             else:
                 ret = {"result": False, "ret_val": "hash absent"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
+
+    def delLnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sh_prc = params.get('sh_prc')
+            action = params.get('action')
+            user = params.get('user')
+            if sh_prc and action in ('return', 'delete'):
+                sql = """delete from lnk r WHERE sh_prc = ? returning r.SH_PRC, r.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER"""
+                opt = (sh_prc,)
+                result = self.db.execute({"sql": sql, "options": opt})[0]
+                if action == 'return':
+                    sql = """insert into PRC
+                    (SH_PRC, ID_VND, ID_TOVAR, N_FG, N_CENA, C_TOVAR, C_ZAVOD, ID_ORG, C_INDEX, DT, IN_WORK)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                    opt = (result[0], result[2], result[3], 0, 0, result[4], result[5], 0, 0, result[6], -1)
+                else:
+                    sql = """insert into R_LNK
+                    (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, DT_R, USER_R)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, 
+                    CAST('NOW' AS TIMESTAMP),
+                    (select ID from USERS where "USER" = ?) )"""
+                    opt = (result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7], user)
+                res = self.db.execute({"sql": sql, "options": opt})
+                ret = {"result": True, "ret_val": result[0]}
+            else:
+                ret = {"result": False, "ret_val": "hash absent"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def returnLnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sh_prc = params.get('sh_prc')
+            user = params.get('user')
+            if sh_prc:
+                sql = """update PRC r set r.N_FG = 0, r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG"""
+                opt = (sh_prc,)
+                _return = []
+                result = self.db.execute({"sql": sql, "options": opt})
+                print(result)
+                for row in result:
+                    r = {
+                        "sh_prc"    : row[0]
+                    }
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "hash error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
 
     def skipLnk(self, params=None, x_hash=None):
         if self._check(x_hash):
