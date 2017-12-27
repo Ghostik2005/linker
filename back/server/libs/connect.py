@@ -103,19 +103,16 @@ class fb_local:
             sql = params.get('sql')
             options = params.get('options')
             try:
-                ret = []
-                for i in options:
-                    cur.execute(sql, options)
-                    try:
-                        reti = cur.fetchall()
-                    except Exception as Err:
-                        reti = -3 #empty return
-                        self._log(Err, kind="error:sql return")
-                    finally:
-                        con.commit()
-                    ret.append(reti[0])
+                cur.executemany(sql, options)
+                try:
+                    ret = cur.fetchall()
+                except Exception as Err:
+                    ret = -3 #empty return
+                    self._log(Err, kind="error:sql return")
+                finally:
+                    con.commit()
             except Exception as Err:
-                ret = -2
+                ret = -2 # transaction error
                 #self._log(traceback.format_exc(), kind="error:sql")
                 self._log(Err, kind="error:sql")
             finally:

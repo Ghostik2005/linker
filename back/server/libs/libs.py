@@ -368,6 +368,186 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _insGr(self, params, result):
+        prescr = params.get("prescr");
+        mandat = params.get("mandat");
+        id_sezon = params.get("id_sezon");
+        id_usloviya = params.get("id_usloviya");
+        id_group = params.get("id_group");
+        id_nds = params.get("id_nds");
+        sql = """insert into GROUPS (CD_CODE, CD_GROUP) values (?, ?)"""
+        opt = []
+        if id_group:
+            opt.append((result, id_group))
+        if id_nds:
+            opt.append((result, id_nds))
+        if id_usloviya:
+            opt.append((result, id_usloviya))
+        if mandat:
+            opt.append((result, 'ZakMedCtg.15'))
+        if prescr:
+            opt.append((result, 'ZakMedCtg.16'))
+        if id_sezon:
+            opt.append((result, id_sezon))
+        if len(opt) > 0:
+            t1 = self.db.executemany({"sql": sql, "options": opt})
+
+    def setSpr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = params.get("id_spr");
+            barcode = params.get("barcode");
+            c_tovar = params.get("c_tovar");
+            id_strana = params.get("id_strana");
+            id_zavod = params.get("id_zavod");
+            id_dv = params.get("id_dv");
+            c_opisanie = params.get("c_opisanie");
+
+            user = params.get("user");
+            sh_prc = params.get("sh_prc");
+            _return = []
+            if id_spr > 0:
+                sql = """update SPR set C_TOVAR = ?, DT = CAST('NOW' AS TIMESTAMP),
+                ID_DV = ?, ID_ZAVOD = ?, ID_STRANA = ?, C_OPISANIE = ? where ID_SPR = ?"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana, c_opisanie, id_spr)
+                res = self.db.execute({"sql": sql, "options": opt})
+                sql = """delete FROM GROUPS as g
+                         WHERE g.CD_GROUP in 
+                             (SELECT c.CD_GROUP
+                             FROM CLASSIFIER as c
+                             WHERE c.IDX_GROUP in (1, 2, 3, 4, 5, 6)
+                             )
+                         and g.CD_CODE = ?"""
+                opt = (id_spr,)
+                t1 = self.db.execute({"sql": sql, "options": opt})
+                self._insGr(params, id_spr)
+                ret = id_spr
+            else:
+                sql = """insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA, C_OPISANIE)
+                values (?, CAST('NOW' AS TIMESTAMP), ?, ?, ?, ?) returning ID_SPR"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana, c_opisanie)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                if result:
+                    sql = """delete from PRC where SH_PRC = ?"""
+                    opt = (sh_prc,)
+                    t1 = self.db.execute({"sql": sql, "options": opt})
+                    self._insGr(params, result)
+                ret = result #new id_spr
+            _return.append(ret)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def checkBar(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = params.get("id_spr");
+            barcode = params.get("barcode");
+            if barcode and id_spr:
+                sql = """select count(*) from spr_barcode where id_spr = ? and barcode = ?"""
+                opt = (id_spr, barcode)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                valid = True if result == 0 else False
+                _return = "OK" if result == 0 else "Non unique"
+                ret = {"result": valid, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setBar(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = params.get("id_spr");
+            barcode = params.get("barcode");
+            if barcode and id_spr:
+                sql = """INSERT INTO spr_barcode (id_spr, barcode) VALUES (?, ?) RETURNING id_spr"""
+                opt = (id_spr, barcode)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
+                opt = (result,)
+                t = self.db.request({"sql": sql, "options": opt})
+                b_code = []
+                for row_b in t:
+                    b_code.append(row_b[0])
+                _return = {
+                    "barcode"   : ", ".join(b_code)
+                    }
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "no new name"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def checkDv(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            act_ingr = params.get("act_ingr")
+            if act_ingr:
+                sql = """select count(*) from dv where act_ingr = ?"""
+                opt = (act_ingr,)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                valid = True if result == 0 else False
+                _return = "OK" if result == 0 else "Non unique"
+                ret = {"result": valid, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setDv(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            act_ingr = params.get("act_ingr")
+            if act_ingr:
+                sql = """INSERT INTO dv (act_ingr, flag) VALUES (upper(?), 1) RETURNING id"""
+                opt = (act_ingr,)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                _return ={
+                    "id"        : result,
+                    "act_ingr"   : act_ingr
+                    }
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "no new name"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def checkZavod(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_zavod = params.get("c_zavod")
+            if c_zavod:
+                sql = """select count(*) from spr_zavod where c_zavod = ?"""
+                opt = (c_zavod,)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                valid = True if result == 0 else False
+                _return = "OK" if result == 0 else "Non unique"
+                ret = {"result": valid, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setZavod(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_zavod = params.get("c_zavod")
+            if c_zavod:
+                sql = """INSERT INTO spr_zavod (c_zavod, flag) VALUES (upper(?), 1) RETURNING id_spr"""
+                opt = (c_zavod,)
+                result = self.db.execute({"sql": sql, "options": opt})[0][0]
+                _return ={
+                    "id"        : result,
+                    "c_zavod"   : c_zavod
+                    }
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "no new name"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getSprSearch(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
@@ -474,7 +654,7 @@ class API:
                         "id_nds"        : "",
                         "nds"           : ""
                     }
-                    sql = "select r.barcode from spr_barcode r where r.id_spr = ?"
+                    sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
                     t = self.db.request({"sql": sql, "options": opt})
                     b_code = []
                     for row_b in t:
