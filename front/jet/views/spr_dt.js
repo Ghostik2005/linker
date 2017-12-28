@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page} from "../views/globals";
+import {last_page, get_bars} from "../views/globals";
 
 export default class SprView extends JetView{
     config(){

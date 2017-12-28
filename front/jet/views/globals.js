@@ -1,5 +1,14 @@
 "use strict";
 
+export var barcodes = new webix.DataCollection({
+        id: "bars_dc",
+        on: {
+            onAfterLoad: function() {
+                }
+            }
+        });
+
+
 export var prcs = new webix.DataCollection({
         id: "prcs_dc",
         on: {
@@ -72,6 +81,19 @@ export function last_page(view) {
     let ppp = $$(view).config.posPpage;
     let lp = (Math.ceil(total/ppp) - 1) * ppp + 1
     return lp
+    }
+
+export function get_bars(th, id_spr) {
+    let user = th.app.config.user;
+    let url = th.app.config.r_url + "?getBar"
+    let params = {"user": user, "id_spr": id_spr};
+    let item = request(url, params, !0).response;
+    item = JSON.parse(item);
+    if (item.result) {
+        $$("bars_dc").clearAll();
+        $$("bars_dc").parse(item.ret_val);
+    } else {
+        };
     }
 
 export function form_navi(view, pager) {

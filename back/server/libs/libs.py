@@ -438,6 +438,26 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getBar(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = params.get("id_spr");
+            if id_spr:
+                sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
+                opt = (id_spr,)
+                t = self.db.request({"sql": sql, "options": opt})
+                _return = []
+                for row_b in t:
+                    r = {
+                        "barcode"   : row_b[0]
+                        }
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "no id_spr"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def checkBar(self, params=None, x_hash=None):
         if self._check(x_hash):
             id_spr = params.get("id_spr");

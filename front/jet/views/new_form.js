@@ -2,8 +2,10 @@
 
 import {JetView} from "webix-jet";
 import NewstriView from "../views/new_stri";
+import NewbarView from "../views/new_bar";
 import {strana, vendor, dv} from "../views/globals";
 import {sezon, nds, group, hran} from "../views/globals";
+import {request, prcs, delPrc, barcodes} from "../views/globals";
 
 export default class NewformView extends JetView{
     config(){
@@ -27,48 +29,86 @@ export default class NewformView extends JetView{
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
             return item.group.toString().toLowerCase().search(value) != -1;
             };
+        function sez_filter(item, value) {
+            value = value.toString().toLowerCase()
+            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            return item.sezon.toString().toLowerCase().search(value) != -1;
+            };
+        function hran_filter(item, value) {
+            value = value.toString().toLowerCase()
+            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            return item.usloviya.toString().toLowerCase().search(value) != -1;
+            };
+
+        function check(item){
+            if (item) {
+                if (item.toString().length > 0 ) return true
+                else return false
+            } else {
+                return false
+                }
+            }
+        function addZavod(item) {
+            vendor.add(item, 0);
+            }
+            
+        function addDv(item) {
+            dv.add(item, 0);
+            }
+
         return {view: "cWindow",
             modal: true,
+            on: {
+                onHide: function() {
+                    barcodes.clearAll();
+                    }
+                },
             body: { view: "form",
                 localId: "new_form",
                 margin: 0,
+                rules:{
+                    "c_tovar": webix.rules.isNotEmpty,
+                    "id_strana": webix.rules.isNotEmpty,
+                    "id_zavod": webix.rules.isNotEmpty,
+                    "id_dv": webix.rules.isNotEmpty
+                    },
                 elements: [
                     {rows: [
                         {view: "label", label:"Название товара:   " + "Название 1", name: 't_name'},
-                        {view: "text", label: "", value: "Название 1", name: "c_tovar"},
+                        {view: "text", label: "", value: "Название 1", name: "c_tovar", required: true},
                         {height: 10, width: 700},
                         {cols: [
                             {rows: [
                                 {view: "label", label:"Страна:", name: "s_name"},
-                                {view:"combo", width: 400, value: "", name: 'id_strana',
+                                {view:"combo", width: 400, value: "", name: 'id_strana', required: true,
                                     options:  {
                                         filter: strana_filter,
                                         body: {
                                             template:"#c_strana#",
                                             yCount:15,
-                                            data: strana
+                                            //data: strana
                                             }
                                         },
                                     on: {
                                         onAfterRender: function() {
-                                            this.getList().sync($$("strana_dc"));
+                                            this.getList().sync(strana);
                                             }
                                         },
                                     },
                                 {view: "label", label:"Производитель:", name: "v_name"},
                                 {cols: [
-                                    {view:"combo", label: "", value: "", name: "id_zavod",
+                                    {view:"combo", label: "", value: "", name: "id_zavod", required: true,
                                         options:  {
                                             filter: zavod_filter,
                                             body: {
                                                 template:"#c_zavod#",
                                                 yCount:10,
-                                                data: vendor
+                                                //data: vendor
                                                 }
                                             },
                                         on: {
                                             onAfterRender: function() {
-                                                this.getList().sync($$("vendor_dc"));
+                                                this.getList().sync(vendor);
                                                 }
                                             },
                                         },
@@ -79,13 +119,14 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         click: () => {
-                                            this.popstri.show("Добавление производителя");
+                                            let params = {'new_name': 'c_zavod', 'url': "Zavod", "callback": addZavod}
+                                            this.popstri.show("Добавление производителя", params);
                                             }
                                         },
                                     ]},
                                 {view: "label", label:"Действующее вещество:", name: 'dv_name'},
                                 {cols: [
-                                    {view:"combo", label: "", value: "", name: "id_dv",
+                                    {view:"combo", label: "", value: "", name: "id_dv", required: true,
                                         options:  {
                                             filter: dv_filter,
                                             body: {
@@ -95,12 +136,12 @@ export default class NewformView extends JetView{
                                                 template: "<div class='comboList'>#act_ingr#</div>",
                                                 height: 250,
                                                 yCount:0,
-                                                data: dv
+                                                //data: dv
                                                 }
                                             },
                                         on: {
                                             onAfterRender: function() {
-                                                this.getList().sync($$("dv_dc"));
+                                                this.getList().sync(dv);
                                                 }
                                             },
                                         },
@@ -111,21 +152,18 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         click: () => {
-                                            this.popstri.show("Добавление д.вещества");
+                                            let params = {'new_name': 'act_ingr', 'url': "Dv", "callback": addDv}
+                                            this.popstri.show("Добавление д.вещества", params);
                                             }
                                         },
                                     ]},
                                 {view: "label", label:"Штрих-код:"},
                                 {cols: [
-                                    {view:"text", label: "", value: "", readonly: true, name: "barcode"},
-                                    {view: "button", type: "base", label: "+", width: 30, disabled: true,
-                                    on: {
-                                        onAfterRender: function () {
-                                            if (this.$scope.app.config.user === "admin") this.enable();
-                                            }
-                                        },
+                                    {view:"text", label: "", value: "", readonly: true, name: "barcode",
                                         click: () => {
-                                            this.popstri.show("Добавление ш.кода");
+                                            let id_spr = this.$$("new_form").getValues().id_spr
+                                            console.log(id_spr);
+                                            this.popbar.show("Редактирование ш.кодов", id_spr);
                                             }
                                         },
                                     ]},
@@ -142,6 +180,7 @@ export default class NewformView extends JetView{
                                         {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
                                         {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
                                             options:  {
+                                                filter: sez_filter,
                                                 body: {
                                                     //autoheight:false,
                                                     //view:"list",
@@ -149,17 +188,18 @@ export default class NewformView extends JetView{
                                                     template: "#sezon#",
                                                     //height: 400,
                                                     yCount:5,
-                                                    data: sezon
+                                                    //data: sezon
                                                     }
                                                 },
                                             on: {
                                                 onAfterRender: function() {
-                                                    this.getList().sync($$("sezon_dc"));
+                                                    this.getList().sync(sezon);
                                                     }
                                                 },
                                             },
                                         {view:"combo", label: "Условия хранения:", labelPosition:"top", value: "", name: "id_usloviya", css: "small",
                                             options:  {
+                                                filter: hran_filter,
                                                 body: {
                                                     //autoheight:false,
                                                     //view:"list",
@@ -167,12 +207,12 @@ export default class NewformView extends JetView{
                                                     template: "#usloviya#",
                                                     //height: 400,
                                                     yCount:10,
-                                                    data: hran
+                                                    //data: hran
                                                     }
                                                 },
                                             on: {
                                                 onAfterRender: function() {
-                                                    this.getList().sync($$("hran_dc"));
+                                                    this.getList().sync(hran);
                                                     }
                                                 },
                                             },
@@ -186,12 +226,12 @@ export default class NewformView extends JetView{
                                                     template: "<div class='comboList'>#group#</div>",
                                                     height: 200,
                                                     yCount:0,
-                                                    data: group
+                                                    //data: group
                                                     }
                                                 },
                                             on: {
                                                 onAfterRender: function() {
-                                                    this.getList().sync($$("group_dc"));
+                                                    this.getList().sync(group);
                                                     }
                                                 },
                                             },
@@ -200,12 +240,12 @@ export default class NewformView extends JetView{
                                                 body: {
                                                     template:"#nds#",
                                                     yCount:10,
-                                                    data: nds
+                                                    //data: nds
                                                     }
                                                 },
                                             on: {
                                                 onAfterRender: function() {
-                                                    this.getList().sync($$("nds_dc"));
+                                                    this.getList().sync(nds);
                                                     }
                                                 },
                                             },
@@ -222,10 +262,6 @@ export default class NewformView extends JetView{
                             {},
                             {view: "button", type: "base", label: "Test", width: 120, height: 32,
                                 click: () => {
-                                    //console.log('root', this.getRoot());
-                                    //console.log('root/body', this.getRoot().getBody());
-                                    //console.log('root/child', this.getRoot().getChildViews());
-                                    //console.log('root/body/child', this.getRoot().getBody().getChildViews()[0].getChildViews());
                                     }
                                 },
                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
@@ -235,37 +271,50 @@ export default class NewformView extends JetView{
                                         }
                                     },
                                 click: () => {
-                                    let left_f = this.$$("new_form").getValues();
-                                    let right_f = this.$$("new_f_right").getValues();
-                                    let item = {};
-                                    item["id_spr"] = (left_f.id_spr) ? left_f.id_spr : -1;
-                                    item["barcode"] = left_f.barcode;
-                                    item["c_tovar"] = left_f.c_tovar;
-                                    item["id_strana"] = left_f.id_strana;
-                                    item["id_zavid"] = left_f.id_zavod;
-                                    item["id_dv"] = left_f.id_dv;
-                                    item["c_opisanie"] = left_f.c_opisanie;
-                                    item["prescr"] = (right_f._prescr ===  1) ? true : false;
-                                    item["mandat"] = (right_f._mandat ===  1) ? true : false;
-                                    item["id_sezon"] = right_f.id_sezon;
-                                    item["id_usloviya"] = right_f.id_usloviya;
-                                    item["id_group"] = right_f.id_group;
-                                    item["id_nds"] = right_f.id_nds;
-                                    console.log('item', item);
-                                    webix.message("Очищаем форму, отправляем данные на сервер и закрываем если все в порядке");
-                                    this.hide();
+                                    let valid = this.$$("new_form").validate({hidden:false, disabled:false});
+                                    console.log('validate: ', valid);
+                                    console.log(this.$$("new_form").getValues());
+                                    if (valid) {
+                                        let left_f = this.$$("new_form").getValues();
+                                        let right_f = this.$$("new_f_right").getValues();
+                                        let params = {};
+                                        params["id_spr"] = (left_f.id_spr) ? left_f.id_spr : -1;
+                                        params["barcode"] = left_f.barcode;
+                                        params["c_tovar"] = left_f.c_tovar;
+                                        params["id_strana"] = left_f.id_strana;
+                                        params["id_zavod"] = left_f.id_zavod;
+                                        params["id_dv"] = left_f.id_dv;
+                                        params["c_opisanie"] = left_f.c_opisanie;
+                                        params["prescr"] = (right_f._prescr ===  1) ? true : false;
+                                        params["mandat"] = (right_f._mandat ===  1) ? true : false;
+                                        params["id_sezon"] = right_f.id_sezon;
+                                        params["id_usloviya"] = right_f.id_usloviya;
+                                        params["id_group"] = right_f.id_group;
+                                        params["id_nds"] = right_f.id_nds;
+                                        params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc;
+                                        params["user"] = this.app.config.user;
+                                        console.log('params', params);
+                                        let url = this.app.config.r_url + "?setSpr"
+                                        let ret_data = request(url, params, !0).response;
+                                        ret_data = JSON.parse(ret_data);
+                                        if (ret_data.result) {
+                                            ret_data = ret_data.ret_val;
+                                            delPrc(params, this)
+                                            console.log(ret_data)
+                                        } else {
+                                            webix.message('error');
+                                            };
+                                        webix.message("Очищаем форму, отправляем данные на сервер и закрываем если все в порядке");
+                                        this.hide();
+                                    } else {
+
+                                        }
                                     }
                                 }
                             ]}
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
-            }
             }
         }
     show(new_head, item){
@@ -283,6 +332,7 @@ export default class NewformView extends JetView{
         }
     init() {
         this.popstri = this.ui(NewstriView);
+        this.popbar = this.ui(NewbarView);
         }
     }
 
