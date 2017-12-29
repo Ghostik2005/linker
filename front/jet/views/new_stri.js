@@ -9,7 +9,6 @@ export default class NewstriView extends JetView{
         
         function check_s(value) {
             let para = this.config._params;
-            console.log(this.$scope);
             let url = this.$scope.app.config.r_url + "?check" + para.url
             let params = {};
             params[para.new_name] = value;

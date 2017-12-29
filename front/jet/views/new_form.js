@@ -159,11 +159,10 @@ export default class NewformView extends JetView{
                                     ]},
                                 {view: "label", label:"Штрих-код:"},
                                 {cols: [
-                                    {view:"text", label: "", value: "", readonly: true, name: "barcode",
+                                    {view:"text", label: "", value: "", readonly: true, name: "barcode", localId: "_barc",
                                         click: () => {
                                             let id_spr = this.$$("new_form").getValues().id_spr
-                                            console.log(id_spr);
-                                            this.popbar.show("Редактирование ш.кодов", id_spr);
+                                            this.popbar.show("Редактирование ш.кодов", id_spr, this);
                                             }
                                         },
                                     ]},
@@ -255,7 +254,6 @@ export default class NewformView extends JetView{
                         {cols: [
                             {view: "button", type: "base", label: "Отменить", width: 120, height: 32,
                                 click: () => {
-                                    webix.message("Очищаем форму и закрываем");
                                     this.hide();
                                     }
                                 },
@@ -272,8 +270,6 @@ export default class NewformView extends JetView{
                                     },
                                 click: () => {
                                     let valid = this.$$("new_form").validate({hidden:false, disabled:false});
-                                    console.log('validate: ', valid);
-                                    console.log(this.$$("new_form").getValues());
                                     if (valid) {
                                         let left_f = this.$$("new_form").getValues();
                                         let right_f = this.$$("new_f_right").getValues();
@@ -293,18 +289,16 @@ export default class NewformView extends JetView{
                                         params["id_nds"] = right_f.id_nds;
                                         params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc;
                                         params["user"] = this.app.config.user;
-                                        console.log('params', params);
                                         let url = this.app.config.r_url + "?setSpr"
                                         let ret_data = request(url, params, !0).response;
                                         ret_data = JSON.parse(ret_data);
-                                        if (ret_data.result) {
-                                            ret_data = ret_data.ret_val;
+                                        if (ret_data.result && ret_data.new) {
+                                            //ret_data = ret_data.ret_val;
                                             delPrc(params, this)
-                                            console.log(ret_data)
+                                        } else if (ret_data.result && !ret_data.new){
                                         } else {
                                             webix.message('error');
                                             };
-                                        webix.message("Очищаем форму, отправляем данные на сервер и закрываем если все в порядке");
                                         this.hide();
                                     } else {
 

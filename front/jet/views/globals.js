@@ -141,7 +141,7 @@ export function get_data(inp_params) {
                 };
             });
         } else {
-            console.log('yes');
+            //console.log('yes');
             };
     }
 

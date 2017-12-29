@@ -420,7 +420,9 @@ class API:
                 opt = (id_spr,)
                 t1 = self.db.execute({"sql": sql, "options": opt})
                 self._insGr(params, id_spr)
+                self.setBar(params, x_hash)
                 ret = id_spr
+                new = False
             else:
                 sql = """insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA, C_OPISANIE)
                 values (?, CAST('NOW' AS TIMESTAMP), ?, ?, ?, ?) returning ID_SPR"""
@@ -431,9 +433,12 @@ class API:
                     opt = (sh_prc,)
                     t1 = self.db.execute({"sql": sql, "options": opt})
                     self._insGr(params, result)
+                    params['id_spr'] = result
+                    self.setBar(params, x_hash)
                 ret = result #new id_spr
+                new = True
             _return.append(ret)
-            ret = {"result": True, "ret_val": _return}
+            ret = {"result": True, "ret_val": _return, "new": new}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -477,28 +482,26 @@ class API:
 
     def setBar(self, params=None, x_hash=None):
         if self._check(x_hash):
-            id_spr = params.get("id_spr");
-            barcode = params.get("barcode");
-            if barcode and id_spr:
-                sql = """INSERT INTO spr_barcode (id_spr, barcode) VALUES (?, ?) RETURNING id_spr"""
-                opt = (id_spr, barcode)
-                result = self.db.execute({"sql": sql, "options": opt})[0][0]
-                sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
-                opt = (result,)
-                t = self.db.request({"sql": sql, "options": opt})
-                b_code = []
-                for row_b in t:
-                    b_code.append(row_b[0])
-                _return = {
-                    "barcode"   : ", ".join(b_code)
-                    }
-                ret = {"result": True, "ret_val": _return}
+            id_spr = params.get("id_spr")
+            barcode = params.get("barcode")
+            barcode = barcode.split()
+            if id_spr:
+                opt_i = []
+                for i in barcode:
+                    t = (id_spr, i)
+                    opt_i.append(t)
+                sql = """delete from spr_barcode where id_spr = ?"""
+                opt = (id_spr, )
+                result = self.db.execute({"sql": sql, "options": opt})
+                if len(opt_i) > 0:
+                    sql = """INSERT INTO spr_barcode (id_spr, barcode) VALUES (?, ?) RETURNING id_spr"""
+                    result = self.db.executemany({"sql": sql, "options": opt_i})
+                ret = {"result": True, "ret_val": "updated"}
             else:
-                ret = {"result": False, "ret_val": "no new name"}
+                ret = {"result": False, "ret_val": "no id_spr"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
     def checkDv(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -679,7 +682,7 @@ class API:
                     b_code = []
                     for row_b in t:
                         b_code.append(row_b[0])
-                    r['barcode'] = ", ".join(b_code)
+                    r['barcode'] = " ".join(b_code)
                     sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
                     from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
                     where ( classifier.idx_group = 5 and groups.cd_code = ?)"""

@@ -17,13 +17,14 @@ export default class NewbarView extends JetView{
             modal: true,
             on: {
                 onHide: () => {
-                    this.$$("_n_b").clear();
+                    this.$$("_nbar").setValue('');
                     this.$$("_n_b").clearValidation();
                     //this.$$("b_list").clearAll();
                     },
                 onShow: () => {
                     let id_spr = this.$$("_n_b").config.id_spr
                     get_bars(this, id_spr);
+                    this.$$("_nbar").setValue('');
                     this.$$("b_list").clearAll();
                     this.$$("b_list").parse(barcodes);
                     },
@@ -32,19 +33,21 @@ export default class NewbarView extends JetView{
                 localId: "_n_b",
                 margin: 0,
                 id_spr: NaN,
+                th: NaN,
                 rules:{
                     "_new_bar": check_b,
                     },
                 elements: [
                     {rows: [
                         {cols: [
-                            {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите новое значение", localId: "_nbar", required: true,
+                            {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите новое значение", localId: "_nbar", //required: true,
                                 },
                             {view: "button", type: "htmlbutton", label: "<span class='webix_icon fa-plus'></span>", width: 30, disabled: !true,
                                 on: {
                                     },
                                 click: () => {
-                                    let valid = this.$$("_n_b").validate();
+                                    //var valid = this.$$("_n_b").validate();
+                                    let valid = check_b(this.$$("_nbar").getValue());
                                     if (valid) {
                                         let val = {"barcode": this.$$("_nbar").getValue()};
                                         this.$$("b_list").add(val);
@@ -67,12 +70,13 @@ export default class NewbarView extends JetView{
                                         },
                                     onItemDblClick: function(uid) {
                                         this.remove(uid);
+                                        this.$scope.$$("b_code").setValue('0000000000000')
                                         },
                                     },
                                 },
                             {width: 10},
                             {rows: [
-                                {view: "barcode", type: "ean13", value: "", width: 300, name: "_new_", localId: "b_code", hieght: 200,
+                                {view: "barcode", type: "ean13", value: '0000000000000', width: 300, name: "_new_", localId: "b_code", hieght: 200,
                                     },
                                 {}
                                 ]},
@@ -84,15 +88,24 @@ export default class NewbarView extends JetView{
                                     }
                                 },
                             {},
-                            {view: "button", type: "base", label: "Сохранить", width: 120,
+                            {view: "button", type: "base", label: "Применить", width: 120,
                                 click: () => {
-                                    let valid = this.$$("_n_b").validate({hidden:false, disabled:false});
-                                    if (valid) {
-                                        let _f = this.$$("_n_b").getValues();
-                                        this.hide();
-                                    } else {
-
+                                    this.$$("b_list").selectAll();
+                                    let bars = this.$$("b_list").getSelectedItem();
+                                    var parse = '';
+                                    if (bars) {
+                                        let t = typeof(bars);
+                                        try {
+                                            bars.forEach(function(item, i, bars) {
+                                                parse += item.barcode + ' ';
+                                                });
+                                        } catch(err) {
+                                            parse = bars.barcode;
+                                            }
                                         }
+                                    let th = this.$$("_n_b").config.th;
+                                    th.$$("_barc").setValue(parse);
+                                    this.hide();
                                     }
                                 }
                             ]}
@@ -108,8 +121,9 @@ export default class NewbarView extends JetView{
             }
         }
         
-    show(new_head, id_spr){
+    show(new_head, id_spr, th){
         this.$$("_n_b").config.id_spr = id_spr;
+        this.$$("_n_b").config.th = th;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
         }
