@@ -166,7 +166,7 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     ]},
-                                {view: "textarea", label: "Описание:", labelPosition:"top", value: "", height: 120, name: "c_opisanie"}
+                                {view: "textarea", label: "Описание:", labelPosition:"top", value: "", height: 125, name: "c_opisanie"}
                                 ]},
                             {width: 5,},
                             {rows: [

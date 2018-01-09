@@ -11,7 +11,7 @@ export default class SkippedView extends JetView{
             let item_id = $$("__dt_s").getSelectedId()
             $$("__dt_s").remove(item_id)
             }
-        var top = {view: 'toolbar',
+        var top = {//view: 'toolbar',
                     height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_search_skip",

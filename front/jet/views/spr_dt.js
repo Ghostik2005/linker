@@ -157,7 +157,8 @@ export default class SprView extends JetView{
                         }
                     },
                 onItemDblClick: function(item) {
-                    item = this.getItem(item.row);
+                    //item = this.getItem(item.row);
+                    item = this.getSelectedItem();
                     item = item.id_spr;
                     item = get_spr(this.$scope, item);
                     item["s_name"] = "Страна: " + item.c_strana;
