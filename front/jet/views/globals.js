@@ -76,6 +76,18 @@ export var group = new webix.DataCollection({
             }
         });
 
+export function addHran(item) {
+    hran.add(item);
+    }
+
+export function delHran(item_id) {
+    hran.remove(item_id);
+    }
+
+export function updHran(item) {
+    hran.updateItem(item.id, item.value);
+    }
+
 export function last_page(view) {
     let total = $$(view).config.totalPos;
     let ppp = $$(view).config.posPpage;

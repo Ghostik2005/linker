@@ -2,12 +2,12 @@
 
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
-import {request} from "../views/globals";
 
-export default class UsersView extends JetView{
+export default class BarcodesView extends JetView{
     config(){
+
         var sprv = {view: "datatable",
-            localId: "__dtu",
+            //id: "__dtu",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -15,6 +15,7 @@ export default class UsersView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
+            //footer: true,
             headermenu:true,
             startPos: 1,
             posPpage: 20,
@@ -28,17 +29,7 @@ export default class UsersView extends JetView{
                     },
                 { id: "c_user",
                     fillspace: 1, sort: "text",
-                    header: [{text: "Пользователь"},
-                        ]
-                    },
-                { id: "id_group",
-                    width: 170, //sort: "text",
-                    header: [{text: "Группа"},
-                        ]
-                    },
-                { id: "id_role",
-                    width: 170, //sort: "text",
-                    header: [{text: "Роль пользователя"},
+                    header: [{text: "Штрихкоды"},
                         ]
                     },
                 { id: "id_state", 
@@ -54,20 +45,20 @@ export default class UsersView extends JetView{
                 ],
             on: {
                 onBeforeRender: function() {
-                    webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
+                    //webix.extend(this, webix.ProgressBar);
+                    //if (!this.count) {
+                        //this.showProgress({
+                            //type: "icon",
+                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            //});
+                        //}
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
                     this.$scope.popnewuser.show('Редактирование пользователя', item);
                     },
                 onAfterLoad: function() {
-                    this.hideProgress();
+                    //this.hideProgress();
                     },
                 onBeforeSelect: () => {
                     this.$$("_del").enable();
@@ -78,13 +69,19 @@ export default class UsersView extends JetView{
                         }
                     },
                 },
+            data: [
+                {"id": 1, "c_user": "admin", "id_group": "adm", "id_role": "adm", "id_state": "active", "dt": "01-01-2016"},
+                {"id": 2, "c_user": "not admin", "id_group": "user", "id_role": "user", "id_state": "active", "dt": "01-01-2016"},
+                {"id": 3, "c_user": "not admin 1", "id_group": "user", "id_role": "user", "id_state": "inactive", "dt": "01-01-2016"},
+
+                ]
             }
 
         var top = {//view: 'layout',
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
+                    keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
                     on: {
                         onTimedKeyPress: function(code, event) {
                             //let th = this.$scope;
@@ -134,19 +131,5 @@ export default class UsersView extends JetView{
         
     init() {
         this.popnewuser = this.ui(NewUserView);
-        let th = this.$$("__dtu");
-        th.clearAll();
-        let user = this.app.config.user;
-        let url = this.app.config.r_url + "?getUsersAll"
-        let params = {"user": user};
-        request(url, params).then(function(data) {
-            data = data.json();
-            if (data.result) {
-                data = data.ret_val
-                th.parse(data);
-            } else {
-                webix.message('error');
-                };
-            })
         }
     }

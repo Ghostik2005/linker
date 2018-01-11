@@ -328,6 +328,25 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def checkHran(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from classifier 
+                where classifier.idx_group = 3 and classifier.cd_group = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+        
+
     def getGroupAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
@@ -439,6 +458,32 @@ class API:
                 new = True
             _return.append(ret)
             ret = {"result": True, "ret_val": _return, "new": new}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+
+    def getUsersAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """select r.ID, r."USER", r.PASSWD, r."GROUP", r.INN, r.ID_ROLE from users r"""
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[0],
+                    "c_user"    : row[1],
+                    "c_pwrd"    : row[2],
+                    "id_group"  : row[3],
+                    "c_inn"     : row[4],
+                    "id_role"   : row[5],
+                    "id_state"  : "active",
+                    "dt"        : "01-01-2016"
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -1369,7 +1414,7 @@ def parse_args(arg, _param, x_hash, api):
     try:
         call = getattr(api, arg)
     except:
-        content = u'\'%s\' not implimented method' % arg
+        content = json.dumps(u'\'%s\' not implimented method' % arg, ensure_ascii=False)
     else:
         if x_hash:
             try:
@@ -1379,9 +1424,9 @@ def parse_args(arg, _param, x_hash, api):
                 #print('error calling', _param, x_hash)
                 print(traceback.format_exc(), flush=True)
                 #print('-'*20)
-                content = u'use \'%s\' with correct parameters' % arg
+                content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
         else:
-            content = u'login please'
+            content = json.dumps(u'login please', ensure_ascii=False)
     return content
 
 def handle_commandline(profile, index):

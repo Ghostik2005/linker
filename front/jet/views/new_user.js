@@ -7,6 +7,10 @@ export default class NewUserView extends JetView{
         return {view: "cWindow",
             modal: true,
             on: {
+                onHide: () => {
+                    console.log(this.$$("new_user"));
+                    this.$$("new_user").clear();
+                    }
                 },
             body: { view: "form",
                 localId: "new_user",
@@ -47,7 +51,7 @@ export default class NewUserView extends JetView{
                             {view:"combo", label: "", value: "", name: "id_role",
                                 options:  {
                                     body: {
-                                        template:"#c_role#",
+                                        template:"#id_role#",
                                         yCount:10,
                                         }
                                     },

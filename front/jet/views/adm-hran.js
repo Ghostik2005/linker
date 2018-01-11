@@ -1,13 +1,15 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import NewUserView from "../views/new_user";
-import {request} from "../views/globals";
+import {hran, addHran, delHran, updHran} from "../views/globals";
+import NewPropView from "../views/new_prop";
 
-export default class UsersView extends JetView{
+
+export default class HranView extends JetView{
     config(){
+
         var sprv = {view: "datatable",
-            localId: "__dtu",
+            localId: "__dth",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -15,6 +17,7 @@ export default class UsersView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
+            //footer: true,
             headermenu:true,
             startPos: 1,
             posPpage: 20,
@@ -26,19 +29,9 @@ export default class UsersView extends JetView{
                     header: [{text: "ID"},
                         ],
                     },
-                { id: "c_user",
+                { id: "usloviya",
                     fillspace: 1, sort: "text",
-                    header: [{text: "Пользователь"},
-                        ]
-                    },
-                { id: "id_group",
-                    width: 170, //sort: "text",
-                    header: [{text: "Группа"},
-                        ]
-                    },
-                { id: "id_role",
-                    width: 170, //sort: "text",
-                    header: [{text: "Роль пользователя"},
+                    header: [{text: "Условия хранения"},
                         ]
                     },
                 { id: "id_state", 
@@ -64,7 +57,8 @@ export default class UsersView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    this.$scope.popnewuser.show('Редактирование пользователя', item);
+                    let params = {'text': item.usloviya, 'id': item.id, 'type': 'Hran', 'callback': updHran};
+                    this.$scope.popnew.show('Редактирование условия хранения', params);
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
@@ -87,35 +81,32 @@ export default class UsersView extends JetView{
                     keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
                     on: {
                         onTimedKeyPress: function(code, event) {
-                            //let th = this.$scope;
-                            //let count = $$("__dt").config.posPpage;
-                            //get_data({
-                                //th: th,
-                                //view: "__dt",
-                                //navBar: "__nav",
-                                //start: 1,
-                                //count: count,
-                                //searchBar: "_spr_search",
-                                //method: "getSprSearch"
-                                //});
+                            let value = this.getValue().toString().toLowerCase();
+                            this.$scope.$$("__dth").filter(function(obj){
+                                return obj.usloviya.toString().toLowerCase().indexOf(value) != -1;
+                                })
                             }
                         },
                     },
                 {view:"button", type: 'htmlbutton', disabled: !true, 
-                    label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
-                        this.popnewuser.show('Добавление пользователя');
+                        let params = {'type': 'Hran', 'callback': addHran};
+                        this.popnew.show('Добавление условия хранения', params);
                         webix.message({
-                            text: "Добавление пользователя",
+                            text: "Добавление",
                             type: "debug",
                             })
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     click: () => {
+                        ///////сделать удаление с сервера
+                        let item_id = this.$$("__dth").getSelectedItem().id
+                        delHran(item_id);
                         webix.message({
-                            text: "Удаление пользователя",
+                            text: "Удаление",
                             type: "debug",
                             })
                         }
@@ -133,20 +124,7 @@ export default class UsersView extends JetView{
         }
         
     init() {
-        this.popnewuser = this.ui(NewUserView);
-        let th = this.$$("__dtu");
-        th.clearAll();
-        let user = this.app.config.user;
-        let url = this.app.config.r_url + "?getUsersAll"
-        let params = {"user": user};
-        request(url, params).then(function(data) {
-            data = data.json();
-            if (data.result) {
-                data = data.ret_val
-                th.parse(data);
-            } else {
-                webix.message('error');
-                };
-            })
+        this.popnew = this.ui(NewPropView);
+        this.$$("__dth").sync(hran.data);
         }
     }
