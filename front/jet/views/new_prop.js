@@ -18,7 +18,7 @@ export default class NewPropView extends JetView{
             if (ret_data.ret_val || this.config._params.text) {
                 ret = true
             } else {
-                //webix.message('error');
+                webix.message('error');
                 };
             return ret;
             }
@@ -57,6 +57,7 @@ export default class NewPropView extends JetView{
                         {view: "button", type: "base", label: "Сохранить", width: 120,
                             click: () => {
                                 let valid = this.$$("_n_f").validate({hidden:false, disabled:false});
+                                //let valid = true;
                                 if (valid) {
                                     let _f = this.$$("_n_f").getValues();
                                     let params = {};
@@ -64,11 +65,12 @@ export default class NewPropView extends JetView{
                                     params['value'] = _f.text;
                                     params['user'] = this.app.config.user;
                                     params['id'] = (para.text) ? para.id : _f.id;
-                                    let url = this.app.config.r_url + "?set" + para.type
+                                    let url = (para.mode === 'new') ? this.app.config.r_url + "?set" + para.type
+                                                                    : this.app.config.r_url + "?upd" + para.type;
                                     let ret_data = request(url, params, !0).response;
                                     ret_data = JSON.parse(ret_data);
                                     if (ret_data.result) {
-                                        para.callback(ret_data.ret_val);
+                                        para.callback(ret_data.ret_val, para.source);
                                     } else {
                                         //webix.message('error');
                                         };
@@ -90,9 +92,12 @@ export default class NewPropView extends JetView{
         }
     show(new_head, params){
         this.$$("_n_f").config._params = params;
+        console.log(params);
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         if (params.text) {
-            this.$$("_n_f").parse(params);
+            let _p = {'text': params.text, 'id': params.id}
+            console.log(_p);
+            this.$$("_n_f").parse(_p);
             this.$$("_id").define('readonly', true);
         } else {
             this.$$("_id").define('readonly', false);

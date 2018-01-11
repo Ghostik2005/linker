@@ -334,7 +334,7 @@ class API:
             if check:
                 sql = """select count(*)
                 from classifier 
-                where classifier.idx_group = 3 and classifier.cd_group = ?
+                where classifier.cd_group = ?
                 """
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
@@ -345,7 +345,72 @@ class API:
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-        
+
+    def setHran(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into classifier (cd_group, nm_group, IDX_GROUP)
+                values (?, ?, 3) returning cd_group"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delHran(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from classifier where cd_group = ? returning cd_group"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def updHran(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update classifier set nm_group = ? where cd_group = ? returning cd_group"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def getGroupAll(self, params=None, x_hash=None):
         if self._check(x_hash):

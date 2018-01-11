@@ -84,8 +84,14 @@ export function delHran(item_id) {
     hran.remove(item_id);
     }
 
-export function updHran(item) {
-    hran.updateItem(item.id, item.value);
+export function updHran(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.usloviya = item.value;
+    //console.log(ret_data.ret_val);
+    source.updateItem(cid, citem);
+    source.refresh();
+    //hran.updateItem(item.id, item.value);
     }
 
 export function last_page(view) {

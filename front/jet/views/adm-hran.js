@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {hran, addHran, delHran, updHran} from "../views/globals";
+import {hran, addHran, delHran, updHran, request} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 
@@ -47,7 +47,7 @@ export default class HranView extends JetView{
                 ],
             on: {
                 onBeforeRender: function() {
-                    webix.extend(this, webix.ProgressBar);
+                    //webix.extend(this, webix.ProgressBar);
                     if (!this.count) {
                         this.showProgress({
                             type: "icon",
@@ -57,7 +57,8 @@ export default class HranView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.usloviya, 'id': item.id, 'type': 'Hran', 'callback': updHran};
+                    console.log(item);
+                    let params = {'text': item.usloviya, 'id': item.id, 'type': 'Hran', 'callback': updHran, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование условия хранения', params);
                     },
                 onAfterLoad: function() {
@@ -78,7 +79,7 @@ export default class HranView extends JetView{
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
+                    keyPressTimeout: 900, tooltip: "поиск по условиям хранения",
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
@@ -91,7 +92,8 @@ export default class HranView extends JetView{
                 {view:"button", type: 'htmlbutton', disabled: !true, 
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
-                        let params = {'type': 'Hran', 'callback': addHran};
+                        //////сделать добавление на сервер
+                        let params = {'type': 'Hran', 'callback': addHran, 'mode': 'new', 'source': this.$$("__dth")};
                         this.popnew.show('Добавление условия хранения', params);
                         webix.message({
                             text: "Добавление",
@@ -104,11 +106,21 @@ export default class HranView extends JetView{
                     click: () => {
                         ///////сделать удаление с сервера
                         let item_id = this.$$("__dth").getSelectedItem().id
-                        delHran(item_id);
-                        webix.message({
-                            text: "Удаление",
-                            type: "debug",
-                            })
+                        console.log(item_id);
+                        let params = {};
+                        params['user'] = this.app.config.user;
+                        params['id'] = item_id;
+                        let url = this.app.config.r_url + "?delHran";
+                        let ret_data = request(url, params, !0).response;
+                        ret_data = JSON.parse(ret_data);
+                        if (ret_data.result) {
+                            delHran(ret_data.ret_val.id);
+                        } else {
+                            webix.message({
+                                text: ret_data.ret_val,
+                                type: "debug",
+                                })
+                            };
                         }
                     },
                 ]
@@ -125,6 +137,7 @@ export default class HranView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
+        webix.extend(this.$$("__dth"), webix.ProgressBar);
         this.$$("__dth").sync(hran.data);
         }
     }
