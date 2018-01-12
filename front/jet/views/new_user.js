@@ -8,7 +8,7 @@ export default class NewUserView extends JetView{
             modal: true,
             on: {
                 onHide: () => {
-                    console.log(this.$$("new_user"));
+                    //console.log(this.$$("new_user"));
                     this.$$("new_user").clear();
                     }
                 },
@@ -109,7 +109,7 @@ export default class NewUserView extends JetView{
                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === "admin") this.enable();
+                                        //if (this.$scope.app.config.user === "admin") this.enable();
                                         }
                                     },
                                 click: () => {

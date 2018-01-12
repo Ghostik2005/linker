@@ -1,8 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import NewUserView from "../views/new_user";
-import {dv} from "../views/globals";
+import {dv, addDv, delDv, updDv, request} from "../views/globals";
+import NewPropView from "../views/new_prop";
 
 export default class DvView extends JetView{
     config(){
@@ -24,7 +24,7 @@ export default class DvView extends JetView{
             old_stri: "",
             columns: [
                 {id: "id",
-                    width: 75,
+                    width: 75, sort: "text",
                     header: [{text: "ID"},
                         ],
                     },
@@ -46,20 +46,20 @@ export default class DvView extends JetView{
                 ],
             on: {
                 onBeforeRender: function() {
-                    //webix.extend(this, webix.ProgressBar);
-                    //if (!this.count) {
-                        //this.showProgress({
-                            //type: "icon",
-                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            //});
-                        //}
+                    if (!this.count) {
+                        this.showProgress({
+                            type: "icon",
+                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            });
+                        }
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    this.$scope.popnewuser.show('Редактирование пользователя', item);
+                    let params = {'text': item.act_ingr, 'id': item.id, 'type': 'Dv', 'callback': updDv, 'mode': 'upd', 'source': this};
+                    this.$scope.popnew.show('Редактирование действующего в-ва', params);
                     },
                 onAfterLoad: function() {
-                    //this.hideProgress();
+                    this.hideProgress();
                     },
                 onBeforeSelect: () => {
                     this.$$("_del").enable();
@@ -70,52 +70,47 @@ export default class DvView extends JetView{
                         }
                     },
                 },
-            //data: [
-                //{"id": 1, "c_user": "admin", "id_group": "adm", "id_role": "adm", "id_state": "active", "dt": "01-01-2016"},
-                //{"id": 2, "c_user": "not admin", "id_group": "user", "id_role": "user", "id_state": "active", "dt": "01-01-2016"},
-                //{"id": 3, "c_user": "not admin 1", "id_group": "user", "id_role": "user", "id_state": "inactive", "dt": "01-01-2016"},
-
-                //]
             }
 
         var top = {//view: 'layout',
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
+                    keyPressTimeout: 900, tooltip: "поиск по действующему веществу",
                     on: {
                         onTimedKeyPress: function(code, event) {
-                            //let th = this.$scope;
-                            //let count = $$("__dt").config.posPpage;
-                            //get_data({
-                                //th: th,
-                                //view: "__dt",
-                                //navBar: "__nav",
-                                //start: 1,
-                                //count: count,
-                                //searchBar: "_spr_search",
-                                //method: "getSprSearch"
-                                //});
+                            let value = this.getValue().toString().toLowerCase();
+                            this.$scope.$$("__dtd").filter(function(obj){
+                                return obj.act_ingr.toString().toLowerCase().indexOf(value) != -1;
+                                })
                             }
                         },
                     },
                 {view:"button", type: 'htmlbutton', disabled: !true, 
-                    label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
-                        this.popnewuser.show('Добавление пользователя');
-                        webix.message({
-                            text: "Добавление пользователя",
-                            type: "debug",
-                            })
+                        let params = {'type': 'Dv', 'callback': addDv, 'mode': 'new', 'source': this.$$("__dtd")};
+                        this.popnew.show('Добавление действующего в-ва', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     click: () => {
-                        webix.message({
-                            text: "Удаление пользователя",
-                            type: "debug",
-                            })
+                        let item_id = this.$$("__dtd").getSelectedItem().id
+                        let params = {};
+                        params['user'] = this.app.config.user;
+                        params['id'] = item_id;
+                        let url = this.app.config.r_url + "?delDv";
+                        let ret_data = request(url, params, !0).response;
+                        ret_data = JSON.parse(ret_data);
+                        if (ret_data.result) {
+                            delDv(ret_data.ret_val.id);
+                        } else {
+                            webix.message({
+                                text: ret_data.ret_val,
+                                type: "debug",
+                                })
+                            };
                         }
                     },
                 ]
@@ -131,7 +126,8 @@ export default class DvView extends JetView{
         }
         
     init() {
-        this.popnewuser = this.ui(NewUserView);
+        this.popnew = this.ui(NewPropView);
+        webix.extend(this.$$("__dtd"), webix.ProgressBar);
         this.$$("__dtd").sync(dv.data);
         }
     }

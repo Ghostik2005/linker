@@ -83,8 +83,8 @@ export default class UsersView extends JetView{
         var top = {//view: 'layout',
             height: 40,
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска. Позже.", 
+                    keyPressTimeout: 900, tooltip: "Поиск по пользователю",
                     on: {
                         onTimedKeyPress: function(code, event) {
                             //let th = this.$scope;
@@ -105,17 +105,17 @@ export default class UsersView extends JetView{
                     label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');
-                        webix.message({
-                            text: "Добавление пользователя",
-                            type: "debug",
-                            })
+                        //webix.message({
+                            //text: "Добавление пользователя",
+                            //type: "debug",
+                            //})
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
                     label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     click: () => {
                         webix.message({
-                            text: "Удаление пользователя",
+                            text: "Удаление пользователя. Позже.",
                             type: "debug",
                             })
                         }

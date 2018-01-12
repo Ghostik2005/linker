@@ -1,14 +1,15 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {strana, addStrana, delStrana, updStrana, request} from "../views/globals";
+import {nds, addNds, delNds, updNds, request} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
-export default class CountryView extends JetView{
+
+export default class SeasonsView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            localId: "__dtc",
+            localId: "__dts",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -28,9 +29,9 @@ export default class CountryView extends JetView{
                     header: [{text: "ID"},
                         ],
                     },
-                { id: "c_strana",
+                { id: "nds",
                     fillspace: 1, sort: "text",
-                    header: [{text: "Страна"},
+                    header: [{text: "НДС"},
                         ]
                     },
                 { id: "id_state", 
@@ -55,8 +56,8 @@ export default class CountryView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.c_strana, 'id': item.id, 'type': 'Strana', 'callback': updStrana, 'mode': 'upd', 'source': this};
-                    this.$scope.popnew.show('Редактирование страны', params);
+                    let params = {'text': item.nds, 'id': item.id, 'type': 'Nds', 'callback': updNds, 'mode': 'upd', 'source': this};
+                    this.$scope.popnew.show('Редактирование НДС', params);
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
@@ -76,12 +77,12 @@ export default class CountryView extends JetView{
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "поиск по стране",
+                    keyPressTimeout: 900, tooltip: "поиск по НДС",
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dtc").filter(function(obj){
-                                return obj.c_strana.toString().toLowerCase().indexOf(value) != -1;
+                            this.$scope.$$("__dts").filter(function(obj){
+                                return obj.nds.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
                         },
@@ -89,22 +90,22 @@ export default class CountryView extends JetView{
                 {view:"button", type: 'htmlbutton', disabled: !true, 
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
-                        let params = {'type': 'Strana', 'callback': addStrana, 'mode': 'new', 'source': this.$$("__dtc")};
-                        this.popnew.show('Добавление страны', params);
+                        let params = {'type': 'Nds', 'callback': addNds, 'mode': 'new', 'source': this.$$("__dts")};
+                        this.popnew.show('Добавление НДС', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
                     label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     click: () => {
-                        let item_id = this.$$("__dtc").getSelectedItem().id
+                        let item_id = this.$$("__dts").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
-                        let url = this.app.config.r_url + "?delStrana";
+                        let url = this.app.config.r_url + "?delNds";
                         let ret_data = request(url, params, !0).response;
                         ret_data = JSON.parse(ret_data);
                         if (ret_data.result) {
-                            delStrana(ret_data.ret_val.id);
+                            delNds(ret_data.ret_val.id);
                         } else {
                             webix.message({
                                 text: ret_data.ret_val,
@@ -127,7 +128,7 @@ export default class CountryView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
-        webix.extend(this.$$("__dtc"), webix.ProgressBar);
-        this.$$("__dtc").sync(strana.data);
+        webix.extend(this.$$("__dts"), webix.ProgressBar);
+        this.$$("__dts").sync(nds.data);
         }
     }

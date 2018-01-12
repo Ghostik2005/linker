@@ -92,11 +92,9 @@ export default class NewPropView extends JetView{
         }
     show(new_head, params){
         this.$$("_n_f").config._params = params;
-        console.log(params);
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         if (params.text) {
             let _p = {'text': params.text, 'id': params.id}
-            console.log(_p);
             this.$$("_n_f").parse(_p);
             this.$$("_id").define('readonly', true);
         } else {

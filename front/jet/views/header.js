@@ -33,7 +33,7 @@ export default class HeaderView extends JetView{
                         //this.app.show("/start/grouper");
                         //}
                     //},
-                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton',
+                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: true,
                     label: "<span class='butt'>Выйти</span>", width: 80,
                     click: () => {
                         webix.message({"text": "exit", "type": "debug"});

@@ -16,7 +16,6 @@ import subprocess
 from urllib.parse import unquote
 from libs.lockfile import LockWait
 import psycopg2
-import asterisk_a.ami as ami
 import zlib
 from io import BytesIO
 from libs.connect import fb_local
@@ -254,6 +253,90 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def checkStrana(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from spr_strana
+                where ID_SPR = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setStrana(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into spr_strana (ID_SPR, C_STRANA, FLAG)
+                values (?, ?, 1) returning ID_SPR"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'c_strana' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delStrana(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from SPR_STRANA where ID_SPR = ? returning ID_SPR"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updStrana(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update SPR_STRANA set C_STRANA = ? where ID_SPR = ? returning ID_SPR"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
     def getVendorAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             sql = "select c_zavod, id_spr from spr_zavod where flag=1 order by c_zavod"
@@ -267,6 +350,89 @@ class API:
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def checkVendor(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from spr_zavod
+                where ID_SPR = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setVendor(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into spr_zavod (ID_SPR, C_ZAVOD, FLAG)
+                values (?, ?, 1) returning ID_SPR"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'c_zavod' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delVendor(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from SPR_ZAVOD where ID_SPR = ? returning ID_SPR"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updVendor(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update SPR_ZAVOD set C_ZAVOD = ? where ID_SPR = ? returning ID_SPR"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -288,6 +454,90 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def checkDv(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from DV
+                where ID = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setDv(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into DV (ID, ACT_INGR, FLAG)
+                values (?, ?, 1) returning ID"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'act_ingr' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "add error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delDv(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from DV where ID = ? returning ID"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updDv(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update DV set ACT_INGR = ? where ID = ? returning ID"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
     def getSezonAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
@@ -304,6 +554,89 @@ class API:
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def checkSez(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from classifier 
+                where classifier.cd_group = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setSez(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into classifier (cd_group, nm_group, IDX_GROUP)
+                values (?, ?, 6) returning cd_group"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'sezon' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "add error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delSez(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from classifier where cd_group = ? returning cd_group"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updSez(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update classifier set nm_group = ? where cd_group = ? returning cd_group"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -358,7 +691,7 @@ class API:
                 if res[0]:
                     _ret = {
                         'id'    : c_id,
-                        'value' : val
+                        'usloviya' : val
                     }
                     ret = {"result": True, "ret_val": _ret}
                 else:
@@ -388,7 +721,6 @@ class API:
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
     def updHran(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -432,6 +764,89 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def checkGr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from classifier 
+                where classifier.cd_group = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setGr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into classifier (cd_group, nm_group, IDX_GROUP)
+                values (?, ?, 1) returning cd_group"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'group' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delGr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from classifier where cd_group = ? returning cd_group"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updGr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update classifier set nm_group = ? where cd_group = ? returning cd_group"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getNdsAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
@@ -451,6 +866,91 @@ class API:
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
+
+    def checkNds(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from classifier 
+                where classifier.cd_group = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setNds(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """insert into classifier (cd_group, nm_group, IDX_GROUP)
+                values (?, ?, 2) returning cd_group"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'nds'   : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "add error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delNds(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            if c_id:
+                sql = """delete from classifier where cd_group = ? returning cd_group"""
+                opt = (c_id,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updNds(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = """update classifier set nm_group = ? where cd_group = ? returning cd_group"""
+                opt = (val, c_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'value' : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
 
     def _insGr(self, params, result):
         prescr = params.get("prescr");
@@ -613,7 +1113,7 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def checkDv(self, params=None, x_hash=None):
+    def checkDv1(self, params=None, x_hash=None):
         if self._check(x_hash):
             act_ingr = params.get("act_ingr")
             if act_ingr:
@@ -629,7 +1129,7 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def setDv(self, params=None, x_hash=None):
+    def setDv1(self, params=None, x_hash=None):
         if self._check(x_hash):
             act_ingr = params.get("act_ingr")
             if act_ingr:

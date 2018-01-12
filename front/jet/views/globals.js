@@ -94,6 +94,102 @@ export function updHran(item, source) {
     //hran.updateItem(item.id, item.value);
     }
 
+export function addStrana(item) {
+    strana.add(item);
+    }
+
+export function delStrana(item_id) {
+    strana.remove(item_id);
+    }
+
+export function updStrana(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.c_strana = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
+export function addDv(item) {
+    dv.add(item);
+    }
+
+export function delDv(item_id) {
+    dv.remove(item_id);
+    }
+
+export function updDv(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.act_ingr = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
+export function addNds(item) {
+    nds.add(item);
+    }
+
+export function delNds(item_id) {
+    nds.remove(item_id);
+    }
+
+export function updNds(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.nds = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
+export function addSez(item) {
+    sezon.add(item);
+    }
+
+export function delSez(item_id) {
+    sezon.remove(item_id);
+    }
+
+export function updSez(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.sezon = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
+export function addGr(item) {
+    group.add(item);
+    }
+
+export function delGr(item_id) {
+    group.remove(item_id);
+    }
+
+export function updGr(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.group = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
+export function addVendor(item) {
+    vendor.add(item);
+    }
+
+export function delVendor(item_id) {
+    vendor.remove(item_id);
+    }
+
+export function updVendor(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.c_zavod = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
 export function last_page(view) {
     let total = $$(view).config.totalPos;
     let ppp = $$(view).config.posPpage;
@@ -138,6 +234,7 @@ export function get_data(inp_params) {
     let search_str = $$(se_s).getValue();
     let user = (th) ? th.app.config.user : "user";
     let url = (th) ? th.app.config.r_url + "?" + method: "http://saas.local/linker_logic?" + method;
+    //let url = (th) ? th.app.config.r_url + "?" + method: "../linker_logic?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count};
     let old_stri = $$(view).config.old_stri;
     if (old_stri !== search_str) {

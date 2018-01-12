@@ -7,7 +7,7 @@ export default class BarcodesView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            //id: "__dtu",
+            localId: "__dtd",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -27,9 +27,9 @@ export default class BarcodesView extends JetView{
                     header: [{text: "ID"},
                         ],
                     },
-                { id: "c_user",
+                { id: "barcode",
                     fillspace: 1, sort: "text",
-                    header: [{text: "Штрихкоды"},
+                    header: [{text: "Штрихкод"},
                         ]
                     },
                 { id: "id_state", 
@@ -55,13 +55,13 @@ export default class BarcodesView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    this.$scope.popnewuser.show('Редактирование пользователя', item);
+                    //this.$scope.popnewuser.show('Редактирование пользователя', item);
                     },
                 onAfterLoad: function() {
                     //this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").enable();
+                    //this.$$("_del").enable();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -70,9 +70,9 @@ export default class BarcodesView extends JetView{
                     },
                 },
             data: [
-                {"id": 1, "c_user": "admin", "id_group": "adm", "id_role": "adm", "id_state": "active", "dt": "01-01-2016"},
-                {"id": 2, "c_user": "not admin", "id_group": "user", "id_role": "user", "id_state": "active", "dt": "01-01-2016"},
-                {"id": 3, "c_user": "not admin 1", "id_group": "user", "id_role": "user", "id_state": "inactive", "dt": "01-01-2016"},
+                {"id": 1, "barcode": "1111111111111", "id_group": "adm", "id_role": "adm", "id_state": "active", "dt": "01-01-2016"},
+                {"id": 2, "barcode": "2222222222222", "id_group": "user", "id_role": "user", "id_state": "active", "dt": "01-01-2016"},
+                {"id": 3, "barcode": "3333333333333", "id_group": "user", "id_role": "user", "id_state": "inactive", "dt": "01-01-2016"},
 
                 ]
             }
@@ -81,7 +81,7 @@ export default class BarcodesView extends JetView{
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
+                    keyPressTimeout: 900, tooltip: "поиск по ШК",
                     on: {
                         onTimedKeyPress: function(code, event) {
                             //let th = this.$scope;
@@ -98,7 +98,7 @@ export default class BarcodesView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: !true, 
+                {view:"button", type: 'htmlbutton', disabled: true, 
                     label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');

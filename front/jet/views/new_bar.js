@@ -81,6 +81,7 @@ export default class NewbarView extends JetView{
                                 {}
                                 ]},
                             ]},
+                        {height: 10},
                         {cols: [
                             {view: "button", type: "base", label: "Отменить", width: 120,
                                 click: () => {

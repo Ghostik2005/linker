@@ -57,7 +57,6 @@ export default class HranView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    console.log(item);
                     let params = {'text': item.usloviya, 'id': item.id, 'type': 'Hran', 'callback': updHran, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование условия хранения', params);
                     },
@@ -92,21 +91,18 @@ export default class HranView extends JetView{
                 {view:"button", type: 'htmlbutton', disabled: !true, 
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
-                        //////сделать добавление на сервер
                         let params = {'type': 'Hran', 'callback': addHran, 'mode': 'new', 'source': this.$$("__dth")};
                         this.popnew.show('Добавление условия хранения', params);
-                        webix.message({
-                            text: "Добавление",
-                            type: "debug",
-                            })
+                        //webix.message({
+                            //text: "Добавление",
+                            //type: "debug",
+                            //})
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
                     label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     click: () => {
-                        ///////сделать удаление с сервера
                         let item_id = this.$$("__dth").getSelectedItem().id
-                        console.log(item_id);
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;

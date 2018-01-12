@@ -152,7 +152,7 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         click: () => {
-                                            let params = {'new_name': 'act_ingr', 'url': "Dv", "callback": addDv}
+                                            let params = {'new_name': 'act_ingr', 'url': "Dv1", "callback": addDv}
                                             this.popstri.show("Добавление д.вещества", params);
                                             }
                                         },

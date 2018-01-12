@@ -33,7 +33,7 @@ export default class TopmenuView extends JetView{
                                        (+id_opt === 5) ? "/start/adm/adm-groups" :
                                        (+id_opt === 7) ? "/start/adm/adm-seasons" :
                                        (+id_opt === 8) ? "/start/adm/adm-hran" :
-                                       (+id_opt === 9) ? "/start/adm/adm-users" :
+                                       (+id_opt === 9) ? "/start/adm/adm-nds" :
                                        "/start/adm/adm-users";
                             //console.log(path);
                             this.app.show(path);
