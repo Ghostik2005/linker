@@ -34,15 +34,15 @@ webix.ready(() => {
                 })
             }
         }, webix.ui.window);
+    let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic";
     var app = new JetApp({
         id:         "mainApp",
         name:       "linker",
-        version:    "2017.334.1230",
+        version:    "17.334.1230",
         start:      "/start/body",
         user:       "admin",
         //user:       "stasya",
-        r_url:      "http://saas.local/linker_logic",
-        //r_url:      "../linker_logic",
+        r_url:      u1,
         //router:     StoreRouter,
         x_api:      "api-key",
         debug:      true

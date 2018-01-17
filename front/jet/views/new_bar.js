@@ -94,6 +94,7 @@ export default class NewbarView extends JetView{
                                     this.$$("b_list").selectAll();
                                     let bars = this.$$("b_list").getSelectedItem();
                                     var parse = '';
+                                    let th = this.$$("_n_b").config.th;
                                     if (bars) {
                                         let t = typeof(bars);
                                         try {
@@ -104,8 +105,7 @@ export default class NewbarView extends JetView{
                                             parse = bars.barcode;
                                             }
                                         }
-                                    let th = this.$$("_n_b").config.th;
-                                    th.$$("_barc").setValue(parse);
+                                    if (th) th.$$("_barc").setValue(parse);
                                     this.hide();
                                     }
                                 }

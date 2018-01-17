@@ -39,6 +39,8 @@ def main():
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
     sys.APPCONF["api"] = libs.API(Lock=sys.APPCONF['Lock'], log = sys.APPCONF["log"], w_path = w_path, p_path=p_path)
 
+    import atexit
+    atexit.register(libs.shutdown, sys.APPCONF["log"])
     #threading.Thread(target=s_send, args=(), daemon=True).start()
 
     threads, processes = prepare_server(Lock=sys.APPCONF['Lock'], api = sys.APPCONF["api"])

@@ -3,7 +3,6 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
-import {prcs} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
 import ConfirmView from "../views/yes-no";
@@ -69,7 +68,7 @@ export default class LinksView extends JetView{
                                         }
                                     },
                                 },
-                            {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1},
+                            {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: true},
                             {view:"button", type: 'htmlbutton', id: "_break", disabled: true,
                                 label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
                                 click: () => {
@@ -87,6 +86,7 @@ export default class LinksView extends JetView{
                             borderless: true,
                             rowHeight: 30,
                             fixedRowHeight:false,
+                            headermenu: true,
                             old_stri: " ",
                             columns: [
                                 {id: "c_tovar", header: "Наименование" , fillspace: true,

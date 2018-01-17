@@ -93,6 +93,72 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getPrcsAll(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            search_re = params.get('search')
+            user = params.get('user')
+            stri = ""
+            if search_re:
+                search_re = search_re.replace("'", "").replace('"', "")
+                t1 = search_re.strip()
+                if len(t1) > 0:
+                    exclude = []
+                    for i in range(search_re.count('!')):
+                        ns = search_re.find('!')
+                        ne = search_re.find(' ', ns)
+                        te = search_re[ns+1: ne if ne > 0 else None]
+                        exclude.append(te)
+                        search_re = search_re.replace("!" + te, '')
+                    search_re = search_re.split()
+                    stri = []
+                    for i in range(len(search_re)):
+                        ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                        stri.append('and %s' % ts1)
+                    if len(exclude) > 0:
+                        for i in range(len(exclude)):
+                            ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                            stri.append('and %s' % ts3)
+                    stri = ' '.join(stri)
+
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
+            from prc r
+            inner join USERS u on (u."GROUP" = r.ID_ORG)
+            WHERE r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1 %s
+            ROWS ? to ?
+            """ %stri
+            opt = (user, start_p, end_p)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8]
+                }
+                _return.append(r)
+            sql = """select count(*)
+                from prc r
+                inner join USERS u on (u."GROUP" = r.ID_ORG)
+                WHERE r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1 %s
+                """ % stri
+            opt = (user,)
+            tot = self.db.request({"sql": sql, "options": opt})[0][0]
+            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
     def getPrcsSkip(self, params=None, x_hash=None):
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
@@ -1027,8 +1093,6 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-
-
     def getUsersAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
@@ -1051,6 +1115,88 @@ class API:
             ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getSprBars(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
+            sti = "lower(r.C_TOVAR) like lower('%%')"
+            exclude = []
+            for i in range(search_re.count('!')):
+                ns = search_re.find('!')
+                ne = search_re.find(' ', ns)
+                te = search_re[ns+1: ne if ne > 0 else None]
+                exclude.append(te)
+                search_re = search_re.replace("!" + te, '')
+            search_re = search_re.split()
+            stri = []
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            if len(exclude) > 0:
+                for i in range(len(exclude)):
+                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    stri.append('and %s' % ts3)
+            stri = ' '.join(stri) if len(stri) > 0 else sti
+            sql = """select count(*)
+                    from spr r
+                    WHERE %s 
+            """ % stri
+            opt = ()
+            count = self.db.request({"sql": sql, "options": opt})[0][0]
+            sql = """select r.id_spr, r.c_tovar 
+                    from spr r
+                    WHERE %s 
+                    order by r.id_spr asc
+                    ROWS ? to ?
+            """ % stri
+            #print(sql)
+            t1 = time.time() - st_t
+            opt = (start_p, end_p)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            st_t = time.time()
+            for row in result:
+                st1 = ' | '.join([str(row[0]), row[1]])
+                r = {
+                    "id"          : row[0],
+                    "$row"        : "barcode",
+                    "open"        : False,
+                    "barcode"     : st1,
+                    "data"        : []
+                }
+                sql = """select r.RDB$DB_KEY, r.barcode from spr_barcode r where r.id_spr = ? order by r.barcode ASC"""
+                opt = (row[0],)
+                res = self.db.request({"sql": sql, "options": opt})
+                for rrr in res:
+                    try:
+                        idc = rrr[0].decode('cp1251')
+                    except Exception as Err:
+                        print(Err)
+                        idc = rrr[0]
+                    #print(idc)
+                    rr = {
+                        #"id"        : idc,
+                        "barcode"   : rrr[1],
+                        "id_state"  : "active",
+                        "dt"        : "",
+                        "owner"     : ""
+                    }
+                    r['data'].append(rr)
+                _return.append(r)
+            t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "time": (t1, t3), "total": count, "start": start_p}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        #print(ret)
         return json.dumps(ret, ensure_ascii=False)
 
     def getBar(self, params=None, x_hash=None):
@@ -1478,8 +1624,8 @@ class API:
                 result = self.db.execute({"sql": sql, "options": opt})[0]
 
                 sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
-                         values (?, ?, ?, ?, ?, ?, ?, ?) """
-                opt = (result[0], id_spr, result[1], result[2], result[3], result[4], result[5], user)
+                         values (?, ?, ?, ?, ?, ?, CAST('NOW' AS TIMESTAMP), ?) """
+                opt = (result[0], id_spr, result[1], result[2], result[3], result[4], user)
                 res = self.db.execute({"sql": sql, "options": opt})
                 ret = {"result": True, "ret_val": result[0]}
             else:
@@ -1500,8 +1646,8 @@ class API:
                 if action == 'return':
                     sql = """insert into PRC
                     (SH_PRC, ID_VND, ID_TOVAR, N_FG, N_CENA, C_TOVAR, C_ZAVOD, ID_ORG, C_INDEX, DT, IN_WORK)
-                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-                    opt = (result[0], result[2], result[3], 0, 0, result[4], result[5], 0, 0, result[6], -1)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST('NOW' AS TIMESTAMP), ?)"""
+                    opt = (result[0], result[2], result[3], 0, 0, result[4], result[5], 0, 0, -1)
                 else:
                     sql = """insert into R_LNK
                     (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, DT_R, USER_R)

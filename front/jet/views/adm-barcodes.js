@@ -2,60 +2,91 @@
 
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
+import {get_data} from "../views/globals";
+import {last_page} from "../views/globals";
+import NewbarView from "../views/new_bar.js";
 
 export default class BarcodesView extends JetView{
     config(){
 
-        var sprv = {view: "datatable",
-            localId: "__dtd",
-            navigation: "row",
-            select: true,
-            resizeColumn:true,
-            fixedRowHeight:false,
-            rowLineHeight:32,
-            rowHeight:32,
-            editable: false,
-            //footer: true,
-            headermenu:true,
+/*
+
+               on: {
+
+                    onItemDblClick: function (item, ii, iii) {
+
+                        },
+
+                    onAfterSelect: function (item) {
+                        let level = this.getSelectedItem().$level;
+                        if (level === 1) {
+                            $$("_break").disable();
+                        } else if (level === 2) {
+                            $$("_break").enable();
+                            };
+                        }
+                    },
+                }
+
+*/
+
+        var sprv = {view: "treetable",
+            id: "__dtd",
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
-            old_stri: "",
+            select: true,
+            resizeColumn:true,
+            borderless: true,
+            navigation: "row",
+            rowHeight: 32,
+            fixedRowHeight:false,
+            rowLineHeight:32,
+            headermenu: true,
+            editable: false,
+            old_stri: " ",
             columns: [
-                {id: "id",
-                    width: 75,
-                    header: [{text: "ID"},
-                        ],
-                    },
-                { id: "barcode",
-                    fillspace: 1, sort: "text",
-                    header: [{text: "Штрихкод"},
-                        ]
+                {id: "barcode", header: "Штрих-код" , fillspace: true,
+                    template:"<span>{common.treetable()} #barcode#</span>" 
                     },
                 { id: "id_state", 
                     width: 150,
                     header: [{text: "Статус"},
                         ]
                     },
-                { id: "dt", 
-                    width: 250,
-                    header: [{text: "Дата заведения"},
-                        ]
-                    }
+                {id: "dt", header: "Дата", width: 160},
+                {id: "owner", header: "Создал", width: 120}
                 ],
             on: {
                 onBeforeRender: function() {
-                    //webix.extend(this, webix.ProgressBar);
-                    //if (!this.count) {
-                        //this.showProgress({
-                            //type: "icon",
-                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            //});
-                        //}
+                    webix.extend(this, webix.ProgressBar);
+                    if (!this.count) {
+                        this.showProgress({
+                            type: "icon",
+                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            });
+                        }
                     },
                 onItemDblClick: function(item) {
-                    item = this.getSelectedItem();
-                    //this.$scope.popnewuser.show('Редактирование пользователя', item);
+                    if (this.$scope.app.config.user === 'admin') {
+                        webix.message('admin');
+                        item = this.getSelectedItem();
+                        let level = item.$level;
+                        if (level === 1) {
+                                webix.message('add barcode');
+                                console.log(item);
+                                //item = item.row;
+                                //item = get_spr(this.$scope, item);
+                                this.$scope.popnewbar.show("Редактирование ШК ", item.id);
+                        } else if (level === 2) {
+                            webix.message('delete barcode');
+                            let it = {'id_spr': item.$parent, 'barcode': item.barcode};
+                            
+                            console.log(it);
+                            };
+                    } else {
+                        webix.message({"type": "error", "text": "Редактирование запрещено"})
+                        };
                     },
                 onAfterLoad: function() {
                     //this.hideProgress();
@@ -69,54 +100,106 @@ export default class BarcodesView extends JetView{
                         }
                     },
                 },
-            data: [
-                {"id": 1, "barcode": "1111111111111", "id_group": "adm", "id_role": "adm", "id_state": "active", "dt": "01-01-2016"},
-                {"id": 2, "barcode": "2222222222222", "id_group": "user", "id_role": "user", "id_state": "active", "dt": "01-01-2016"},
-                {"id": 3, "barcode": "3333333333333", "id_group": "user", "id_role": "user", "id_state": "inactive", "dt": "01-01-2016"},
-
-                ]
             }
 
         var top = {//view: 'layout',
             height: 40,
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "__s_b", fillspace: true,
                     keyPressTimeout: 900, tooltip: "поиск по ШК",
                     on: {
                         onTimedKeyPress: function(code, event) {
-                            //let th = this.$scope;
-                            //let count = $$("__dt").config.posPpage;
-                            //get_data({
-                                //th: th,
-                                //view: "__dt",
-                                //navBar: "__nav",
-                                //start: 1,
-                                //count: count,
-                                //searchBar: "_spr_search",
-                                //method: "getSprSearch"
-                                //});
+                            let th = this.$scope;
+                            let count = $$("__dtd").config.posPpage;
+                            get_data({
+                                th: th,
+                                view: "__dtd",
+                                navBar: "__nav_b",
+                                start: 1,
+                                count: count,
+                                searchBar: "__s_b",
+                                method: "getSprBars"
+                                });
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, 
-                    label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: true, width: 200}
+                ]
+            }
+
+        var nav_b = {view: "toolbar",
+            id: "__nav_b",
+            height: 36,
+            cols: [
+                {view: "button", type: 'htmlbutton',
+                    label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                     click: () => {
-                        this.popnewuser.show('Добавление пользователя');
-                        webix.message({
-                            text: "Добавление пользователя",
-                            type: "debug",
-                            })
+                        let start = 1;
+                        let count = $$("__dtd").config.posPpage;
+                        get_data({
+                            th: this,
+                            view: "__dtd",
+                            navBar: "__nav_b",
+                            start: start,
+                            count: count,
+                            searchBar: "__s_b",
+                            method: "getSprBars"
+                            });
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                {view: "button", type: 'htmlbutton',
+                    label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
                     click: () => {
-                        webix.message({
-                            text: "Удаление пользователя",
-                            type: "debug",
-                            })
+                        let start = $$("__dtd").config.startPos - $$("__dtd").config.posPpage;
+                        start = (start < 0) ? 1 : start;
+                        let count = $$("__dtd").config.posPpage;
+                        get_data({
+                            th: this,
+                            view: "__dtd",
+                            navBar: "__nav_b",
+                            start: start,
+                            count: count,
+                            searchBar: "__s_b",
+                            method: "getSprBars"
+                            });
                         }
                     },
+                {view: "label", label: "Страница 1 из 1", width: 200},
+                {view: "button", type: 'htmlbutton',
+                    label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
+                    click: () => {
+                        let start = $$("__dtd").config.startPos + $$("__dtd").config.posPpage;
+                        start = (start > $$("__dtd").config.totalPos) ? last_page("__dtd"): start;
+                        let count = $$("__dtd").config.posPpage;
+                        get_data({
+                            th: this,
+                            view: "__dtd",
+                            navBar: "__nav_b",
+                            start: start,
+                            count: count,
+                            searchBar: "__s_b",
+                            method: "getSprBars"
+                            });
+                        }
+                    },
+                {view: "button", type: 'htmlbutton',
+                    label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
+                    click: () => {
+                        let start = last_page("__dtd");
+                        let count = $$("__dtd").config.posPpage;
+                        get_data({
+                            th: this,
+                            view: "__dtd",
+                            navBar: "__nav_b",
+                            start: start,
+                            count: count,
+                            searchBar: "__s_b",
+                            method: "getSprBars"
+                            });
+                        }
+                    },
+                {},
+                {view: "label", label: "Всего записей: 0", width: 180},
                 ]
             }
 
@@ -125,11 +208,13 @@ export default class BarcodesView extends JetView{
             rows: [
                 top,
                 sprv,
+                nav_b
                 ]
             }
         }
         
     init() {
-        this.popnewuser = this.ui(NewUserView);
+        webix.extend($$("__dtd"), webix.ProgressBar);
+        this.popnewbar = this.ui(NewbarView);
         }
     }

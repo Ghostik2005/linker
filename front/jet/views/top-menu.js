@@ -7,6 +7,7 @@ import ConfirmView from "../views/yes-no";
 import {filter_1, get_suppl, get_prcs} from "../views/globals";
 import {parse_unlinked_item, get_data} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
+import AllUnlinkedView from "../views/unlinkedall";
 import SkippedView from "../views/skipped";
 import {prcs, delPrc} from "../views/globals";
 
@@ -61,8 +62,14 @@ export default class TopmenuView extends JetView{
                                 this.popskipped.show("Пропущенные товары")
                                 }
                             },
+                        {view:"button", type: 'htmlbutton',
+                            label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Все несвязанные</span>", width: 210,
+                            click: () => {
+                                this.popallunlink.show("Пропущенные товары")
+                                }
+                            },
                         {view:"button", id: '_links', type: 'htmlbutton',
-                            label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки (Ctrl+L)</span>", width: 150,
+                            label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки (Ctrl+L)</span>", width: 210,
                             click: () => {
                                 this.poplinks.show("Линки");
                                 }
@@ -210,6 +217,7 @@ export default class TopmenuView extends JetView{
         this.popnew = this.ui(NewformView);
         this.poplinks = this.ui(LinksView);
         this.popunlink = this.ui(UnlinkedView);
+        this.popallunlink = this.ui(AllUnlinkedView);
         this.popskipped = this.ui(SkippedView);
         
         }

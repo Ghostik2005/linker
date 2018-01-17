@@ -233,11 +233,11 @@ export function get_data(inp_params) {
     let method = inp_params.method;
     let search_str = $$(se_s).getValue();
     let user = (th) ? th.app.config.user : "user";
-    let url = (th) ? th.app.config.r_url + "?" + method: "http://saas.local/linker_logic?" + method;
-    //let url = (th) ? th.app.config.r_url + "?" + method: "../linker_logic?" + method;
+    let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic?" : "../linker_logic?";
+    let url = (th) ? th.app.config.r_url + "?" + method : u1 + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count};
     let old_stri = $$(view).config.old_stri;
-    if (old_stri !== search_str) {
+    if (old_stri !== search_str || old_stri === search_str) { ////////////////////
         $$(view).config.old_stri = search_str;
         $$(view).showProgress({
             type: "icon",
@@ -260,8 +260,8 @@ export function get_data(inp_params) {
             };
     }
 
-export function parse_unlinked_item(th) {
-    let c_item = $$("prcs_dc").getItem($$("prcs_dc").getCursor());
+export function parse_unlinked_item(th, c_item) {
+    c_item = (c_item) ? c_item : $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
@@ -410,16 +410,16 @@ export function get_suppl(view, th) {
 
 export function delPrc(inp_data, th) {
     let sh_prc = inp_data.sh_prc;
-    let cursor =prcs.getCursor() 
+    let cursor = prcs.getCursor() 
     let data = prcs.data.order;
     let _c;
     data.forEach(function(item, i, data) {
-        if (item === cursor) _c = i
+        if (item === cursor) _c = +i
         });
     _c = _c + 1;
-    if (_c === prcs.count()-1) _c = 0;
+    if (_c === prcs.count()) _c = 0;
     prcs.remove(cursor);
-    cursor = prcs.data.order[+_c]
+    cursor = prcs.data.order[+_c];
     prcs.setCursor(cursor);
     if (prcs.count() < 1){
         get_suppl("_suppl", th)

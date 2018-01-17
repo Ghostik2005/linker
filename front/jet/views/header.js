@@ -9,7 +9,7 @@ export default class HeaderView extends JetView{
             cols: [
                 {view: "label", label: "<a href='http://ms71.org'><span class='ms-logo', style='background-image: url(addons/img/ms_logo.jpg);'></span></a>",
                     width: 44, align: 'center', height: 36},
-                {view: "label", label: "Манускрипт солюшн: linker | " + this.app.config.user, css: 'ms-logo-text',
+                {view: "label", label: "Манускрипт солюшн: Линкер v. " + this.app.config.version + " | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
                 //{view: "label", label: "Текущий пользователь:  " + this.app.config.user, css: 'ms-logo-text',
                     //width: 300, height: 36},
