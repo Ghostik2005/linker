@@ -36,7 +36,9 @@ export default class LinksView extends JetView{
                             start: 1,
                             count: 20,
                             searchBar: "_link_search",
-                            method: "getSprLnks"
+                            method: "getSprLnks",
+                            field: 'c_tovar',
+                            direction: 'asc'
                             });
                     },
                 onHide: () => {
@@ -56,6 +58,8 @@ export default class LinksView extends JetView{
                                     onTimedKeyPress: function(code, event) {
                                         let th = this.$scope;
                                         let count = $$("__tt").config.posPpage;
+                                        let field = $$("__tt").config.fi;
+                                        let direction = $$("__tt").config.di;
                                         get_data({
                                             th: th,
                                             view: "__tt",
@@ -63,7 +67,9 @@ export default class LinksView extends JetView{
                                             start: 1,
                                             count: count,
                                             searchBar: "_link_search",
-                                            method: "getSprLnks"
+                                            method: "getSprLnks",
+                                            field: field,
+                                            direction: direction
                                             });
                                         }
                                     },
@@ -87,9 +93,11 @@ export default class LinksView extends JetView{
                             rowHeight: 30,
                             fixedRowHeight:false,
                             headermenu: true,
+                            fi: 'c_tovar',
+                            di: 'asc',
                             old_stri: " ",
                             columns: [
-                                {id: "c_tovar", header: "Наименование" , fillspace: true,
+                                {id: "c_tovar", header: "Наименование" , fillspace: true, sort: 'server',
                                     template:"<span>{common.treetable()} #c_tovar#</span>" 
                                     },
                                 {id: "c_zavod", header: "Производитель", width: 250},
@@ -107,6 +115,24 @@ export default class LinksView extends JetView{
                                             icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
                                             });
                                         }
+                                    },
+                                onBeforeSort: (field, direction) => {
+                                    let th = this;
+                                    let start = $$("__tt").config.startPos;
+                                    let count = $$("__tt").config.posPpage;
+                                    $$("__tt").config.fi = field;
+                                    $$("__tt").config.di = direction;
+                                    get_data({
+                                        th: this,
+                                        view: "__tt",
+                                        navBar: "__nav_l",
+                                        start: start,
+                                        count: count,
+                                        searchBar: "_link_search",
+                                        method: "getSprLnks",
+                                        field: field,
+                                        direction: direction
+                                        });
                                     },
                                 onItemDblClick: function (item, ii, iii) {
                                     let level = this.getSelectedItem().$level;
@@ -160,6 +186,8 @@ export default class LinksView extends JetView{
                                     click: () => {
                                         let start = 1;
                                         let count = $$("__tt").config.posPpage;
+                                        let field = $$("__tt").config.fi;
+                                        let direction = $$("__tt").config.di;
                                         get_data({
                                             th: this,
                                             view: "__tt",
@@ -167,7 +195,9 @@ export default class LinksView extends JetView{
                                             start: start,
                                             count: count,
                                             searchBar: "_link_search",
-                                            method: "getSprLnks"
+                                            method: "getSprLnks",
+                                            field: field,
+                                            direction: direction
                                             });
                                         }
                                     },
@@ -177,6 +207,8 @@ export default class LinksView extends JetView{
                                         let start = $$("__tt").config.startPos - $$("__tt").config.posPpage;
                                         start = (start < 0) ? 1 : start;
                                         let count = $$("__tt").config.posPpage;
+                                        let field = $$("__tt").config.fi;
+                                        let direction = $$("__tt").config.di;
                                         get_data({
                                             th: this,
                                             view: "__tt",
@@ -184,7 +216,9 @@ export default class LinksView extends JetView{
                                             start: start,
                                             count: count,
                                             searchBar: "_link_search",
-                                            method: "getSprLnks"
+                                            method: "getSprLnks",
+                                            field: field,
+                                            direction: direction
                                             });
                                         }
                                     },
@@ -195,6 +229,8 @@ export default class LinksView extends JetView{
                                         let start = $$("__tt").config.startPos + $$("__tt").config.posPpage;
                                         start = (start > $$("__tt").config.totalPos) ? last_page("__tt"): start;
                                         let count = $$("__tt").config.posPpage;
+                                        let field = $$("__tt").config.fi;
+                                        let direction = $$("__tt").config.di;
                                         get_data({
                                             th: this,
                                             view: "__tt",
@@ -202,7 +238,9 @@ export default class LinksView extends JetView{
                                             start: start,
                                             count: count,
                                             searchBar: "_link_search",
-                                            method: "getSprLnks"
+                                            method: "getSprLnks",
+                                            field: field,
+                                            direction: direction
                                             });
                                         }
                                     },
@@ -211,6 +249,8 @@ export default class LinksView extends JetView{
                                     click: () => {
                                         let start = last_page("__tt");
                                         let count = $$("__tt").config.posPpage;
+                                        let field = $$("__tt").config.fi;
+                                        let direction = $$("__tt").config.di;
                                         get_data({
                                             th: this,
                                             view: "__tt",
@@ -218,7 +258,9 @@ export default class LinksView extends JetView{
                                             start: start,
                                             count: count,
                                             searchBar: "_link_search",
-                                            method: "getSprLnks"
+                                            method: "getSprLnks",
+                                            field: field,
+                                            direction: direction
                                             });
                                         }
                                     },

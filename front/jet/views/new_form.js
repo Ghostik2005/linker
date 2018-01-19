@@ -158,23 +158,21 @@ export default class NewformView extends JetView{
                                         },
                                     ]},
                                 {view: "label", label:"Штрих-код:"},
-                                {cols: [
-                                    {view:"text", label: "", value: "", readonly: true, name: "barcode", localId: "_barc",
-                                        click: () => {
-                                            let id_spr = this.$$("new_form").getValues().id_spr
-                                            this.popbar.show("Редактирование ш.кодов", id_spr, this);
-                                            }
-                                        },
-                                    ]},
-                                {view: "textarea", label: "Описание:", labelPosition:"top", value: "", height: 125, name: "c_opisanie"}
+                                {view:"text", label: "", value: "", readonly: true, name: "barcode", localId: "_barc",
+                                    click: () => {
+                                        let id_spr = this.$$("new_form").getValues().id_spr
+                                        this.popbar.show("Редактирование ш.кодов", id_spr, this);
+                                        }
+                                    },
+                                {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_opisanie"}
                                 ]},
                             {width: 5,},
                             {rows: [
                                 {view: "form", css: "borders",
                                     localId: "new_f_right",
                                     elements: [
-                                        {view: "label", labelWidth: 0},
-                                        {view: "label", labelWidth: 0},
+                                        //{view: "label", labelWidth: 0},
+                                        //{view: "label", labelWidth: 0},
                                         {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
                                         {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
                                         {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",

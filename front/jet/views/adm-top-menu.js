@@ -26,7 +26,7 @@ export default class TopmenuView extends JetView{
                     on: {
                         onChange: () => {
                             let id_opt = this.$$("_options").getValue();
-                            let path = (+id_opt === 6) ? "/start/adm/adm-barcodes" :
+                            let path = (+id_opt === 6) ? "/start/adm/adm-barcodes/adm-barcodes-s" :
                                        (+id_opt === 2) ? "/start/adm/adm-country" :
                                        (+id_opt === 3) ? "/start/adm/adm-vendors" :
                                        (+id_opt === 4) ? "/start/adm/adm-dv" :

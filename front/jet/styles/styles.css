@@ -78,3 +78,8 @@ button {
 .comboList {
     word-break: break-all;
     }
+
+.webix_list_item {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    }

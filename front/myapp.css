@@ -65,5 +65,9 @@ button {
 .comboList {
   word-break: break-all;
 }
+.webix_list_item {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/

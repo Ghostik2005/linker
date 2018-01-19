@@ -40,7 +40,7 @@ export default class NewPropView extends JetView{
                     "text": webix.rules.isNotEmpty,
                     },
                 elements: [
-                    {view: "text", localId: "_id",label: "ID группы", value: "", width: 320, name: "id", placeholder: "Введите значение", readonly: true,
+                    {view: "text", localId: "_id",label: "ID", value: "", width: 320, name: "id", placeholder: "Введите значение", readonly: true,
                         required: true, invalidMessage: "Такой ID уже есть"
                         },
                     {view: "text", label: "Название", value: "", width: 320, name: "text", placeholder: "Введите значение",

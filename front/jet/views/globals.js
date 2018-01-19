@@ -225,17 +225,20 @@ export function form_navi(view, pager) {
 
 export function get_data(inp_params) {
     let th = inp_params.th;
+    //console.log(th.getBody());
     let view = inp_params.view;
     let nav = inp_params.navBar;
     let start = inp_params.start;
     let count = inp_params.count;
     let se_s = inp_params.searchBar;
     let method = inp_params.method;
+    let field = (inp_params.field) ? inp_params.field : undefined;
+    let direction = (inp_params.direction) ? inp_params.direction : undefined;
     let search_str = $$(se_s).getValue();
     let user = (th) ? th.app.config.user : "user";
     let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic?" : "../linker_logic?";
     let url = (th) ? th.app.config.r_url + "?" + method : u1 + method;
-    let params = {"user": user, "search": search_str, "start": start, "count": count};
+    let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction};
     let old_stri = $$(view).config.old_stri;
     if (old_stri !== search_str || old_stri === search_str) { ////////////////////
         $$(view).config.old_stri = search_str;

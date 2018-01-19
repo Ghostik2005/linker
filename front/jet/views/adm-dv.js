@@ -26,21 +26,31 @@ export default class DvView extends JetView{
                 {id: "id",
                     width: 75, sort: "text",
                     header: [{text: "ID"},
+                        {content:"selectFilter"}
                         ],
                     },
                 { id: "act_ingr",
                     fillspace: 1, sort: "text",
                     header: [{text: "Действующее вещество"},
+                        {content:"selectFilter"}
+                        ]
+                    },
+                { id: "oa",
+                    width: 200, sort: "text",
+                    header: [{text: "Обязательный ассортимент"},
+                        {content:"selectFilter"}
                         ]
                     },
                 { id: "id_state", 
                     width: 150,
                     header: [{text: "Статус"},
+                        {content:"selectFilter"}
                         ]
                     },
                 { id: "dt", 
                     width: 250,
                     header: [{text: "Дата заведения"},
+                        {content:"selectFilter"}
                         ]
                     }
                 ],

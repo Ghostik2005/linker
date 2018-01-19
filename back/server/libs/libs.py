@@ -99,6 +99,8 @@ class API:
             start_p = int( params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
             search_re = params.get('search')
             user = params.get('user')
             stri = ""
@@ -127,9 +129,9 @@ class API:
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
-            WHERE r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1 %s
-            ROWS ? to ?
-            """ %stri
+            WHERE r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1 {0}
+            order by r.{1} {2}
+            ROWS ? to ?""".format(stri, field, direction)
             opt = (user, start_p, end_p)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -164,6 +166,8 @@ class API:
             start_p = int( params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
             search_re = params.get('search')
             user = params.get('user')
             stri = ""
@@ -191,9 +195,10 @@ class API:
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
-            WHERE r.n_fg = 1 and u."USER" = ? %s
+            WHERE r.n_fg = 1 and u."USER" = ? {0}
+            order by r.{1} {2}
             ROWS ? to ?
-            """ % stri
+            """.format(stri, field, direction)
             opt = (user, start_p, end_p)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -505,14 +510,19 @@ class API:
 
     def getDvAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = "select r.ID, r.ACT_INGR from dv r where r.flag=1 order by r.ACT_INGR"
+            sql = "select r.ID, r.ACT_INGR, r.OA from dv r where r.flag=1 order by r.ACT_INGR"
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
+                if row[2]:
+                    oa = 'Для аптек' if row[2] == 1 else 'Для аптек и аптечных пунктов'
+                else:
+                    oa = 'Нет'
                 r = {
                     "id"        : row[0],
-                    "act_ingr"       : row[1]
+                    "act_ingr"  : row[1],
+                    "oa"        : oa
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1050,15 +1060,14 @@ class API:
             id_strana = params.get("id_strana");
             id_zavod = params.get("id_zavod");
             id_dv = params.get("id_dv");
-            c_opisanie = params.get("c_opisanie");
 
             user = params.get("user");
             sh_prc = params.get("sh_prc");
             _return = []
             if id_spr > 0:
                 sql = """update SPR set C_TOVAR = ?, DT = CAST('NOW' AS TIMESTAMP),
-                ID_DV = ?, ID_ZAVOD = ?, ID_STRANA = ?, C_OPISANIE = ? where ID_SPR = ?"""
-                opt = (c_tovar, id_dv, id_zavod, id_strana, c_opisanie, id_spr)
+                ID_DV = ?, ID_ZAVOD = ?, ID_STRANA = ? where ID_SPR = ?"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana, id_spr)
                 res = self.db.execute({"sql": sql, "options": opt})
                 sql = """delete FROM GROUPS as g
                          WHERE g.CD_GROUP in 
@@ -1074,9 +1083,9 @@ class API:
                 ret = id_spr
                 new = False
             else:
-                sql = """insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA, C_OPISANIE)
-                values (?, CAST('NOW' AS TIMESTAMP), ?, ?, ?, ?) returning ID_SPR"""
-                opt = (c_tovar, id_dv, id_zavod, id_strana, c_opisanie)
+                sql = """insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA)
+                values (?, CAST('NOW' AS TIMESTAMP), ?, ?, ?) returning ID_SPR"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 if result:
                     sql = """delete from PRC where SH_PRC = ?"""
@@ -1117,12 +1126,76 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getBarsSpr(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            field = params.get('field', 'c_tovar')
+            field = field.replace('c_tovar', 'barcode')
+            direction = params.get('direction', 'asc')
+            search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
+            stri = "lower(r.barcode) like lower('%{0}%')".format(search_re)
+            sql = """select count(*)
+                    from spr_barcode r
+                    WHERE %s 
+            """ % stri
+            opt = ()
+            count = self.db.request({"sql": sql, "options": opt})[0][0]
+            sql = """select distinct r.barcode from spr_barcode r
+            where {0}
+            order by r.{1} {2}
+            ROWS ? to ?""".format(stri, field, direction)
+            print(sql)
+            t1 = time.time() - st_t
+            opt = (start_p, end_p)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            st_t = time.time()
+            idc = 0
+            for row in result:
+                #st1 = ' | '.join([str(row[0]), row[1]])
+                r = {
+                    "id"          : idc,
+                    "$row"        : "c_tovar",
+                    "open"        : False,
+                    "c_tovar"     : row[0],
+                    "data"        : []
+                }
+                idc += 1
+                sql = """select r.id_spr, s.c_tovar from spr_barcode r
+                join spr s on (r.id_spr = s.id_spr)
+                where r.barcode = ? order by s.id_spr ASC"""
+                opt = (row[0],)
+                res = self.db.request({"sql": sql, "options": opt})
+                for rrr in res:
+                    rr = {
+                        "id_spr"    : rrr[0],
+                        "c_tovar"   : rrr[1],
+                        "id_state"  : "active",
+                        "dt"        : "",
+                        "owner"     : ""
+                    }
+                    r['data'].append(rr)
+                _return.append(r)
+            t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "time": (t1, t3), "total": count, "start": start_p}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        #print(ret)
+        return json.dumps(ret, ensure_ascii=False)
+
     def getSprBars(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
+            field = params.get('field', 'c_tovar')
+            field = field.replace('barcode', 'c_tovar')
+            direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
@@ -1154,10 +1227,10 @@ class API:
             count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """select r.id_spr, r.c_tovar 
                     from spr r
-                    WHERE %s 
-                    order by r.id_spr asc
+                    WHERE {0} 
+                    order by r.{1} {2}
                     ROWS ? to ?
-            """ % stri
+            """.format(stri, field, direction)
             #print(sql)
             t1 = time.time() - st_t
             opt = (start_p, end_p)
@@ -1232,6 +1305,28 @@ class API:
                 ret = {"result": valid, "ret_val": _return}
             else:
                 ret = {"result": False, "ret_val": "empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delBar(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = params.get("id_spr")
+            barcode = params.get("barcode")
+            if id_spr and barcode:
+                sql = """delete from spr_barcode where id_spr = ? and barcode = ?"""
+                opt = (id_spr, barcode)
+                print(sql)
+                print(opt)
+                result = self.db.execute({"sql": sql, "options": opt})
+                ret = {"result": True, "ret_val": "updated"}
+            elif barcode:
+                sql = """delete from spr_barcode where barcode = ?"""
+                opt = (barcode,)
+                result = self.db.execute({"sql": sql, "options": opt})
+                ret = {"result": True, "ret_val": "updated"}
+            else:
+                ret = {"result": False, "ret_val": "no id_spr or barcode"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -1332,6 +1427,8 @@ class API:
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
             start_p = 1 if start_p == 0 else start_p
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
@@ -1377,8 +1474,8 @@ class API:
             FROM SPR r
             inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
             inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
-            WHERE %s ORDER by r.C_TOVAR ASC ROWS ? to ?
-            """ % stri
+            WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
+            """.format(stri, field, direction)
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -1403,7 +1500,7 @@ class API:
         if self._check(x_hash):
             id_spr = int(params.get('id_spr'))
             if id_spr:
-                sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.C_OPISANIE, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV
+                sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV
                 FROM SPR r where r.id_spr = ?
                 """
                 opt = (id_spr,)
@@ -1417,10 +1514,9 @@ class API:
                         "c_dv"          : '',
                         "c_zavod"       : '',
                         "c_strana"      : '',
-                        "c_opisanie"    : row[2],
-                        "id_strana"     : row[3],
-                        "id_zavod"      : row[4],
-                        "id_dv"         : row[5],
+                        #"c_opisanie"    : row[2],
+                        "id_zavod"      : row[3],
+                        "id_dv"         : row[4],
                         "barcode"       : "",
                         "_prescr"       : 0,
                         "_mandat"       : 0,
@@ -1501,7 +1597,7 @@ class API:
                         pass
 
                     sql = "select c_zavod from spr_zavod where id_spr = ? and flag = 1"
-                    opt = (row[4],)
+                    opt = (row[3],)
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r['c_zavod'] = t[0][0]
@@ -1515,7 +1611,7 @@ class API:
                     except:
                         pass
                     sql = "select ACT_INGR from dv where id = ? and flag = 1"
-                    opt = (row[5],)
+                    opt = (row[4],)
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r['c_dv'] = t[0][0]
@@ -1535,6 +1631,8 @@ class API:
             start_p = int( params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
@@ -1569,10 +1667,10 @@ class API:
                     from spr r
                     inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
                     inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
-                    WHERE %s 
-                    order by r.id_spr asc
+                    WHERE {0} 
+                    order by r.{1} {2}
                     ROWS ? to ?
-            """ % stri
+            """.format(stri, field, direction)
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []

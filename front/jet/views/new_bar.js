@@ -17,14 +17,15 @@ export default class NewbarView extends JetView{
             modal: true,
             on: {
                 onHide: () => {
-                    this.$$("_nbar").setValue('');
-                    this.$$("_n_b").clearValidation();
+                    this.$$("_nbar").setValue("");
+                    this.$$("b_code").setValue('0000000000000');
                     //this.$$("b_list").clearAll();
                     },
                 onShow: () => {
+                    this.$$("_nbar").setValue("");
+                    this.$$("b_code").setValue('0000000000000');
                     let id_spr = this.$$("_n_b").config.id_spr
                     get_bars(this, id_spr);
-                    this.$$("_nbar").setValue('');
                     this.$$("b_list").clearAll();
                     this.$$("b_list").parse(barcodes);
                     },
@@ -32,15 +33,16 @@ export default class NewbarView extends JetView{
             body: { view: "form",
                 localId: "_n_b",
                 margin: 0,
-                id_spr: NaN,
-                th: NaN,
+                id_spr: undefined,
+                th: undefined,
+                callback: undefined,
                 rules:{
-                    "_new_bar": check_b,
+                    //"_new_bar": check_b,
                     },
                 elements: [
                     {rows: [
                         {cols: [
-                            {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите новое значение", localId: "_nbar", //required: true,
+                            {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите штрихкод", localId: "_nbar", required: !true,
                                 },
                             {view: "button", type: "htmlbutton", label: "<span class='webix_icon fa-plus'></span>", width: 30, disabled: !true,
                                 on: {
@@ -95,6 +97,8 @@ export default class NewbarView extends JetView{
                                     let bars = this.$$("b_list").getSelectedItem();
                                     var parse = '';
                                     let th = this.$$("_n_b").config.th;
+                                    let id_spr = this.$$("_n_b").config.id_spr;
+                                    let callback = this.$$("_n_b").config.callback;
                                     if (bars) {
                                         let t = typeof(bars);
                                         try {
@@ -106,6 +110,7 @@ export default class NewbarView extends JetView{
                                             }
                                         }
                                     if (th) th.$$("_barc").setValue(parse);
+                                    if (callback) callback(id_spr, parse);
                                     this.hide();
                                     }
                                 }
@@ -122,9 +127,10 @@ export default class NewbarView extends JetView{
             }
         }
         
-    show(new_head, id_spr, th){
+    show(new_head, id_spr, th, callback){
         this.$$("_n_b").config.id_spr = id_spr;
         this.$$("_n_b").config.th = th;
+        this.$$("_n_b").config.callback = callback;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
         }

@@ -20,6 +20,8 @@ export default class AllUnlinkedView extends JetView{
                             on: {
                                 onTimedKeyPress: (code, event) => {
                                     let count = $$("__dt_a").config.posPpage;
+                                    let field = $$("__dt_a").config.fi;
+                                    let direction = $$("__dt_a").config.di;
                                     get_data({
                                         th: this,
                                         view: "__dt_a",
@@ -27,7 +29,9 @@ export default class AllUnlinkedView extends JetView{
                                         start: 1,
                                         count: count,
                                         searchBar: "_search_all",
-                                        method: "getPrcsAll"
+                                        method: "getPrcsAll",
+                                        field: field,
+                                        direction: direction
                                         });
                                     }
                                 },
@@ -45,6 +49,8 @@ export default class AllUnlinkedView extends JetView{
                     click: () => {
                         let start = 1;
                         let count = $$("__dt_a").config.posPpage;
+                        let field = $$("__dt_a").config.fi;
+                        let direction = $$("__dt_a").config.di;
                         get_data({
                             th: this,
                             view: "__dt_a",
@@ -52,7 +58,9 @@ export default class AllUnlinkedView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_search_all",
-                            method: "getPrcsAll"
+                            method: "getPrcsAll",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -62,6 +70,8 @@ export default class AllUnlinkedView extends JetView{
                         let start = $$("__dt_a").config.startPos - $$("__dt_a").config.posPpage;
                         start = (start < 0) ? 1 : start;
                         let count = $$("__dt_a").config.posPpage;
+                        let field = $$("__dt_a").config.fi;
+                        let direction = $$("__dt_a").config.di;
                         get_data({
                             th: this,
                             view: "__dt_a",
@@ -69,7 +79,9 @@ export default class AllUnlinkedView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_search_all",
-                            method: "getPrcsAll"
+                            method: "getPrcsAll",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -80,6 +92,8 @@ export default class AllUnlinkedView extends JetView{
                         let start = $$("__dt_a").config.startPos + $$("__dt_a").config.posPpage;
                         start = (start > $$("__dt_a").config.totalPos) ? last_page("__dt_a"): start;
                         let count = $$("__dt_a").config.posPpage;
+                        let field = $$("__dt_a").config.fi;
+                        let direction = $$("__dt_a").config.di;
                         get_data({
                             th: this,
                             view: "__dt_a",
@@ -87,7 +101,9 @@ export default class AllUnlinkedView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_search_all",
-                            method: "getPrcsAll"
+                            method: "getPrcsAll",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -96,6 +112,8 @@ export default class AllUnlinkedView extends JetView{
                     click: () => {
                         let start = last_page("__dt_a");
                         let count = $$("__dt_a").config.posPpage;
+                        let field = $$("__dt_a").config.fi;
+                        let direction = $$("__dt_a").config.di;
                         get_data({
                             th: this,
                             view: "__dt_a",
@@ -103,7 +121,9 @@ export default class AllUnlinkedView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_search_all",
-                            method: "getPrcsAll"
+                            method: "getPrcsAll",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -125,13 +145,15 @@ export default class AllUnlinkedView extends JetView{
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
+            fi: 'c_tovar',
+            di: 'asc',
             old_stri: " ",
             columns: [
-                {id: "id_tovar", width: 80, sort: "int",
+                {id: "id_tovar", width: 80, sort: "server",
                     header: [{text: "ID товара"},
                         ],
                     },
-                { id: "c_tovar", fillspace: 1, sort: "text",
+                { id: "c_tovar", fillspace: 1, sort: "server",
                     header: [{text: "Название"},
                         ]
                     },
@@ -153,6 +175,24 @@ export default class AllUnlinkedView extends JetView{
                             icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
                             });
                         }
+                    },
+                onBeforeSort: (field, direction) => {
+                    let th = this;
+                    let start = $$("__dt_a").config.startPos;
+                    let count = $$("__dt_a").config.posPpage;
+                    $$("__dt_a").config.fi = field;
+                    $$("__dt_a").config.di = direction;
+                    get_data({
+                        th: this,
+                        view: "__dt_a",
+                        navBar: "__nav_a",
+                        start: start,
+                        count: count,
+                        searchBar: "_search_all",
+                        method: "getPrcsAll",
+                        field: field,
+                        direction: direction
+                        });
                     },
                 onItemDblClick: (item) => {
                     parse_unlinked_item(this, $$("__dt_a").getSelectedItem());
@@ -183,7 +223,9 @@ export default class AllUnlinkedView extends JetView{
                         start: 1,
                         count: $$("__dt_a").config.posPpage,
                         searchBar: "_search_all",
-                        method: "getPrcsAll"
+                        method: "getPrcsAll",
+                        field: 'c_tovar',
+                        direction: 'asc'
                         });
                     }
                 },

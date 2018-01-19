@@ -15,6 +15,12 @@ export default class SprView extends JetView{
             return ret
             }
 
+        function sortBy(i, ii, iii) {
+            console.log('i', i);
+            console.log('ii', ii);
+            console.log('iii', iii);
+            }
+
         var bottom = {
             view: "toolbar",
             id: "__nav",
@@ -25,6 +31,8 @@ export default class SprView extends JetView{
                     click: () => {
                         let start = 1;
                         let count = $$("__dt").config.posPpage;
+                        let field = $$("__dt").config.fi;
+                        let direction = $$("__dt").config.di;
                         get_data({
                             th: this,
                             view: "__dt",
@@ -32,7 +40,9 @@ export default class SprView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_spr_search",
-                            method: "getSprSearch"
+                            method: "getSprSearch",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -43,6 +53,8 @@ export default class SprView extends JetView{
                         let start = $$("__dt").config.startPos - $$("__dt").config.posPpage;
                         start = (start < 0) ? 1 : start;
                         let count = $$("__dt").config.posPpage;
+                        let field = $$("__dt").config.fi;
+                        let direction = $$("__dt").config.di;
                         get_data({
                             th: this,
                             view: "__dt",
@@ -50,7 +62,9 @@ export default class SprView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_spr_search",
-                            method: "getSprSearch"
+                            method: "getSprSearch",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -62,6 +76,8 @@ export default class SprView extends JetView{
                         let start = $$("__dt").config.startPos + $$("__dt").config.posPpage;
                         start = (start > $$("__dt").config.totalPos) ? last_page("__dt"): start;
                         let count = $$("__dt").config.posPpage;
+                        let field = $$("__dt").config.fi;
+                        let direction = $$("__dt").config.di;
                         get_data({
                             th: this,
                             view: "__dt",
@@ -69,7 +85,9 @@ export default class SprView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_spr_search",
-                            method: "getSprSearch"
+                            method: "getSprSearch",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -79,6 +97,8 @@ export default class SprView extends JetView{
                         let th = this;
                         let start = last_page("__dt");
                         let count = $$("__dt").config.posPpage;
+                        let field = $$("__dt").config.fi;
+                        let direction = $$("__dt").config.di;
                         get_data({
                             th: this,
                             view: "__dt",
@@ -86,7 +106,9 @@ export default class SprView extends JetView{
                             start: start,
                             count: count,
                             searchBar: "_spr_search",
-                            method: "getSprSearch"
+                            method: "getSprSearch",
+                            field: field,
+                            direction: direction
                             });
                         }
                     },
@@ -109,6 +131,8 @@ export default class SprView extends JetView{
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
+            fi: 'c_tovar',
+            di: 'asc',
             old_stri: "",
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
@@ -116,12 +140,12 @@ export default class SprView extends JetView{
                         ],
                     //footer: {text:"Всего:", colspan:5, rowspan: 1, height: 24}
                     },
-                {id: "id_spr", width: 80, //sort: "int",
+                {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
                         //{content:"textFilter"}
                         ],
                     },
-                { id: "c_tovar", fillspace: 1, sort: "text",
+                { id: "c_tovar", fillspace: 1, sort: "server",
                     header: [{text: "Название"},
                         //{content:"textFilter"}
                         ]
@@ -141,11 +165,26 @@ export default class SprView extends JetView{
                 ],
             on: {
                 "data->onParse":function(i, data){
-                    //console.log("1", i);
-                    //console.log("2", data);
                     this.clearAll();
                     $$("_link").disable();
-                    //this.data.url = "data/data.php";
+                    },
+                onBeforeSort: (field, direction) => {
+                    let th = this;
+                    let start = $$("__dt").config.startPos;
+                    let count = $$("__dt").config.posPpage;
+                    $$("__dt").config.fi = field;
+                    $$("__dt").config.di = direction;
+                    get_data({
+                        th: this,
+                        view: "__dt",
+                        navBar: "__nav",
+                        start: start,
+                        count: count,
+                        searchBar: "_spr_search",
+                        method: "getSprSearch",
+                        field: field,
+                        direction: direction
+                        });
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
