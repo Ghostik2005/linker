@@ -1,4 +1,5 @@
 "use strict";
+import {JetApp, JetView} from "webix-jet";
 
 export var barcodes = new webix.DataCollection({
         id: "bars_dc",
@@ -235,7 +236,10 @@ export function get_data(inp_params) {
     let field = (inp_params.field) ? inp_params.field : undefined;
     let direction = (inp_params.direction) ? inp_params.direction : undefined;
     let search_str = $$(se_s).getValue();
-    let user = (th) ? th.app.config.user : "user";
+    let app = $$("main_ui").$scope.app;
+    //console.log('gdata', app);
+    //console.dir(JetView);
+    let user = (th) ? th.app.config.user : app.config.user;
     let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic?" : "../linker_logic?";
     let url = (th) ? th.app.config.r_url + "?" + method : u1 + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction};

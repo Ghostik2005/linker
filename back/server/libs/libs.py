@@ -85,6 +85,21 @@ class API:
             ret = True
         return ret
 
+    def login(self, params=None, x_hash=None):
+        user = params.get('user')
+        p_hash = params.get('pass')
+        ret = {"result": False, "ret_val": "access denied"}
+        if self._check(x_hash):
+            sql = """select r."USER", r.PASSWD FROM USERS r where r."USER" = ?"""
+            opt = (user,)
+            res = self.db.request({"sql": sql, "options": opt})
+            if len(res) > 0:
+                md = hashlib.md5()
+                md.update(res[0][1].encode())
+                if md.hexdigest() == p_hash:
+                    ret = {"result": True, "ret_val": 'new_api_key'}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getVersion(self, params=None, x_hash=None):
         user = params.get('user')
         if self._check(x_hash):
@@ -2034,10 +2049,6 @@ class SCGIServer:
         data = """
 
         location /linker_logic {
-        #if (!-f /ms71/data/crm_login/keys/$http_x_api_key.crm) {
-        #return 403;
-        #}
-
          if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
@@ -2065,6 +2076,9 @@ class SCGIServer:
             add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
          }
 
+        if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
+        return 403;
+        }
 
         limit_except POST HEAD OPTIONS GET{
             deny all;
@@ -2078,9 +2092,9 @@ class SCGIServer:
     }
 
     location /linker {
-        #if (!-f /ms71/data/crm_login/keys/$http_x_api_key.crm) {
-        #return 403;
-        #}
+        if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
+        return 403;
+        }
         add_header Cache_Control no-cache;
         #alias html/crm;
         #index index.html;

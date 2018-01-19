@@ -38,13 +38,15 @@ webix.ready(() => {
     var app = new JetApp({
         id:         "mainApp",
         name:       "linker",
-        version:    "17.334.1230",
-        start:      "/start/body",
-        user:       "admin",
+        version:    "18.019.1830",
+        //start:      "/start/body",
+        start:      "/login",
+        admin:      "admin",
+        user:       "",
         //user:       "stasya",
         r_url:      u1,
         //router:     StoreRouter,
-        x_api:      "api-key",
+        x_api:      "x_login",
         debug:      true
     });
     app.render();

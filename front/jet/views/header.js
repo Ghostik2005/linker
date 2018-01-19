@@ -1,6 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
+import {deleteCookie} from "../views/globals";
 
 export default class HeaderView extends JetView{
     config(){
@@ -17,8 +18,11 @@ export default class HeaderView extends JetView{
                 {view:"button", id: '_adm', css: "butt", type: 'htmlbutton', 
                     label: "<span class = 'butt'>Админка</span>", width: 120,
                     click: () => {
-                        this.app.show("/start/adm/adm-users");
-                        //webix.message({"text": "Упс. Пока не доступно", "type": "debug"});
+                        if (this.app.config.user === this.app.config.admin) {
+                            this.app.show("/start/adm/adm-users");
+                        } else {
+                            webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
+                            }
                         }
                     },
                 {view:"button", id: '_merge', css: "butt", type: 'htmlbutton',
@@ -27,16 +31,15 @@ export default class HeaderView extends JetView{
                         this.app.show("/start/body");
                         }
                     },
-                //{view:"button", id: '_group', css: "butt", type: 'htmlbutton', disabled: true,
-                    //label: "<span class='butt'>Grouper</span>", width: 80,
-                    //click: () => {
-                        //this.app.show("/start/grouper");
-                        //}
-                    //},
-                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: true,
+                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: !true,
                     label: "<span class='butt'>Выйти</span>", width: 80,
                     click: () => {
-                        webix.message({"text": "exit", "type": "debug"});
+                        deleteCookie('user');
+                        deleteCookie('auth_key');
+                        this.app.config.user = '';
+                        this.app.config.x_api = 'x_login';
+                        this.show("/login")
+                        //webix.message({"text": "exit", "type": "debug"});
                         }
                     },
             ]}
