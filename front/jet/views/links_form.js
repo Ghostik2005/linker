@@ -137,7 +137,7 @@ export default class LinksView extends JetView{
                                 onItemDblClick: function (item, ii, iii) {
                                     let level = this.getSelectedItem().$level;
                                     if (level === 1) {
-                                        if (this.$scope.app.config.user === 'admin') {
+                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) {
                                             //webix.message('admin');
                                             item = item.row;
                                             item = get_spr(this.$scope, item);

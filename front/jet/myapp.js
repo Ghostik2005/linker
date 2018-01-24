@@ -49,15 +49,19 @@ webix.ready(() => {
         x_api:      "x_login",
         debug:      true
     });
+    
+    webix.attachEvent("onBeforeAjax", 
+        function(mode, url, data, request, headers, files, promise){
+            //console.log('x-api', app.config.x_api);
+            headers["x-api-key"] = app.config.x_api;
+            }
+        );
+
     app.render();
     
     init_first(app);
     
-    webix.attachEvent("onBeforeAjax", 
-        function(mode, url, data, request, headers, files, promise){
-            headers["x-api-key"] = app.config.x_api;
-            }
-        );
+
 
     app.attachEvent("app:error:resolve", function(name, error){
         window.console.error(error);

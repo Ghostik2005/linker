@@ -114,7 +114,7 @@ export default class BarcodesSView extends JetView{
                     },
                 onItemDblClick: function() {
                     var item = this.getSelectedItem();
-                    if (this.$scope.app.config.user === 'admin') {
+                    if (this.$scope.app.config.user === this.$scope.app.config.admin) {
                         let level = item.$level;
                         if (level === 1) {
                             this.$scope.popnewbar.show("Редактирование ШК: " + item.barcode, item.id, undefined, editBarCode);

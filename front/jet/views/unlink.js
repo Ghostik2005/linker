@@ -50,7 +50,7 @@ export default class UnlinkView extends JetView{
                             on: {
                                 onAfterRender: function () {
                                     let user = this.$scope.app.config.user;
-                                    if (user === 'admin') {
+                                    if (user === this.$scope.app.config.admin) {
                                         this.enable();
                                         }
                                     }

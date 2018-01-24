@@ -123,6 +123,7 @@ export function updDv(item, source) {
     var cid = item.id; 
     let citem = source.getItem(cid);
     citem.act_ingr = item.value;
+    citem.oa = item.oa;
     source.updateItem(cid, citem);
     source.refresh();
     }
@@ -441,9 +442,20 @@ export function filter_1(item, value) {
     return item.c_vnd.toString().toLowerCase().search(value) != -1;
     }
 
+export function after_call(i, ii, iii) {
+    if (iii.status === 403) {
+        console.log('iii', iii);
+        deleteCookie('linker_user');
+        deleteCookie('linker_auth_key');
+        let u1 = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
+        //console.log($$("main_ui").$scope.app);
+        location.href = u1;
+        }
+    }
+
 export function request (url, params, mode) {
-    var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params):
-        webix.ajax().headers({'Content-type': 'application/json'}).post(url, params)
+    var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
+        : webix.ajax().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
     }
 

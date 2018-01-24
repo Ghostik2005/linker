@@ -41,15 +41,15 @@ export default class TopmenuView extends JetView{
                         },
                     },
                 {},
-                {view:"button", type: 'base', disabled: !true,
-                    label: "TEST", width: 150,
-                    click: () => {
-                        webix.message({
-                            text: "test",
-                            type: "debug",
-                            })
-                        }
-                    },
+                //{view:"button", type: 'base', disabled: !true,
+                    //label: "TEST", width: 150,
+                    //click: () => {
+                        //webix.message({
+                            //text: "test",
+                            //type: "debug",
+                            //})
+                        //}
+                    //},
                 {view: "button", type: "htmlbutton", disabled: !true,
                     label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
                     click: () => {

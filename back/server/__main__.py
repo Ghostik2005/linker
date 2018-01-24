@@ -20,7 +20,7 @@ import libs.libs as libs
 
 def main():
     w_path = '/ms71/data/linker'
-    p_path = '/ms71/keys'
+    p_path = '/ms71/data/linker/api-k'
     sys.extip = None
     sys.intip = None
     global __profile__, __index__

@@ -103,8 +103,8 @@ export default class BarcodesBView extends JetView{
                         });
                     },
                 onItemDblClick: function(item) {
-                    if (this.$scope.app.config.user === 'admin') {
-                        webix.message('admin');
+                    if (this.$scope.app.config.user === this.$scope.app.config.admin) {
+                        //webix.message('admin');
                         item = this.getSelectedItem();
                         let level = item.$level;
                         let para = {"item": item, "th": this};

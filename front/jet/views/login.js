@@ -18,8 +18,8 @@ export default class loginView extends JetView{
                 th.$scope.app.config.user = item.user;
                 th.$scope.app.config.x_api = res.ret_val;
                 var opt = {'path': '/'};
-                setCookie('user', item.user);//, opt);
-                setCookie('auth_key', res.ret_val);//, opt);
+                setCookie('linker_user', item.user, opt);
+                setCookie('linker_auth_key', res.ret_val, opt);
                 };
             return ret;
             }
@@ -62,16 +62,16 @@ export default class loginView extends JetView{
         return af
         }
     init() {
-        let u = getCookie('user');
-        let x = getCookie('auth_key');
-        console.log(u,x);
+        let u = getCookie('linker_user');
+        let x = getCookie('linker_auth_key');
+        //console.log(u,x);
         if (u && x) {
             this.app.config.user = u;
             this.app.config.x_api = x;
             this.show("/start/body");
             }
         
-        console.log('init', this);
-        console.log('если есть куки - направляем на start');
+        //console.log('init', this);
+        //console.log('если есть куки - направляем на start');
         }
     }

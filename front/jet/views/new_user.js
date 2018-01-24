@@ -39,7 +39,7 @@ export default class NewUserView extends JetView{
                             {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === "admin") this.enable();
+                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -63,7 +63,7 @@ export default class NewUserView extends JetView{
                             {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === "admin") this.enable();
+                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -87,7 +87,7 @@ export default class NewUserView extends JetView{
                             {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === "admin") this.enable();
+                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -102,14 +102,14 @@ export default class NewUserView extends JetView{
                                     }
                                 },
                             {},
-                            {view: "button", type: "base", label: "Test", width: 120, height: 32,
-                                click: () => {
-                                    }
-                                },
+                            //{view: "button", type: "base", label: "Test", width: 120, height: 32,
+                                //click: () => {
+                                    //}
+                                //},
                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        //if (this.$scope.app.config.user === "admin") this.enable();
+                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -123,7 +123,7 @@ export default class NewUserView extends JetView{
             }
         }
     show(new_head, item){
-        console.log(item);
+        //console.log(item);
         if (item) {
             this.$$("new_user").parse(item);
             }

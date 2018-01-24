@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {dv, addDv, delDv, updDv, request} from "../views/globals";
-import NewPropView from "../views/new_prop";
+import NewDvView from "../views/new_dv";
 
 export default class DvView extends JetView{
     config(){
@@ -65,7 +65,8 @@ export default class DvView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.act_ingr, 'id': item.id, 'type': 'Dv', 'callback': updDv, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.act_ingr, 'id': item.id, "oa": item.oa,'type': 'Dv', 'callback': updDv, 'mode': 'upd', 'source': this};
+                    console.log(params);
                     this.$scope.popnew.show('Редактирование действующего в-ва', params);
                     },
                 onAfterLoad: function() {
@@ -136,7 +137,7 @@ export default class DvView extends JetView{
         }
         
     init() {
-        this.popnew = this.ui(NewPropView);
+        this.popnew = this.ui(NewDvView);
         webix.extend(this.$$("__dtd"), webix.ProgressBar);
         this.$$("__dtd").sync(dv.data);
         }

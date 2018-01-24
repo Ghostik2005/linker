@@ -36,20 +36,20 @@ export default class TopmenuView extends JetView{
                                 },
                             },
                         {},
-                        {view:"button", type: 'base',
-                            label: "TEST", width: 150,
-                            click: () => {
-                                webix.message({
-                                    text: "test",
-                                    type: "debug",
-                                    })
-                                //$$("prcs_dc").loadNext(50,10,function(answer_json,answer,XMLHttpRequest){
-                                    //console.log('answer_json', answer_json);
-                                    //console.log('answer', answer);
-                                    //console.log('XMLHttpRequest', XMLHttpRequest);
-                                    //}, "post->/linker_logic?getSprSearch&search=аспирин")
-                                }
-                            },
+                        //{view:"button", type: 'base',
+                            //label: "TEST", width: 150,
+                            //click: () => {
+                                //webix.message({
+                                    //text: "test",
+                                    //type: "debug",
+                                    //})
+                                ////$$("prcs_dc").loadNext(50,10,function(answer_json,answer,XMLHttpRequest){
+                                    ////console.log('answer_json', answer_json);
+                                    ////console.log('answer', answer);
+                                    ////console.log('XMLHttpRequest', XMLHttpRequest);
+                                    ////}, "post->/linker_logic?getSprSearch&search=аспирин")
+                                //}
+                            //},
                         {view: "button", type: "htmlbutton",
                             label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
                             click: () => {
@@ -131,7 +131,7 @@ export default class TopmenuView extends JetView{
                             hotkey: "insert", disabled: true,
                             on: {
                                 onAfterRender: function () {
-                                    if (this.$scope.app.config.user === "admin") this.enable();
+                                    if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
                                     }
                                 },
                             click: () => {

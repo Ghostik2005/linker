@@ -35,7 +35,6 @@ INDEX IDX_ID_WORK on PRC
 (IN_WORK);
 COMMIT;
 
-
 CREATE TABLE R_LNK
 (
   SH_PRC TSTR32 NOT NULL,
@@ -51,12 +50,15 @@ CREATE TABLE R_LNK
   CONSTRAINT PK_R_LNK PRIMARY KEY (SH_PRC)
 );
 
+commit;
+
 CREATE INDEX R_LNK_IDX1 ON R_LNK (ID_SPR);
 CREATE INDEX R_LNK_IDX2 ON R_LNK (ID_VND,ID_TOVAR);
 CREATE DESCENDING INDEX R_LNK_IDX3 ON R_LNK (DT);
 GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
  ON R_LNK TO  SYSDBA WITH GRANT OPTION;
 
+commit;
 
 """
 
@@ -66,10 +68,14 @@ class API:
     x_hash - API key
     """
 
-    def __init__(self, Lock, log, w_path = '/ms71/data/crm', p_path='/ms71/keys'):
+    def __init__(self, Lock, log, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k'):
         self.methods = []
         self.path = w_path
         self.p_path = p_path
+        if not os.path.exists(self.path):
+             os.makedirs(self.path, mode=0o777)
+        if not os.path.exists(self.p_path):
+             os.makedirs(self.p_path, mode=0o777)
         self.lock = Lock
         self.exec = sys.executable
         self.log = log
@@ -82,7 +88,9 @@ class API:
         #проверка валидности ключа
         ret = False
         if x_hash:
-            ret = True
+            f_name = os.path.join(self.p_path, x_hash)
+            if os.path.exists(f_name):
+                ret = True
         return ret
 
     def login(self, params=None, x_hash=None):
@@ -97,7 +105,19 @@ class API:
                 md = hashlib.md5()
                 md.update(res[0][1].encode())
                 if md.hexdigest() == p_hash:
-                    ret = {"result": True, "ret_val": 'new_api_key'}
+                    k_list = glob.glob(os.path.join(self.p_path, '*'))
+                    for f_name in k_list:
+                        print(f_name)
+                        with open(f_name, 'rb') as f_obj:
+                            fuser = f_obj.read().decode().strip()
+                        if fuser == user:
+                            os.remove(f_name)
+                            break
+                    a_key = uuid.uuid4().hex
+                    f_name = os.path.join(self.p_path, a_key)
+                    with open(f_name, 'wb') as f_obj:
+                        f_obj.write(user.encode())
+                    ret = {"result": True, "ret_val": a_key}
         return json.dumps(ret, ensure_ascii=False)
 
     def getVersion(self, params=None, x_hash=None):
@@ -530,8 +550,10 @@ class API:
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
-                if row[2]:
-                    oa = 'Для аптек' if row[2] == 1 else 'Для аптек и аптечных пунктов'
+                if row[2] == 1 :
+                    oa = 'Для аптек'
+                elif row[2] == 2:
+                    oa = 'Для аптек и аптечных пунктов'
                 else:
                     oa = 'Нет'
                 r = {
@@ -567,15 +589,30 @@ class API:
         if self._check(x_hash):
             c_id = params.get('id')
             val = params.get('value')
+            oa1 = int(params.get('oa'))
+            if oa1 == 1:
+                oa = 1
+            elif oa1 == 2:
+                oa = 2
+            else:
+                oa = None
             if c_id and val:
-                sql = """insert into DV (ID, ACT_INGR, FLAG)
-                values (?, ?, 1) returning ID"""
-                opt = (c_id, val)
+                sql = """insert into DV (ID, ACT_INGR, OA, FLAG)
+                values (?, ?, ?, 1) returning ID"""
+                opt = (c_id, val, oa)
                 res = self.db.execute({"sql": sql, "options": opt})
                 if res[0]:
+                    if oa == 1 :
+                        oa1 = 'Для аптек'
+                    elif oa == 2:
+                        oa1 = 'Для аптек и аптечных пунктов'
+                    else:
+                        oa1 = 'Нет'
                     _ret = {
                         'id'    : c_id,
-                        'act_ingr' : val
+                        'act_ingr' : val,
+                        'oa': oa1
+                        
                     }
                     ret = {"result": True, "ret_val": _ret}
                 else:
@@ -610,14 +647,30 @@ class API:
         if self._check(x_hash):
             c_id = params.get('id')
             val = params.get('value')
+            oa1 = int(params.get('oa'))
+            if oa1 == 1 :
+                oa = 1
+            elif oa1 == 2:
+                oa = 2
+            else:
+                oa = None
             if c_id and val:
-                sql = """update DV set ACT_INGR = ? where ID = ? returning ID"""
-                opt = (val, c_id)
+                sql = """update DV set ACT_INGR = ?, OA = ? where ID = ? returning ID"""
+                opt = (val, oa, c_id)
+                print(sql)
+                print(opt)
                 res = self.db.execute({"sql": sql, "options": opt})
                 if res[0]:
+                    if oa == 1 :
+                        oa1 = 'Для аптек'
+                    elif oa == 2:
+                        oa1 = 'Для аптек и аптечных пунктов'
+                    else:
+                        oa1 = 'Нет'
                     _ret = {
                         'id'    : c_id,
-                        'value' : val
+                        'value' : val,
+                        'oa': oa1
                     }
                     ret = {"result": True, "ret_val": _ret}
                 else:
@@ -1807,8 +1860,9 @@ class API:
             opt = (user,)
             user_id = self.db.request({"sql": sql, "options": opt})[0][0]
             iid = 1 if user_id == 0 else user_id
+            sss = '' if user_id == 0 else 'r.id_org = 0,'
             if sh_prc:
-                sql = """update PRC r set r.N_FG = ?, r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG"""
+                sql = """update PRC r set r.N_FG = ?, %s r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG""" % sss
                 opt = (iid, sh_prc)
                 print(sql)
                 print(opt)
@@ -2092,9 +2146,9 @@ class SCGIServer:
     }
 
     location /linker {
-        if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
-        return 403;
-        }
+        #if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
+        #return 403;
+        #}
         add_header Cache_Control no-cache;
         #alias html/crm;
         #index index.html;

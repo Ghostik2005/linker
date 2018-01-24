@@ -8,8 +8,8 @@ import ConfirmView from "../views/yes-no";
 export default class SkippedView extends JetView{
     config(){
         function delSkip () {
-            let item_id = $$("__dt_s_s").getSelectedId()
-            $$("__dt_s_s").remove(item_id)
+            let item_id = $$("__dt_s").getSelectedId()
+            $$("__dt_s").remove(item_id)
             }
         var top = {//view: 'toolbar',
                     height: 40,
@@ -18,12 +18,12 @@ export default class SkippedView extends JetView{
                             keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
                             on: {
                                 onTimedKeyPress: (code, event) => {
-                                    let count = $$("__dt_s_s").config.posPpage;
+                                    let count = $$("__dt_s").config.posPpage;
                                     let field = $$("__dt_s").config.fi;
                                     let direction = $$("__dt_s").config.di;
                                     get_data({
                                         th: this,
-                                        view: "__dt_s_s",
+                                        view: "__dt_s",
                                         navBar: "__nav_s",
                                         start: 1,
                                         count: count,
@@ -47,12 +47,12 @@ export default class SkippedView extends JetView{
                     label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                     click: () => {
                         let start = 1;
-                        let count = $$("__dt_s_s").config.posPpage;
+                        let count = $$("__dt_s").config.posPpage;
                         let field = $$("__dt_s").config.fi;
                         let direction = $$("__dt_s").config.di;
                         get_data({
                             th: this,
-                            view: "__dt_s_s",
+                            view: "__dt_s",
                             navBar: "__nav_s",
                             start: start,
                             count: count,
@@ -66,14 +66,14 @@ export default class SkippedView extends JetView{
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
                     click: () => {
-                        let start = $$("__dt_s_s").config.startPos - $$("__dt_s_s").config.posPpage;
+                        let start = $$("__dt_s").config.startPos - $$("__dt_s").config.posPpage;
                         start = (start < 0) ? 1 : start;
-                        let count = $$("__dt_s_s").config.posPpage;
+                        let count = $$("__dt_s").config.posPpage;
                         let field = $$("__dt_s").config.fi;
                         let direction = $$("__dt_s").config.di;
                         get_data({
                             th: this,
-                            view: "__dt_s_s",
+                            view: "__dt_s",
                             navBar: "__nav_s",
                             start: start,
                             count: count,
@@ -88,14 +88,14 @@ export default class SkippedView extends JetView{
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
                     click: () => {
-                        let start = $$("__dt_s_s").config.startPos + $$("__dt_s_s").config.posPpage;
-                        start = (start > $$("__dt_s_s").config.totalPos) ? last_page("__dt_s_s"): start;
-                        let count = $$("__dt_s_s").config.posPpage;
+                        let start = $$("__dt_s").config.startPos + $$("__dt_s").config.posPpage;
+                        start = (start > $$("__dt_s").config.totalPos) ? last_page("__dt_s"): start;
+                        let count = $$("__dt_s").config.posPpage;
                         let field = $$("__dt_s").config.fi;
                         let direction = $$("__dt_s").config.di;
                         get_data({
                             th: this,
-                            view: "__dt_s_s",
+                            view: "__dt_s",
                             navBar: "__nav_s",
                             start: start,
                             count: count,
@@ -109,13 +109,13 @@ export default class SkippedView extends JetView{
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                     click: () => {
-                        let start = last_page("__dt_s_s");
-                        let count = $$("__dt_s_s").config.posPpage;
+                        let start = last_page("__dt_s");
+                        let count = $$("__dt_s").config.posPpage;
                         let field = $$("__dt_s").config.fi;
                         let direction = $$("__dt_s").config.di;
                         get_data({
                             th: this,
-                            view: "__dt_s_s",
+                            view: "__dt_s",
                             navBar: "__nav_s",
                             start: start,
                             count: count,
@@ -132,7 +132,7 @@ export default class SkippedView extends JetView{
             };
 
         var sprv = {view: "datatable",
-            id: "__dt_s_s",
+            id: "__dt_s",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -183,7 +183,7 @@ export default class SkippedView extends JetView{
                     $$("__dt_s").config.di = direction;
                     get_data({
                         th: this,
-                        view: "__dt_s_s",
+                        view: "__dt_s",
                         navBar: "__nav_s",
                         start: start,
                         count: count,
@@ -195,7 +195,7 @@ export default class SkippedView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user
-                    if (user === 'admin') {
+                    if (user === this.$scope.app.config.admin) {
                         let sh_prc = this.getSelectedItem().sh_prc
                         let params = {};
                         params["command"] = "?returnLnk";
@@ -225,10 +225,10 @@ export default class SkippedView extends JetView{
                 onShow: () => {
                     get_data({
                         th: this,
-                        view: "__dt_s_s",
+                        view: "__dt_s",
                         navBar: "__nav_s",
                         start: 1,
-                        count: $$("__dt_s_s").config.posPpage,
+                        count: $$("__dt_s").config.posPpage,
                         searchBar: "_search_skip",
                         method: "getPrcsSkip",
                         direction: "asc",

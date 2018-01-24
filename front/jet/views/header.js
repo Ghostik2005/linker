@@ -34,8 +34,8 @@ export default class HeaderView extends JetView{
                 {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: !true,
                     label: "<span class='butt'>Выйти</span>", width: 80,
                     click: () => {
-                        deleteCookie('user');
-                        deleteCookie('auth_key');
+                        deleteCookie('linker_user');
+                        deleteCookie('linker_auth_key');
                         this.app.config.user = '';
                         this.app.config.x_api = 'x_login';
                         this.show("/login")
