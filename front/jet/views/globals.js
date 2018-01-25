@@ -9,6 +9,14 @@ export var barcodes = new webix.DataCollection({
             }
         });
 
+export var tg = new webix.DataCollection({
+        id: "tg_dc",
+        on: {
+            onAfterLoad: function() {
+                }
+            }
+        });
+
 
 export var prcs = new webix.DataCollection({
         id: "prcs_dc",
@@ -20,6 +28,15 @@ export var prcs = new webix.DataCollection({
                 }
             }
         });
+
+export var allTg = new webix.DataCollection({
+        id: "allTg_dc",
+        on: {
+            onAfterLoad: function() {
+                }
+            }
+        });
+
 
 export var strana = new webix.DataCollection({
         id: "strana_dc",
@@ -89,7 +106,6 @@ export function updHran(item, source) {
     var cid = item.id; 
     let citem = source.getItem(cid);
     citem.usloviya = item.value;
-    //console.log(ret_data.ret_val);
     source.updateItem(cid, citem);
     source.refresh();
     //hran.updateItem(item.id, item.value);
@@ -208,6 +224,20 @@ export function get_bars(th, id_spr) {
     if (item.result) {
         $$("bars_dc").clearAll();
         $$("bars_dc").parse(item.ret_val);
+    } else {
+        };
+    }
+
+export function get_tg(th, id_spr) {
+    let user = th.app.config.user;
+    let url = th.app.config.r_url + "?getTg"
+    let params = {"user": user, "id_spr": id_spr};
+    let item = request(url, params, !0).response;
+    item = JSON.parse(item);
+    if (item.result) {
+        console.log(item.ret_val);
+        $$("tg_dc").clearAll();
+        $$("tg_dc").parse(item.ret_val);
     } else {
         };
     }
@@ -337,6 +367,7 @@ export function init_first(app) {
     setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
     setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
     setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
     }
 
 export function get_prcs(th, id_vnd) {

@@ -13,6 +13,10 @@ import {prcs, delPrc} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
+        var w = (this.app.config.user === this.app.config.admin) ? 210: 1
+        var w1 = (this.app.config.user === this.app.config.admin) ? 140: 1
+        var d = (this.app.config.user === this.app.config.admin) ? false: true
+        //console.log(this);
         return {
             rows: [
                 {view: 'toolbar',
@@ -43,21 +47,16 @@ export default class TopmenuView extends JetView{
                                     //text: "test",
                                     //type: "debug",
                                     //})
-                                ////$$("prcs_dc").loadNext(50,10,function(answer_json,answer,XMLHttpRequest){
-                                    ////console.log('answer_json', answer_json);
-                                    ////console.log('answer', answer);
-                                    ////console.log('XMLHttpRequest', XMLHttpRequest);
-                                    ////}, "post->/linker_logic?getSprSearch&search=аспирин")
                                 //}
                             //},
                         {view: "button", type: "htmlbutton",
-                            label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
+                            label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Обновить с сервера</span>", width: 210,
                             click: () => {
                                 get_suppl("_suppl", this)
                                 }
                             },
                         {view:"button", id: '_skip', type: 'htmlbutton',
-                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210,
+                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: w, disabled: d,
                             click: () => {
                                 this.popskipped.show("Пропущенные товары")
                                 }
@@ -65,7 +64,7 @@ export default class TopmenuView extends JetView{
                         {view:"button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Все несвязанные</span>", width: 210,
                             click: () => {
-                                this.popallunlink.show("Пропущенные товары")
+                                this.popallunlink.show("Все несвязанные товары")
                                 }
                             },
                         {view:"button", id: '_links', type: 'htmlbutton',
@@ -126,9 +125,9 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view:"button", type: 'htmlbutton',id: "_add",
-                            label: "Добавить (Ins)", width: 140,
-                            hotkey: "insert", disabled: true,
+                        {view:"button", type: 'htmlbutton',id: "_add",  width: w1, disabled: d,
+                            label: "Добавить (Ins)", 
+                            hotkey: "insert", 
                             on: {
                                 onAfterRender: function () {
                                     if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();

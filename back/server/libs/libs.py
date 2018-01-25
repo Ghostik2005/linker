@@ -107,7 +107,7 @@ class API:
                 if md.hexdigest() == p_hash:
                     k_list = glob.glob(os.path.join(self.p_path, '*'))
                     for f_name in k_list:
-                        print(f_name)
+                        #print(f_name)
                         with open(f_name, 'rb') as f_obj:
                             fuser = f_obj.read().decode().strip()
                         if fuser == user:
@@ -138,6 +138,7 @@ class API:
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             user = params.get('user')
+            us_stri = '' if user == 'admin' else """and u."USER" = '%s'""" % user
             stri = ""
             if search_re:
                 search_re = search_re.replace("'", "").replace('"', "")
@@ -161,13 +162,13 @@ class API:
                             stri.append('and %s' % ts3)
                     stri = ' '.join(stri)
 
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER"
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
-            WHERE r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1 {0}
+            WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {3}
             order by r.{1} {2}
-            ROWS ? to ?""".format(stri, field, direction)
-            opt = (user, start_p, end_p)
+            ROWS ? to ?""".format(stri, field, direction, us_stri)
+            opt = (start_p, end_p)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
@@ -180,7 +181,8 @@ class API:
                     "c_tovar" : row[5],
                     "c_zavod" : row[6],
                     "id_org"  : row[7],
-                    "c_index" : row[8]
+                    "c_index" : row[8],
+                    "c_user"  : row[9]
                 }
                 _return.append(r)
             sql = """select count(*)
@@ -657,8 +659,6 @@ class API:
             if c_id and val:
                 sql = """update DV set ACT_INGR = ?, OA = ? where ID = ? returning ID"""
                 opt = (val, oa, c_id)
-                print(sql)
-                print(opt)
                 res = self.db.execute({"sql": sql, "options": opt})
                 if res[0]:
                     if oa == 1 :
@@ -884,6 +884,27 @@ class API:
                     ret = {"result": False, "ret_val": "upd error"}
             else:
                 ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getTgAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select classifier.nm_group, classifier.cd_group
+            from classifier 
+            where classifier.idx_group = 7
+            order by classifier.nm_group asc
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"            : row[1],
+                    "c_tgroup"         : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -1216,7 +1237,6 @@ class API:
             where {0}
             order by r.{1} {2}
             ROWS ? to ?""".format(stri, field, direction)
-            print(sql)
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -1299,7 +1319,7 @@ class API:
                     order by r.{1} {2}
                     ROWS ? to ?
             """.format(stri, field, direction)
-            #print(sql)
+
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -1314,19 +1334,12 @@ class API:
                     "barcode"     : st1,
                     "data"        : []
                 }
-                sql = """select r.RDB$DB_KEY, r.barcode from spr_barcode r where r.id_spr = ? order by r.barcode ASC"""
+                sql = """select r.barcode from spr_barcode r where r.id_spr = ? order by r.barcode ASC"""
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
                 for rrr in res:
-                    try:
-                        idc = rrr[0].decode('cp1251')
-                    except Exception as Err:
-                        print(Err)
-                        idc = rrr[0]
-                    #print(idc)
                     rr = {
-                        #"id"        : idc,
-                        "barcode"   : rrr[1],
+                        "barcode"   : rrr[0],
                         "id_state"  : "active",
                         "dt"        : "",
                         "owner"     : ""
@@ -1338,6 +1351,30 @@ class API:
         else:
             ret = {"result": False, "ret_val": "access denied"}
         #print(ret)
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getTg(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_spr = params.get("id_spr");
+            if id_spr:
+                sql = """select classifier.nm_group, classifier.cd_group
+                    from CLASSIFIER 
+                    inner join GROUPS on (groups.cd_group = classifier.cd_group) 
+                    where ( classifier.idx_group = 7 and groups.cd_code = ? )"""
+                opt = (id_spr,)
+                t = self.db.request({"sql": sql, "options": opt})
+                _return = []
+                for row_b in t:
+                    r = {
+                        "c_tgroup"   : row_b[0],
+                        "id"         : row_b[1]
+                        }
+                    _return.append(r)
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "no id_spr"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def getBar(self, params=None, x_hash=None):
@@ -1384,8 +1421,6 @@ class API:
             if id_spr and barcode:
                 sql = """delete from spr_barcode where id_spr = ? and barcode = ?"""
                 opt = (id_spr, barcode)
-                print(sql)
-                print(opt)
                 result = self.db.execute({"sql": sql, "options": opt})
                 ret = {"result": True, "ret_val": "updated"}
             elif barcode:
@@ -1579,10 +1614,10 @@ class API:
                     r = {
                         "id_spr"        : row[0],
                         "c_tovar"       : row[1],
+                        "id_strana"     : row[2],
                         "c_dv"          : '',
                         "c_zavod"       : '',
                         "c_strana"      : '',
-                        #"c_opisanie"    : row[2],
                         "id_zavod"      : row[3],
                         "id_dv"         : row[4],
                         "barcode"       : "",
@@ -1595,7 +1630,9 @@ class API:
                         "group"         : "",
                         "id_group"      : "",
                         "id_nds"        : "",
-                        "nds"           : ""
+                        "nds"           : "",
+                        "c_tgroup"      : "",
+                        "id_tgroup"     : ""
                     }
                     sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
                     t = self.db.request({"sql": sql, "options": opt})
@@ -1631,6 +1668,19 @@ class API:
                     try:
                         r["sezon"] = t[0][0]
                         r["id_sezon"] = t[0][1]
+                    except:
+                        pass
+
+                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
+                    from groups
+                    inner join classifier on (groups.cd_group = classifier.cd_group)
+                    where ( classifier.idx_group = 7 and groups.cd_code = ? )"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    try:
+                        c_t = []
+                        for row_g in t:
+                            c_t.append(row_g[0])
+                        r['c_tgroup'] = " ".join(c_t)
                     except:
                         pass
 
@@ -1672,7 +1722,7 @@ class API:
                     except:
                         pass
                     sql = "select c_strana from spr_strana where id_spr = ? and flag = 1"
-                    opt = (row[3],)
+                    opt = (row[2],)
                     t = self.db.request({"sql": sql, "options": opt})
                     try:
                         r['c_strana'] = t[0][0]
@@ -1838,7 +1888,6 @@ class API:
                 opt = (sh_prc,)
                 _return = []
                 result = self.db.execute({"sql": sql, "options": opt})
-                print(result)
                 for row in result:
                     r = {
                         "sh_prc"    : row[0]
@@ -1864,11 +1913,8 @@ class API:
             if sh_prc:
                 sql = """update PRC r set r.N_FG = ?, %s r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG""" % sss
                 opt = (iid, sh_prc)
-                print(sql)
-                print(opt)
                 _return = []
                 result = self.db.execute({"sql": sql, "options": opt})
-                print(result)
                 for row in result:
                     r = {
                         "sh_prc"    : row[0]

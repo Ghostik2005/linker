@@ -26,7 +26,7 @@ export default class HeaderView extends JetView{
                         }
                     },
                 {view:"button", id: '_merge', css: "butt", type: 'htmlbutton',
-                    label: "<span class='butt'>Merger</span>", width: 80,
+                    label: "<span class='butt'>Линкер</span>", width: 80,
                     click: () => {
                         this.app.show("/start/body");
                         }

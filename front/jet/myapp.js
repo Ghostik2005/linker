@@ -2,7 +2,7 @@ import "./styles/styles.css";
 //import "./libs/webix/webix.js";
 //import "./libs/webix/skin.js";
 import {JetApp, JetView} from "webix-jet";
-import {StoreRouter} from "webix-jet";
+import {StoreRouter, EmptyRouter} from "webix-jet";
 import {init_first} from "./views/globals";
 
 webix.ready(() => {
@@ -38,7 +38,7 @@ webix.ready(() => {
     var app = new JetApp({
         id:         "mainApp",
         name:       "linker",
-        version:    "18.019.1830",
+        version:    "18.025.1630",
         //start:      "/start/body",
         start:      "/login",
         admin:      "admin",
@@ -46,6 +46,7 @@ webix.ready(() => {
         //user:       "stasya",
         r_url:      u1,
         //router:     StoreRouter,
+        router:     EmptyRouter,
         x_api:      "x_login",
         debug:      true
     });

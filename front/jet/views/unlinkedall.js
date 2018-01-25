@@ -158,8 +158,13 @@ export default class AllUnlinkedView extends JetView{
                         ]
                     },
                 { id: "c_zavod", sort: "text",
-                    width: 300,
+                    width: 200,
                     header: [{text: "Производитель"},
+                        ]
+                    },
+                { id: "c_user", sort: "text",
+                    width: 200,
+                    header: [{text: "Пользователь"},
                         ]
                     },
                 ],
@@ -194,9 +199,17 @@ export default class AllUnlinkedView extends JetView{
                         direction: direction
                         });
                     },
-                onItemDblClick: (item) => {
-                    parse_unlinked_item(this, $$("__dt_a").getSelectedItem());
-                    this.getRoot().hide();
+                onItemDblClick: () => {
+                    //console.log(this.getRoot().getBody());
+                    let item = $$("__dt_a").getSelectedItem();
+                    if (this.app.config.user === this.app.config.admin || item.c_user === this.app.config.user) {
+                        //разрешено редактирование только админами или текущий пользовватель совпадает с ответственным
+                        //console.log(item);
+                        parse_unlinked_item(this, item);
+                        this.getRoot().hide();
+                    } else {
+                        webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
+                        }
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {

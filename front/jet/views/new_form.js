@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
+import NewtgView from "../views/new_tg";
 import {strana, vendor, dv} from "../views/globals";
 import {sezon, nds, group, hran} from "../views/globals";
 import {request, prcs, delPrc, barcodes} from "../views/globals";
@@ -160,11 +161,17 @@ export default class NewformView extends JetView{
                                 {view: "label", label:"Штрих-код:"},
                                 {view:"text", label: "", value: "", readonly: true, name: "barcode", localId: "_barc",
                                     click: () => {
-                                        let id_spr = this.$$("new_form").getValues().id_spr
+                                        let id_spr = this.$$("new_form").getValues().id_spr;
                                         this.popbar.show("Редактирование ш.кодов", id_spr, this);
                                         }
                                     },
-                                {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_opisanie"}
+                                {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_tgroup", localId: "_c_tgroup",
+                                    click: () => {
+                                        let id_spr = this.$$("new_form").getValues().id_spr;
+                                        //console.log(id_spr);
+                                        this.poptg.show("Редактирование товарных групп", id_spr, this);
+                                        }
+                                    }
                                 ]},
                             {width: 5,},
                             {rows: [
@@ -325,6 +332,7 @@ export default class NewformView extends JetView{
     init() {
         this.popstri = this.ui(NewstriView);
         this.popbar = this.ui(NewbarView);
+        this.poptg = this.ui(NewtgView);
         }
     }
 

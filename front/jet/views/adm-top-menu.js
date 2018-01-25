@@ -50,15 +50,15 @@ export default class TopmenuView extends JetView{
                             //})
                         //}
                     //},
-                {view: "button", type: "htmlbutton", disabled: !true,
-                    label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
-                    click: () => {
-                        webix.message({
-                            text: "sync",
-                            type: "debug",
-                            })
-                        }
-                    },
+                //{view: "button", type: "htmlbutton", disabled: !true,
+                    //label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
+                    //click: () => {
+                        //webix.message({
+                            //text: "sync",
+                            //type: "debug",
+                            //})
+                        //}
+                    //},
                 //{view:"button", type: 'htmlbutton', disabled: !true,
                     //label: "<span class='webix_icon fa-users'></span><span style='line-height: 20px;'> Пользователи</span>", width: 210,
                     //click: () => {
