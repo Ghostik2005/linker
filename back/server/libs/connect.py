@@ -17,7 +17,7 @@ class fb_local:
     def __init__(self, log):
         try:
             config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker/1conf.ini', encoding='UTF-8')
+            config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
             init = config['init']
             self.prod_params = {
                     'uri': init['uri'],

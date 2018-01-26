@@ -81,12 +81,20 @@ export default class TopmenuView extends JetView{
                     rows: [
                         {cols: [
                             {view: "label", label: "", name: "_name", fillspace: 1},
-                            {width: 100},
-                            {view: "label", label: "", css: 'right', name: "_count"},
+                            //{width: 20},
+                            //{view: "label", label: "", css: 'right', name: "_count", width: 220},
                             ]},
                         {cols: [
                             {view: "label", label: "", css: "header", name: "_vendor"},
                             {},
+                            {view: "label", label: "", css: 'right', name: "_count", width: 320,
+                                click: () => {
+                                    let suppl = $$("_suppl").getValue();
+                                    suppl = $$("_suppl").getList().getItem(suppl).c_vnd
+                                    this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
+                                    }
+                                },
+                            {width: 10},
                             {view: "button", type: "htmlbutton",
                                 label: "<span class='butt'>Обновить сессию</span>", width: 230,
                                 click: () => {
@@ -94,14 +102,14 @@ export default class TopmenuView extends JetView{
                                     get_prcs(this, id_vnd);
                                     }
                                 },
-                            {view: "button", type: "htmlbutton",
-                                label: "<span class='butt'>Посмотреть все из сессии</span>", width: 230,
-                                click: () => {
-                                    let suppl = $$("_suppl").getValue();
-                                    suppl = $$("_suppl").getList().getItem(suppl).c_vnd
-                                    this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
-                                    }
-                                },
+                            //{view: "button", type: "htmlbutton",
+                                //label: "<span class='butt'>Посмотреть все из сессии</span>", width: 230,
+                                //click: () => {
+                                    //let suppl = $$("_suppl").getValue();
+                                    //suppl = $$("_suppl").getList().getItem(suppl).c_vnd
+                                    //this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
+                                    //}
+                                //},
                             ]},
                     ]},
                 {view: 'toolbar',

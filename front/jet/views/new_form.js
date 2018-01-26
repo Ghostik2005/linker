@@ -158,14 +158,15 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     ]},
-                                {view: "label", label:"Штрих-код:"},
-                                {view:"text", label: "", value: "", readonly: true, name: "barcode", localId: "_barc",
+                                //{view: "label", label:"Штрих-код:"},
+                                {view:"text", label: "Штрих-код:", value: "", labelPosition:"top", readonly: true, name: "barcode", localId: "_barc",
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
                                         this.popbar.show("Редактирование ш.кодов", id_spr, this);
                                         }
                                     },
                                 {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_tgroup", localId: "_c_tgroup",
+                                    readonly: true,
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
                                         //console.log(id_spr);
@@ -293,6 +294,7 @@ export default class NewformView extends JetView{
                                         params["id_group"] = right_f.id_group;
                                         params["id_nds"] = right_f.id_nds;
                                         params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc;
+                                        params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
                                         let url = this.app.config.r_url + "?setSpr"
                                         let ret_data = request(url, params, !0).response;

@@ -1115,17 +1115,26 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-
-
     def _insGr(self, params, result):
-        prescr = params.get("prescr");
-        mandat = params.get("mandat");
-        id_sezon = params.get("id_sezon");
-        id_usloviya = params.get("id_usloviya");
-        id_group = params.get("id_group");
-        id_nds = params.get("id_nds");
+        prescr = params.get("prescr")
+        mandat = params.get("mandat")
+        id_sezon = params.get("id_sezon")
+        id_usloviya = params.get("id_usloviya")
+        id_group = params.get("id_group")
+        id_nds = params.get("id_nds")
+        c_tgroup = params.get("c_tgroup")
+        c_tgroup = c_tgroup.split('; ')
         sql = """insert into GROUPS (CD_CODE, CD_GROUP) values (?, ?)"""
         opt = []
+        for i in range(len(c_tgroup)):
+            c_tgroup[i] = c_tgroup[i].strip()
+            if len(c_tgroup[i]) < 1:
+                c_tgroup.pop(i)
+        stri = ', '.join(["'" + q + "'" for q in c_tgroup]) if len(c_tgroup) > 0 else "''"
+        sq = "SELECT r.CD_GROUP FROM CLASSIFIER r WHERE r.IDX_GROUP = 7 AND r.NM_GROUP in (%s)" % stri
+        tt = self.db.execute({"sql": sq, "options": ()})
+        for id_tgroup in tt:
+            opt.append((result, id_tgroup[0]))
         if id_group:
             opt.append((result, id_group))
         if id_nds:
@@ -1139,19 +1148,22 @@ class API:
         if id_sezon:
             opt.append((result, id_sezon))
         if len(opt) > 0:
+            print(sql)
+            print(opt)
             t1 = self.db.executemany({"sql": sql, "options": opt})
 
     def setSpr(self, params=None, x_hash=None):
         if self._check(x_hash):
-            id_spr = params.get("id_spr");
-            barcode = params.get("barcode");
-            c_tovar = params.get("c_tovar");
-            id_strana = params.get("id_strana");
-            id_zavod = params.get("id_zavod");
-            id_dv = params.get("id_dv");
-
-            user = params.get("user");
-            sh_prc = params.get("sh_prc");
+            id_spr = params.get("id_spr")
+            barcode = params.get("barcode")
+            c_tovar = params.get("c_tovar")
+            id_strana = params.get("id_strana")
+            id_zavod = params.get("id_zavod")
+            id_dv = params.get("id_dv")
+            c_tgroup = params.get('c_tgroup')
+            
+            user = params.get("user")
+            sh_prc = params.get("sh_prc")
             _return = []
             if id_spr > 0:
                 sql = """update SPR set C_TOVAR = ?, DT = CAST('NOW' AS TIMESTAMP),
@@ -1162,7 +1174,7 @@ class API:
                          WHERE g.CD_GROUP in 
                              (SELECT c.CD_GROUP
                              FROM CLASSIFIER as c
-                             WHERE c.IDX_GROUP in (1, 2, 3, 4, 5, 6)
+                             WHERE c.IDX_GROUP in (1, 2, 3, 4, 5, 6, 7)
                              )
                          and g.CD_CODE = ?"""
                 opt = (id_spr,)
@@ -1355,7 +1367,7 @@ class API:
 
     def getTg(self, params=None, x_hash=None):
         if self._check(x_hash):
-            id_spr = params.get("id_spr");
+            id_spr = params.get("id_spr")
             if id_spr:
                 sql = """select classifier.nm_group, classifier.cd_group
                     from CLASSIFIER 
@@ -1379,7 +1391,7 @@ class API:
 
     def getBar(self, params=None, x_hash=None):
         if self._check(x_hash):
-            id_spr = params.get("id_spr");
+            id_spr = params.get("id_spr")
             if id_spr:
                 sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
                 opt = (id_spr,)
@@ -1399,8 +1411,8 @@ class API:
 
     def checkBar(self, params=None, x_hash=None):
         if self._check(x_hash):
-            id_spr = params.get("id_spr");
-            barcode = params.get("barcode");
+            id_spr = params.get("id_spr")
+            barcode = params.get("barcode")
             if barcode and id_spr:
                 sql = """select count(*) from spr_barcode where id_spr = ? and barcode = ?"""
                 opt = (id_spr, barcode)
@@ -1680,7 +1692,7 @@ class API:
                         c_t = []
                         for row_g in t:
                             c_t.append(row_g[0])
-                        r['c_tgroup'] = " ".join(c_t)
+                        r['c_tgroup'] = "; ".join(c_t)
                     except:
                         pass
 

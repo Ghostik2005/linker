@@ -6,12 +6,6 @@ import {request, get_refs, allTg, tg, get_tg} from "../views/globals";
 
 export default class NewtgView extends JetView{
     config(){
-        function check_b(value) {
-            var esum=0;
-            if (isNaN(value) || value.length !== 13) return false;
-            for (let i=0; i<13; i++) esum += Number(value[i])*(i%2*2+1);
-            return !(esum % 10)
-            }
 
         return {view: "cWindow",
             modal: true,
@@ -20,26 +14,26 @@ export default class NewtgView extends JetView{
                     this.$$("_filt").setValue("");
                     this.$$("t_list").clearAll();
                     this.$$("e_list").clearAll();
-                    console.log('alltg', allTg);
                     },
                 onShow: () => {
                     this.$$("_filt").setValue("");
                     let id_spr = this.$$("_n_tg").config.id_spr
                     get_tg(this, id_spr);
+                    var qw = this.$$("e_list");
+                    qw.clearAll(true);
                     this.$$("t_list").clearAll();
-                    this.$$("e_list").clearAll();
                     this.$$("t_list").parse(tg);
-                    //console.log('alltg', allTg);
-                    //console.log('this', this);
-                    this.$$("e_list").parse(allTg); //непонятно почему глючит при повторном вызове???
-                    let l_data = this.$$("t_list").data.order;
-                    l_data.forEach(function(item, i, l_data) {
-                        try {
-                            this.$$("e_list").remove(item);
-                        } catch(err) {
-                            console.log(err)
-                            };
+                    let pp = allTg.data.order;
+                    pp.forEach(function(item, i, pp) {
+                        let ii = allTg.getItem(item);
+                        qw.add(ii);
                         });
+                    //qw.parse(pp); //непонятно почему глючит при повторном вызове, если перед этим удалять позиции из list'а???
+                    pp = this.$$("t_list").data.order;
+                    pp.forEach(function(item, i, pp) {
+                        qw.remove(item);
+                        });
+                    this.$$("_filt").focus();
                     },
                 },
             body: { view: "form",
@@ -51,6 +45,12 @@ export default class NewtgView extends JetView{
                 elements: [
                     {rows: [
                         {view: "text", label: "Название", value: "", name: "_filter", placeholder: "Введите название группы", localId: "_filt",
+                            on: {
+                                onTimedKeyPress: function(code, event) {
+                                    let value = this.getValue().toString().toLowerCase();
+                                    this.$scope.$$("e_list").filter("c_tgroup", value);
+                                    },
+                                },
                             },
                         {cols: [
                             {rows: [
@@ -103,7 +103,8 @@ export default class NewtgView extends JetView{
                                 click: () => {
                                     this.$$("t_list").selectAll();
                                     let tgs = this.$$("t_list").getSelectedItem();
-                                    var parse = '';
+                                    //console.log('tgs', tgs);
+                                    var p = '';
                                     let th = this.$$("_n_tg").config.th;
                                     let id_spr = this.$$("_n_tg").config.id_spr;
                                     let callback = this.$$("_n_tg").config.callback;
@@ -111,14 +112,15 @@ export default class NewtgView extends JetView{
                                         let t = typeof(tgs);
                                         try {
                                             tgs.forEach(function(item, i, tgs) {
-                                                parse += item.c_tgroup + ' ';
+                                                p += item.c_tgroup + '; ';
                                                 });
                                         } catch(err) {
-                                            parse = tgs.c_tgroup;
+                                            p = tgs.c_tgroup;
                                             }
                                         }
-                                    if (th) th.$$("_c_tgroup").setValue(parse);
-                                    if (callback) callback(id_spr, parse);
+                                    //console.log('p', p)
+                                    if (th) th.$$("_c_tgroup").setValue(p);
+                                    if (callback) callback(id_spr, p);
                                     this.hide();
                                     }
                                 }

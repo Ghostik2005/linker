@@ -38,12 +38,11 @@ webix.ready(() => {
     var app = new JetApp({
         id:         "mainApp",
         name:       "linker",
-        version:    "18.025.1630",
+        version:    "18.026.1600",
         //start:      "/start/body",
         start:      "/login",
         admin:      "admin",
         user:       "",
-        //user:       "stasya",
         r_url:      u1,
         //router:     StoreRouter,
         router:     EmptyRouter,
@@ -53,17 +52,12 @@ webix.ready(() => {
     
     webix.attachEvent("onBeforeAjax", 
         function(mode, url, data, request, headers, files, promise){
-            //console.log('x-api', app.config.x_api);
             headers["x-api-key"] = app.config.x_api;
             }
         );
-
+        
     app.render();
-    
     init_first(app);
-    
-
-
     app.attachEvent("app:error:resolve", function(name, error){
         window.console.error(error);
     });

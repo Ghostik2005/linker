@@ -235,7 +235,7 @@ export function get_tg(th, id_spr) {
     let item = request(url, params, !0).response;
     item = JSON.parse(item);
     if (item.result) {
-        console.log(item.ret_val);
+        //console.log(item.ret_val);
         $$("tg_dc").clearAll();
         $$("tg_dc").parse(item.ret_val);
     } else {
@@ -343,6 +343,7 @@ export function parse_unlinked_item(th, c_item) {
         searchBar: "_spr_search",
         method: "getSprSearch"
         });
+    $$("_spr_search").focus();
     }
 
 export function get_spr(th, id_spr) {
@@ -360,14 +361,14 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    setTimeout(get_refs, 5500, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    setTimeout(get_refs, 4500, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
-    setTimeout(get_refs, 0, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
     }
 
 export function get_prcs(th, id_vnd) {
@@ -449,21 +450,32 @@ export function get_suppl(view, th) {
 
 export function delPrc(inp_data, th) {
     let sh_prc = inp_data.sh_prc;
-    let cursor = prcs.getCursor() 
-    let data = prcs.data.order;
-    let _c;
-    data.forEach(function(item, i, data) {
-        if (item === cursor) _c = +i
-        });
-    _c = _c + 1;
-    if (_c === prcs.count()) _c = 0;
+    let cursor = prcs.getCursor();
+    //let data = prcs.data.order;
+    //console.log('cursor', cursor);
+    //let _c;
+    //data.forEach(function(item, i, data) {
+        //console.log('item', item);
+        //if (item === cursor) {
+            //_c = +i;
+            //console.log('match');
+            //};
+        //});
+    //_c = _c + 1;
+    //if (_c === prcs.count()) _c = 0;
     prcs.remove(cursor);
-    cursor = prcs.data.order[+_c];
-    prcs.setCursor(cursor);
+    //cursor = prcs.data.order[_c];
     if (prcs.count() < 1){
         get_suppl("_suppl", th)
     } else {
+        cursor = prcs.data.order[0];
+        prcs.setCursor(cursor);
         parse_unlinked_item();
+        let ll = $$("_suppl").getList();
+        let cc = ll._selected[0]
+        let iti = ll.getItem(cc);
+        iti.count = iti.count - 1;
+        ll.updateItem(cc, iti);
         };
     }
     

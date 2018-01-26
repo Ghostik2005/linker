@@ -83,3 +83,8 @@ button {
     padding-left: 8px !important;
     padding-right: 8px !important;
     }
+
+.dt_css {
+    color: black;
+    font-size: larger;
+    }

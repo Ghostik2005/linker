@@ -134,6 +134,7 @@ export default class SprView extends JetView{
             fi: 'c_tovar',
             di: 'asc',
             old_stri: "",
+            css: 'dt_css',
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
