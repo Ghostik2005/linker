@@ -28,7 +28,7 @@ export default class GroupsView extends JetView{
                     header: [{text: "ID"},
                         ],
                     },
-                { id: "group",
+                { id: "group", headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "Группа"},
                         ]
@@ -45,6 +45,9 @@ export default class GroupsView extends JetView{
                     }
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     if (!this.count) {
                         this.showProgress({

@@ -230,8 +230,9 @@ if "__main__" == __name__:
     sql ="select count(*) from prc"
     sql = "select count(*) from spr r WHERE lower(r.C_TOVAR) like lower('%12507%')"
     sql = "select r.id_spr, r.c_tovar from spr r WHERE lower(r.C_TOVAR) like lower('%анальгин%') order by r.c_tovar asc ROWS 1 to 20"
+    sql = "insert INTO ROLES (id, name) values (0, 'Пользователь')"
     opt = ()
-    rr = fb.request({"sql": sql, "options": opt})
+    rr = fb.execute({"sql": sql, "options": opt})
     if rr == -1:
         print("sql connection error")
     elif rr == -2:

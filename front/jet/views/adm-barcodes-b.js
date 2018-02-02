@@ -58,7 +58,7 @@ export default class BarcodesBView extends JetView{
             fi: 'c_tovar',
             di: 'asc',
             columns: [
-                {id: "c_tovar", header: "Товар" , fillspace: true, sort: "server",
+                {id: "c_tovar", header: "Товар" , fillspace: true, sort: "server", headermenu: false,
                     template:"<span>{common.treetable()} #c_tovar#</span>" 
                     },
                 {id: "id_spr",
@@ -75,6 +75,9 @@ export default class BarcodesBView extends JetView{
                 {id: "owner", header: "Создал", width: 120}
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     if (!this.count) {

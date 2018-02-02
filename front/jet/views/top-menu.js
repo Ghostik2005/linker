@@ -40,15 +40,6 @@ export default class TopmenuView extends JetView{
                                 },
                             },
                         {},
-                        //{view:"button", type: 'base',
-                            //label: "TEST", width: 150,
-                            //click: () => {
-                                //webix.message({
-                                    //text: "test",
-                                    //type: "debug",
-                                    //})
-                                //}
-                            //},
                         {view: "button", type: "htmlbutton",
                             label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Обновить с сервера</span>", width: 210,
                             click: () => {
@@ -133,7 +124,19 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view:"button", type: 'htmlbutton',id: "_add",  width: w1, disabled: d,
+                        {view: "button", type: 'htmlbutton', width: 35,
+                            label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                            click: () => {
+                                let hist = webix.storage.session.get("__dt");
+                                //let hist = window.sessionStorage.getItem("__dt");
+                                console.log(hist);
+                                webix.message({
+                                    'type': 'debug',
+                                    'text': 'история поиска в этой сессии',
+                                    })
+                                },
+                            },
+                        {view:"button", type: 'htmlbutton', id: "_add",  width: w1, disabled: d,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {

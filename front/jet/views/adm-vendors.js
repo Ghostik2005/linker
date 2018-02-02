@@ -29,6 +29,7 @@ export default class VendorsView extends JetView{
                         ],
                     },
                 { id: "c_zavod",
+                    headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "Производитель"},
                         ]
@@ -45,6 +46,9 @@ export default class VendorsView extends JetView{
                     }
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     if (!this.count) {
                         this.showProgress({

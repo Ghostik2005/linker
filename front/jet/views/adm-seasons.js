@@ -29,7 +29,7 @@ export default class SeasonsView extends JetView{
                     header: [{text: "ID"},
                         ],
                     },
-                { id: "sezon",
+                { id: "sezon", headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "Сезон"},
                         ]
@@ -46,6 +46,9 @@ export default class SeasonsView extends JetView{
                     }
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     if (!this.count) {
                         this.showProgress({

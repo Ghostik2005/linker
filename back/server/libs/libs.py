@@ -123,7 +123,8 @@ class API:
     def getVersion(self, params=None, x_hash=None):
         user = params.get('user')
         if self._check(x_hash):
-            ret = {"result": True, "ret_val": self.log.version}
+            prod = self.db.production;
+            ret = {"result": True, "ret_val": self.log.version, "prod": prod}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -131,15 +132,47 @@ class API:
     def getPrcsAll(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
-            start_p = int( params.get('start', self.start))
+            filt = params.get('c_filter')
+            pref = 'and %s'
+            stri = ""
+            if filt:
+                pars = {}
+                pars['c_vnd'] = filt.get('c_vnd')
+                pars['c_zavod'] = filt.get('c_zavod')
+                pars['c_tovar'] = filt.get('c_tovar')
+                pars['c_user'] = filt.get('c_user')
+                ssss = []
+                if pars['c_vnd']:
+                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_user']:
+                    s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_tovar']:
+                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_zavod']:
+                    s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    ssss.append(pref % s)
+                stri = ' '.join(ssss)
+            start_p = int(params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
+            search_field = params.get('s_field')
             user = params.get('user')
             us_stri = '' if user == 'admin' else """and u."USER" = '%s'""" % user
-            stri = ""
+            #stri = ""
+            table = 'r'
+            if field == 'c_vnd':
+                table = 'v'
+            elif field == 'c_user':
+                table = 'u'
+                field = '"USER"'
+            field = '.'.join([table, field])
+            """
             if search_re:
                 search_re = search_re.replace("'", "").replace('"', "")
                 t1 = search_re.strip()
@@ -161,13 +194,15 @@ class API:
                             ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                             stri.append('and %s' % ts3)
                     stri = ' '.join(stri)
+            """
 
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER"
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
-            WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {3}
-            order by r.{1} {2}
-            ROWS ? to ?""".format(stri, field, direction, us_stri)
+            INNER JOIN VND v on (r.ID_VND = v.ID_VND)
+            WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1}
+            order by {2} {3}
+            ROWS ? to ?""".format(stri, us_stri, field, direction)
             opt = (start_p, end_p)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -182,15 +217,18 @@ class API:
                     "c_zavod" : row[6],
                     "id_org"  : row[7],
                     "c_index" : row[8],
-                    "c_user"  : row[9]
+                    "c_user"  : row[9],
+                    "c_vnd"   : row[10]
                 }
                 _return.append(r)
             sql = """select count(*)
                 from prc r
                 inner join USERS u on (u."GROUP" = r.ID_ORG)
-                WHERE r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1 %s
-                """ % stri
-            opt = (user,)
+                INNER JOIN VND v on (r.ID_VND = v.ID_VND)
+                WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1}
+                """.format(stri, us_stri)
+            opt = ()
+
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
             ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
         else:
@@ -200,43 +238,54 @@ class API:
 
     def getPrcsSkip(self, params=None, x_hash=None):
         if self._check(x_hash):
-            start_p = int( params.get('start', self.start))
+            filt = params.get('c_filter')
+            pref = 'and %s'
+            stri = ""
+            if filt:
+                pars = {}
+                pars['c_vnd'] = filt.get('c_vnd')
+                pars['c_zavod'] = filt.get('c_zavod')
+                pars['c_tovar'] = filt.get('c_tovar')
+                pars['c_user'] = filt.get('c_user')
+                ssss = []
+                if pars['c_vnd']:
+                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_user']:
+                    s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_tovar']:
+                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_zavod']:
+                    s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    ssss.append(pref % s)
+                stri = ' '.join(ssss)
+            start_p = int(params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
+            search_field = params.get('s_field')
             user = params.get('user')
-            stri = ""
-            if search_re:
-                search_re = search_re.replace("'", "").replace('"', "")
-                t1 = search_re.strip()
-                if len(t1) > 0:
-                    exclude = []
-                    for i in range(search_re.count('!')):
-                        ns = search_re.find('!')
-                        ne = search_re.find(' ', ns)
-                        te = search_re[ns+1: ne if ne > 0 else None]
-                        exclude.append(te)
-                        search_re = search_re.replace("!" + te, '')
-                    search_re = search_re.split()
-                    stri = []
-                    for i in range(len(search_re)):
-                        ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
-                        stri.append('and %s' % ts1)
-                    if len(exclude) > 0:
-                        for i in range(len(exclude)):
-                            ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
-                            stri.append('and %s' % ts3)
-                    stri = ' '.join(stri)
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
+            us_stri = '' if user == 'admin' else """and u."USER" = '%s'""" % user
+            table = 'r'
+            if field == 'c_vnd':
+                table = 'v'
+            elif field == 'c_user':
+                table = 'u'
+                field = '"USER"'
+            field = '.'.join([table, field])
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, v.C_VND
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
-            WHERE r.n_fg = 1 and u."USER" = ? {0}
-            order by r.{1} {2}
+            INNER JOIN VND v on (r.ID_VND = v.ID_VND)
+            WHERE r.n_fg = 1 {0} {1}
+            order by {2} {3}
             ROWS ? to ?
-            """.format(stri, field, direction)
-            opt = (user, start_p, end_p)
+            """.format(stri, us_stri, field, direction)
+            opt = (start_p, end_p)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
@@ -249,15 +298,17 @@ class API:
                     "c_tovar" : row[5],
                     "c_zavod" : row[6],
                     "id_org"  : row[7],
-                    "c_index" : row[8]
+                    "c_index" : row[8],
+                    "c_vnd"   : row[9]
                 }
                 _return.append(r)
             sql = """select count(*)
                 from prc r
                 inner join USERS u on (u."GROUP" = r.ID_ORG)
-                WHERE r.n_fg = 1 and u."USER" = ? %s
-                """ % stri
-            opt = (user,)
+                INNER JOIN VND v on (r.ID_VND = v.ID_VND)
+                WHERE r.n_fg = 1 {0} {1} 
+                """.format(stri, us_stri)
+            opt = ()
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
             ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
         else:
@@ -1206,7 +1257,8 @@ class API:
     def getUsersAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = """select r.ID, r."USER", r.PASSWD, r."GROUP", r.INN, r.ID_ROLE from users r"""
+            sql = """select r.ID, r."USER", r.PASSWD, r."GROUP", r.INN, a.NAME, r.ID_ROLE from users r
+                INNER JOIN ROLES a on (a.ID = r.ID_ROLE)"""
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -1217,9 +1269,11 @@ class API:
                     "c_pwrd"    : row[2],
                     "id_group"  : row[3],
                     "c_inn"     : row[4],
-                    "id_role"   : row[5],
-                    "id_state"  : "active",
-                    "dt"        : "01-01-2016"
+                    "c_role"    : row[5],
+                    "id_role"   : str(row[6]),
+                    "c_status"   : "active",
+                    "id_status"  : 1,
+                    "dt"        : ""
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}

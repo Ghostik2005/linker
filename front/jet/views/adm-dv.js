@@ -30,7 +30,7 @@ export default class DvView extends JetView{
                         ],
                     },
                 { id: "act_ingr",
-                    fillspace: 1, sort: "text",
+                    fillspace: 1, sort: "text", headermenu: false,
                     header: [{text: "Действующее вещество"},
                         {content:"selectFilter"}
                         ]
@@ -55,6 +55,9 @@ export default class DvView extends JetView{
                     }
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     if (!this.count) {
                         this.showProgress({

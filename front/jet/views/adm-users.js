@@ -22,6 +22,7 @@ export default class UsersView extends JetView{
             old_stri: "",
             columns: [
                 {id: "id",
+                    hidden: true,
                     width: 75,
                     header: [{text: "ID"},
                         ],
@@ -29,19 +30,20 @@ export default class UsersView extends JetView{
                 { id: "c_user",
                     fillspace: 1, sort: "text",
                     header: [{text: "Пользователь"},
-                        ]
+                        ],
+                    headermenu:false,
                     },
                 { id: "id_group",
                     width: 170, //sort: "text",
                     header: [{text: "Группа"},
                         ]
                     },
-                { id: "id_role",
-                    width: 170, //sort: "text",
+                { id: "c_role",
+                    width: 170, sort: "text",
                     header: [{text: "Роль пользователя"},
                         ]
                     },
-                { id: "id_state", 
+                { id: "c_status", sort: "text",
                     width: 150,
                     header: [{text: "Статус"},
                         ]
@@ -53,6 +55,9 @@ export default class UsersView extends JetView{
                     }
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     if (!this.count) {
@@ -105,10 +110,6 @@ export default class UsersView extends JetView{
                     label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');
-                        //webix.message({
-                            //text: "Добавление пользователя",
-                            //type: "debug",
-                            //})
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",

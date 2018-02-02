@@ -145,11 +145,13 @@ export default class SprView extends JetView{
                     header: [{text: "IDSPR"},
                         //{content:"textFilter"}
                         ],
+                    headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     header: [{text: "Название"},
                         //{content:"textFilter"}
-                        ]
+                        ],
+                    headermenu:false,
                     },
                 { id: "id_zavod", //sort: "text",
                     width: 400,

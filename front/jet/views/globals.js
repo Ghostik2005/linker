@@ -256,8 +256,6 @@ export function form_navi(view, pager) {
     }
 
 export function get_data(inp_params) {
-    let th = inp_params.th;
-    //console.log(th.getBody());
     let view = inp_params.view;
     let nav = inp_params.navBar;
     let start = inp_params.start;
@@ -265,15 +263,15 @@ export function get_data(inp_params) {
     let se_s = inp_params.searchBar;
     let method = inp_params.method;
     let field = (inp_params.field) ? inp_params.field : undefined;
+    let s_field = (inp_params.s_field) ? inp_params.s_field : undefined;
     let direction = (inp_params.direction) ? inp_params.direction : undefined;
-    let search_str = $$(se_s).getValue();
+    let search_str = (se_s) ? $$(se_s).getValue() : undefined;
+    let c_filter = (inp_params.filter) ? inp_params.filter : undefined;
     let app = $$("main_ui").$scope.app;
-    //console.log('gdata', app);
-    //console.dir(JetView);
-    let user = (th) ? th.app.config.user : app.config.user;
-    let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic?" : "../linker_logic?";
-    let url = (th) ? th.app.config.r_url + "?" + method : u1 + method;
-    let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction};
+    let user = app.config.user;
+    let url = app.config.r_url + "?" + method;
+    let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction, "c_filter": c_filter};
+    //console.log('params', params);
     let old_stri = $$(view).config.old_stri;
     if (old_stri !== search_str || old_stri === search_str) { ////////////////////
         $$(view).config.old_stri = search_str;
@@ -284,14 +282,25 @@ export function get_data(inp_params) {
         request(url, params).then(function(data) {
             data = data.json();
             if (data.result) {
-                $$(view).clearAll();
+                //$$(view).clearAll();
                 $$(view).parse(data.ret_val);
                 $$(view).config.startPos = data.start;
                 $$(view).config.totalPos = data.total;
                 form_navi(view, nav);
+                let hist = webix.storage.session.get(view);
+                //let hist = window.sessionStorage.getItem(view);
+                if (hist) {
+                    hist.push(search_str)
+                } else {
+                    hist = [search_str,]
+                    }
+                webix.storage.session.put(view, hist);
+                //window.sessionStorage.putItem(view, hist);
             } else {
+                $$(view).clearAll();
                 webix.message('error');
                 };
+            $$(view).hideProgress();
             });
         } else {
             //console.log('yes');

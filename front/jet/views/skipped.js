@@ -11,6 +11,52 @@ export default class SkippedView extends JetView{
             let item_id = $$("__dt_s").getSelectedId()
             $$("__dt_s").remove(item_id)
             }
+
+        function getParams(ui) {
+            let c_filter = {
+                        'c_tovar'   : $$(ui).getFilter('c_tovar').value,
+                        'c_vnd'     : $$(ui).getFilter('c_vnd').value,
+                        'c_zavod'   : $$(ui).getFilter('c_zavod').value,
+                        }
+            let count = ui.config.posPpage;
+            let field = ui.config.fi;
+            let direction = ui.config.di;
+            return [c_filter, count, field, direction]
+            }
+
+        webix.ui.datafilter.customFilterSkip = webix.extend ({
+            render:function(master, config){
+                if (this.init) this.init(config);
+                config.css = "my_filter";
+                return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
+                },
+            _on_key_down:function(e, node, value){
+                var id = this._comp_id;
+                if ((e.which || e.keyCode) == 9) return;
+                if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                this._filter_timer=window.setTimeout(function(){
+                    let ui = webix.$$(id);
+                    if (ui) {
+                        let params = getParams(ui);
+                        get_data({
+                            view: id,
+                            navBar: "__nav_s",
+                            start: 1,
+                            count: params[1],
+                            searchBar: undefined,
+                            method: "getPrcsSkip",
+                            field: params[2],
+                            direction: params[3],
+                            filter: params[0]
+                            });
+                        };
+                    //if (ui) ui.filterByAll();
+                    },webix.ui.datafilter.textWaitDelay);
+                }
+            },  webix.ui.datafilter.textFilter);
+
+
+            
         var top = {//view: 'toolbar',
                     height: 40,
                     cols: [
@@ -46,21 +92,22 @@ export default class SkippedView extends JetView{
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                     click: () => {
-                        let start = 1;
-                        let count = $$("__dt_s").config.posPpage;
-                        let field = $$("__dt_s").config.fi;
-                        let direction = $$("__dt_s").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt_s",
-                            navBar: "__nav_s",
-                            start: start,
-                            count: count,
-                            searchBar: "_search_skip",
-                            method: "getPrcsSkip",
-                            field: field,
-                            direction: direction
-                            });
+                        var id = "__dt_s";
+                        let ui = webix.$$(id);
+                        if (ui) {
+                            let params = getParams(ui);
+                            get_data({
+                                view: id,
+                                navBar: "__nav_s",
+                                start: 1,
+                                count: params[1],
+                                searchBar: undefined,
+                                method: "getPrcsSkip",
+                                field: params[2],
+                                direction: params[3],
+                                filter: params[0]
+                                });
+                            };
                         }
                     },
                 {view: "button", type: 'htmlbutton',
@@ -68,62 +115,68 @@ export default class SkippedView extends JetView{
                     click: () => {
                         let start = $$("__dt_s").config.startPos - $$("__dt_s").config.posPpage;
                         start = (start < 0) ? 1 : start;
-                        let count = $$("__dt_s").config.posPpage;
-                        let field = $$("__dt_s").config.fi;
-                        let direction = $$("__dt_s").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt_s",
-                            navBar: "__nav_s",
-                            start: start,
-                            count: count,
-                            searchBar: "_search_skip",
-                            method: "getPrcsSkip",
-                            field: field,
-                            direction: direction
-                            });
+                        var id = "__dt_s";
+                        let ui = webix.$$(id);
+                        if (ui) {
+                            let params = getParams(ui);
+                            get_data({
+                                view: id,
+                                navBar: "__nav_s",
+                                start: start,
+                                count: params[1],
+                                searchBar: undefined,
+                                method: "getPrcsSkip",
+                                field: params[2],
+                                direction: params[3],
+                                filter: params[0]
+                                });
+                            };
                         }
                     },
                 {view: "label", label: "Страница 1 из 1", width: 200, id: "__pager_s"},
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
                     click: () => {
-                        let start = $$("__dt_s").config.startPos + $$("__dt_s").config.posPpage;
-                        start = (start > $$("__dt_s").config.totalPos) ? last_page("__dt_s"): start;
-                        let count = $$("__dt_s").config.posPpage;
-                        let field = $$("__dt_s").config.fi;
-                        let direction = $$("__dt_s").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt_s",
-                            navBar: "__nav_s",
-                            start: start,
-                            count: count,
-                            searchBar: "_search_skip",
-                            method: "getPrcsSkip",
-                            field: field,
-                            direction: direction
-                            });
+                        var id = "__dt_s";
+                        let ui = webix.$$(id);
+                        if (ui) {
+                            let start = ui.config.startPos + ui.config.posPpage;
+                            start = (start > ui.config.totalPos) ? last_page(id): start;
+                            let params = getParams(ui);
+                            get_data({
+                                view: id,
+                                navBar: "__nav_s",
+                                start: start,
+                                count: params[1],
+                                searchBar: undefined,
+                                method: "getPrcsSkip",
+                                field: params[2],
+                                direction: params[3],
+                                filter: params[0]
+                                });
+                            };
                         }
                     },
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                     click: () => {
-                        let start = last_page("__dt_s");
-                        let count = $$("__dt_s").config.posPpage;
-                        let field = $$("__dt_s").config.fi;
-                        let direction = $$("__dt_s").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt_s",
-                            navBar: "__nav_s",
-                            start: start,
-                            count: count,
-                            searchBar: "_search_skip",
-                            method: "getPrcsSkip",
-                            field: field,
-                            direction: direction
-                            });
+                        var id = "__dt_s";
+                        let ui = webix.$$(id);
+                        if (ui) {
+                            let start = last_page(id);
+                            let params = getParams(ui);
+                            get_data({
+                                view: id,
+                                navBar: "__nav_s",
+                                start: start,
+                                count: params[1],
+                                searchBar: undefined,
+                                method: "getPrcsSkip",
+                                field: params[2],
+                                direction: params[3],
+                                filter: params[0]
+                                });
+                            };
                         }
                     },
                 {},
@@ -148,17 +201,27 @@ export default class SkippedView extends JetView{
             fi: 'c_tovar',
             di: 'asc',
             columns: [
-                {id: "id_tovar", width: 80, sort: "server",
+                {id: "id_tovar", width: 80, //sort: "server",
+                    hidden: true,
                     header: [{text: "ID товара"},
                         ],
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
+                    headermenu:false,
                     header: [{text: "Название"},
+                        {content: "customFilterSkip"},
+                        ]
+                    },
+                { id: "c_vnd", sort: "server",
+                    width: 200,
+                    header: [{text: "Поставщик"},
+                        {content: "customFilterSkip"},
                         ]
                     },
                 { id: "c_zavod", sort: "text",
-                    width: 300,
+                    width: 200,
                     header: [{text: "Производитель"},
+                        {content: "customFilterSkip"},
                         ]
                     },
                 ],
@@ -176,22 +239,23 @@ export default class SkippedView extends JetView{
                         }
                     },
                 onBeforeSort: (field, direction) => {
-                    let th = this;
-                    let start = $$("__dt_s").config.startPos;
-                    let count = $$("__dt_s").config.posPpage;
-                    $$("__dt_s").config.fi = field;
-                    $$("__dt_s").config.di = direction;
-                    get_data({
-                        th: this,
-                        view: "__dt_s",
-                        navBar: "__nav_s",
-                        start: start,
-                        count: count,
-                        searchBar: "_search_skip",
-                        method: "getPrcsSkip",
-                        field: field,
-                        direction: direction
-                        });
+                    var id = "__dt_s";
+                    let ui = webix.$$(id);
+                    if (ui) {
+                        let start = ui.config.startPos;
+                        let params = getParams(ui);
+                        get_data({
+                            view: id,
+                            navBar: "__nav_s",
+                            start: start,
+                            count: params[1],
+                            searchBar: undefined,
+                            method: "getPrcsSkip",
+                            field: params[2],
+                            direction: params[3],
+                            filter: params[0]
+                            });
+                        };
                     },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user
@@ -223,23 +287,28 @@ export default class SkippedView extends JetView{
             modal: true,
             on: {
                 onShow: () => {
-                    get_data({
-                        th: this,
-                        view: "__dt_s",
-                        navBar: "__nav_s",
-                        start: 1,
-                        count: $$("__dt_s").config.posPpage,
-                        searchBar: "_search_skip",
-                        method: "getPrcsSkip",
-                        direction: "asc",
-                        field: "c_tovar"
-                        });
+                    var id = "__dt_s";
+                    let ui = webix.$$(id);
+                    if (ui) {
+                        let params = getParams(ui);
+                        get_data({
+                            view: id,
+                            navBar: "__nav_s",
+                            start: 1,
+                            count: params[1],
+                            searchBar: undefined,
+                            method: "getPrcsSkip",
+                            field: params[2],
+                            direction: params[3],
+                            filter: params[0]
+                            });
+                        };
                     }
                 },
             body: {
                 view: "layout",
                 rows: [
-                    top,
+                    //top,
                     sprv,
                     bottom,
                     ]}

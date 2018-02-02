@@ -5,18 +5,17 @@ import {deleteCookie} from "../views/globals";
 
 export default class HeaderView extends JetView{
     config(){
+
         return {view: 'toolbar',
             css: 'header',
             cols: [
                 {view: "label", label: "<a href='http://ms71.org'><span class='ms-logo', style='background-image: url(addons/img/ms_logo.jpg);'></span></a>",
                     width: 44, align: 'center', height: 36},
-                {view: "label", label: "Манускрипт солюшн: Линкер v. " + this.app.config.version + " | " + this.app.config.user, css: 'ms-logo-text',
+                {view: "label", label: "Манускрипт солюшн: Линкер | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
-                //{view: "label", label: "Текущий пользователь:  " + this.app.config.user, css: 'ms-logo-text',
-                    //width: 300, height: 36},
                 {},
                 {view:"button", id: '_adm', css: "butt", type: 'htmlbutton', 
-                    label: "<span class = 'butt'>Админка</span>", width: 120,
+                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
                     click: () => {
                         if (this.app.config.user === this.app.config.admin) {
                             this.app.show("/start/adm/adm-users");
@@ -39,7 +38,6 @@ export default class HeaderView extends JetView{
                         this.app.config.user = '';
                         this.app.config.x_api = 'x_login';
                         this.show("/login")
-                        //webix.message({"text": "exit", "type": "debug"});
                         }
                     },
             ]}

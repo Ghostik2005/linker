@@ -29,7 +29,7 @@ export default class HranView extends JetView{
                     header: [{text: "ID"},
                         ],
                     },
-                { id: "usloviya",
+                { id: "usloviya", headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "Условия хранения"},
                         ]
@@ -46,6 +46,9 @@ export default class HranView extends JetView{
                     }
                 ],
             on: {
+                "data->onParse":function(i, data){
+                    this.clearAll();
+                    },
                 onBeforeRender: function() {
                     //webix.extend(this, webix.ProgressBar);
                     if (!this.count) {

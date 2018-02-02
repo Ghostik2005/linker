@@ -42,8 +42,9 @@ export default class LinksView extends JetView{
                             });
                     },
                 onHide: () => {
-                    $$("__tt").clearAll();
-                    $$("_link_search").setValue('');
+                    //$$("__tt").clearAll();
+                    $$("__tt").unselectAll();
+                    //$$("_link_search").setValue('');
                     $$("_break").disable();
                     }
                 },
@@ -72,6 +73,17 @@ export default class LinksView extends JetView{
                                             direction: direction
                                             });
                                         }
+                                    },
+                                },
+                            {view: "button", type: 'htmlbutton', width: 40,
+                                label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                                click: () => {
+                                    let hist = webix.storage.session.get("__tt");
+                                    console.log(hist);
+                                    webix.message({
+                                        'type': 'debug',
+                                        'text': 'история поиска в этой сессии',
+                                        })
                                     },
                                 },
                             {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: true},
@@ -107,6 +119,9 @@ export default class LinksView extends JetView{
                                 {id: "owner", header: "Создал", width: 120}
                                 ],
                             on: {
+                                "data->onParse":function(i, data){
+                                    this.clearAll();
+                                    },
                                 onBeforeRender: function() {
                                     webix.extend(this, webix.ProgressBar);
                                     if (!this.count) {

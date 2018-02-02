@@ -73,5 +73,26 @@ button {
   color: black;
   font-size: larger;
 }
+.my_filter select,
+.my_filter input {
+  width: 100%;
+  font-size: inherit;
+  color: #666666 !important;
+  margin-top: -2px;
+  padding: 0 3px;
+  vertical-align: top;
+  border: 1px solid #dddddd;
+  line-height: 24px;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 70%;
+  vertical-align: middle;
+  /*border-radius: 6px;
+      font-family: Roboto, Arial;*/
+}
+.my_filter select {
+  padding: 3px;
+}
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/
