@@ -25,7 +25,6 @@ export default class NewUserView extends JetView{
                     },
                 elements: [
                     {rows: [
-                        //{view: "label", label:"Пользователь:" , name: 'u_name'},
                         {view: "text", labelPosition: 'top', label: "Пользователь:", value: "", name: "c_user"},
                         {height: 10, width: 600},
                         {view: "label", label: "Пароль:"},
@@ -37,7 +36,7 @@ export default class NewUserView extends JetView{
                                 _vis: false,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                        if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click:  () => {
@@ -59,11 +58,11 @@ export default class NewUserView extends JetView{
                             ]},
                         {view: "label", label:"Группа:", name: "g_name"},
                         {cols: [
-                            {view:"combo", value: "", name: 'id_group',
+                            {view:"combo", value: "", name: 'id_group', disabled: true,
                                 options:  {
                                     body: {
                                         template:"#c_group#",
-                                        yCount:15,
+                                        yCount:7,
                                         }
                                     },
                                 on: {
@@ -76,7 +75,7 @@ export default class NewUserView extends JetView{
                                 width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        //if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                        //if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -85,11 +84,11 @@ export default class NewUserView extends JetView{
                             ]},
                         {view: "label", label:"Роль пользователя:", name: "r_name"},
                         {cols: [
-                            {view:"combo", label: "", value: "", name: "id_role",
+                            {view:"combo", label: "", value: "", name: "id_role", disabled: true,
                                 options:  {
                                     body: {
                                         template:"#c_role#",
-                                        yCount:10,
+                                        yCount:7,
                                         data: [{"id": "0", "c_role" : "Пользователь"}, {"id": "34", "c_role": "Всемогущий"}]
                                         }
                                     },
@@ -103,7 +102,7 @@ export default class NewUserView extends JetView{
                                 width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        //if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                        //if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -112,7 +111,7 @@ export default class NewUserView extends JetView{
                             ]},
                         {view: "label", label:"Статус:", name: 'st_name'},
                         {cols: [
-                            {view:"combo", label: "", value: "", name: "id_status",
+                            {view:"combo", label: "", value: "", name: "id_status", disabled: true,
                                 options:  {
                                     body: {
                                         template:"#c_status#",
@@ -130,7 +129,7 @@ export default class NewUserView extends JetView{
                                 width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        //if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                        //if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -148,12 +147,16 @@ export default class NewUserView extends JetView{
                              {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                        if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
                                     let ff = this.$$("new_user").getValues();
                                     console.log('form', ff);
+                                    webix.message({
+                                        'type': 'debug',
+                                        'text': 'сохранение изменений. пока недоступно'
+                                        });
                                     //this.hide();
                                     }
                                 }

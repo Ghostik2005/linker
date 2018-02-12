@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request, barcodes, get_bars} from "../views/globals";
+import {barcodes, get_bars} from "../views/globals";
 
 
 export default class NewbarView extends JetView{

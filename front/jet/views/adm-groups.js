@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {group, addGr, delGr, updGr, request} from "../views/globals";
+import {group, addGr, delGr, updGr, request, checkVal} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 export default class GroupsView extends JetView{
@@ -104,15 +104,10 @@ export default class GroupsView extends JetView{
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
                         let url = this.app.config.r_url + "?delGr";
-                        let ret_data = request(url, params, !0).response;
-                        ret_data = JSON.parse(ret_data);
-                        if (ret_data.result) {
-                            delGr(ret_data.ret_val.id);
-                        } else {
-                            webix.message({
-                                text: ret_data.ret_val,
-                                type: "debug",
-                                })
+                        let res = request(url, params, !0).response;
+                        res = checkVal(res, 's');
+                        if (res) {
+                            delGr(res.id);
                             };
                         }
                     },

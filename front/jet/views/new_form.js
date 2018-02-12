@@ -6,7 +6,7 @@ import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
 import {strana, vendor, dv} from "../views/globals";
 import {sezon, nds, group, hran} from "../views/globals";
-import {request, prcs, delPrc, barcodes} from "../views/globals";
+import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
 export default class NewformView extends JetView{
     config(){
@@ -86,7 +86,7 @@ export default class NewformView extends JetView{
                                         filter: strana_filter,
                                         body: {
                                             template:"#c_strana#",
-                                            yCount:15,
+                                            yCount:7,
                                             //data: strana
                                             }
                                         },
@@ -103,7 +103,7 @@ export default class NewformView extends JetView{
                                             filter: zavod_filter,
                                             body: {
                                                 template:"#c_zavod#",
-                                                yCount:10,
+                                                yCount:7,
                                                 //data: vendor
                                                 }
                                             },
@@ -116,7 +116,7 @@ export default class NewformView extends JetView{
                                     {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                         on: {
                                             onAfterRender: function () {
-                                                if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                                if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                                 }
                                             },
                                         click: () => {
@@ -135,7 +135,7 @@ export default class NewformView extends JetView{
                                                 view:"list",
                                                 type:{ height:"auto" },
                                                 template: "<div class='comboList'>#act_ingr#</div>",
-                                                height: 250,
+                                                height: 200,
                                                 yCount:0,
                                                 //data: dv
                                                 }
@@ -149,7 +149,7 @@ export default class NewformView extends JetView{
                                     {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                         on: {
                                             onAfterRender: function () {
-                                                if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                                if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                                 }
                                             },
                                         click: () => {
@@ -158,7 +158,6 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     ]},
-                                //{view: "label", label:"Штрих-код:"},
                                 {view:"text", label: "Штрих-код:", value: "", labelPosition:"top", readonly: true, name: "barcode", localId: "_barc",
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
@@ -169,7 +168,6 @@ export default class NewformView extends JetView{
                                     readonly: true,
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
-                                        //console.log(id_spr);
                                         this.poptg.show("Редактирование товарных групп", id_spr, this);
                                         }
                                     }
@@ -179,8 +177,6 @@ export default class NewformView extends JetView{
                                 {view: "form", css: "borders",
                                     localId: "new_f_right",
                                     elements: [
-                                        //{view: "label", labelWidth: 0},
-                                        //{view: "label", labelWidth: 0},
                                         {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
                                         {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
                                         {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
@@ -211,7 +207,7 @@ export default class NewformView extends JetView{
                                                     //type:{ height:"auto" },
                                                     template: "#usloviya#",
                                                     //height: 400,
-                                                    yCount:10,
+                                                    yCount:5,
                                                     //data: hran
                                                     }
                                                 },
@@ -244,7 +240,7 @@ export default class NewformView extends JetView{
                                             options:  {
                                                 body: {
                                                     template:"#nds#",
-                                                    yCount:10,
+                                                    yCount:5,
                                                     //data: nds
                                                     }
                                                 },
@@ -264,14 +260,10 @@ export default class NewformView extends JetView{
                                     }
                                 },
                             {},
-                            //{view: "button", type: "base", label: "Test", width: 120, height: 32,
-                                //click: () => {
-                                    //}
-                                //},
                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                        if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -296,20 +288,14 @@ export default class NewformView extends JetView{
                                         params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
-                                        let url = this.app.config.r_url + "?setSpr"
-                                        let ret_data = request(url, params, !0).response;
-                                        ret_data = JSON.parse(ret_data);
-                                        if (ret_data.result && ret_data.new) {
-                                            //ret_data = ret_data.ret_val;
+                                        let url = this.app.config.r_url + "?setSpr";
+                                        let res = request(url, params, !0).response;
+                                        res = checkVal(res, 's');
+                                        if (res && res.new) {
                                             delPrc(params, this)
-                                        } else if (ret_data.result && !ret_data.new){
-                                        } else {
-                                            webix.message('error');
                                             };
                                         this.hide();
-                                    } else {
-
-                                        }
+                                        };
                                     }
                                 }
                             ]}

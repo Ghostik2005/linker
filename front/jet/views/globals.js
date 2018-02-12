@@ -1,4 +1,5 @@
 "use strict";
+
 import {JetApp, JetView} from "webix-jet";
 
 export var barcodes = new webix.DataCollection({
@@ -36,7 +37,6 @@ export var allTg = new webix.DataCollection({
                 }
             }
         });
-
 
 export var strana = new webix.DataCollection({
         id: "strana_dc",
@@ -93,6 +93,24 @@ export var group = new webix.DataCollection({
                 }
             }
         });
+
+export function checkVal(result, mode) {
+    var ret_value;
+    var err;
+    if (mode === 's') {
+        ret_value = JSON.parse(result);
+    } else if (mode === 'a') {
+        ret_value = result.json();
+        };
+    if (ret_value.result) {
+        ret_value = ret_value.ret_val;
+    } else {
+        ret_value = undefined;
+        err = 'error';
+        }
+    if (err) webix.message({'type': 'debug', 'text': err});
+    return ret_value;
+    }
 
 export function addHran(item) {
     hran.add(item);
@@ -219,12 +237,11 @@ export function get_bars(th, id_spr) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getBar"
     let params = {"user": user, "id_spr": id_spr};
-    let item = request(url, params, !0).response;
-    item = JSON.parse(item);
-    if (item.result) {
+    let res = request(url, params, !0).response;
+    res = checkVal(res, 's');
+    if (res) {
         $$("bars_dc").clearAll();
-        $$("bars_dc").parse(item.ret_val);
-    } else {
+        $$("bars_dc").parse(res);
         };
     }
 
@@ -232,13 +249,11 @@ export function get_tg(th, id_spr) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getTg"
     let params = {"user": user, "id_spr": id_spr};
-    let item = request(url, params, !0).response;
-    item = JSON.parse(item);
-    if (item.result) {
-        //console.log(item.ret_val);
+    let res = request(url, params, !0).response;
+    res = checkVal(res, 's');
+    if (res) {
         $$("tg_dc").clearAll();
-        $$("tg_dc").parse(item.ret_val);
-    } else {
+        $$("tg_dc").parse(res);
         };
     }
 
@@ -271,7 +286,6 @@ export function get_data(inp_params) {
     let user = app.config.user;
     let url = app.config.r_url + "?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction, "c_filter": c_filter};
-    //console.log('params', params);
     let old_stri = $$(view).config.old_stri;
     if (old_stri !== search_str || old_stri === search_str) { ////////////////////
         $$(view).config.old_stri = search_str;
@@ -280,22 +294,19 @@ export function get_data(inp_params) {
             icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
             });
         request(url, params).then(function(data) {
-            data = data.json();
-            if (data.result) {
-                //$$(view).clearAll();
-                $$(view).parse(data.ret_val);
+            data = checkVal(data, 'a');
+            if (data) {
+                $$(view).parse(data.datas);
                 $$(view).config.startPos = data.start;
                 $$(view).config.totalPos = data.total;
                 form_navi(view, nav);
                 let hist = webix.storage.session.get(view);
-                //let hist = window.sessionStorage.getItem(view);
                 if (hist) {
                     hist.push(search_str)
                 } else {
                     hist = [search_str,]
                     }
                 webix.storage.session.put(view, hist);
-                //window.sessionStorage.putItem(view, hist);
             } else {
                 $$(view).clearAll();
                 webix.message('error');
@@ -303,7 +314,6 @@ export function get_data(inp_params) {
             $$(view).hideProgress();
             });
         } else {
-            //console.log('yes');
             };
     }
 
@@ -359,10 +369,10 @@ export function get_spr(th, id_spr) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getSpr"
     let params = {"user": user, "id_spr": id_spr};
-    let item = request(url, params, !0).response;
-    item = JSON.parse(item);
-    if (item.result) {
-        return item.ret_val[0]
+    let res = request(url, params, !0).response;
+    res = checkVal(res, 's');
+    if (res) {
+        return res[0]
     } else {
         webix.message('error');
         return 'error';
@@ -370,33 +380,24 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
-    setTimeout(get_refs, 8000, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
     }
 
 export function get_prcs(th, id_vnd) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getPrcs"
     let params = {"user": user, "id_vnd": +id_vnd};
-    //let data = request(url, params, !0).response;
-    //data = JSON.parse(data);
-    //if (data.result) {
-        //data = data.ret_val
-        //$$("prcs_dc").clearAll();
-        //$$("prcs_dc").parse(data);
-    //} else {
-        //webix.message('error');
-        //};
     request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
+        data = checkVal(data, 'a');
+        if (data) {
+            //data = data.data;
             $$("prcs_dc").clearAll();
             $$("prcs_dc").parse(data);
         } else {
@@ -415,9 +416,9 @@ export function get_refs(inp_params){
     let type = inp_params.type;
     if (type !== "sync") {
         request(url, params).then(function(data) {
-            data = data.json();
-            if (data.result) {
-                data = data.ret_val
+            data = checkVal(data, 'a');
+            if (data) {
+                //data = data.data;
                 $$(store).clearAll();
                 $$(store).parse(data);
             } else {
@@ -425,14 +426,11 @@ export function get_refs(inp_params){
                 };
             })
     } else {
-        let data = request(url, params, !0).response;
-        data = JSON.parse(data);
-        if (data.result) {
-            data = data.ret_val
+        let res = request(url, params, !0).response;
+        res = checkVal(res, 's');
+        if (res) {
             $$(store).clearAll();
-            $$(store).parse(data);
-        } else {
-            webix.message('error');
+            $$(store).parse(res);
             };
         };
     }
@@ -442,9 +440,9 @@ export function get_suppl(view, th) {
     let url = th.app.config.r_url + "?getSupplUnlnk"
     let params = {"user": user};
     request(url, params).then(function(data) {
-        data = data.json();
-        if (data.result) {
-            data = data.ret_val
+        data = checkVal(data, 'a');
+        if (data) {
+            //data = data.data;
             $$(view).getList().clearAll();
             $$(view).getList().parse(data);
             let fid = $$(view).getList().getFirstId();
@@ -458,22 +456,10 @@ export function get_suppl(view, th) {
     }
 
 export function delPrc(inp_data, th) {
-    let sh_prc = inp_data.sh_prc;
+    //let sh_prc = inp_data.sh_prc;
+    //console.log('sh', sh_prc);
     let cursor = prcs.getCursor();
-    //let data = prcs.data.order;
-    //console.log('cursor', cursor);
-    //let _c;
-    //data.forEach(function(item, i, data) {
-        //console.log('item', item);
-        //if (item === cursor) {
-            //_c = +i;
-            //console.log('match');
-            //};
-        //});
-    //_c = _c + 1;
-    //if (_c === prcs.count()) _c = 0;
     prcs.remove(cursor);
-    //cursor = prcs.data.order[_c];
     if (prcs.count() < 1){
         get_suppl("_suppl", th)
     } else {
@@ -481,10 +467,11 @@ export function delPrc(inp_data, th) {
         prcs.setCursor(cursor);
         parse_unlinked_item();
         let ll = $$("_suppl").getList();
-        let cc = ll._selected[0]
+        let cc = $$("_suppl").getValue();
         let iti = ll.getItem(cc);
         iti.count = iti.count - 1;
         ll.updateItem(cc, iti);
+        $$("_suppl").refresh();
         };
     }
     

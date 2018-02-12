@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
-import {request} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 
 export default class UsersView extends JetView{
     config(){
@@ -141,12 +141,9 @@ export default class UsersView extends JetView{
         let url = this.app.config.r_url + "?getUsersAll"
         let params = {"user": user};
         request(url, params).then(function(data) {
-            data = data.json();
-            if (data.result) {
-                data = data.ret_val
+            data = checkVal(data, 'a');
+            if (data) {
                 th.parse(data);
-            } else {
-                webix.message('error');
                 };
             })
         }

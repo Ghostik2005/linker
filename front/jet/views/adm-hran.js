@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {hran, addHran, delHran, updHran, request} from "../views/globals";
+import {hran, addHran, delHran, updHran, request, checkVal} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 
@@ -110,15 +110,10 @@ export default class HranView extends JetView{
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
                         let url = this.app.config.r_url + "?delHran";
-                        let ret_data = request(url, params, !0).response;
-                        ret_data = JSON.parse(ret_data);
-                        if (ret_data.result) {
-                            delHran(ret_data.ret_val.id);
-                        } else {
-                            webix.message({
-                                text: ret_data.ret_val,
-                                type: "debug",
-                                })
+                        let res = request(url, params, !0).response;
+                        res = checkVal(res, 's');
+                        if (res) {
+                            delHran(res.id);
                             };
                         }
                     },

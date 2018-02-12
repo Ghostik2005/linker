@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 
 
 export default class UnlinkView extends JetView{
@@ -20,12 +20,9 @@ export default class UnlinkView extends JetView{
                 console.log('sync');
             } else {
                 request(url, params).then(function(data) {
-                    data = data.json();
-                    if (data.result) {
-                        if (callback) callback(data)
-                        else console.log('ecall', data);
-                    } else {
-                        webix.message('error');
+                    data = checkVal(data, 'a');
+                    if (data) {
+                        if (callback) callback(data);
                         };
                     })
                 }
@@ -50,7 +47,7 @@ export default class UnlinkView extends JetView{
                             on: {
                                 onAfterRender: function () {
                                     let user = this.$scope.app.config.user;
-                                    if (user === this.$scope.app.config.admin) {
+                                    if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                                         this.enable();
                                         }
                                     }

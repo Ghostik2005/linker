@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {dv, addDv, delDv, updDv, request} from "../views/globals";
+import {dv, addDv, delDv, updDv, request, checkVal} from "../views/globals";
 import NewDvView from "../views/new_dv";
 
 export default class DvView extends JetView{
@@ -115,15 +115,10 @@ export default class DvView extends JetView{
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
                         let url = this.app.config.r_url + "?delDv";
-                        let ret_data = request(url, params, !0).response;
-                        ret_data = JSON.parse(ret_data);
-                        if (ret_data.result) {
-                            delDv(ret_data.ret_val.id);
-                        } else {
-                            webix.message({
-                                text: ret_data.ret_val,
-                                type: "debug",
-                                })
+                        let res = request(url, params, !0).response;
+                        res = checkVal(res, 's');
+                        if (res) {
+                            delDv(res.id);
                             };
                         }
                     },

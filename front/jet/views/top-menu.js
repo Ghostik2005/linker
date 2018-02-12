@@ -13,9 +13,9 @@ import {prcs, delPrc} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
-        var w = (this.app.config.user === this.app.config.admin) ? 210: 1
-        var w1 = (this.app.config.user === this.app.config.admin) ? 140: 1
-        var d = (this.app.config.user === this.app.config.admin) ? false: true
+        var w = (this.app.config.role === this.app.config.admin) ? 210 : 1
+        var w1 = (this.app.config.role === this.app.config.admin) ? 140 : 1
+        var d = (this.app.config.role === this.app.config.admin) ? false : true
         //console.log(this);
         return {
             rows: [
@@ -141,7 +141,7 @@ export default class TopmenuView extends JetView{
                             hotkey: "insert", 
                             on: {
                                 onAfterRender: function () {
-                                    if (this.$scope.app.config.user === this.$scope.app.config.admin) this.enable();
+                                    if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
                                     }
                                 },
                             click: () => {

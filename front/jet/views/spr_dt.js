@@ -203,7 +203,7 @@ export default class SprView extends JetView{
                     item = this.getSelectedItem();
                     item = item.id_spr;
                     item = get_spr(this.$scope, item);
-                    console.log('item', item);
+                    //console.log('item', item);
                     item["s_name"] = "Страна: " + item.c_strana;
                     item["t_name"] = "Название товара: " + item.c_tovar;
                     item["v_name"] = "Производитель: " + item.c_zavod;

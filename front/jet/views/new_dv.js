@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request, prcs, delPrc} from "../views/globals";
+import {request, checkVal, prcs, delPrc} from "../views/globals";
 
 
 export default class NewDvView extends JetView{
@@ -14,16 +14,14 @@ export default class NewDvView extends JetView{
             params['user'] = this.$scope.app.config.user;
             var ret = false;
             if (this.$scope.$$("_n_f").config._params.mode=='new') {
-                let ret_data = request(url, params, !0).response;
-                ret_data = JSON.parse(ret_data);
-                if (ret_data.ret_val || this.config._params.text) {
+                let res = request(url, params, !0).response;
+                res = checkVal(res, 's');
+                if (res || this.config._params.text) {
                     ret = true
+                    }
                 } else {
-                    webix.message('error');
+                    ret = true;
                     };
-            } else {
-                ret = true;
-                };
             return ret;
             }
             
@@ -82,13 +80,11 @@ export default class NewDvView extends JetView{
                                     params['oa'] = _f.oa;
                                     let url = (para.mode === 'new') ? this.app.config.r_url + "?set" + para.type
                                                                     : this.app.config.r_url + "?upd" + para.type;
-                                    console.log(params);
-                                    let ret_data = request(url, params, !0).response;
-                                    ret_data = JSON.parse(ret_data);
-                                    if (ret_data.result) {
-                                        para.callback(ret_data.ret_val, para.source);
-                                    } else {
-                                        //webix.message('error');
+                                    //console.log(params);
+                                    let res = request(url, params, !0).response;
+                                    res = checkVal(res, 's');
+                                    if (res) {
+                                        para.callback(res, para.source);
                                         };
                                     this.hide();
                                 } else {

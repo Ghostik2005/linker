@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, getCookie, setCookie, deleteCookie} from "../views/globals";
+import {request, checkVal, getCookie, setCookie, deleteCookie} from "../views/globals";
 
 export default class loginView extends JetView{
     config(){
@@ -11,14 +11,16 @@ export default class loginView extends JetView{
             var ret = false;
             let url = th.$scope.app.config.r_url + "?login"
             let res = request(url, item, !0).response;
-            res = JSON.parse(res);
-            if (res.result) {
+            res = checkVal(res, 's');
+            if (res) {
                 ret = true;
                 th.$scope.app.config.user = item.user;
-                th.$scope.app.config.x_api = res.ret_val;
+                th.$scope.app.config.role = res.role;
+                th.$scope.app.config.x_api = res.key;
                 var opt = {'path': '/'};
                 setCookie('linker_user', item.user, opt);
-                setCookie('linker_auth_key', res.ret_val, opt);
+                setCookie('linker_auth_key', res.key, opt);
+                setCookie('linker_role', res.role, opt);
                 };
             return ret;
             }
@@ -63,14 +65,12 @@ export default class loginView extends JetView{
     init() {
         let u = getCookie('linker_user');
         let x = getCookie('linker_auth_key');
-        //console.log(u,x);
+        let r = getCookie('linker_role');
         if (u && x) {
             this.app.config.user = u;
+            this.app.config.role = r;
             this.app.config.x_api = x;
             this.show("/start/body");
             }
-        
-        //console.log('init', this);
-        //console.log('если есть куки - направляем на start');
         }
     }

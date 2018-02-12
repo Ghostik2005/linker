@@ -5,7 +5,6 @@ import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
-import ConfirmView from "../views/yes-no";
 import UnlinkView from "../views/unlink";
 
 export default class LinksView extends JetView{
@@ -152,8 +151,7 @@ export default class LinksView extends JetView{
                                 onItemDblClick: function (item, ii, iii) {
                                     let level = this.getSelectedItem().$level;
                                     if (level === 1) {
-                                        if (this.$scope.app.config.user === this.$scope.app.config.admin) {
-                                            //webix.message('admin');
+                                        if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                                             item = item.row;
                                             item = get_spr(this.$scope, item);
                                             item["s_name"] = "Страна: " + item.c_strana;
@@ -298,7 +296,6 @@ export default class LinksView extends JetView{
         }
     init() {
         this.popnew = this.ui(NewformView);
-        this.popconfirm = this.ui(ConfirmView);
         this.popunlink = this.ui(UnlinkView);
         }
     }

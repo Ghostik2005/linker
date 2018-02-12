@@ -3,16 +3,10 @@
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
-import ConfirmView from "../views/yes-no";
 import {parse_unlinked_item, prcs} from "../views/globals";
 
 export default class AllUnlinkedView extends JetView{
     config(){
-        
-        function delSkip () {
-            let item_id = $$("__dt_a").getSelectedId()
-            $$("__dt_a").remove(item_id)
-            }
 
         function getParams(ui) {
             let c_filter = {
@@ -266,7 +260,7 @@ export default class AllUnlinkedView extends JetView{
                     },
                 onItemDblClick: () => {
                     let item = $$("__dt_a").getSelectedItem();
-                    if (this.app.config.user === this.app.config.admin || item.c_user === this.app.config.user) {
+                    if (this.app.config.role === this.app.config.admin || item.c_user === this.app.config.user) {
                         //разрешено редактирование только админами или текущий пользовватель совпадает с ответственным
                         let suppl_dt = $$("_suppl").getList()
                         let data = suppl_dt.data.order;
@@ -359,7 +353,6 @@ export default class AllUnlinkedView extends JetView{
         this.getRoot().hide()
         }
     init() {
-        this.popconfirm = this.ui(ConfirmView);
         $$("__dt_a").getFilter('c_user').value = this.app.config.user;
         }
     }

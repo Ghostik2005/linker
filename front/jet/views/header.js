@@ -17,7 +17,7 @@ export default class HeaderView extends JetView{
                 {view:"button", id: '_adm', css: "butt", type: 'htmlbutton', 
                     label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
                     click: () => {
-                        if (this.app.config.user === this.app.config.admin) {
+                        if (this.app.config.role === this.app.config.admin) {
                             this.app.show("/start/adm/adm-users");
                         } else {
                             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
@@ -35,7 +35,9 @@ export default class HeaderView extends JetView{
                     click: () => {
                         deleteCookie('linker_user');
                         deleteCookie('linker_auth_key');
+                        deleteCookie('linker_role');
                         this.app.config.user = '';
+                        this.app.config.role = '0';
                         this.app.config.x_api = 'x_login';
                         this.show("/login")
                         }

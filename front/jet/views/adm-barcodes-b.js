@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
-import {last_page, request} from "../views/globals";
+import {last_page, request, checkVal} from "../views/globals";
 import ConfirmBarView from "../views/bar-yes-no.js";
 
 export default class BarcodesBView extends JetView{
@@ -23,10 +23,8 @@ export default class BarcodesBView extends JetView{
                 params = {"user": user, 'barcode': bc, "id_spr": item.id_spr};
                 };
             let res = request(url, params, !0).response;
-            res = JSON.parse(res);
-            //console.log(params);
-            //let res = {"result": true};
-            if (res.result) {
+            res = checkVal(res, 's');
+            if (res) {
                 if (level===1) {
                     th.remove(item.id);
                 } else if (level===2) {
@@ -35,8 +33,6 @@ export default class BarcodesBView extends JetView{
                         th.remove(item.$parent);
                         }
                     }
-            } else {
-                console.log('error');
                 };
             }
 
@@ -106,7 +102,7 @@ export default class BarcodesBView extends JetView{
                         });
                     },
                 onItemDblClick: function(item) {
-                    if (this.$scope.app.config.user === this.$scope.app.config.admin) {
+                    if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                         //webix.message('admin');
                         item = this.getSelectedItem();
                         let level = item.$level;

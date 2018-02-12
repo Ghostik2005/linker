@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
-import {last_page, request} from "../views/globals";
+import {last_page, request, checkVal} from "../views/globals";
 import NewbarView from "../views/new_bar.js";
 import ConfirmBarView from "../views/bar-yes-no.js";
 
@@ -16,12 +16,10 @@ export default class BarcodesSView extends JetView{
             let url = th.$scope.app.config.r_url + "?delBar";
             let params = {"user": user, 'id_spr': item.$parent, 'barcode': item.barcode};
             let res = request(url, params, !0).response;
-            res = JSON.parse(res);
-            if (res.result) {
+            res = checkVal(res, 's');
+            if (res) {
                 th.remove(item.id);
-            } else {
-                console.log('error');
-                };
+                }
             }
         
         function editBarCode(id_spr, parse) {
@@ -29,10 +27,9 @@ export default class BarcodesSView extends JetView{
             let user = th.$scope.app.config.user;
             let url = th.$scope.app.config.r_url + "?setBar"
             let params = {"user": user, "id_spr": id_spr, "barcode": parse};
-            let item = request(url, params, !0).response;
-            item = JSON.parse(item);
-            //let item = {"result": true};
-            if (item.result) {
+            let res = request(url, params, !0).response;
+            res = checkVal(res, 's');
+            if (res) {
                 let op = th.isBranchOpen(id_spr);
                 var parseArr = parse.split(' ');
                 let data = th.data;
@@ -50,9 +47,7 @@ export default class BarcodesSView extends JetView{
                         }
                     });
                 if (op) th.open(id_spr);
-            } else {
-                console.log('error');
-                };
+                }
             }
             
         var sprv = {view: "treetable",
@@ -117,7 +112,7 @@ export default class BarcodesSView extends JetView{
                     },
                 onItemDblClick: function() {
                     var item = this.getSelectedItem();
-                    if (this.$scope.app.config.user === this.$scope.app.config.admin) {
+                    if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                         let level = item.$level;
                         if (level === 1) {
                             this.$scope.popnewbar.show("Редактирование ШК: " + item.barcode, item.id, undefined, editBarCode);

@@ -1,8 +1,6 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request} from "../views/globals";
-
 
 export default class ConfirmBarView extends JetView{
     config(){

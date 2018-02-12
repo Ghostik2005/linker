@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request, prcs, delPrc} from "../views/globals";
+import {request, checkVal, prcs, delPrc} from "../views/globals";
 
 
 export default class NewPropView extends JetView{
@@ -12,13 +12,11 @@ export default class NewPropView extends JetView{
             let params = {};
             params['check'] = value;
             params['user'] = this.$scope.app.config.user;
-            let ret_data = request(url, params, !0).response;
-            ret_data = JSON.parse(ret_data);
             var ret = false;
-            if (ret_data.ret_val || this.config._params.text) {
+            let res = request(url, params, !0).response;
+            res = checkVal(res, 's');
+            if (res || this.config._params.text) {
                 ret = true
-            } else {
-                webix.message('error');
                 };
             return ret;
             }
@@ -67,12 +65,10 @@ export default class NewPropView extends JetView{
                                     params['id'] = (para.text) ? para.id : _f.id;
                                     let url = (para.mode === 'new') ? this.app.config.r_url + "?set" + para.type
                                                                     : this.app.config.r_url + "?upd" + para.type;
-                                    let ret_data = request(url, params, !0).response;
-                                    ret_data = JSON.parse(ret_data);
-                                    if (ret_data.result) {
-                                        para.callback(ret_data.ret_val, para.source);
-                                    } else {
-                                        //webix.message('error');
+                                    let res = request(url, params, !0).response;
+                                    res = checkVal(res, 's');
+                                    if (res) {
+                                        para.callback(res, para.source);
                                         };
                                     this.hide();
                                 } else {

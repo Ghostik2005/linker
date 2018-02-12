@@ -259,7 +259,7 @@ export default class SkippedView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user
-                    if (user === this.$scope.app.config.admin) {
+                    if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                         let sh_prc = this.getSelectedItem().sh_prc
                         let params = {};
                         params["command"] = "?returnLnk";

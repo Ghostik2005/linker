@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 
 
 export default class ConfirmView extends JetView{
@@ -45,12 +45,9 @@ export default class ConfirmView extends JetView{
                                     ///////////console.log('sync'); //синхронный запрос
                                 } else {
                                     request(url, params).then(function(data) {
-                                        data = data.json();
-                                        if (data.result) {
-                                            if (callback) callback(data, th)
-                                            else console.log('error callback', data);
-                                        } else {
-                                            webix.message('error');
+                                        data = checkVal(data, 'a');
+                                        if (data) {
+                                            if (callback) callback(data, th);
                                             };
                                         })
                                     }
