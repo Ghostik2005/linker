@@ -71,6 +71,8 @@ button {
 }
 .dt_css {
   color: black;
+}
+.webix_view.webix_dtable {
   font-size: larger;
 }
 .my_filter select,

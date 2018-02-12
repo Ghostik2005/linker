@@ -98,7 +98,7 @@ class API:
         p_hash = params.get('pass')
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
-            sql = """select r."USER", r.PASSWD FROM USERS r where r."USER" = ?"""
+            sql = """select r."USER", r.PASSWD, r.ID_ROLE FROM USERS r where r."USER" = ?"""
             opt = (user,)
             res = self.db.request({"sql": sql, "options": opt})
             if len(res) > 0:
@@ -117,14 +117,14 @@ class API:
                     f_name = os.path.join(self.p_path, a_key)
                     with open(f_name, 'wb') as f_obj:
                         f_obj.write(user.encode())
-                    ret = {"result": True, "ret_val": a_key}
+                    ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2])}}
         return json.dumps(ret, ensure_ascii=False)
 
     def getVersion(self, params=None, x_hash=None):
         user = params.get('user')
         if self._check(x_hash):
-            prod = self.db.production;
-            ret = {"result": True, "ret_val": self.log.version, "prod": prod}
+            prod = {'version': self.log.version, 'prod': self.db.production};
+            ret = {"result": True, "ret_val": prod}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -230,7 +230,7 @@ class API:
             opt = ()
 
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
-            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
+            ret = {"result": True, "ret_val": {"datas" :_return, "total": tot, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -310,7 +310,7 @@ class API:
                 """.format(stri, us_stri)
             opt = ()
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
-            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
 
@@ -1249,7 +1249,8 @@ class API:
                 ret = result #new id_spr
                 new = True
             _return.append(ret)
-            ret = {"result": True, "ret_val": _return, "new": new}
+            rett = {"datas": _return, "new": new}
+            ret = {"result": True, "ret_val": rett}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -1335,7 +1336,7 @@ class API:
                     r['data'].append(rr)
                 _return.append(r)
             t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": _return, "time": (t1, t3), "total": count, "start": start_p}
+            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         #print(ret)
@@ -1413,7 +1414,7 @@ class API:
                     r['data'].append(rr)
                 _return.append(r)
             t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": _return, "time": (t1, t3), "total": count, "start": start_p}
+            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         #print(ret)
@@ -1660,7 +1661,7 @@ class API:
                 }
                 _return.append(r)
             t2 = time.time() - st_t
-            ret = {"result": True, "ret_val": _return, "total": tot, "start": start_p, "time": (t1, t2)}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p, "time": (t1, t2)}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -1890,7 +1891,7 @@ class API:
                     r['data'].append(rr)
                 _return.append(r)
             t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": _return, "time": (t1, t3), "total": count, "start": start_p}
+            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2447,17 +2448,6 @@ def handle_commandline(profile, index):
     if "index" in kwargs:
         index = kwargs.pop("index")
     return args, kwargs, profile, index
-
-def clear_keys(w_path):
-    """
-    remove all keys
-    """
-
-    f_list = glob.glob(f'{w_path}/*.sw')
-    for f_ in f_list:
-        try:
-            os.remove(f_)
-        except: pass
 
 
 class UDPSocket(socket.socket):

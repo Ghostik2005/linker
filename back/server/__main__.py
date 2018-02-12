@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.033.1000' # очень много исправлений и добавлений
+__version__ = '18.043.1610' # добавлена проверка данных при получении, там можно проверять права пользователя, добалена авторизация по роли вместо имени
+#__version__ = '18.033.1000' # очень много исправлений и добавлений
 #__version__ = '2017.346.1400' # старт
 __profile__ = ""
 __index__   =-1
@@ -40,8 +41,8 @@ def main():
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
     sys.APPCONF["api"] = libs.API(Lock=sys.APPCONF['Lock'], log = sys.APPCONF["log"], w_path = w_path, p_path=p_path)
 
-    import atexit
-    atexit.register(libs.shutdown, sys.APPCONF["log"])
+    #import atexit
+    #atexit.register(libs.shutdown, sys.APPCONF["log"])
     #threading.Thread(target=s_send, args=(), daemon=True).start()
 
     threads, processes = prepare_server(Lock=sys.APPCONF['Lock'], api = sys.APPCONF["api"])
@@ -110,7 +111,6 @@ def prepare_server(Lock=None, api = None):
         os.makedirs(api.path)
     if not os.path.exists(api.p_path):
         os.makedirs(api.p_path)
-    libs.clear_keys(api.path)
     while not sys.extip:
         sys.extip, sys.intip = libs.getip(sys.APPCONF["log"])
     threads = []

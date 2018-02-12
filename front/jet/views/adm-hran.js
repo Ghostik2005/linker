@@ -25,7 +25,7 @@ export default class HranView extends JetView{
             old_stri: "",
             columns: [
                 {id: "id",
-                    width: 75,
+                    width: 200,
                     header: [{text: "ID"},
                         ],
                     },

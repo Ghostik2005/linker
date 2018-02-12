@@ -87,7 +87,7 @@ export default class TopmenuView extends JetView{
                                 },
                             {width: 10},
                             {view: "button", type: "htmlbutton",
-                                label: "<span class='butt'>Обновить сессию</span>", width: 230,
+                                label: "<span class='butt'>Обновить сессию</span>", width: 230, height: 32,
                                 click: () => {
                                     let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
                                     get_prcs(this, id_vnd);

@@ -24,7 +24,7 @@ export default class GroupsView extends JetView{
             old_stri: "",
             columns: [
                 {id: "id",
-                    width: 75,
+                    width: 200,
                     header: [{text: "ID"},
                         ],
                     },
