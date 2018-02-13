@@ -9,7 +9,7 @@ import {parse_unlinked_item, get_data} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import AllUnlinkedView from "../views/unlinkedall";
 import SkippedView from "../views/skipped";
-import {prcs, delPrc} from "../views/globals";
+import {prcs, delPrc, checkKey} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -106,21 +106,58 @@ export default class TopmenuView extends JetView{
                 {view: 'toolbar',
                     height: 40,
                     cols: [
-                        {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search",
-                            keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
+                        {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
+                            tooltip: "поиск от двух символов, !слово - исключить из поиска", //keyPressTimeout: 900,
                             on: {
-                                onTimedKeyPress: function(code, event) {
-                                    let th = this.$scope;
-                                    let count = $$("__dt").config.posPpage;
-                                    get_data({
-                                        th: th,
-                                        view: "__dt",
-                                        navBar: "__nav",
-                                        start: 1,
-                                        count: count,
-                                        searchBar: "_spr_search",
-                                        method: "getSprSearch"
-                                        });
+                                //onTimedKeyPress: function() {
+                                    //let th = this.$scope;
+                                    //let count = $$("__dt").config.posPpage;
+                                    //get_data({
+                                        //th: th,
+                                        //view: "__dt",
+                                        //navBar: "__nav",
+                                        //start: 1,
+                                        //count: count,
+                                        //searchBar: "_spr_search",
+                                        //method: "getSprSearch"
+                                        //});
+                                    //},
+                                //onChange: function(newv, oldv) {
+                                    //console.log('newv', newv);
+                                    //console.log('oldv', oldv);
+                                    //clearTimeout(this.config._keytimed);
+                                    //this.config._keytimed = setTimeout(function () {
+                                        //let th = this.$scope;
+                                        //let count = $$("__dt").config.posPpage;
+                                        //get_data({
+                                            //th: th,
+                                            //view: "__dt",
+                                            //navBar: "__nav",
+                                            //start: 1,
+                                            //count: count,
+                                            //searchBar: "_spr_search",
+                                            //method: "getSprSearch"
+                                            //});
+                                        //}, 400);
+                                    //},
+                                onKeyPress: function(code, event) {
+                                    //console.log('code', code);
+                                    clearTimeout(this.config._keytimed);
+                                    if (checkKey(code)) {
+                                        this.config._keytimed = setTimeout(function () {
+                                            let th = this.$scope;
+                                            let count = $$("__dt").config.posPpage;
+                                            get_data({
+                                                th: th,
+                                                view: "__dt",
+                                                navBar: "__nav",
+                                                start: 1,
+                                                count: count,
+                                                searchBar: "_spr_search",
+                                                method: "getSprSearch"
+                                                });
+                                            }, 1000);
+                                        }
                                     }
                                 },
                             },
@@ -128,7 +165,6 @@ export default class TopmenuView extends JetView{
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
                                 let hist = webix.storage.session.get("__dt");
-                                //let hist = window.sessionStorage.getItem("__dt");
                                 console.log(hist);
                                 webix.message({
                                     'type': 'debug',

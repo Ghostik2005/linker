@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page} from "../views/globals";
+import {last_page, checkKey} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 export default class LinksView extends JetView{
@@ -28,6 +28,7 @@ export default class LinksView extends JetView{
             modal: true,
             on: {
                 onShow: () => {
+                        $$("_link_search").focus();
                         get_data({
                             th: this,
                             view: "__tt",
@@ -41,36 +42,57 @@ export default class LinksView extends JetView{
                             });
                     },
                 onHide: () => {
-                    //$$("__tt").clearAll();
                     $$("__tt").unselectAll();
-                    //$$("_link_search").setValue('');
                     $$("_break").disable();
+                    $$("_spr_search").focus();
                     }
                 },
             body: { view: "layout",
-                //margin: 0,
                 rows: [
                     {rows: [
                         {cols: [
                             {view: "text", label: "", placeholder: "Строка поиска", width: 500, id: "_link_search", height: 40,
-                                keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
+                                tooltip: "поиск от двух символов, !слово - исключить из поиска", //keyPressTimeout: 900, 
                                 on: {
-                                    onTimedKeyPress: function(code, event) {
-                                        let th = this.$scope;
-                                        let count = $$("__tt").config.posPpage;
-                                        let field = $$("__tt").config.fi;
-                                        let direction = $$("__tt").config.di;
-                                        get_data({
-                                            th: th,
-                                            view: "__tt",
-                                            navBar: "__nav_l",
-                                            start: 1,
-                                            count: count,
-                                            searchBar: "_link_search",
-                                            method: "getSprLnks",
-                                            field: field,
-                                            direction: direction
-                                            });
+                                    //onTimedKeyPress: function(code, event) {
+                                        //let th = this.$scope;
+                                        //let count = $$("__tt").config.posPpage;
+                                        //let field = $$("__tt").config.fi;
+                                        //let direction = $$("__tt").config.di;
+                                        //get_data({
+                                            //th: th,
+                                            //view: "__tt",
+                                            //navBar: "__nav_l",
+                                            //start: 1,
+                                            //count: count,
+                                            //searchBar: "_link_search",
+                                            //method: "getSprLnks",
+                                            //field: field,
+                                            //direction: direction
+                                            //});
+                                        //},
+                                    onKeyPress: function(code, event) {
+                                        console.log('code', code);
+                                        clearTimeout(this.config._keytimed);
+                                        if (checkKey(code)) {
+                                            this.config._keytimed = setTimeout(function () {
+                                            let th = this.$scope;
+                                            let count = $$("__tt").config.posPpage;
+                                            let field = $$("__tt").config.fi;
+                                            let direction = $$("__tt").config.di;
+                                            get_data({
+                                                th: th,
+                                                view: "__tt",
+                                                navBar: "__nav_l",
+                                                start: 1,
+                                                count: count,
+                                                searchBar: "_link_search",
+                                                method: "getSprLnks",
+                                                field: field,
+                                                direction: direction
+                                                });
+                                                }, 1000);
+                                            }
                                         }
                                     },
                                 },
@@ -104,6 +126,7 @@ export default class LinksView extends JetView{
                             rowHeight: 30,
                             fixedRowHeight:false,
                             headermenu: true,
+                            resizeColumn:true,
                             fi: 'c_tovar',
                             di: 'asc',
                             old_stri: " ",

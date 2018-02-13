@@ -94,6 +94,12 @@ export var group = new webix.DataCollection({
             }
         });
 
+export function checkKey(code) {
+    let ret = false;
+    if (code === 8 || code === 13 || code === 32 || code === 46 || (code > 47 && code < 91) || (code > 95 && code < 112) || (code > 185 && code < 193) || (code > 219 && code < 223)) ret = true;
+    return ret
+    }
+
 export function checkVal(result, mode) {
     var ret_value;
     var err;
@@ -287,7 +293,13 @@ export function get_data(inp_params) {
     let url = app.config.r_url + "?" + method;
     let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction, "c_filter": c_filter};
     let old_stri = $$(view).config.old_stri;
-    if (old_stri !== search_str || old_stri === search_str) { ////////////////////
+    //console.log('search_str', search_str);
+    let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
+    let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
+    //console.log('t search', typeof search_str);
+    //console.log('rl', rl);
+    //console.log('sl', sl);
+    if (sl > 1 && rl > 1) { ////////////////////
         $$(view).config.old_stri = search_str;
         $$(view).showProgress({
             type: "icon",
@@ -322,7 +334,7 @@ export function parse_unlinked_item(th, c_item) {
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
-    let count = "<span style='color: #666666;'>Осталось свести в текущей сессии: </span><span style='color: red; font-weight: bold;'>"+ $$("prcs_dc").count() + "</span>";
+    let count = "<span style='color: #666666; text-decoration: underline;'>Осталось свести в текущей сессии:</span><span style='color: red; font-weight: bold;'>  "+ $$("prcs_dc").count() + "</span>";
     n_item['_name'] = name;
     n_item['_count'] = count;
     n_item['_vendor'] = c_item.c_zavod;
@@ -380,14 +392,14 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
-    setTimeout(get_refs, 7000, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
+    setTimeout(get_refs, 2000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    setTimeout(get_refs, 2000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    setTimeout(get_refs, 3000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    setTimeout(get_refs, 3000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
     }
 
 export function get_prcs(th, id_vnd) {

@@ -92,6 +92,10 @@ button {
     font-size: larger;
     }
 
+.col_center {
+    text-align: center;
+    }
+
 .my_filter select,
 .my_filter input {
       width: 100%;

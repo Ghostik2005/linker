@@ -385,7 +385,7 @@ class API:
             if len(in_work) > 0:
                 #ins = tuple(in_work)
                 sql = """UPDATE PRC r
-                    SET r.IN_WORK = (SELECT u."GROUP" FROM USERS u WHERE u."USER" = ?)
+                    SET r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)
                     where r.SH_PRC in (%s)""" %(', '.join([f'\'{q}\'' for q in in_work]))
                 opt = (user,)
                 res = self.db.execute({"sql": sql, "options": opt})
@@ -1596,7 +1596,7 @@ class API:
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
             start_p = 1 if start_p == 0 else start_p
@@ -1638,17 +1638,100 @@ class API:
                     FROM SPR r
                     inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
                     WHERE %s""" % stri
+
+            sql = """
+SELECT count(*)
+FROM SPR r
+LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
+LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
+LEFT OUTER join dv d on (r.ID_DV = d.ID)
+LEFT OUTER join 
+    (select g.CD_CODE cc, g.CD_GROUP cg, c.NM_GROUP gr
+    from GROUPS g
+    inner join CLASSIFIER c on (g.CD_GROUP = c.CD_GROUP) where c.IDX_GROUP = 1
+    ) on (r.ID_SPR = cc)
+LEFT OUTER join 
+    (select g1.CD_CODE cc1, g1.CD_GROUP cg1, c1.NM_GROUP nds
+    from GROUPS g1
+    inner join CLASSIFIER c1 on (g1.CD_GROUP = c1.CD_GROUP) where c1.IDX_GROUP = 2
+    ) on (r.ID_SPR = cc1)
+LEFT OUTER join 
+    (select g2.CD_CODE cc2, g2.CD_GROUP cg2, c2.NM_GROUP uhran
+    from GROUPS g2
+    inner join CLASSIFIER c2 on (g2.CD_GROUP = c2.CD_GROUP) where c2.IDX_GROUP = 3
+    ) on (r.ID_SPR = cc2)
+LEFT OUTER join 
+    (select g3.CD_CODE cc3, g3.CD_GROUP cg3, c3.NM_GROUP sezon
+    from GROUPS g3
+    inner join CLASSIFIER c3 on (g3.CD_GROUP = c3.CD_GROUP) where c3.IDX_GROUP = 6
+    ) on (r.ID_SPR = cc3)
+LEFT OUTER join 
+    (select g4.CD_CODE cc4, g4.CD_GROUP cg4, c4.NM_GROUP mandat
+    from GROUPS g4
+    inner join CLASSIFIER c4 on (g4.CD_GROUP = c4.CD_GROUP) where c4.IDX_GROUP = 4
+    ) on (r.ID_SPR = cc4)
+LEFT OUTER join 
+    (select g5.CD_CODE cc5, g5.CD_GROUP cg5, c5.NM_GROUP presc
+    from GROUPS g5
+    inner join CLASSIFIER c5 on (g5.CD_GROUP = c5.CD_GROUP) where c5.IDX_GROUP = 5
+    ) on (r.ID_SPR = cc5)
+WHERE %s
+            """ % stri
+
             opt = ()
+            #print(sql)
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
             sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
             FROM SPR r
-            inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-            inner join spr_strana s on (s.ID_SPR = r.ID_STRANA)
+            inner join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
+            inner join spr_strana s on (r.ID_STRANA = s.ID_SPR)
             WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
             """.format(stri, field, direction)
+
+            sql = """
+SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc
+FROM SPR r
+LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
+LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
+LEFT OUTER join dv d on (r.ID_DV = d.ID)
+LEFT OUTER join 
+    (select g.CD_CODE cc, g.CD_GROUP cg, c.NM_GROUP gr
+    from GROUPS g
+    inner join CLASSIFIER c on (g.CD_GROUP = c.CD_GROUP) where c.IDX_GROUP = 1
+    ) on (r.ID_SPR = cc)
+LEFT OUTER join 
+    (select g1.CD_CODE cc1, g1.CD_GROUP cg1, c1.NM_GROUP nds
+    from GROUPS g1
+    inner join CLASSIFIER c1 on (g1.CD_GROUP = c1.CD_GROUP) where c1.IDX_GROUP = 2
+    ) on (r.ID_SPR = cc1)
+LEFT OUTER join 
+    (select g2.CD_CODE cc2, g2.CD_GROUP cg2, c2.NM_GROUP uhran
+    from GROUPS g2
+    inner join CLASSIFIER c2 on (g2.CD_GROUP = c2.CD_GROUP) where c2.IDX_GROUP = 3
+    ) on (r.ID_SPR = cc2)
+LEFT OUTER join 
+    (select g3.CD_CODE cc3, g3.CD_GROUP cg3, c3.NM_GROUP sezon
+    from GROUPS g3
+    inner join CLASSIFIER c3 on (g3.CD_GROUP = c3.CD_GROUP) where c3.IDX_GROUP = 6
+    ) on (r.ID_SPR = cc3)
+LEFT OUTER join 
+    (select g4.CD_CODE cc4, g4.CD_GROUP cg4, c4.NM_GROUP mandat
+    from GROUPS g4
+    inner join CLASSIFIER c4 on (g4.CD_GROUP = c4.CD_GROUP) where c4.IDX_GROUP = 4
+    ) on (r.ID_SPR = cc4)
+LEFT OUTER join 
+    (select g5.CD_CODE cc5, g5.CD_GROUP cg5, c5.NM_GROUP presc
+    from GROUPS g5
+    inner join CLASSIFIER c5 on (g5.CD_GROUP = c5.CD_GROUP) where c5.IDX_GROUP = 5
+    ) on (r.ID_SPR = cc5)
+WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
+            """.format(stri, field, direction)
+            
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
+            #print(sql)
+            #print(opt)
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
             for row in result:
@@ -1658,6 +1741,13 @@ class API:
                     "id_dv"         : row[2],
                     "id_zavod"      : row[3],
                     "id_strana"     : row[4],
+                    "c_dv"          : row[5],
+                    "c_group"       : row[6],
+                    "c_nds"         : row[7],
+                    "c_hran"        : row[8],
+                    "c_sezon"       : row[9],
+                    "c_mandat"      : row[10],
+                    "c_prescr"      : row[11]
                 }
                 _return.append(r)
             t2 = time.time() - st_t

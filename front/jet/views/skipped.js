@@ -303,6 +303,9 @@ export default class SkippedView extends JetView{
                             filter: params[0]
                             });
                         };
+                    },
+                onHide: () => {
+                    $$("_spr_search").focus();
                     }
                 },
             body: {

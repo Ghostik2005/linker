@@ -10,16 +10,23 @@ export default class SprView extends JetView{
     config(){
 
         function mnn_func(obj) {
-            var ret = obj.id_mnn;
-            ret = (+ret !== 0) ? "<div> <span class='green'>есть</span></div>" : "<div> <span class='red'>нет</span></div>"
+            let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
+                                         : "<div> <span class='red'>нет</span></div>";
             return ret
             }
 
-        function sortBy(i, ii, iii) {
-            console.log('i', i);
-            console.log('ii', ii);
-            console.log('iii', iii);
+        function mandat_func(obj) {
+            let ret = (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
+                                     : "<div><span></span></div>";
+            return ret
             }
+
+        function prescr_func(obj) {
+            let ret = (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
+                                     : "<div><span></span></div>";
+            return ret
+            }
+
 
         var bottom = {
             view: "toolbar",
@@ -154,17 +161,50 @@ export default class SprView extends JetView{
                     headermenu:false,
                     },
                 { id: "id_zavod", //sort: "text",
-                    width: 400,
+                    width: 300,
                     header: [{text: "Производитель"},
                         //{content:"textFilter"}
                         ]
                     },
                 { id: "id_strana", //sort: "text",
-                    width: 250,
+                    width: 200,
                     header: [{text: "Страна"},
                         //{content:"textFilter"}
                         ]
-                    }
+                    },
+                { id: "c_dv", hidden: true,
+                    width: 150,
+                    header: [{text: "Д. в-во"},
+                        ]
+                    },
+                { id: "c_group", hidden: true,
+                    width: 150,
+                    header: [{text: "Группа"},
+                        ]
+                    },
+                { id: "c_nds", hidden: true,
+                    width: 150,
+                    header: [{text: "НДС"},
+                        ]
+                    },
+                { id: "c_hran", hidden: true,
+                    width: 150,
+                    header: [{text: "Условия хранения"},
+                        ]
+                    },
+                { id: "c_sezon", hidden: true,
+                    width: 150,
+                    header: [{text: "Сезонность"},
+                        ]
+                    },
+                {id: "mandat", width:100, template: mandat_func, hidden: true, css: "col_center",
+                    header: [{text: "Обязательный"},
+                        ],
+                    },
+                {id: "prescr", width:100, template: prescr_func, hidden: true, css: "col_center",
+                    header: [{text: "Рецептурный"},
+                        ],
+                    },
                 ],
             on: {
                 "data->onParse":function(i, data){

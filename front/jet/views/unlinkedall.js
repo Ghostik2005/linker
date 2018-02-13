@@ -332,6 +332,9 @@ export default class AllUnlinkedView extends JetView{
                             filter: params[0]
                             });
                         };
+                    },
+                onHide: () => {
+                    $$("_spr_search").focus();
                     }
                 },
             body: {

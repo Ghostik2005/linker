@@ -75,6 +75,9 @@ button {
 .webix_view.webix_dtable {
   font-size: larger;
 }
+.col_center {
+  text-align: center;
+}
 .my_filter select,
 .my_filter input {
   width: 100%;

@@ -17,8 +17,8 @@ export default class UnlinkedView extends JetView{
             headermenu:true,
             old_stri: "",
             columns: [
-                {id: "id_tovar", width: 100, sort: "int",
-                    header: [{text: "ID у поставщика"},
+                {id: "id_tovar", width: 120, sort: "int",
+                    header: [{text: "ID поставщика"},
                         ],
                     },
                 { id: "c_tovar", fillspace: 1, sort: "text",
