@@ -351,7 +351,7 @@ class API:
             #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
             sql = """UPDATE PRC r
             SET r.IN_WORK = -1
-            where r.IN_WORK = (select u."GROUP" from USERS u where u."USER" = ?)
+            where r.IN_WORK = (select u.ID from USERS u where u."USER" = ?)
             """
             opt = (user,)
             res = self.db.execute({"sql": sql, "options": opt})
@@ -1240,9 +1240,10 @@ class API:
                 opt = (c_tovar, id_dv, id_zavod, id_strana)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 if result:
-                    sql = """delete from PRC where SH_PRC = ?"""
-                    opt = (sh_prc,)
-                    t1 = self.db.execute({"sql": sql, "options": opt})
+                    if sh_prc:
+                        sql = """delete from PRC where SH_PRC = ?"""
+                        opt = (sh_prc,)
+                        t1 = self.db.execute({"sql": sql, "options": opt})
                     self._insGr(params, result)
                     params['id_spr'] = result
                     self.setBar(params, x_hash)
@@ -1634,11 +1635,6 @@ class API:
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri) if len(stri) > 0 else sti
-            sql = """SELECT count(*)
-                    FROM SPR r
-                    inner join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-                    WHERE %s""" % stri
-
             sql = """
 SELECT count(*)
 FROM SPR r
@@ -1677,17 +1673,8 @@ LEFT OUTER join
     ) on (r.ID_SPR = cc5)
 WHERE %s
             """ % stri
-
             opt = ()
-            #print(sql)
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
-            sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA
-            FROM SPR r
-            inner join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
-            inner join spr_strana s on (r.ID_STRANA = s.ID_SPR)
-            WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
-            """.format(stri, field, direction)
-
             sql = """
 SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc
 FROM SPR r
@@ -1730,8 +1717,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
-            #print(sql)
-            #print(opt)
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
             for row in result:
@@ -1760,8 +1745,43 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
         if self._check(x_hash):
             id_spr = int(params.get('id_spr'))
             if id_spr:
-                sql ="""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV
-                FROM SPR r where r.id_spr = ?
+                sql = """
+    SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc
+    FROM SPR r
+    LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
+    LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
+    LEFT OUTER join dv d on (r.ID_DV = d.ID)
+    LEFT OUTER join 
+        (select g.CD_CODE cc, g.CD_GROUP cg, c.NM_GROUP gr, c.CD_group i_gr
+        from GROUPS g
+        inner join CLASSIFIER c on (g.CD_GROUP = c.CD_GROUP) where c.IDX_GROUP = 1
+        ) on (r.ID_SPR = cc)
+    LEFT OUTER join 
+        (select g1.CD_CODE cc1, g1.CD_GROUP cg1, c1.NM_GROUP nds, c1.CD_group i_nds
+        from GROUPS g1
+        inner join CLASSIFIER c1 on (g1.CD_GROUP = c1.CD_GROUP) where c1.IDX_GROUP = 2
+        ) on (r.ID_SPR = cc1)
+    LEFT OUTER join 
+        (select g2.CD_CODE cc2, g2.CD_GROUP cg2, c2.NM_GROUP uhran, c2.CD_GROUP i_uhran
+        from GROUPS g2
+        inner join CLASSIFIER c2 on (g2.CD_GROUP = c2.CD_GROUP) where c2.IDX_GROUP = 3
+        ) on (r.ID_SPR = cc2)
+    LEFT OUTER join 
+        (select g3.CD_CODE cc3, g3.CD_GROUP cg3, c3.NM_GROUP sezon, c3.CD_GROUP i_sezon
+        from GROUPS g3
+        inner join CLASSIFIER c3 on (g3.CD_GROUP = c3.CD_GROUP) where c3.IDX_GROUP = 6
+        ) on (r.ID_SPR = cc3)
+    LEFT OUTER join 
+        (select g4.CD_CODE cc4, g4.CD_GROUP cg4, c4.NM_GROUP mandat
+        from GROUPS g4
+        inner join CLASSIFIER c4 on (g4.CD_GROUP = c4.CD_GROUP) where c4.IDX_GROUP = 4
+        ) on (r.ID_SPR = cc4)
+    LEFT OUTER join 
+        (select g5.CD_CODE cc5, g5.CD_GROUP cg5, c5.NM_GROUP presc
+        from GROUPS g5
+        inner join CLASSIFIER c5 on (g5.CD_GROUP = c5.CD_GROUP) where c5.IDX_GROUP = 5
+        ) on (r.ID_SPR = cc5)
+    WHERE r.id_spr = ?
                 """
                 opt = (id_spr,)
                 _return = []
@@ -1771,23 +1791,23 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     r = {
                         "id_spr"        : row[0],
                         "c_tovar"       : row[1],
-                        "id_strana"     : row[2],
-                        "c_dv"          : '',
-                        "c_zavod"       : '',
-                        "c_strana"      : '',
-                        "id_zavod"      : row[3],
-                        "id_dv"         : row[4],
+                        "id_strana"     : row[2] or '',
+                        "c_dv"          : row[7] or '',
+                        "c_zavod"       : row[5] or '',
+                        "c_strana"      : row[6] or '',
+                        "id_zavod"      : row[3] or '',
+                        "id_dv"         : row[4] or '',
                         "barcode"       : "",
-                        "_prescr"       : 0,
-                        "_mandat"       : 0,
-                        "sezon"         : "",
-                        "id_sezon"      : "",
-                        "usloviya"      : "",
-                        "id_usloviya"   : "",
-                        "group"         : "",
-                        "id_group"      : "",
-                        "id_nds"        : "",
-                        "nds"           : "",
+                        "_prescr"       : 1 if row[17] else 0,
+                        "_mandat"       : 1 if row[16] else 0,
+                        "sezon"         : row[14],
+                        "id_sezon"      : row[15],
+                        "usloviya"      : row[12],
+                        "id_usloviya"   : row[13],
+                        "group"         : row[8],
+                        "id_group"      : row[9],
+                        "id_nds"        : row[11],
+                        "nds"           : row[10],
                         "c_tgroup"      : "",
                         "id_tgroup"     : ""
                     }
@@ -1797,36 +1817,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     for row_b in t:
                         b_code.append(row_b[0])
                     r['barcode'] = " ".join(b_code)
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
-                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                    where ( classifier.idx_group = 5 and groups.cd_code = ?)"""
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        tt = t[0][0]
-                        if tt:
-                            r["_prescr"] = 1
-                    except:
-                        pass
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
-                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                    where ( classifier.idx_group = 4 and groups.cd_code = ?)"""
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        tt = t[0][0]
-                        if tt:
-                            r["_mandat"] = 1
-                    except:
-                        pass
-                        
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
-                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                    where ( classifier.idx_group = 6 and groups.cd_code = ? )"""
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r["sezon"] = t[0][0]
-                        r["id_sezon"] = t[0][1]
-                    except:
-                        pass
 
                     sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
                     from groups
@@ -1838,58 +1828,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                         for row_g in t:
                             c_t.append(row_g[0])
                         r['c_tgroup'] = "; ".join(c_t)
-                    except:
-                        pass
-
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
-                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                    where ( classifier.idx_group = 3 and groups.cd_code = ?)"""
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r["usloviya"] = t[0][0]
-                        r["id_usloviya"] = t[0][1]
-                    except:
-                        pass
-
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
-                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                    where ( classifier.idx_group = 1 and groups.cd_code = ? )"""
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r["group"] = t[0][0]
-                        r["id_group"] = t[0][1]
-                    except:
-                        pass
-                    
-                    sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group
-                    from groups inner join classifier on (groups.cd_group = classifier.cd_group) inner join spr on (groups.cd_code = spr.id_spr)
-                    where ( classifier.idx_group = 2 and groups.cd_code = ? )"""
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r["nds"] = t[0][0]
-                        r["id_nds"] = t[0][1]
-                    except:
-                        pass
-
-                    sql = "select c_zavod from spr_zavod where id_spr = ? and flag = 1"
-                    opt = (row[3],)
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r['c_zavod'] = t[0][0]
-                    except:
-                        pass
-                    sql = "select c_strana from spr_strana where id_spr = ? and flag = 1"
-                    opt = (row[2],)
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r['c_strana'] = t[0][0]
-                    except:
-                        pass
-                    sql = "select ACT_INGR from dv where id = ? and flag = 1"
-                    opt = (row[4],)
-                    t = self.db.request({"sql": sql, "options": opt})
-                    try:
-                        r['c_dv'] = t[0][0]
                     except:
                         pass
                     _return.append(r)

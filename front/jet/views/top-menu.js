@@ -1,6 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
+import History from "../views/history";
 import NewformView from "../views/new_form";
 import LinksView from "../views/links_form";
 import ConfirmView from "../views/yes-no";
@@ -122,26 +123,7 @@ export default class TopmenuView extends JetView{
                                         //method: "getSprSearch"
                                         //});
                                     //},
-                                //onChange: function(newv, oldv) {
-                                    //console.log('newv', newv);
-                                    //console.log('oldv', oldv);
-                                    //clearTimeout(this.config._keytimed);
-                                    //this.config._keytimed = setTimeout(function () {
-                                        //let th = this.$scope;
-                                        //let count = $$("__dt").config.posPpage;
-                                        //get_data({
-                                            //th: th,
-                                            //view: "__dt",
-                                            //navBar: "__nav",
-                                            //start: 1,
-                                            //count: count,
-                                            //searchBar: "_spr_search",
-                                            //method: "getSprSearch"
-                                            //});
-                                        //}, 400);
-                                    //},
                                 onKeyPress: function(code, event) {
-                                    //console.log('code', code);
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(function () {
@@ -156,7 +138,7 @@ export default class TopmenuView extends JetView{
                                                 searchBar: "_spr_search",
                                                 method: "getSprSearch"
                                                 });
-                                            }, 1000);
+                                            }, this.$scope.app.config.searchDelay);
                                         }
                                     }
                                 },
@@ -165,11 +147,7 @@ export default class TopmenuView extends JetView{
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
                                 let hist = webix.storage.session.get("__dt");
-                                console.log(hist);
-                                webix.message({
-                                    'type': 'debug',
-                                    'text': 'история поиска в этой сессии',
-                                    })
+                                this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
                         {view:"button", type: 'htmlbutton', id: "_add",  width: w1, disabled: d,
@@ -185,7 +163,7 @@ export default class TopmenuView extends JetView{
                                 let name = $$("_names_bar").getValues().p_name;
                                 item['t_name'] = "Название товара:   " + name;
                                 item['c_tovar'] = name.toUpperCase();
-                                this.popnew.show("Добавление в справочник", item);
+                                this.popnew.show("Добавление в справочник", $$("_spr_search"), item);
                                 }
                             },
                         {view:"button", type: 'htmlbutton', id: "_link",
@@ -265,6 +243,6 @@ export default class TopmenuView extends JetView{
         this.popunlink = this.ui(UnlinkedView);
         this.popallunlink = this.ui(AllUnlinkedView);
         this.popskipped = this.ui(SkippedView);
-        
+        this.pophistory = this.ui(History);
         }
     }

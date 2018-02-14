@@ -118,3 +118,20 @@ button {
 .my_filter select {
   padding: 3px;
 }
+
+.custom_list {
+    height: 32px !important;
+    line-height: 32px !important;
+    }
+
+.barcode{
+    /*width: 80px;*/
+    overflow: hidden;
+    float: left;
+}
+.butt1{
+    /*padding-left: 10px;*/
+    /*height: 60px;*/
+    /*padding-top:10px;*/
+    float:right;
+}

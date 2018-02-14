@@ -19,6 +19,7 @@ export default class NewbarView extends JetView{
                 onHide: () => {
                     this.$$("_nbar").setValue("");
                     this.$$("b_code").setValue('0000000000000');
+                    this.$$("_n_b").reconstruct();
                     //this.$$("b_list").clearAll();
                     },
                 onShow: () => {
@@ -42,13 +43,10 @@ export default class NewbarView extends JetView{
                 elements: [
                     {rows: [
                         {cols: [
-                            {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите штрихкод", localId: "_nbar", required: !true,
+                            {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите новый штрихкод", localId: "_nbar", required: !true,
                                 },
                             {view: "button", type: "htmlbutton", label: "<span class='webix_icon fa-plus'></span>", width: 30, disabled: !true,
-                                on: {
-                                    },
                                 click: () => {
-                                    //var valid = this.$$("_n_b").validate();
                                     let valid = check_b(this.$$("_nbar").getValue());
                                     if (valid) {
                                         let val = {"barcode": this.$$("_nbar").getValue()};
@@ -59,11 +57,26 @@ export default class NewbarView extends JetView{
                                 },
                             ]},
                         {cols: [
-                            {view:"list",
+                            {view:"activeList",
+                                activeContent:{
+                                    deleteBut:{
+                                        view:"button",
+                                        type: "htmlbutton",
+                                        label: "<span class='webix_icon fa-minus'></span>",
+                                        width:30,
+                                        click: (id, e) => {
+                                            var item_id = this.$$("b_list").locate(e);
+                                            this.$$("b_list").callEvent("onItemDblClick", [item_id,]);
+                                            },
+                                        },
+                                    },
                                 localId: "b_list",
                                 width:250,
                                 height:350,
-                                template:"#barcode#",
+                                type: {
+                                    height: 32,
+                                    },
+                                template: "<div class ='barcode'>#barcode#</div>" + "<div class = 'butt1'>{common.deleteBut()}</div>",
                                 select:true,
                                 on: {
                                     onAfterSelect: function () {

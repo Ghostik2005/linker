@@ -42,6 +42,9 @@ export default class loginView extends JetView{
                                 webix.message('авторизованно');
                             } else {
                                 webix.message('не авторизованно');
+                                deleteCookie('linker_user');
+                                deleteCookie('linker_auth_key');
+                                deleteCookie('linker_role');
                                 }
                             }
                         },
@@ -66,11 +69,15 @@ export default class loginView extends JetView{
         let u = getCookie('linker_user');
         let x = getCookie('linker_auth_key');
         let r = getCookie('linker_role');
-        if (u && x) {
+        if (u && x && r) {
             this.app.config.user = u;
             this.app.config.role = r;
             this.app.config.x_api = x;
             this.show("/start/body");
-            }
+        } else {
+            deleteCookie('linker_user');
+            deleteCookie('linker_auth_key');
+            deleteCookie('linker_role');
+            };
         }
     }

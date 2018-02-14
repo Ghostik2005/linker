@@ -308,6 +308,7 @@ export function get_data(inp_params) {
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
+                //console.log('data', data);
                 $$(view).parse(data.datas);
                 $$(view).config.startPos = data.start;
                 $$(view).config.totalPos = data.total;
@@ -392,6 +393,7 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
+    console.log('this', this);
     setTimeout(get_refs, 2000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
     setTimeout(get_refs, 2000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
     setTimeout(get_refs, 3000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
@@ -495,12 +497,11 @@ export function filter_1(item, value) {
 
 export function after_call(i, ii, iii) {
     if (iii.status === 403) {
-        console.log('iii', iii);
+        //console.log('iii', iii);
         deleteCookie('linker_user');
         deleteCookie('linker_auth_key');
-        let u1 = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
-        //console.log($$("main_ui").$scope.app);
-        location.href = u1;
+        deleteCookie('linker_role');
+        location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
         }
     }
 

@@ -18,7 +18,7 @@ export default class HeaderView extends JetView{
                     label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
                     click: () => {
                         if (this.app.config.role === this.app.config.admin) {
-                            this.app.show("/start/adm/adm-users");
+                            this.app.show("/start/adm/adm-spr");
                         } else {
                             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
                             }

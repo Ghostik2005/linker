@@ -14,6 +14,7 @@ export default class NewtgView extends JetView{
                     this.$$("_filt").setValue("");
                     this.$$("t_list").clearAll();
                     this.$$("e_list").clearAll();
+                    this.$$("_n_tg").reconstruct();
                     },
                 onShow: () => {
                     this.$$("_filt").setValue("");
@@ -25,10 +26,9 @@ export default class NewtgView extends JetView{
                     this.$$("t_list").parse(tg);
                     let pp = allTg.data.order;
                     pp.forEach(function(item, i, pp) {
-                        let ii = allTg.getItem(item);
-                        qw.add(ii);
+                        qw.add(allTg.getItem(item));
                         });
-                    //qw.parse(pp); //непонятно почему глючит при повторном вызове, если перед этим удалять позиции из list'а???
+                    //qw.parse(allTg); //непонятно почему глючит при повторном вызове, если перед этим удалять позиции из list'а???
                     pp = this.$$("t_list").data.order;
                     pp.forEach(function(item, i, pp) {
                         qw.remove(item);
@@ -58,7 +58,7 @@ export default class NewtgView extends JetView{
                                 {view:"list",
                                     localId: "t_list",
                                     width:350,
-                                    height:550,
+                                    height: document.documentElement.clientHeight * 0.7,
                                     template:"#c_tgroup#",
                                     select:true,
                                     on: {
@@ -77,7 +77,7 @@ export default class NewtgView extends JetView{
                                 {view:"list",
                                     localId: "e_list",
                                     width:350,
-                                    height:550,
+                                    //height: document.documentElement.clientHeight * 0.7,
                                     template:"#c_tgroup#",
                                     select:true,
                                     on: {

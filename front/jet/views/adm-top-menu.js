@@ -13,7 +13,7 @@ export default class TopmenuView extends JetView{
                 {view: "combo", localId: "_options", value: 1,
                     readonly: !true, disabled: !true, width: 190,
                     options: [
-                        {"id": 1, "value": "Пользователи"},
+                        {"id": 1, "value": "Справочник"},
                         {"id": 2, "value": "Страны"},
                         {"id": 3, "value": "Производители"},
                         {"id": 4, "value": "Действующие вещества"},
@@ -22,6 +22,7 @@ export default class TopmenuView extends JetView{
                         {"id": 7, "value": "Сезоны"},
                         {"id": 8, "value": "Условия хранения"},
                         {"id": 9, "value": "Ставки НДС"},
+                        {"id": 10, "value": "Пользователи"},
                         ],
                     on: {
                         onChange: () => {
@@ -34,22 +35,13 @@ export default class TopmenuView extends JetView{
                                        (+id_opt === 7) ? "/start/adm/adm-seasons" :
                                        (+id_opt === 8) ? "/start/adm/adm-hran" :
                                        (+id_opt === 9) ? "/start/adm/adm-nds" :
-                                       "/start/adm/adm-users";
-                            //console.log(path);
+                                       (+id_opt === 10) ? "/start/adm/adm-users" :
+                                       "/start/adm/adm-spr";
                             this.app.show(path);
                             }
                         },
                     },
                 {},
-                //{view:"button", type: 'base', disabled: !true,
-                    //label: "TEST", width: 150,
-                    //click: () => {
-                        //webix.message({
-                            //text: "test",
-                            //type: "debug",
-                            //})
-                        //}
-                    //},
                 //{view: "button", type: "htmlbutton", disabled: !true,
                     //label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Синхронизировать с сервером</span>", width: 260,
                     //click: () => {
@@ -57,18 +49,6 @@ export default class TopmenuView extends JetView{
                             //text: "sync",
                             //type: "debug",
                             //})
-                        //}
-                    //},
-                //{view:"button", type: 'htmlbutton', disabled: !true,
-                    //label: "<span class='webix_icon fa-users'></span><span style='line-height: 20px;'> Пользователи</span>", width: 210,
-                    //click: () => {
-                        //this.app.show("/start/adm/adm-users");
-                        //}
-                    //},
-                //{view:"button", type: 'htmlbutton', disabled: true,
-                    //label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки (Ctrl+L)</span>", width: 150,
-                    //click: () => {
-                        //this.poplinks.show("Линки");
                         //}
                     //},
                 ]

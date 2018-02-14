@@ -62,11 +62,15 @@ export default class NewformView extends JetView{
             on: {
                 onHide: function() {
                     barcodes.clearAll();
+                    this.$scope.$$("new_form").clear();
+                    this.$scope.$$("new_form").reconstruct();
                     }
                 },
             body: { view: "form",
                 localId: "new_form",
                 margin: 0,
+                spr: false,
+                search_bar: undefined,
                 rules:{
                     "c_tovar": webix.rules.isNotEmpty,
                     "id_strana": webix.rules.isNotEmpty,
@@ -75,8 +79,8 @@ export default class NewformView extends JetView{
                     },
                 elements: [
                     {rows: [
-                        {view: "label", label:"Название товара:   " + "Название 1", name: 't_name'},
-                        {view: "text", label: "", value: "Название 1", name: "c_tovar", required: true},
+                        {view: "label", label:"Название товара:", name: 't_name'},
+                        {view: "text", label: "", value: "", name: "c_tovar", required: true},
                         {height: 10, width: 700},
                         {cols: [
                             {rows: [
@@ -285,15 +289,21 @@ export default class NewformView extends JetView{
                                         params["id_usloviya"] = right_f.id_usloviya;
                                         params["id_group"] = right_f.id_group;
                                         params["id_nds"] = right_f.id_nds;
-                                        params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc;
+                                        params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc
+                                                                                            : undefined;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
                                         let url = this.app.config.r_url + "?setSpr";
+                                        console.log(params);
                                         let res = request(url, params, !0).response;
                                         res = checkVal(res, 's');
-                                        if (res && res.new) {
+                                        if (res && res.new && this.$$("new_form").config.spr) {
                                             delPrc(params, this)
+                                        } else {
+                                            console.log("bar", this.$$("new_form").config.search_bar)
+                                            this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
                                             };
+                                        this.$$("new_form").config.spr = false;
                                         this.hide();
                                         };
                                     }
@@ -304,10 +314,12 @@ export default class NewformView extends JetView{
                 }
             }
         }
-    show(new_head, item){
+    show(new_head, search_bar, item){
+        this.$$("new_form").config.search_bar = search_bar;
         if (item) {
             this.$$("new_form").parse(item);
             this.$$("new_f_right").parse(item);
+            this.$$("new_form").config.spr = true;
             //this.getRoot().getBody().parse(item);
             //console.log('parse', item);
             }

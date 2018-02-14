@@ -1,6 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
+import History from "../views/history";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
@@ -51,7 +52,7 @@ export default class LinksView extends JetView{
                 rows: [
                     {rows: [
                         {cols: [
-                            {view: "text", label: "", placeholder: "Строка поиска", width: 500, id: "_link_search", height: 40,
+                            {view: "text", label: "", placeholder: "Строка поиска", id: "_link_search", height: 40, fillspace: 1,
                                 tooltip: "поиск от двух символов, !слово - исключить из поиска", //keyPressTimeout: 900, 
                                 on: {
                                     //onTimedKeyPress: function(code, event) {
@@ -91,7 +92,7 @@ export default class LinksView extends JetView{
                                                 field: field,
                                                 direction: direction
                                                 });
-                                                }, 1000);
+                                                }, this.$scope.app.config.searchDelay);
                                             }
                                         }
                                     },
@@ -100,11 +101,7 @@ export default class LinksView extends JetView{
                                 label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                                 click: () => {
                                     let hist = webix.storage.session.get("__tt");
-                                    console.log(hist);
-                                    webix.message({
-                                        'type': 'debug',
-                                        'text': 'история поиска в этой сессии',
-                                        })
+                                    this.pophistory.show(hist, $$("_link_search"));
                                     },
                                 },
                             {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: true},
@@ -320,6 +317,7 @@ export default class LinksView extends JetView{
     init() {
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
+        this.pophistory = this.ui(History);
         }
     }
 

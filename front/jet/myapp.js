@@ -6,6 +6,11 @@ import {StoreRouter, EmptyRouter} from "webix-jet";
 import {init_first} from "./views/globals";
 
 webix.ready(() => {
+    
+    webix.protoUI({
+        name:"activeList"
+        },webix.ui.list, webix.ActiveContent);
+        
     webix.protoUI({
         name: "cWindow",
         defaults: {
@@ -36,19 +41,19 @@ webix.ready(() => {
         }, webix.ui.window);
     let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic";
     var app = new JetApp({
-        id:         "mainApp",
-        name:       "linker",
-        version:    "18.043.1610",
-        //start:      "/start/body",
-        start:      "/login",
-        admin:      "34",
-        user:       "",
-        role:       "0",
-        r_url:      u1,
-        //router:     StoreRouter,
-        router:     EmptyRouter,
-        x_api:      "x_login",
-        debug:      true
+        id:             "mainApp",
+        name:           "linker",
+        version:        "18.045.1800",
+        start:          "/login",
+        admin:          "34",
+        user:           "",
+        role:           "0",
+        r_url:          u1,
+        //router:         StoreRouter,
+        router:         EmptyRouter,
+        x_api:          "x_login",
+        debug:          true,
+        searchDelay:    1000
     });
     
     webix.attachEvent("onBeforeAjax", 

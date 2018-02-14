@@ -2,11 +2,12 @@
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
+import History from "../views/history";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, get_bars} from "../views/globals";
+import {last_page, get_bars, checkKey} from "../views/globals";
 
-export default class SprView extends JetView{
+export default class SprViews extends JetView{
     config(){
 
         function mnn_func(obj) {
@@ -30,23 +31,23 @@ export default class SprView extends JetView{
 
         var bottom = {
             view: "toolbar",
-            id: "__nav",
+            id: "__nav_as",
             height: 36,
             cols: [
                 {view: "button", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                     click: () => {
                         let start = 1;
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
+                        let count = $$("__dt_as").config.posPpage;
+                        let field = $$("__dt_as").config.fi;
+                        let direction = $$("__dt_as").config.di;
                         get_data({
                             th: this,
-                            view: "__dt",
-                            navBar: "__nav",
+                            view: "__dt_as",
+                            navBar: "__nav_as",
                             start: start,
                             count: count,
-                            searchBar: "_spr_search",
+                            searchBar: "_spr_search_adm",
                             method: "getSprSearch",
                             field: field,
                             direction: direction
@@ -57,18 +58,18 @@ export default class SprView extends JetView{
                     label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
                     click: () => {
                         let th = this;
-                        let start = $$("__dt").config.startPos - $$("__dt").config.posPpage;
+                        let start = $$("__dt_as").config.startPos - $$("__dt_as").config.posPpage;
                         start = (start < 0) ? 1 : start;
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
+                        let count = $$("__dt_as").config.posPpage;
+                        let field = $$("__dt_as").config.fi;
+                        let direction = $$("__dt_as").config.di;
                         get_data({
                             th: this,
-                            view: "__dt",
-                            navBar: "__nav",
+                            view: "__dt_as",
+                            navBar: "__nav_as",
                             start: start,
                             count: count,
-                            searchBar: "_spr_search",
+                            searchBar: "_spr_search_adm",
                             method: "getSprSearch",
                             field: field,
                             direction: direction
@@ -80,18 +81,18 @@ export default class SprView extends JetView{
                     label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
                     click: () => {
                         let th = this;
-                        let start = $$("__dt").config.startPos + $$("__dt").config.posPpage;
-                        start = (start > $$("__dt").config.totalPos) ? last_page("__dt"): start;
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
+                        let start = $$("__dt_as").config.startPos + $$("__dt_as").config.posPpage;
+                        start = (start > $$("__dt_as").config.totalPos) ? last_page("__dt_as"): start;
+                        let count = $$("__dt_as").config.posPpage;
+                        let field = $$("__dt_as").config.fi;
+                        let direction = $$("__dt_as").config.di;
                         get_data({
                             th: this,
-                            view: "__dt",
-                            navBar: "__nav",
+                            view: "__dt_as",
+                            navBar: "__nav_as",
                             start: start,
                             count: count,
-                            searchBar: "_spr_search",
+                            searchBar: "_spr_search_adm",
                             method: "getSprSearch",
                             field: field,
                             direction: direction
@@ -102,17 +103,17 @@ export default class SprView extends JetView{
                     label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                     click: () => {
                         let th = this;
-                        let start = last_page("__dt");
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
+                        let start = last_page("__dt_as");
+                        let count = $$("__dt_as").config.posPpage;
+                        let field = $$("__dt_as").config.fi;
+                        let direction = $$("__dt_as").config.di;
                         get_data({
                             th: this,
-                            view: "__dt",
-                            navBar: "__nav",
+                            view: "__dt_as",
+                            navBar: "__nav_as",
                             start: start,
                             count: count,
-                            searchBar: "_spr_search",
+                            searchBar: "_spr_search_adm",
                             method: "getSprSearch",
                             field: field,
                             direction: direction
@@ -125,7 +126,7 @@ export default class SprView extends JetView{
             };
 
         var sprv = {view: "datatable",
-            id: "__dt",
+            id: "__dt_as",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -209,27 +210,28 @@ export default class SprView extends JetView{
             on: {
                 "data->onParse":function(i, data){
                     this.clearAll();
-                    $$("_link").disable();
+                    this.$scope.$$("_del").disable();
                     },
                 onBeforeSort: (field, direction) => {
                     let th = this;
-                    let start = $$("__dt").config.startPos;
-                    let count = $$("__dt").config.posPpage;
-                    $$("__dt").config.fi = field;
-                    $$("__dt").config.di = direction;
+                    let start = $$("__dt_as").config.startPos;
+                    let count = $$("__dt_as").config.posPpage;
+                    $$("__dt_as").config.fi = field;
+                    $$("__dt_as").config.di = direction;
                     get_data({
                         th: this,
-                        view: "__dt",
-                        navBar: "__nav",
+                        view: "__dt_as",
+                        navBar: "__nav_as",
                         start: start,
                         count: count,
-                        searchBar: "_spr_search",
+                        searchBar: "_spr_search_adm",
                         method: "getSprSearch",
                         field: field,
                         direction: direction
                         });
                     },
                 onBeforeRender: function() {
+                    $$("_spr_search_adm").focus();
                     webix.extend(this, webix.ProgressBar);
                     if (!this.count) {
                         this.showProgress({
@@ -239,23 +241,20 @@ export default class SprView extends JetView{
                         }
                     },
                 onItemDblClick: function(item) {
-                    //item = this.getItem(item.row);
                     item = this.getSelectedItem();
                     item = item.id_spr;
                     item = get_spr(this.$scope, item);
-                    //console.log('item', item);
                     item["s_name"] = "Страна: " + item.c_strana;
                     item["t_name"] = "Название товара: " + item.c_tovar;
                     item["v_name"] = "Производитель: " + item.c_zavod;
                     item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search_adm"), item);
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    $$("_link").enable();
-                    //$$("_add").enable();
+                    this.$$("_del").enable();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -264,9 +263,64 @@ export default class SprView extends JetView{
                     },
                 }
             }
+
+        var top = {
+            height: 40,
+            cols: [
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", id: "_spr_search_adm",
+                    tooltip: "поиск от двух символов, !слово - исключить из поиска",
+                    on: {
+                        onKeyPress: function(code, event) {
+                            clearTimeout(this.config._keytimed);
+                            if (checkKey(code)) {
+                                this.config._keytimed = setTimeout(function () {
+                                    let th = this.$scope;
+                                    let count = $$("__dt_as").config.posPpage;
+                                    get_data({
+                                        th: th,
+                                        view: "__dt_as",
+                                        navBar: "__nav_as",
+                                        start: 1,
+                                        count: count,
+                                        searchBar: "_spr_search_adm",
+                                        method: "getSprSearch"
+                                        });
+                                    }, this.$scope.app.config.searchDelay);
+                                }
+                            }
+                        },
+                    },
+                {view: "button", type: 'htmlbutton', width: 35,
+                    label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                    click: () => {
+                        let hist = webix.storage.session.get("__dt_as");
+                        this.pophistory.show(hist, $$("_spr_search_adm"));
+                        },
+                    },
+                {view:"button", type: 'htmlbutton', disabled: !true, 
+                    label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    click: () => {
+                        this.popnew.show("Новый эталон", $$("_spr_search_adm"));
+
+                        }
+                    },
+                {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
+                    label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    click: () => {
+                        webix.message({
+                            text: "Удаление из SPR. Позже.",
+                            type: "debug",
+                            })
+                        }
+                    },
+                ]
+            }
+
+            
         var dt = {
             view: "layout",
             rows: [
+                top,
                 sprv,
                 bottom,
                 ]}
@@ -276,5 +330,6 @@ export default class SprView extends JetView{
         }
     init() {
         this.popnew = this.ui(NewformView);
+        this.pophistory = this.ui(History);
         }
     }
