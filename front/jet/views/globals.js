@@ -393,15 +393,16 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    console.log('this', this);
-    setTimeout(get_refs, 2000, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    setTimeout(get_refs, 2000, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    setTimeout(get_refs, 3000, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    setTimeout(get_refs, 3000, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    setTimeout(get_refs, 4000, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
-    setTimeout(get_refs, 5000, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
+    console.log('app', app);
+    let delay = app.config.searchDelay;
+    setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
     }
 
 export function get_prcs(th, id_vnd) {
@@ -496,18 +497,17 @@ export function filter_1(item, value) {
     }
 
 export function after_call(i, ii, iii) {
-    if (iii.status === 403) {
-        //console.log('iii', iii);
-        deleteCookie('linker_user');
-        deleteCookie('linker_auth_key');
-        deleteCookie('linker_role');
-        location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
-        }
+    //console.log('iii', iii.status);
+    deleteCookie('linker_user');
+    deleteCookie('linker_auth_key');
+    deleteCookie('linker_role');
+    location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
     }
 
 export function request (url, params, mode) {
-    var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
-        : webix.ajax().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
+    var req;
+    req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
+                        : webix.ajax().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
     }
 

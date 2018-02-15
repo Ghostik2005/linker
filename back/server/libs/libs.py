@@ -29,7 +29,6 @@ SET IN_WORK = '-1'
 WHERE IN_WORK IS NULL;
 commit;
 
-
 create ASC 
 INDEX IDX_ID_WORK on PRC 
 (IN_WORK);
@@ -49,7 +48,6 @@ CREATE TABLE R_LNK
   USER_R TINT32,
   CONSTRAINT PK_R_LNK PRIMARY KEY (SH_PRC)
 );
-
 commit;
 
 CREATE INDEX R_LNK_IDX1 ON R_LNK (ID_SPR);
@@ -57,14 +55,64 @@ CREATE INDEX R_LNK_IDX2 ON R_LNK (ID_VND,ID_TOVAR);
 CREATE DESCENDING INDEX R_LNK_IDX3 ON R_LNK (DT);
 GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
  ON R_LNK TO  SYSDBA WITH GRANT OPTION;
-
 commit;
 
+CREATE INDEX IDX_SPR_ZAVOD1 ON SPR_ZAVOD (C_ZAVOD);
+CREATE INDEX IDX_DV1 ON DV (ACT_INGR);
+commit;
+
+ALTER TABLE LNK ADD CHANGE_DT Timestamp;
+ALTER TABLE PRC ADD CHANGE_DT Timestamp;
+commit;
+
+SET TERM ^ ;
+ALTER TRIGGER LNK_BI0 ACTIVE
+BEFORE INSERT POSITION 0
+AS
+begin
+  if (new.dt is Null) then
+    new.dt = current_timestamp;
+    new.CHANGE_DT = current_timestamp;
+  new.newflag = 1;
+end^
+SET TERM ; ^
+commit;
+
+SET TERM ^ ;
+ALTER TRIGGER PRC_BI0 ACTIVE
+BEFORE INSERT POSITION 0
+AS
+begin
+  new.dt = current_timestamp;
+  new.CHANGE_DT = current_timestamp;
+end^
+SET TERM ; ^
+commit;
+
+SET TERM ^;
+CREATE TRIGGER LNK_BU FOR LNK
+ACTIVE BEFORE UPDATE POSITION 0
+AS
+BEGIN
+    new.CHANGE_DT = current_timestamp;
+END^
+SET TERM ;^
+commit;
+
+SET TERM ^;
+CREATE TRIGGER PRC_BU FOR PRC
+ACTIVE BEFORE UPDATE POSITION 0
+AS
+BEGIN
+    new.CHANGE_DT = current_timestamp;
+END^
+SET TERM ;^
+commit;
 """
 
 class API:
     """
-    API class for http access to reloader
+    API class for http post access
     x_hash - API key
     """
 
@@ -80,9 +128,9 @@ class API:
         self.exec = sys.executable
         self.log = log
         self.db = fb_local(self.log)
+        res = self.db.execute({"sql": "update PRC SET IN_WORK = -1 where IN_WORK != -1", "options": ()})
         self.start = 1
         self.count = 20
-
 
     def _check(self, x_hash):
         #проверка валидности ключа
