@@ -1404,6 +1404,11 @@ class API:
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
             exclude = []
+            cbars = params.get('cbars')
+            cbars = cbars.split(',')
+            print()
+            print(cbars)
+            print()
             for i in range(search_re.count('!')):
                 ns = search_re.find('!')
                 ne = search_re.find(' ', ns)
@@ -1423,19 +1428,46 @@ class API:
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri) if len(stri) > 0 else sti
-            sql = """select count(*)
-                    from spr r
-                    WHERE %s 
-            """ % stri
+            sql = """
+select count(*)
+from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
+        CASE 
+        WHEN qty is null THEN 0
+        ELSE qty
+        END as quantity
+    from SPR r 
+    left outer join (select idspr, qty
+        FROM (select s.ID_SPR as idspr,
+            count(s.ID_SPR) as qty
+            FROM SPR_BARCODE s
+            GROUP BY idspr)
+        ) on (r.id_spr = idspr)
+    WHERE {0}
+    )
+where quantity >= {1} AND quantity <= {2}
+            """.format(stri, cbars[0], cbars[1])
             opt = ()
             count = self.db.request({"sql": sql, "options": opt})[0][0]
-            sql = """select r.id_spr, r.c_tovar 
-                    from spr r
-                    WHERE {0} 
-                    order by r.{1} {2}
-                    ROWS ? to ?
-            """.format(stri, field, direction)
-
+            sql = """
+select id, c_tovar, quantity 
+from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
+        CASE 
+        WHEN qty is null THEN 0
+        ELSE qty
+        END as quantity
+    from SPR r 
+    left outer join (select idspr, qty
+        FROM (select s.ID_SPR as idspr,
+            count(s.ID_SPR) as qty
+            FROM SPR_BARCODE s
+            GROUP BY idspr)
+        ) on (r.id_spr = idspr)
+    WHERE {0}
+    )
+where quantity >= {1} AND quantity <= {2}
+order by {3} {4}
+ROWS ? to ?
+            """.format(stri, cbars[0], cbars[1], field, direction)
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -1448,7 +1480,7 @@ class API:
                     "$row"        : "barcode",
                     "open"        : False,
                     "barcode"     : st1,
-                    "data"        : []
+                    "data"        : [],
                 }
                 sql = """select r.barcode from spr_barcode r where r.id_spr = ? order by r.barcode ASC"""
                 opt = (row[0],)
@@ -1458,9 +1490,11 @@ class API:
                         "barcode"   : rrr[0],
                         "id_state"  : "active",
                         "dt"        : "",
-                        "owner"     : ""
+                        "owner"     : "",
+                        "count"     : ''
                     }
                     r['data'].append(rr)
+                r['count'] = '' if len(r['data']) == 0 else len(r['data'])
                 _return.append(r)
             t3 = time.time() - st_t
             ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}

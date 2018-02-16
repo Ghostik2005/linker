@@ -19,6 +19,9 @@ export default class BarcodesSView extends JetView{
             res = checkVal(res, 's');
             if (res) {
                 th.remove(item.id);
+                let pitem = $$("__dtd").getItem(item.$parent);
+                pitem.count = (pitem.$count > 0) ? pitem.$count : "";
+                $$("__dtd").refresh(item.$parent)
                 }
             }
         
@@ -42,11 +45,14 @@ export default class BarcodesSView extends JetView{
                 th.remove(rem);
                 parseArr.forEach(function(it, i, parseArr) {
                     if (it.length > 1) {
-                        let newI = {"barcode": it, "id_state": "active", "dt": '', "owner": ''};
+                        let newI = {"barcode": it, "id_state": "active", "dt": '', "owner": '', 'count': ""};
                         th.add(newI, 0, id_spr);
                         }
                     });
                 if (op) th.open(id_spr);
+                let pitem = $$("__dtd").getItem(id_spr);
+                pitem.count = (pitem.$count > 0) ? pitem.$count : "";
+                $$("__dtd").refresh(id_spr)
                 }
             }
             
@@ -69,15 +75,11 @@ export default class BarcodesSView extends JetView{
             di: 'asc',
             columns: [
                 {id: "barcode", header: "Штрих-код" , fillspace: true, sort: "server", headermenu: false,
-                    template:"<span>{common.treetable()} #barcode#</span>" 
+                    template:"<span>{common.treetable()} #barcode#</span><span style='color: red'> #count#</span>" 
                     },
-                { id: "id_state", 
-                    width: 150,
-                    header: [{text: "Статус"},
-                        ]
-                    },
-                {id: "dt", header: "Дата", width: 160},
-                {id: "owner", header: "Создал", width: 120}
+                //{ id: "id_state", width: 150, header: [{text: "Статус"},] },
+                {id: "dt", header: "Дата изменения", width: 180},
+                {id: "owner", header: "Изменил", width: 120}
                 ],
             on: {
                 "data->onParse":function(i, data){
@@ -85,12 +87,12 @@ export default class BarcodesSView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
+                    //if (!this.count) {
+                        //this.showProgress({
+                            //type: "icon",
+                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            //});
+                        //}
                     },
                 onBeforeSort: (field, direction) => {
                     let th = this;
@@ -98,6 +100,7 @@ export default class BarcodesSView extends JetView{
                     let count = $$("__dtd").config.posPpage;
                     $$("__dtd").config.fi = field;
                     $$("__dtd").config.di = direction;
+                    let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
                     get_data({
                         th: this,
                         view: "__dtd",
@@ -107,7 +110,8 @@ export default class BarcodesSView extends JetView{
                         searchBar: "__s_b",
                         method: "getSprBars",
                         field: field,
-                        direction: direction
+                        direction: direction,
+                        cbars: cbars
                         });
                     },
                 onItemDblClick: function() {
@@ -150,6 +154,7 @@ export default class BarcodesSView extends JetView{
                         let count = $$("__dtd").config.posPpage;
                         let field = $$("__dtd").config.fi;
                         let direction = $$("__dtd").config.di;
+                        let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
                         get_data({
                             th: this,
                             view: "__dtd",
@@ -159,7 +164,8 @@ export default class BarcodesSView extends JetView{
                             searchBar: "__s_b",
                             method: "getSprBars",
                             field: field,
-                            direction: direction
+                            direction: direction,
+                            cbars: cbars
                             });
                         }
                     },
@@ -171,6 +177,7 @@ export default class BarcodesSView extends JetView{
                         let count = $$("__dtd").config.posPpage;
                         let field = $$("__dtd").config.fi;
                         let direction = $$("__dtd").config.di;
+                        let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
                         get_data({
                             th: this,
                             view: "__dtd",
@@ -180,7 +187,8 @@ export default class BarcodesSView extends JetView{
                             searchBar: "__s_b",
                             method: "getSprBars",
                             field: field,
-                            direction: direction
+                            direction: direction,
+                            cbars: cbars
                             });
                         }
                     },
@@ -193,6 +201,7 @@ export default class BarcodesSView extends JetView{
                         let count = $$("__dtd").config.posPpage;
                         let field = $$("__dtd").config.fi;
                         let direction = $$("__dtd").config.di;
+                        let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
                         get_data({
                             th: this,
                             view: "__dtd",
@@ -202,7 +211,8 @@ export default class BarcodesSView extends JetView{
                             searchBar: "__s_b",
                             method: "getSprBars",
                             field: field,
-                            direction: direction
+                            direction: direction,
+                            cbars: cbars
                             });
                         }
                     },
@@ -213,6 +223,7 @@ export default class BarcodesSView extends JetView{
                         let count = $$("__dtd").config.posPpage;
                         let field = $$("__dtd").config.fi;
                         let direction = $$("__dtd").config.di;
+                        let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
                         get_data({
                             th: this,
                             view: "__dtd",
@@ -222,7 +233,8 @@ export default class BarcodesSView extends JetView{
                             searchBar: "__s_b",
                             method: "getSprBars",
                             field: field,
-                            direction: direction
+                            direction: direction,
+                            cbars: cbars
                             });
                         }
                     },
@@ -244,5 +256,9 @@ export default class BarcodesSView extends JetView{
         webix.extend($$("__dtd"), webix.ProgressBar);
         this.popnewbar = this.ui(NewbarView);
         this.popconfirm = this.ui(ConfirmBarView);
+        }
+    ready() {
+        //console.log($$("__s_b"));
+        $$("__s_b").focus();
         }
     }

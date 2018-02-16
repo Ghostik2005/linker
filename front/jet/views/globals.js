@@ -277,6 +277,7 @@ export function form_navi(view, pager) {
     }
 
 export function get_data(inp_params) {
+    let cbars = inp_params.cbars;
     let view = inp_params.view;
     let nav = inp_params.navBar;
     let start = inp_params.start;
@@ -291,14 +292,10 @@ export function get_data(inp_params) {
     let app = $$("main_ui").$scope.app;
     let user = app.config.user;
     let url = app.config.r_url + "?" + method;
-    let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction, "c_filter": c_filter};
+    let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction, "c_filter": c_filter, "cbars": cbars};
     let old_stri = $$(view).config.old_stri;
-    //console.log('search_str', search_str);
     let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
     let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
-    //console.log('t search', typeof search_str);
-    //console.log('rl', rl);
-    //console.log('sl', sl);
     if (sl > 1 && rl > 1) { ////////////////////
         $$(view).config.old_stri = search_str;
         $$(view).showProgress({
@@ -393,7 +390,7 @@ export function get_spr(th, id_spr) {
     }
 
 export function init_first(app) {
-    console.log('app', app);
+    //console.log('app', app);
     let delay = app.config.searchDelay;
     setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
     setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});

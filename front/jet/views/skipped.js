@@ -61,7 +61,7 @@ export default class SkippedView extends JetView{
                     height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_search_skip",
-                            keyPressTimeout: 900, tooltip: "!слово - исключить из поиска, +слово - поиск в названии производителя",
+                            keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
                             on: {
                                 onTimedKeyPress: (code, event) => {
                                     let count = $$("__dt_s").config.posPpage;

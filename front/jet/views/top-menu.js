@@ -108,7 +108,7 @@ export default class TopmenuView extends JetView{
                     height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
-                            tooltip: "поиск от двух символов, !слово - исключить из поиска", //keyPressTimeout: 900,
+                            tooltip: "поиск от двух символов", //keyPressTimeout: 900,
                             on: {
                                 //onTimedKeyPress: function() {
                                     //let th = this.$scope;

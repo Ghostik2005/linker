@@ -52,8 +52,8 @@ export default class LinksView extends JetView{
                 rows: [
                     {rows: [
                         {cols: [
-                            {view: "text", label: "", placeholder: "Строка поиска", id: "_link_search", height: 40, fillspace: 1,
-                                tooltip: "поиск от двух символов, !слово - исключить из поиска", //keyPressTimeout: 900, 
+                            {view: "text", label: "", placeholder: "Строка поиска", id: "_link_search", height: 40, fillspace: true,
+                                tooltip: "поиск от двух символов", //keyPressTimeout: 900, 
                                 on: {
                                     //onTimedKeyPress: function(code, event) {
                                         //let th = this.$scope;
@@ -104,7 +104,7 @@ export default class LinksView extends JetView{
                                     this.pophistory.show(hist, $$("_link_search"));
                                     },
                                 },
-                            {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: true},
+                            {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: true, width: 150},
                             {view:"button", type: 'htmlbutton', id: "_break", disabled: true,
                                 label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
                                 click: () => {
@@ -178,7 +178,7 @@ export default class LinksView extends JetView{
                                             item["t_name"] = "Название товара: " + item.c_tovar;
                                             item["v_name"] = "Производитель: " + item.c_zavod;
                                             item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                                            this.$scope.popnew.show("Редактирование записи " + item.id_spr, item);
+                                            this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_link_search"), item);
                                         } else {
                                             webix.message({"type": "error", "text": "Редактирование запрещено"})
                                             };

@@ -14,6 +14,21 @@ export default class HeaderView extends JetView{
                 {view: "label", label: "Манускрипт солюшн: Линкер | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
                 {},
+                //{view:"button",  css: "butt", type: 'htmlbutton', 
+                    //label: "<span class = 'butt'>GetState</span>", width: 120,
+                    //click: () => {
+                        //webix.storage.local.put("stateApp", webix.UIManager.getState("__dt", true));
+                        //}
+                    //},
+                //{view:"button",  css: "butt", type: 'htmlbutton', 
+                    //label: "<span class = 'butt'>SetState</span>", width: 120,
+                    //click: () => {
+                        //var stateApp = webix.storage.local.get("stateApp");
+                        //console.log('stateApp', stateApp);
+                        //if(stateApp) webix.UIManager.setState(stateApp);
+                        //}
+                    //},
+                //{},
                 {view:"button", id: '_adm', css: "butt", type: 'htmlbutton', 
                     label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
                     click: () => {

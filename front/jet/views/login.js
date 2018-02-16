@@ -41,7 +41,7 @@ export default class loginView extends JetView{
                                 this.$scope.show("/start/body")
                                 webix.message('авторизованно');
                             } else {
-                                webix.message('не авторизованно');
+                                webix.message({'text': 'не авторизованно', "type" : "debug"});
                                 deleteCookie('linker_user');
                                 deleteCookie('linker_auth_key');
                                 deleteCookie('linker_role');
