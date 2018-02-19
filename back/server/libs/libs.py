@@ -19,6 +19,54 @@ import psycopg2
 import zlib
 from io import BytesIO
 from libs.connect import fb_local
+"""
+
+//Firebird
+CREATE TRIGGER tr_Update ON Contractor
+AFTER UPDATE
+AS
+/**Объявляем переменные**/
+DECLARE VARIABLE    
+            new_Name                    NVARCHAR (max);
+            new_LegalAddress                NVARCHAR (max);
+            new_INN                     NVARCHAR (max);
+            uid                     NVARCHAR (max);
+ 
+            old_Name                    NVARCHAR (max);
+            old_LegalAddress                NVARCHAR (max);
+               old_INN                      NVARCHAR (max);
+ 
+BEGIN
+/**Присваиваем значение переменным**/
+ SELECT new_Name into :Name,
+        new_LegalAddress into :(SELECT Name FROM dbo.Address ad WHERE ins.LegalAddress = ad.id),
+     new_INN into :INN,
+     uid into :"uid"
+ FROM   INSERTED  ins /**Измененные значения полей таблицы**/
+ 
+ 
+SELECT old_Name into :Name,
+       old_LegalAddress into :(SELECT Name FROM dbo.Address ad WHERE del.LegalAddress = ad.id),
+     old_INN into :INN
+ FROM   DELETED del    /**Старые значения полей таблицы**/
+ 
+ 
+ /**Проверяем изменилось ли значение выбранных полей, если да то записываем в таблицу истории изменений**/
+ IF (old_Name<>new_Name)
+ THEN   insert into dbo.IstoriyaIzmeneniyaNeskoljkoP (UidKontragenta,NazvaniePolya,StaroeZnacheniePolya,NovoeZnacheniePolya,DataIzmeneniya)
+    values (uid,’Наименование’,old_Name,new_Name,GETDATE())
+ 
+ IF (old_LegalAddress<>new_LegalAddress)
+ THEN insert into dbo.IstoriyaIzmeneniyaNeskoljkoP (UidKontragenta,NazvaniePolya,StaroeZnacheniePolya,NovoeZnacheniePolya,DataIzmeneniya)
+    values (uid,’Юридический адрес’,old_LegalAddress,new_LegalAddress,GETDATE())
+ 
+ IF (old_INN<>new_INN)
+ THEN   insert into dbo.IstoriyaIzmeneniyaNeskoljkoP (UidKontragenta,NazvaniePolya,StaroeZnacheniePolya,NovoeZnacheniePolya,DataIzmeneniya)
+    values (uid,’ИНН’,old_INN,new_INN,GETDATE())
+END
+
+"""
+
 
 """
 ALTER TABLE PRC ADD 
@@ -1932,6 +1980,32 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
             exclude = []
+            
+            filt = params.get('c_filter')
+            pref = 'and %s'
+            stri_1 = ""
+            if filt:
+                pars = {}
+                pars['c_vnd'] = filt.get('c_vnd')
+                pars['c_zavod'] = filt.get('c_zavod')
+                pars['c_tovar'] = filt.get('c_tovar')
+                pars['c_user'] = filt.get('c_user')
+                ssss = []
+                if pars['c_vnd']:
+                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_user']:
+                    s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_tovar']:
+                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_zavod']:
+                    s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    ssss.append(pref % s)
+                stri_1 = ' '.join(ssss)
+            print('stri_1 -> \t', stri_1) 
+            
             for i in range(search_re.count('!')):
                 ns = search_re.find('!')
                 ne = search_re.find(' ', ns)
@@ -1951,6 +2025,7 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri) if len(stri) > 0 else sti
+            #stri += stri_1
             sql = """select count(*)
                     from spr r
                     WHERE %s 
@@ -1984,10 +2059,12 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                 sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER
                         FROM LNK r 
                         JOIN VND v on (v.ID_VND = r.ID_VND)
-                        WHERE r.ID_SPR = ? order by r.C_TOVAR ASC
-                """
+                        WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
+                """.format(stri_1)
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
+                #if len(res) < 1:
+                    #continue
                 for rrr in res:
                     rr = {
                         "id"        : rrr[0],
