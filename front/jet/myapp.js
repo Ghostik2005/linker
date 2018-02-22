@@ -53,7 +53,8 @@ webix.ready(() => {
         router:         EmptyRouter,
         x_api:          "x_login",
         debug:          true,
-        searchDelay:    1000
+        searchDelay:    1000,
+        lch:            1
     });
     
     webix.attachEvent("onBeforeAjax", 

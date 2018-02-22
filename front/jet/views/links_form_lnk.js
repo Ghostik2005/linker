@@ -8,7 +8,7 @@ import {last_page, checkKey} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 
-export default class LinksViewSpr extends JetView{
+export default class LinksViewLnk extends JetView{
     config(){
 
         webix.protoUI({
@@ -19,16 +19,16 @@ export default class LinksViewSpr extends JetView{
                     align:"center", height:30, click:function(){
                         if (this._filter_timer) window.clearTimeout(this._filter_timer);
                         this._filter_timer=window.setTimeout(function(){
-                            let ui = webix.$$("__tt");
+                            let ui = webix.$$("__ttl");
                             if (ui) {
                                 let params = getParams(ui);
                                 get_data({
-                                    view: "__tt",
-                                    navBar: "__nav_l",
+                                    view: "__ttl",
+                                    navBar: "__nav_ll",
                                     start: 1,
                                     count: params[1],
                                     searchBar: "_link_search",
-                                    method: "getSprLnks",
+                                    method: "getLnkSprs",
                                     field: params[2],
                                     direction: params[3],
                                     filter: params[0]
@@ -37,7 +37,7 @@ export default class LinksViewSpr extends JetView{
                             //if (ui) ui.filterByAll();
                             },webix.ui.datafilter.textWaitDelay);
                         
-                        //console.log('val', $$("__tt").getFilter('dt').getValue());
+                        //console.log('val', $$("__ttl").getFilter('dt').getValue());
                         this.getParentView().getParentView().hide();
                         }
                     };
@@ -106,11 +106,11 @@ export default class LinksViewSpr extends JetView{
                         let params = getParams(ui);
                         get_data({
                             view: id,
-                            navBar: "__nav_l",
+                            navBar: "__nav_ll",
                             start: 1,
                             count: params[1],
                             searchBar: "_link_search",
-                            method: "getSprLnks",
+                            method: "getLnkSprs",
                             field: params[2],
                             direction: params[3],
                             filter: params[0]
@@ -122,14 +122,14 @@ export default class LinksViewSpr extends JetView{
             },  webix.ui.datafilter.textFilter);
         
         function delLnk() {
-            let cid = $$("__tt").getSelectedItem().id;
-            $$("__tt").remove(cid);
+            let cid = $$("__ttl").getSelectedItem().id;
+            $$("__ttl").remove(cid);
             }
         
         return {view: "layout",
             rows: [
                 {view: "treetable",
-                    id: "__tt",
+                    id: "__ttl",
                     startPos: 1,
                     posPpage: 20,
                     totalPos: 1250,
@@ -165,8 +165,7 @@ export default class LinksViewSpr extends JetView{
                             },
                         {id: "dt", width: 200,
                             format: dt_formating,
-                            header: [{text: "Дата"}, // сделать диапазон дат
-                            //{content: "dateRangeFilter", inputConfig:{format:webix.i18n.fullDateFormatStr},
+                            header: [{text: "Дата изменения"}, 
                             {content: "filterDateRange",
                                 inputConfig:{format:dt_formating, width: 180,},
                                 suggest:{
@@ -196,18 +195,18 @@ export default class LinksViewSpr extends JetView{
                             },
                         onBeforeSort: (field, direction) => {
                             let th = this;
-                            let start = $$("__tt").config.startPos;
-                            let count = $$("__tt").config.posPpage;
-                            $$("__tt").config.fi = field;
-                            $$("__tt").config.di = direction;
+                            let start = $$("__ttl").config.startPos;
+                            let count = $$("__ttl").config.posPpage;
+                            $$("__ttl").config.fi = field;
+                            $$("__ttl").config.di = direction;
                             get_data({
                                 th: this,
-                                view: "__tt",
-                                navBar: "__nav_l",
+                                view: "__ttl",
+                                navBar: "__nav_ll",
                                 start: start,
                                 count: count,
                                 searchBar: "_link_search",
-                                method: "getSprLnks",
+                                method: "getLnkSprs",
                                 field: field,
                                 direction: direction
                                 });
@@ -227,7 +226,7 @@ export default class LinksViewSpr extends JetView{
                                     webix.message({"type": "error", "text": "Редактирование запрещено"})
                                     };
                             } else if (level === 2) {
-                                let sh_prc = $$("__tt").getSelectedItem().id;
+                                let sh_prc = $$("__ttl").getSelectedItem().id;
                                 let params = {};
                                 params["action"] = "return";
                                 params["command"] = "?delLnk";
@@ -255,24 +254,24 @@ export default class LinksViewSpr extends JetView{
                         },
                     },
                 {view: "toolbar",
-                    id: "__nav_l",
+                    id: "__nav_ll",
                     height: 36,
                     cols: [
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                             click: () => {
                                 let start = 1;
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
+                                let count = $$("__ttl").config.posPpage;
+                                let field = $$("__ttl").config.fi;
+                                let direction = $$("__ttl").config.di;
                                 get_data({
                                     th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
+                                    view: "__ttl",
+                                    navBar: "__nav_ll",
                                     start: start,
                                     count: count,
                                     searchBar: "_link_search",
-                                    method: "getSprLnks",
+                                    method: "getLnkSprs",
                                     field: field,
                                     direction: direction
                                     });
@@ -281,19 +280,19 @@ export default class LinksViewSpr extends JetView{
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
                             click: () => {
-                                let start = $$("__tt").config.startPos - $$("__tt").config.posPpage;
+                                let start = $$("__ttl").config.startPos - $$("__ttl").config.posPpage;
                                 start = (start < 0) ? 1 : start;
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
+                                let count = $$("__ttl").config.posPpage;
+                                let field = $$("__ttl").config.fi;
+                                let direction = $$("__ttl").config.di;
                                 get_data({
                                     th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
+                                    view: "__ttl",
+                                    navBar: "__nav_ll",
                                     start: start,
                                     count: count,
                                     searchBar: "_link_search",
-                                    method: "getSprLnks",
+                                    method: "getLnkSprs",
                                     field: field,
                                     direction: direction
                                     });
@@ -303,19 +302,19 @@ export default class LinksViewSpr extends JetView{
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
                             click: () => {
-                                let start = $$("__tt").config.startPos + $$("__tt").config.posPpage;
-                                start = (start > $$("__tt").config.totalPos) ? last_page("__tt"): start;
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
+                                let start = $$("__ttl").config.startPos + $$("__ttl").config.posPpage;
+                                start = (start > $$("__ttl").config.totalPos) ? last_page("__ttl"): start;
+                                let count = $$("__ttl").config.posPpage;
+                                let field = $$("__ttl").config.fi;
+                                let direction = $$("__ttl").config.di;
                                 get_data({
                                     th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
+                                    view: "__ttl",
+                                    navBar: "__nav_ll",
                                     start: start,
                                     count: count,
                                     searchBar: "_link_search",
-                                    method: "getSprLnks",
+                                    method: "getLnkSprs",
                                     field: field,
                                     direction: direction
                                     });
@@ -324,18 +323,18 @@ export default class LinksViewSpr extends JetView{
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                             click: () => {
-                                let start = last_page("__tt");
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
+                                let start = last_page("__ttl");
+                                let count = $$("__ttl").config.posPpage;
+                                let field = $$("__ttl").config.fi;
+                                let direction = $$("__ttl").config.di;
                                 get_data({
                                     th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
+                                    view: "__ttl",
+                                    navBar: "__nav_ll",
                                     start: start,
                                     count: count,
                                     searchBar: "_link_search",
-                                    method: "getSprLnks",
+                                    method: "getLnkSprs",
                                     field: field,
                                     direction: direction
                                     });

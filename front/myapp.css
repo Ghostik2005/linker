@@ -90,8 +90,8 @@ button {
   box-sizing: border-box;
   height: 70%;
   vertical-align: middle;
-  /*border-radius: 6px;
-      font-family: Roboto, Arial;*/
+  border-radius: 6px;
+  /*font-family: Roboto, Arial;*/
 }
 .my_filter select {
   padding: 3px;
@@ -115,5 +115,38 @@ button {
   font-weight: bolder;
   color: red;
 }
+/*.webix_view.webix_control.webix_el_datepicker {
+    width: 200px !important;
+    }
+
+.webix_el_datepicker .webix_el_box {
+    width: 198px !important;
+    }
+
+.webix_el_box {
+    width: 200px !important;
+    }
+
+.webix_inp_static {
+    width: 200px !important;
+    }
+
+.webix_div_filter {
+      width: 100%;
+      font-size: inherit;
+      color: #666666 !important;
+      margin-top: -2px;
+      padding: 0 3px;
+      vertical-align: top;
+      border: 1px solid #dddddd;
+      line-height: 24px;
+      -moz-box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      height: 70%;
+      vertical-align: middle;
+      border-radius: 6px;
+      font-family: Roboto, Arial;
+    }*/
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/

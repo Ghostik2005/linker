@@ -1990,7 +1990,18 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                 pars['c_zavod'] = filt.get('c_zavod')
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
+                dt = filt.get('dt')
+                if dt:
+                    pars['start_dt'] = dt.get('start')
+                    pars['end_dt'] = dt.get('end')
                 ssss = []
+                if pars['start_dt'] and not pars['end_dt']:
+                    pars['start_dt'] = pars['start_dt'].split()[0]
+                    s = " (CAST(r.CHANGE_DT as DATE) = '%s' or CAST(r.DT as DATE) = '%s')" % (pars['start_dt'], pars['start_dt'])
+                    ssss.append(pref % s)
+                elif pars['start_dt'] and pars['end_dt']:
+                    s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= '{1}') or (r.DT >= '{0}' AND r.DT <= '{1}'))".format(pars['start_dt'], pars['start_dt'])
+                    ssss.append(pref % s)
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
                     ssss.append(pref % s)
@@ -2004,7 +2015,7 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append(pref % s)
                 stri_1 = ' '.join(ssss)
-            print('stri_1 -> \t', stri_1) 
+            #print('stri_1 -> \t', stri_1) 
             
             for i in range(search_re.count('!')):
                 ns = search_re.find('!')
@@ -2056,7 +2067,7 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     #"c_zavod_s"   : row[2],
                     "data"        : []
                 }
-                sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER
+                sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT
                         FROM LNK r 
                         JOIN VND v on (v.ID_VND = r.ID_VND)
                         WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
@@ -2072,13 +2083,108 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                         "id_tovar"  : rrr[2],
                         "c_tovar"   : rrr[3],
                         "c_zavod"   : rrr[4],
-                        "dt"        : str(rrr[5]),
+                        "dt"        : str(rrr[7] or rrr[5]),
                         "owner"     : rrr[6]
                     }
                     r['data'].append(rr)
                 _return.append(r)
             t3 = time.time() - st_t
             ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getLnkSprs(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p
+            start_p = 1 if start_p == 0 else start_p
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
+            search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
+            sti = "lower(r.C_TOVAR) like lower('%%')"
+            exclude = []
+            
+            filt = params.get('c_filter')
+            pref = 'and %s'
+            stri_1 = ""
+            if filt:
+                pars = {}
+                pars['c_vnd'] = filt.get('c_vnd')
+                pars['c_zavod'] = filt.get('c_zavod')
+                pars['c_tovar'] = filt.get('c_tovar')
+                pars['c_user'] = filt.get('c_user')
+                dt = filt.get('dt')
+                if dt:
+                    pars['start_dt'] = dt.get('start')
+                    pars['end_dt'] = dt.get('end')
+                ssss = []
+                if pars['start_dt'] and not pars['end_dt']:
+                    pars['start_dt'] = pars['start_dt'].split()[0]
+                    s = " (CAST(r.CHANGE_DT as DATE) = '%s' or CAST(r.DT as DATE) = '%s')" % (pars['start_dt'], pars['start_dt'])
+                    ssss.append(pref % s)
+                elif pars['start_dt'] and pars['end_dt']:
+                    s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= '{1}') or (r.DT >= '{0}' AND r.DT <= '{1}'))".format(pars['start_dt'], pars['start_dt'])
+                    ssss.append(pref % s)
+                if pars['c_vnd']:
+                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_user']:
+                    s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_tovar']:
+                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    ssss.append(pref % s)
+                if pars['c_zavod']:
+                    s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    ssss.append(pref % s)
+                stri_1 = ' '.join(ssss)
+            search_re = search_re.split()
+            stri = []
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            stri.append(stri_1)
+            stri = ' '.join(stri) if len(stri) > 0 else sti
+
+            sql = """select count(*)
+                    from LNK r
+                    WHERE %s 
+            """ % stri
+            opt = ()
+            count = self.db.request({"sql": sql, "options": opt})[0][0]
+            sql = """
+SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT, r.ID_SPR, s.C_TOVAR
+FROM LNK r 
+LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)
+LEFT OUTER JOIN SPR s on (s.ID_SPR = r.ID_SPR)
+WHERE {0} 
+order by {1} {2}
+rows ? to ?
+            """.format(stri, field, direction)
+            opt = (start_p, end_p)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            st_t = time.time()
+            for row in result:
+                r = {
+                    "id"          : row[0],
+                    "c_vnd"       : row[1],
+                    "id_tovar"    : row[2],
+                    "c_tovar"     : row[3],
+                    "c_zavod"     : row[4],
+                    "dt"          : str(row[7] or row[5]),
+                    "owner"       : row[6],
+                    "id_spr"      : row[8],
+                    "spr"         : row[9]
+                    }
+                _return.append(r)
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
