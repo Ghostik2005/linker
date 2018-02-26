@@ -389,6 +389,27 @@ export function get_spr(th, id_spr) {
         };
     }
 
+export function getDtParams(ui) {
+    let c_filter;
+    if (ui.config.id === "__ttl") {
+        c_filter = {
+                //'c_tovar'   : $$(ui).getFilter('c_tovar').value,
+                'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+                'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+                'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
+                'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
+                'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
+                };
+    } else {
+        c_filter = undefined;
+        }
+    let count = ui.config.posPpage;
+    let field = ui.config.fi;
+    let direction = ui.config.di;
+    return [c_filter, count, field, direction]
+    }
+
+
 export function init_first(app) {
     //console.log('app', app);
     let delay = app.config.searchDelay;

@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, checkKey} from "../views/globals";
+import {last_page, checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 
@@ -21,7 +21,7 @@ export default class LinksViewSpr extends JetView{
                         this._filter_timer=window.setTimeout(function(){
                             let ui = webix.$$("__tt");
                             if (ui) {
-                                let params = getParams(ui);
+                                let params = getDtParams(ui);
                                 get_data({
                                     view: "__tt",
                                     navBar: "__nav_l",
@@ -34,10 +34,8 @@ export default class LinksViewSpr extends JetView{
                                     filter: params[0]
                                     });
                                 };
-                            //if (ui) ui.filterByAll();
                             },webix.ui.datafilter.textWaitDelay);
                         
-                        //console.log('val', $$("__tt").getFilter('dt').getValue());
                         this.getParentView().getParentView().hide();
                         }
                     };
@@ -57,34 +55,7 @@ export default class LinksViewSpr extends JetView{
             return webix.Date.dateToStr("%d-%m-%Y")(d)
             };
 
-        function getParams(ui) {
-            let c_filter = {
-                        //'c_tovar'   : $$(ui).getFilter('c_tovar').value,
-                        'c_vnd'     : $$(ui).getFilter('c_vnd').value,
-                        'c_zavod'   : $$(ui).getFilter('c_zavod').value,
-                        'id_tovar'  : $$(ui).getFilter('id_tovar').value,
-                        'dt'        : $$(ui).getFilter('dt').getValue(),
-                        'owner'     : $$(ui).getFilter('owner').value,
-                        };
-            console.log('c_filter', c_filter);
-            let count = ui.config.posPpage;
-            let field = ui.config.fi;
-            let direction = ui.config.di;
-            return [c_filter, count, field, direction]
-            }
-
         webix.ui.datafilter.filterDateRange = webix.extend ({
-            //refresh:function(master, node, value){
-                //if (master.$destructed) return;
-                //var select = webix.$$(value.richselect);
-                //node.$webix = value.richselect;
-                //node.style.marginLeft = "-10px";
-                //value.compare = value.compare || this.compare;
-                //value.prepare = value.prepare || this.prepare;
-                //master.registerFilter(node, value, this);
-                ////reattaching node back to master container
-                //node.firstChild.appendChild(select.$view.parentNode);
-                //},
             compare:function(a, b){
                 return true;
                 },
@@ -103,7 +74,7 @@ export default class LinksViewSpr extends JetView{
                 this._filter_timer=window.setTimeout(function(){
                     let ui = webix.$$(id);
                     if (ui) {
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_l",
@@ -146,38 +117,38 @@ export default class LinksViewSpr extends JetView{
                         {id: "c_tovar", fillspace: true, //sort: 'server',
                             template:"<span>{common.treetable()} #c_tovar#</span>",
                             header: [{text: "Наименование"},
-                            ]
+                            ],
+                            headermenu:false,
                             },
                         {id: "c_zavod", width: 200,
                             header: [{text: "Производитель"},
-                            {content: "customFilterLnkSpr"},
+                            //{content: "customFilterLnkSpr"},
                             ]
                             },
                         {id: "c_vnd", width: 160,
                             header: [{text: "Поставщик"},
-                            {content: "customFilterLnkSpr"},
+                            //{content: "customFilterLnkSpr"},
                             ]
                             },
                         {id: "id_tovar", width: 100,
                             header: [{text: "Код"},
-                            {content: "customFilterLnkSpr"},
+                            //{content: "customFilterLnkSpr"},
                             ]
                             },
                         {id: "dt", width: 200,
                             format: dt_formating,
-                            header: [{text: "Дата"}, // сделать диапазон дат
-                            //{content: "dateRangeFilter", inputConfig:{format:webix.i18n.fullDateFormatStr},
-                            {content: "filterDateRange",
-                                inputConfig:{format:dt_formating, width: 180,},
-                                suggest:{
-                                    view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
-                                    },
-                                },
+                            header: [{text: "Дата"},
+                            //{content: "filterDateRange",
+                                //inputConfig:{format:dt_formating, width: 180,},
+                                //suggest:{
+                                    //view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
+                                    //},
+                                //},
                             ]
                             },
                         {id: "owner", width: 100,
-                            header: [{text: "Создал"}, //сделать выпадающий список
-                            {content: "customFilterLnkSpr"},
+                            header: [{text: "Создал"}, 
+                            //{content: "customFilterLnkSpr"},
                             ]
                             }
                         ],
@@ -195,22 +166,22 @@ export default class LinksViewSpr extends JetView{
                                 }
                             },
                         onBeforeSort: (field, direction) => {
-                            let th = this;
                             let start = $$("__tt").config.startPos;
-                            let count = $$("__tt").config.posPpage;
-                            $$("__tt").config.fi = field;
-                            $$("__tt").config.di = direction;
-                            get_data({
-                                th: this,
-                                view: "__tt",
-                                navBar: "__nav_l",
-                                start: start,
-                                count: count,
-                                searchBar: "_link_search",
-                                method: "getSprLnks",
-                                field: field,
-                                direction: direction
-                                });
+                            let ui = webix.$$("__tt");
+                            if (ui) {
+                                let params = getDtParams(ui);
+                                get_data({
+                                    view: "__tt",
+                                    navBar: "__nav_l",
+                                    start: start,
+                                    count: params[1],
+                                    searchBar: "_link_search",
+                                    method: "getSprLnks",
+                                    field: params[2],
+                                    direction: params[3],
+                                    filter: params[0]
+                                    });
+                                };
                             },
                         onItemDblClick: function (item, ii, iii) {
                             let level = this.getSelectedItem().$level;
@@ -262,20 +233,21 @@ export default class LinksViewSpr extends JetView{
                             label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                             click: () => {
                                 let start = 1;
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getSprLnks",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__tt");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__tt",
+                                        navBar: "__nav_l",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getSprLnks",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
                                 }
                             },
                         {view: "button", type: 'htmlbutton',
@@ -283,20 +255,22 @@ export default class LinksViewSpr extends JetView{
                             click: () => {
                                 let start = $$("__tt").config.startPos - $$("__tt").config.posPpage;
                                 start = (start < 0) ? 1 : start;
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getSprLnks",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__tt");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__tt",
+                                        navBar: "__nav_l",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getSprLnks",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
+
                                 }
                             },
                         {view: "label", label: "Страница 1 из 1", width: 200},
@@ -305,40 +279,44 @@ export default class LinksViewSpr extends JetView{
                             click: () => {
                                 let start = $$("__tt").config.startPos + $$("__tt").config.posPpage;
                                 start = (start > $$("__tt").config.totalPos) ? last_page("__tt"): start;
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getSprLnks",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__tt");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__tt",
+                                        navBar: "__nav_l",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getSprLnks",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
+
                                 }
                             },
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                             click: () => {
                                 let start = last_page("__tt");
-                                let count = $$("__tt").config.posPpage;
-                                let field = $$("__tt").config.fi;
-                                let direction = $$("__tt").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__tt",
-                                    navBar: "__nav_l",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getSprLnks",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__tt");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__tt",
+                                        navBar: "__nav_l",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getSprLnks",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
+
                                 }
                             },
                         {},
@@ -348,14 +326,7 @@ export default class LinksViewSpr extends JetView{
                 ],
             }
         }
-        
-    show(new_head){
-        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
-        }
-    hide(){
-        this.getRoot().hide()
-        }
+
     init() {
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);

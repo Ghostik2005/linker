@@ -5,10 +5,10 @@ import History from "../views/history";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, checkKey} from "../views/globals";
+import {last_page, checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
-import LinksViewSpr from "../views/links_form_spr";
-import LinksViewLnk from "../views/links_form_lnk";
+//import LinksViewSpr from "../views/links_form_spr";
+//import LinksViewLnk from "../views/links_form_lnk";
 
 export default class LinksView extends JetView{
     config(){
@@ -21,16 +21,17 @@ export default class LinksView extends JetView{
             }
         
         function delLnk() {
-            let cid = $$(getActDt).getSelectedItem().id;
-            $$(getActDt).remove(cid);
+            let cid = $$(getActDt()).getSelectedItem().id;
+            $$(getActDt()).remove(cid);
             }
         
-        var getActView = (this.app.config.lch===1) ? {$subview: LinksViewSpr} : {$subview: LinksViewLnk};
+        var getActView = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         //var getActView = {$subview: LinksViewSpr};
 
         var getActDt = function() {
-            if ($$("_spr_ch").getValue() === 1) return "__tt";
-            else return "__ttl";
+            //if ($$("_spr_ch").getValue() === 1) return "__tt";
+            //else return "__ttl";
+            return ($$("_spr_ch").getValue() === 1) ? "__tt" : "__ttl"
             }
 
         var getNavL = function() {
@@ -49,22 +50,22 @@ export default class LinksView extends JetView{
             height: document.documentElement.clientHeight * 0.8,
             modal: true,
             on: {
-                onShow: () => {
-                        $$("_link_search").focus();
-                        get_data({
-                            th: this,
-                            view: getActDt(),
-                            navBar: getNavL(),
-                            start: 1,
-                            count: 20,
-                            searchBar: "_link_search",
-                            method: getMethod(),
-                            field: 'c_tovar',
-                            direction: 'asc'
-                            });
-                    },
+                //onShow: () => {
+                        //$$("_link_search").focus();
+                        //get_data({
+                            //th: this,
+                            //view: getActDt(),
+                            //navBar: getNavL(),
+                            //start: 1,
+                            //count: 20,
+                            //searchBar: "_link_search",
+                            //method: getMethod(),
+                            //field: 'c_tovar',
+                            //direction: 'asc'
+                            //});
+                    //},
                 onHide: () => {
-                    $$(getActDt).unselectAll();
+                    $$(getActDt()).unselectAll();
                     $$("_break").disable();
                     $$("_spr_search").focus();
                     }
@@ -96,21 +97,21 @@ export default class LinksView extends JetView{
                                         clearTimeout(this.config._keytimed);
                                         if (checkKey(code)) {
                                             this.config._keytimed = setTimeout(function () {
-                                            let th = this.$scope;
-                                            let count = $$(getActDt).config.posPpage;
-                                            let field = $$(getActDt).config.fi;
-                                            let direction = $$(getActDt).config.di;
-                                            get_data({
-                                                th: th,
-                                                view: getActDt(),
-                                                navBar: getNavL(),
-                                                start: 1,
-                                                count: count,
-                                                searchBar: "_link_search",
-                                                method: getMethod(),
-                                                field: field,
-                                                direction: direction
-                                                });
+                                            let ui = webix.$$(getActDt());
+                                            if (ui) {
+                                                let params = getDtParams(ui);
+                                                get_data({
+                                                    view: getActDt(),
+                                                    navBar: getNavL(),
+                                                    start: 1,
+                                                    count: params[1],
+                                                    searchBar: "_link_search",
+                                                    method: getMethod(),
+                                                    field: params[2],
+                                                    direction: params[3],
+                                                    filter: params[0]
+                                                    });
+                                                    }
                                                 }, this.$scope.app.config.searchDelay);
                                             }
                                         }
@@ -119,50 +120,45 @@ export default class LinksView extends JetView{
                             {view: "button", type: 'htmlbutton', width: 40,
                                 label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                                 click: () => {
-                                    let hist = webix.storage.session.get(getActDt);
+                                    let hist = webix.storage.session.get(getActDt());
                                     this.pophistory.show(hist, $$("_link_search"));
                                     },
                                 },
                             {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: this.app.config.lch, disabled: !true, width: 150, id: "_spr_ch",
                                 on: {
                                     onChange: () => {
+                                        $$("_link_search").setValue('');
                                         let value = $$("_spr_ch").getValue();
                                         if (value===0) {
                                             this.app.config.lch = 0
-                                            //getActView = {$subview: LinksViewLnk};
+                                            this.getRoot().getHead().getChildViews()[0].setValue('Поиск по связкам');
                                             }
                                         else if (value===1) {
                                             this.app.config.lch = 1
-                                            //getActView = {$subview: LinksViewSpr};
+                                            this.getRoot().getHead().getChildViews()[0].setValue('Поиск по эталонам');
                                             }
-                                        console.log('this', this)
-                                        this.init();
+                                        this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
                                         }
                                     }
                                 },
                             {view:"button", type: 'htmlbutton', id: "_break", disabled: true,
                                 label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
                                 click: () => {
-                                    $$(getActDt).callEvent("onItemDblClick");
+                                    $$(getActDt()).callEvent("onItemDblClick");
                                     }
                                 },
                             ]},
                         {height: 10},
-                        //{$subview: true},
-                        getActView,
+                        {$subview: true},
                     ],
                 }
             }
         }
         
-    show(new_head){
-        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        //this._urlChange('../LinksViewLnk');
+    showWindow(new_head){
+        this.getRoot().getHead().getChildViews()[0].setValue((this.app.config.lch===1) ? 'Поиск по эталонам' : 'Поиск по связкам');
         this.getRoot().show();
-        console.log('this', this);
-        console.log('this.root', this.getRoot());
-        
-        //this.getRoot().show(LinksViewLnk)
+        this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
         }
     hide(){
         this.getRoot().hide()

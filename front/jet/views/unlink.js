@@ -12,9 +12,8 @@ export default class UnlinkView extends JetView{
             let user = th.app.config.user;
             let url = th.app.config.r_url + pars.command;
             let type = pars.type;
-            let action = act;
             var callback = pars.callback;
-            let params = {"user": user, "sh_prc": sh_prc, "action": action,};
+            let params = {"user": user, "sh_prc": sh_prc, "action": act};
             th.hide()
             if (type === "sync") {
                 console.log('sync');

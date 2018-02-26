@@ -7,6 +7,15 @@ import ConfirmView from "../views/yes-no";
 
 export default class SkippedView extends JetView{
     config(){
+        
+        function dt_formating(d) {
+            return webix.Date.dateToStr("%d-%m-%Y")(d)
+            };
+
+        function dt_formating_sec(d) {
+            return webix.Date.dateToStr("%d-%m-%Y  %G:%i:%s")(d)
+            };
+            
         function delSkip () {
             let item_id = $$("__dt_s").getSelectedId()
             $$("__dt_s").remove(item_id)
@@ -14,9 +23,9 @@ export default class SkippedView extends JetView{
 
         function getParams(ui) {
             let c_filter = {
-                        'c_tovar'   : $$(ui).getFilter('c_tovar').value,
-                        'c_vnd'     : $$(ui).getFilter('c_vnd').value,
-                        'c_zavod'   : $$(ui).getFilter('c_zavod').value,
+                        'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
+                        'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+                        'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
                         }
             let count = ui.config.posPpage;
             let field = ui.config.fi;
@@ -224,6 +233,18 @@ export default class SkippedView extends JetView{
                         {content: "customFilterSkip"},
                         ]
                     },
+                {id: "dt", width: 200, //sort: 'server',
+                    format: dt_formating_sec,
+                    css: 'center_p',
+                    header: [{text: "Дата изменения"}, 
+                    //{content: "filterDateRange",
+                        //inputConfig:{format:dt_formating, width: 180,},
+                        //suggest:{
+                            //view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
+                            //},
+                        //},
+                    ]
+                    },
                 ],
             on: {
                 "data->onParse":function(i, data){
@@ -305,6 +326,7 @@ export default class SkippedView extends JetView{
                         };
                     },
                 onHide: () => {
+                    $$("__dt_s").clearAll();
                     $$("_spr_search").focus();
                     }
                 },

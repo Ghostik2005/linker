@@ -4,13 +4,12 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, checkKey} from "../views/globals";
+import {last_page, checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 
 export default class LinksViewLnk extends JetView{
     config(){
-
         webix.protoUI({
             name: "daterange",
             _footer_row: function(config, width){
@@ -21,7 +20,7 @@ export default class LinksViewLnk extends JetView{
                         this._filter_timer=window.setTimeout(function(){
                             let ui = webix.$$("__ttl");
                             if (ui) {
-                                let params = getParams(ui);
+                                let params = getDtParams(ui);
                                 get_data({
                                     view: "__ttl",
                                     navBar: "__nav_ll",
@@ -34,10 +33,7 @@ export default class LinksViewLnk extends JetView{
                                     filter: params[0]
                                     });
                                 };
-                            //if (ui) ui.filterByAll();
                             },webix.ui.datafilter.textWaitDelay);
-                        
-                        //console.log('val', $$("__ttl").getFilter('dt').getValue());
                         this.getParentView().getParentView().hide();
                         }
                     };
@@ -52,39 +48,16 @@ export default class LinksViewLnk extends JetView{
                 return row;
                 },
             }, webix.ui.daterange);
+
+        function dt_formating_sec(d) {
+            return webix.Date.dateToStr("%d-%m-%Y  %G:%i:%s")(d)
+            };
             
         function dt_formating(d) {
             return webix.Date.dateToStr("%d-%m-%Y")(d)
             };
 
-        function getParams(ui) {
-            let c_filter = {
-                        //'c_tovar'   : $$(ui).getFilter('c_tovar').value,
-                        'c_vnd'     : $$(ui).getFilter('c_vnd').value,
-                        'c_zavod'   : $$(ui).getFilter('c_zavod').value,
-                        'id_tovar'  : $$(ui).getFilter('id_tovar').value,
-                        'dt'        : $$(ui).getFilter('dt').getValue(),
-                        'owner'     : $$(ui).getFilter('owner').value,
-                        };
-            console.log('c_filter', c_filter);
-            let count = ui.config.posPpage;
-            let field = ui.config.fi;
-            let direction = ui.config.di;
-            return [c_filter, count, field, direction]
-            }
-
         webix.ui.datafilter.filterDateRange = webix.extend ({
-            //refresh:function(master, node, value){
-                //if (master.$destructed) return;
-                //var select = webix.$$(value.richselect);
-                //node.$webix = value.richselect;
-                //node.style.marginLeft = "-10px";
-                //value.compare = value.compare || this.compare;
-                //value.prepare = value.prepare || this.prepare;
-                //master.registerFilter(node, value, this);
-                ////reattaching node back to master container
-                //node.firstChild.appendChild(select.$view.parentNode);
-                //},
             compare:function(a, b){
                 return true;
                 },
@@ -103,7 +76,7 @@ export default class LinksViewLnk extends JetView{
                 this._filter_timer=window.setTimeout(function(){
                     let ui = webix.$$(id);
                     if (ui) {
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_ll",
@@ -128,7 +101,7 @@ export default class LinksViewLnk extends JetView{
         
         return {view: "layout",
             rows: [
-                {view: "treetable",
+                {view: "datatable",
                     id: "__ttl",
                     startPos: 1,
                     posPpage: 20,
@@ -143,12 +116,26 @@ export default class LinksViewLnk extends JetView{
                     di: 'asc',
                     old_stri: " ",
                     columns: [
-                        {id: "c_tovar", fillspace: true, //sort: 'server',
-                            template:"<span>{common.treetable()} #c_tovar#</span>",
-                            header: [{text: "Наименование"},
+                        {id: "id_tovar", width: 100, hidden: true,
+                            header: [{text: "Код"},
+                            {content: "customFilterLnkSpr"},
                             ]
                             },
-                        {id: "c_zavod", width: 200,
+                        {id: "c_tovar", fillspace: true, sort: 'server',
+                            template:"<span>{common.treetable()} #c_tovar#</span>",
+                            header: [{text: "Наименование"},
+                            ],
+                            headermenu:false,
+                            },
+                        {id: "id_spr", width: 150, hidden: true,
+                            header: [{text: "id_spr"},
+                            ]
+                            },
+                        {id: "spr", width: 350,
+                            header: [{text: "Эталон"},
+                            ]
+                            },
+                        {id: "c_zavod", width: 200, hidden: true,
                             header: [{text: "Производитель"},
                             {content: "customFilterLnkSpr"},
                             ]
@@ -158,13 +145,9 @@ export default class LinksViewLnk extends JetView{
                             {content: "customFilterLnkSpr"},
                             ]
                             },
-                        {id: "id_tovar", width: 100,
-                            header: [{text: "Код"},
-                            {content: "customFilterLnkSpr"},
-                            ]
-                            },
-                        {id: "dt", width: 200,
-                            format: dt_formating,
+                        {id: "dt", width: 200, sort: 'server',
+                            format: dt_formating_sec,
+                            css: 'center_p',
                             header: [{text: "Дата изменения"}, 
                             {content: "filterDateRange",
                                 inputConfig:{format:dt_formating, width: 180,},
@@ -174,8 +157,8 @@ export default class LinksViewLnk extends JetView{
                                 },
                             ]
                             },
-                        {id: "owner", width: 100,
-                            header: [{text: "Создал"}, //сделать выпадающий список
+                        {id: "owner", width: 100, sort: 'server',
+                            header: [{text: "Создал"}, 
                             {content: "customFilterLnkSpr"},
                             ]
                             }
@@ -186,55 +169,56 @@ export default class LinksViewLnk extends JetView{
                             },
                         onBeforeRender: function() {
                             webix.extend(this, webix.ProgressBar);
-                            if (!this.count) {
-                                this.showProgress({
-                                    type: "icon",
-                                    icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                                    });
+                            //if (!this.count) {
+                                //this.showProgress({
+                                    //type: "icon",
+                                    //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                                    //});
+                                //}
+                            },
+                        onResize: function () {
+                            if ($$("__ttl").isColumnVisible('dt')) {
+                                console.log($$("__ttl").getFilter('dt'));
+                                $$("__ttl").getFilter('dt').setValue({'start':new Date()});
+                                }
+                            if ($$("__ttl").isColumnVisible('owner')) {
+                                if  (this.$scope.app.config.role !== this.$scope.app.config.admin) {
+                                    $$("__ttl").getFilter('owner').value = this.$scope.app.config.user;;
+                                    $$("__ttl").getFilter('owner').readOnly = true;
+                                } else {
+                                    $$("__ttl").getFilter('owner').readOnly = false;
+                                    }
                                 }
                             },
                         onBeforeSort: (field, direction) => {
-                            let th = this;
                             let start = $$("__ttl").config.startPos;
-                            let count = $$("__ttl").config.posPpage;
                             $$("__ttl").config.fi = field;
                             $$("__ttl").config.di = direction;
-                            get_data({
-                                th: this,
-                                view: "__ttl",
-                                navBar: "__nav_ll",
-                                start: start,
-                                count: count,
-                                searchBar: "_link_search",
-                                method: "getLnkSprs",
-                                field: field,
-                                direction: direction
-                                });
-                            },
-                        onItemDblClick: function (item, ii, iii) {
-                            let level = this.getSelectedItem().$level;
-                            if (level === 1) {
-                                if (this.$scope.app.config.role === this.$scope.app.config.admin) {
-                                    item = item.row;
-                                    item = get_spr(this.$scope, item);
-                                    item["s_name"] = "Страна: " + item.c_strana;
-                                    item["t_name"] = "Название товара: " + item.c_tovar;
-                                    item["v_name"] = "Производитель: " + item.c_zavod;
-                                    item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_link_search"), item);
-                                } else {
-                                    webix.message({"type": "error", "text": "Редактирование запрещено"})
-                                    };
-                            } else if (level === 2) {
-                                let sh_prc = $$("__ttl").getSelectedItem().id;
-                                let params = {};
-                                params["action"] = "return";
-                                params["command"] = "?delLnk";
-                                params["sh_prc"] = sh_prc;
-                                params["type"] = "async";
-                                params["callback"] = delLnk; //обновление списка
-                                this.$scope.popunlink.show("Причина разрыва связкии?", params);
+                            let ui = webix.$$("__ttl");
+                            if (ui) {
+                                let params = getDtParams(ui);
+                                get_data({
+                                    view: "__ttl",
+                                    navBar: "__nav_ll",
+                                    start: start,
+                                    count: params[1],
+                                    searchBar: "_link_search",
+                                    method: "getLnkSprs",
+                                    field: params[2],
+                                    direction: params[3],
+                                    filter: params[0]
+                                    });
                                 };
+                            },
+                        onItemDblClick: (item, ii, iii) => {
+                            let sh_prc = $$("__ttl").getSelectedItem().id;
+                            let params = {};
+                            //params["action"] = "return";
+                            params["command"] = "?delLnk";
+                            params["sh_prc"] = sh_prc;
+                            params["type"] = "async";
+                            params["callback"] = delLnk;
+                            this.popunlink.show("Причина разрыва связкии?", params);
                             },
                         onKeyPress: function(code, e){
                             if (13 === code) {
@@ -244,12 +228,7 @@ export default class LinksViewLnk extends JetView{
                         onBeforeSelect: function (item) {
                             },
                         onAfterSelect: function (item) {
-                            let level = this.getSelectedItem().$level;
-                            if (level === 1) {
-                                $$("_break").disable();
-                            } else if (level === 2) {
-                                $$("_break").enable();
-                                };
+                            $$("_break").enable();
                             }
                         },
                     },
@@ -261,20 +240,21 @@ export default class LinksViewLnk extends JetView{
                             label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                             click: () => {
                                 let start = 1;
-                                let count = $$("__ttl").config.posPpage;
-                                let field = $$("__ttl").config.fi;
-                                let direction = $$("__ttl").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__ttl",
-                                    navBar: "__nav_ll",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getLnkSprs",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__ttl");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__ttl",
+                                        navBar: "__nav_ll",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getLnkSprs",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
                                 }
                             },
                         {view: "button", type: 'htmlbutton',
@@ -282,20 +262,22 @@ export default class LinksViewLnk extends JetView{
                             click: () => {
                                 let start = $$("__ttl").config.startPos - $$("__ttl").config.posPpage;
                                 start = (start < 0) ? 1 : start;
-                                let count = $$("__ttl").config.posPpage;
-                                let field = $$("__ttl").config.fi;
-                                let direction = $$("__ttl").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__ttl",
-                                    navBar: "__nav_ll",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getLnkSprs",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__ttl");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__ttl",
+                                        navBar: "__nav_ll",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getLnkSprs",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
+                                    
                                 }
                             },
                         {view: "label", label: "Страница 1 из 1", width: 200},
@@ -304,40 +286,42 @@ export default class LinksViewLnk extends JetView{
                             click: () => {
                                 let start = $$("__ttl").config.startPos + $$("__ttl").config.posPpage;
                                 start = (start > $$("__ttl").config.totalPos) ? last_page("__ttl"): start;
-                                let count = $$("__ttl").config.posPpage;
-                                let field = $$("__ttl").config.fi;
-                                let direction = $$("__ttl").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__ttl",
-                                    navBar: "__nav_ll",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getLnkSprs",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__ttl");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__ttl",
+                                        navBar: "__nav_ll",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getLnkSprs",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
                                 }
                             },
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
                             click: () => {
                                 let start = last_page("__ttl");
-                                let count = $$("__ttl").config.posPpage;
-                                let field = $$("__ttl").config.fi;
-                                let direction = $$("__ttl").config.di;
-                                get_data({
-                                    th: this,
-                                    view: "__ttl",
-                                    navBar: "__nav_ll",
-                                    start: start,
-                                    count: count,
-                                    searchBar: "_link_search",
-                                    method: "getLnkSprs",
-                                    field: field,
-                                    direction: direction
-                                    });
+                                let ui = webix.$$("__ttl");
+                                if (ui) {
+                                    let params = getDtParams(ui);
+                                    get_data({
+                                        view: "__ttl",
+                                        navBar: "__nav_ll",
+                                        start: start,
+                                        count: params[1],
+                                        searchBar: "_link_search",
+                                        method: "getLnkSprs",
+                                        field: params[2],
+                                        direction: params[3],
+                                        filter: params[0]
+                                        });
+                                    };
                                 }
                             },
                         {},
@@ -347,14 +331,7 @@ export default class LinksViewLnk extends JetView{
                 ],
             }
         }
-        
-    show(new_head){
-        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
-        }
-    hide(){
-        this.getRoot().hide()
-        }
+
     init() {
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);

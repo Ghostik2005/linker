@@ -62,7 +62,7 @@ export default class TopmenuView extends JetView{
                         {view:"button", id: '_links', type: 'htmlbutton',
                             label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки (Ctrl+L)</span>", width: 210,
                             click: () => {
-                                this.poplinks.show("Линки");
+                                this.poplinks.showWindow("Линки");
                                 }
                             },
                     ]},

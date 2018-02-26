@@ -19,8 +19,14 @@ import psycopg2
 import zlib
 from io import BytesIO
 from libs.connect import fb_local
+
 """
 
+
+"""
+
+
+"""
 //Firebird
 CREATE TRIGGER tr_Update ON Contractor
 AFTER UPDATE
@@ -67,96 +73,6 @@ END
 
 """
 
-
-"""
-ALTER TABLE PRC ADD 
-IN_WORK Integer NOT NULL;
-COMMIT;
-UPDATE PRC 
-SET IN_WORK = '-1' 
-WHERE IN_WORK IS NULL;
-commit;
-
-create ASC 
-INDEX IDX_ID_WORK on PRC 
-(IN_WORK);
-COMMIT;
-
-CREATE TABLE R_LNK
-(
-  SH_PRC TSTR32 NOT NULL,
-  ID_SPR TINT32,
-  ID_VND TINT32,
-  ID_TOVAR TSTR32,
-  C_TOVAR TSTR255,
-  C_ZAVOD TSTR255,
-  DT TDATETIME,
-  OWNER TSTR255,
-  DT_R TDATETIME,
-  USER_R TINT32,
-  CONSTRAINT PK_R_LNK PRIMARY KEY (SH_PRC)
-);
-commit;
-
-CREATE INDEX R_LNK_IDX1 ON R_LNK (ID_SPR);
-CREATE INDEX R_LNK_IDX2 ON R_LNK (ID_VND,ID_TOVAR);
-CREATE DESCENDING INDEX R_LNK_IDX3 ON R_LNK (DT);
-GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
- ON R_LNK TO  SYSDBA WITH GRANT OPTION;
-commit;
-
-CREATE INDEX IDX_SPR_ZAVOD1 ON SPR_ZAVOD (C_ZAVOD);
-CREATE INDEX IDX_DV1 ON DV (ACT_INGR);
-commit;
-
-ALTER TABLE LNK ADD CHANGE_DT Timestamp;
-ALTER TABLE PRC ADD CHANGE_DT Timestamp;
-commit;
-
-SET TERM ^ ;
-ALTER TRIGGER LNK_BI0 ACTIVE
-BEFORE INSERT POSITION 0
-AS
-begin
-  if (new.dt is Null) then
-    new.dt = current_timestamp;
-    new.CHANGE_DT = current_timestamp;
-  new.newflag = 1;
-end^
-SET TERM ; ^
-commit;
-
-SET TERM ^ ;
-ALTER TRIGGER PRC_BI0 ACTIVE
-BEFORE INSERT POSITION 0
-AS
-begin
-  new.dt = current_timestamp;
-  new.CHANGE_DT = current_timestamp;
-end^
-SET TERM ; ^
-commit;
-
-SET TERM ^;
-CREATE TRIGGER LNK_BU FOR LNK
-ACTIVE BEFORE UPDATE POSITION 0
-AS
-BEGIN
-    new.CHANGE_DT = current_timestamp;
-END^
-SET TERM ;^
-commit;
-
-SET TERM ^;
-CREATE TRIGGER PRC_BU FOR PRC
-ACTIVE BEFORE UPDATE POSITION 0
-AS
-BEGIN
-    new.CHANGE_DT = current_timestamp;
-END^
-SET TERM ;^
-commit;
-"""
 
 class API:
     """
@@ -373,7 +289,11 @@ class API:
                 table = 'u'
                 field = '"USER"'
             field = '.'.join([table, field])
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, v.C_VND
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, v.C_VND,
+            CASE 
+            WHEN r.CHANGE_DT is null THEN r.DT
+            ELSE r.CHANGE_DT
+            END as ch_date
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
             INNER JOIN VND v on (r.ID_VND = v.ID_VND)
@@ -395,7 +315,9 @@ class API:
                     "c_zavod" : row[6],
                     "id_org"  : row[7],
                     "c_index" : row[8],
-                    "c_vnd"   : row[9]
+                    "c_vnd"   : row[9],
+                    "dt"      : str(row[10])
+                    
                 }
                 _return.append(r)
             sql = """select count(*)
@@ -1802,7 +1724,14 @@ LEFT OUTER join
     inner join CLASSIFIER c5 on (g5.CD_GROUP = c5.CD_GROUP) where c5.IDX_GROUP = 5
     ) on (r.ID_SPR = cc5)
 WHERE %s
-            """ % stri
+            """ % stri #old value
+
+
+            sql = """
+SELECT count(*)
+FROM SPR r
+WHERE %s
+            """ % stri #new value (try to optimize)
             opt = ()
             tot = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """
@@ -1991,6 +1920,7 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
                 dt = filt.get('dt')
+                print(dt)
                 if dt:
                     pars['start_dt'] = dt.get('start')
                     pars['end_dt'] = dt.get('end')
@@ -2041,7 +1971,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     from spr r
                     WHERE %s 
             """ % stri
-            #print(sql)
             opt = ()
             count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
@@ -2097,16 +2026,20 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
     def getLnkSprs(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
-            start_p = int( params.get('start', self.start))
+            user = params.get('user')
+            start_p = int(params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
             start_p = 1 if start_p == 0 else start_p
             field = params.get('field', 'c_tovar')
+            if field == 'dt':
+                field = 'ch_date'
+            else:
+                field = 'r.' + field
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
             exclude = []
-            
             filt = params.get('c_filter')
             pref = 'and %s'
             stri_1 = ""
@@ -2115,7 +2048,13 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                 pars['c_vnd'] = filt.get('c_vnd')
                 pars['c_zavod'] = filt.get('c_zavod')
                 pars['c_tovar'] = filt.get('c_tovar')
-                pars['c_user'] = filt.get('c_user')
+                pars['owner'] = filt.get('owner')
+                if not pars['owner']:
+                    sql = 'SELECT r.ID_ROLE FROM USERS r WHERE r."USER" = ?'
+                    opt = (user,)
+                    id_role = self.db.request({"sql": sql, "options": opt})[0][0]
+                    if id_role not in (10, 34):
+                        pars['owner'] = user
                 dt = filt.get('dt')
                 if dt:
                     pars['start_dt'] = dt.get('start')
@@ -2126,13 +2065,13 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                     s = " (CAST(r.CHANGE_DT as DATE) = '%s' or CAST(r.DT as DATE) = '%s')" % (pars['start_dt'], pars['start_dt'])
                     ssss.append(pref % s)
                 elif pars['start_dt'] and pars['end_dt']:
-                    s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= '{1}') or (r.DT >= '{0}' AND r.DT <= '{1}'))".format(pars['start_dt'], pars['start_dt'])
+                    s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= '{1}') or (r.DT >= '{0}' AND r.DT <= '{1}'))".format(pars['start_dt'], pars['end_dt'])
                     ssss.append(pref % s)
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
                     ssss.append(pref % s)
-                if pars['c_user']:
-                    s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
+                if pars['owner']:
+                    s = "lower(r.OWNER) like lower('%" + pars['owner'] + "%')"
                     ssss.append(pref % s)
                 if pars['c_tovar']:
                     s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
@@ -2154,12 +2093,17 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
 
             sql = """select count(*)
                     from LNK r
+                    LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)
                     WHERE %s 
             """ % stri
             opt = ()
             count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """
-SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT, r.ID_SPR, s.C_TOVAR
+SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT, r.ID_SPR, s.C_TOVAR,
+    CASE 
+    WHEN r.CHANGE_DT is null THEN r.DT
+    ELSE r.CHANGE_DT
+    END as ch_date
 FROM LNK r 
 LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)
 LEFT OUTER JOIN SPR s on (s.ID_SPR = r.ID_SPR)
@@ -2169,6 +2113,7 @@ rows ? to ?
             """.format(stri, field, direction)
             opt = (start_p, end_p)
             _return = []
+            print(sql)
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
             for row in result:
@@ -2178,7 +2123,7 @@ rows ? to ?
                     "id_tovar"    : row[2],
                     "c_tovar"     : row[3],
                     "c_zavod"     : row[4],
-                    "dt"          : str(row[7] or row[5]),
+                    "dt"          : str(row[10]),
                     "owner"       : row[6],
                     "id_spr"      : row[8],
                     "spr"         : row[9]
@@ -2777,3 +2722,103 @@ class UDPSocket(socket.socket):
 
     def read(self, n=8192):
         return self.recv(n)
+
+
+###########old sqls
+"""
+ALTER TABLE PRC ADD 
+IN_WORK Integer NOT NULL;
+COMMIT;
+UPDATE PRC 
+SET IN_WORK = '-1' 
+WHERE IN_WORK IS NULL;
+commit;
+
+create ASC 
+INDEX IDX_ID_WORK on PRC 
+(IN_WORK);
+COMMIT;
+
+CREATE TABLE R_LNK
+(
+  SH_PRC TSTR32 NOT NULL,
+  ID_SPR TINT32,
+  ID_VND TINT32,
+  ID_TOVAR TSTR32,
+  C_TOVAR TSTR255,
+  C_ZAVOD TSTR255,
+  DT TDATETIME,
+  OWNER TSTR255,
+  DT_R TDATETIME,
+  USER_R TINT32,
+  CONSTRAINT PK_R_LNK PRIMARY KEY (SH_PRC)
+);
+commit;
+
+CREATE INDEX R_LNK_IDX1 ON R_LNK (ID_SPR);
+CREATE INDEX R_LNK_IDX2 ON R_LNK (ID_VND,ID_TOVAR);
+CREATE DESCENDING INDEX R_LNK_IDX3 ON R_LNK (DT);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON R_LNK TO  SYSDBA WITH GRANT OPTION;
+commit;
+
+CREATE INDEX IDX_SPR_ZAVOD1 ON SPR_ZAVOD (C_ZAVOD);
+CREATE INDEX IDX_DV1 ON DV (ACT_INGR);
+commit;
+
+ALTER TABLE LNK ADD CHANGE_DT Timestamp;
+ALTER TABLE PRC ADD CHANGE_DT Timestamp;
+commit;
+
+SET TERM ^ ;
+ALTER TRIGGER LNK_BI0 ACTIVE
+BEFORE INSERT POSITION 0
+AS
+begin
+  if (new.dt is Null) then
+    new.dt = current_timestamp;
+    new.CHANGE_DT = current_timestamp;
+  new.newflag = 1;
+end^
+SET TERM ; ^
+commit;
+
+SET TERM ^ ;
+ALTER TRIGGER PRC_BI0 ACTIVE
+BEFORE INSERT POSITION 0
+AS
+begin
+  new.dt = current_timestamp;
+  new.CHANGE_DT = current_timestamp;
+end^
+SET TERM ; ^
+commit;
+
+SET TERM ^;
+CREATE TRIGGER LNK_BU FOR LNK
+ACTIVE BEFORE UPDATE POSITION 0
+AS
+BEGIN
+    new.CHANGE_DT = current_timestamp;
+END^
+SET TERM ;^
+commit;
+
+SET TERM ^;
+CREATE TRIGGER PRC_BU FOR PRC
+ACTIVE BEFORE UPDATE POSITION 0
+AS
+BEGIN
+    new.CHANGE_DT = current_timestamp;
+END^
+SET TERM ;^
+commit;
+
+CREATE INDEX IDX_LNK1 ON LNK
+  (C_TOVAR);
+CREATE DESCENDING INDEX IDX_LNK2 ON LNK
+  (C_TOVAR);
+CREATE DESCENDING INDEX IDX_LNK3 ON LNK
+  (CHANGE_DT);
+commit;
+"""

@@ -27,7 +27,6 @@ export default class History extends JetView{
                         editable: false,
                         on: {
                             onItemDblClick: (item) => {
-                                console.log('item', item);
                                 this.$$("_tb").config.searchBar.setValue(item);
                                 this.getRoot().hide();
                                 this.$$("_tb").config.searchBar.callEvent('onKeyPress', [13,]);
