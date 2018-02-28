@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal} from "../views/globals";
+import {request, checkVal, parseToLink} from "../views/globals";
 
 
 export default class UnlinkView extends JetView{
@@ -11,17 +11,21 @@ export default class UnlinkView extends JetView{
             let sh_prc = pars.sh_prc;
             let user = th.app.config.user;
             let url = th.app.config.r_url + pars.command;
-            let type = pars.type;
-            var callback = pars.callback;
+            let callback = pars.callback;
             let params = {"user": user, "sh_prc": sh_prc, "action": act};
             th.hide()
-            if (type === "sync") {
+            if (pars.type === "sync") {
                 console.log('sync');
             } else {
                 request(url, params).then(function(data) {
                     data = checkVal(data, 'a');
                     if (data) {
                         if (callback) callback(data);
+                        if (act === "return") {
+                            let item = checkVal(request(th.app.config.r_url + "?getPrcsItem", {"user": user, "sh_prc": sh_prc}, !0).response, 's').datas;
+                            parseToLink(item);
+                            pars.parent.getRoot().getParentView().$scope.hide();
+                            }
                         };
                     })
                 }

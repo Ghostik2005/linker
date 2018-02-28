@@ -94,6 +94,31 @@ export var group = new webix.DataCollection({
             }
         });
 
+export function compareTrue () {
+    return true;
+    }
+    
+export var cEvent = function(a,b,c,d){
+    d = d || {};
+    d.inner = true;
+    webix.event(a,b,c,d);
+};
+
+export var fRefresh = function(master, node, value){
+    node.component = master.config.id;
+    master.registerFilter(node, value, this);
+    node._comp_id = master.config.id;
+    if (value.value && this.getValue(node) != value.value) this.setValue(node, value.value);
+    node.onclick = webix.html.preventEvent;
+    cEvent(node, "keydown", this.on_key_down);
+    };
+
+export var fRender = function(master, config){
+    if (this.init) this.init(config);
+    config.css = "my_filter";
+    return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
+    };
+    
 export function checkKey(code) {
     let ret = false;
     if (code === 8 || code === 13 || code === 32 || code === 46 || (code > 47 && code < 91) || (code > 95 && code < 112) || (code > 185 && code < 193) || (code > 219 && code < 223)) ret = true;
@@ -238,6 +263,38 @@ export function last_page(view) {
     let lp = (Math.ceil(total/ppp) - 1) * ppp + 1
     return lp
     }
+
+export function parseToLink(item){
+    let suppl_dt = $$("_suppl").getList()
+    let data = suppl_dt.data.order;
+    let cid;
+    data.forEach(function(d_item, i, data) {
+        if (suppl_dt.getItem(d_item).c_vnd === item.c_vnd) {
+            cid = suppl_dt.getItem(d_item).id;
+            };
+        });
+    if (cid) {
+        suppl_dt.getItem(cid).count += 1;
+        $$("_suppl").setValue(cid);
+        setTimeout(function() {
+            prcs.add(item, 0);
+            prcs.setCursor(cid);
+            parse_unlinked_item(this, item);
+            }, 800);
+    } else {
+        let p_item = {"id": 'new', "count": 1, "c_vnd": item.c_vnd, "id_vnd": item.id_vnd}
+        suppl_dt.add(p_item);
+        $$("_suppl").setValue('new');
+        setTimeout(function() {
+            prcs.clearAll();
+            prcs.add(item, 0);
+            let iid = prcs.data.order[0];
+            prcs.setCursor(iid);
+            parse_unlinked_item(this, item);
+            }, 800);
+        };
+    }
+
 
 export function get_bars(th, id_spr) {
     let user = th.app.config.user;
@@ -393,22 +450,44 @@ export function getDtParams(ui) {
     let c_filter;
     if (ui.config.id === "__ttl") {
         c_filter = {
-                //'c_tovar'   : $$(ui).getFilter('c_tovar').value,
-                'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
-                'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
-                'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
-                'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
-                'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
-                };
-    } else {
-        c_filter = undefined;
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
+            'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
+            'spr'       : ($$(ui).isColumnVisible('spr')) ? $$(ui).getFilter('spr').value : undefined,
+            'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
+            };
+    } else if (ui.config.id === "__tt") {
+        c_filter = {
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
+            'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
+            };
+    } else if (ui.config.id === "__dt_a") {
+        c_filter = {
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
+            'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').value : undefined,
+            };
+    } else if (ui.config.id === "__dt_s") {
+        c_filter = {
+            'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            };
         }
-    let count = ui.config.posPpage;
-    let field = ui.config.fi;
-    let direction = ui.config.di;
-    return [c_filter, count, field, direction]
+    return [c_filter, ui.config.posPpage, ui.config.fi, ui.config.di]
     }
 
+export function dt_formating_sec(d) {
+    return webix.Date.dateToStr("%d-%m-%Y  %G:%i:%s")(d)
+    };
+    
+export function dt_formating(d) {
+    return webix.Date.dateToStr("%d-%m-%Y")(d)
+    };
 
 export function init_first(app) {
     //console.log('app', app);

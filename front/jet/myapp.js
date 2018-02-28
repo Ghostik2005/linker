@@ -4,9 +4,12 @@ import "./styles/styles.css";
 import {JetApp, JetView} from "webix-jet";
 import {StoreRouter, EmptyRouter} from "webix-jet";
 import {init_first} from "./views/globals";
+import "./locales/ru";
 
-webix.ready(() => {
-    
+webix.ready( () => {
+
+    webix.i18n.setLocale('ru-RU');
+
     webix.protoUI({
         name:"activeList"
         },webix.ui.list, webix.ActiveContent);
@@ -39,11 +42,11 @@ webix.ready(() => {
                 })
             }
         }, webix.ui.window);
-    //let u1 = (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic";
+
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.057.1640",
+        version:        "18.059.1515",
         start:          "/login",
         admin:          "34",
         user:           "",
@@ -62,10 +65,40 @@ webix.ready(() => {
             headers["x-api-key"] = app.config.x_api;
             }
         );
-        
+
     app.render();
+
+    webix.ui.datafilter.customFilterLnkSpr = webix.extend ({
+        render:function(master, config){
+            if (this.init) this.init(config);
+            config.css = "my_filter";
+            return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
+            },
+        _on_key_down:function(e, node, value){
+            var id = this._comp_id;
+            if ((e.which || e.keyCode) == 9) return;
+            if (!checkKey(e.keyCode)) return;
+            if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            this._filter_timer=window.setTimeout(function(){
+                let ui = webix.$$(id);
+                if (ui) {
+                    let params = getDtParams(ui);
+                    get_data({
+                        view: id,
+                        navBar: "__nav_ll",
+                        start: 1,
+                        count: params[1],
+                        searchBar: "_link_search",
+                        method: "getLnkSprs",
+                        field: params[2],
+                        direction: params[3],
+                        filter: params[0]
+                        });
+                    };
+                //if (ui) ui.filterByAll();
+                },webix.ui.datafilter.textWaitDelay);
+            }
+        },  webix.ui.datafilter.textFilter);
+    
     init_first(app);
-    //app.attachEvent("app:error:resolve", function(name, error){
-        //window.console.error(error);
-    //});
 });

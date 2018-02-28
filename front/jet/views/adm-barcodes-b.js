@@ -76,12 +76,12 @@ export default class BarcodesBView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
+                    //if (!this.count) {
+                        //this.showProgress({
+                            //type: "icon",
+                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            //});
+                        //}
                     },
                 onBeforeSort: (field, direction) => {
                     let th = this;

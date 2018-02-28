@@ -4,72 +4,18 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, checkKey, getDtParams} from "../views/globals";
+import {last_page, checkKey, getDtParams, fRender, fRefresh, cEvent} from "../views/globals";
 import UnlinkView from "../views/unlink";
-
+import {dt_formating_sec, dt_formating} from "../views/globals";
 
 export default class LinksViewSpr extends JetView{
     config(){
-
-        webix.protoUI({
-            name: "daterange",
-            _footer_row: function(config, width){
-                var button = { view:"button", value:"ПРИМЕНИТЬ",
-                    minWidth:100, maxWidth:230,
-                    align:"center", height:30, click:function(){
-                        if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                        this._filter_timer=window.setTimeout(function(){
-                            let ui = webix.$$("__tt");
-                            if (ui) {
-                                let params = getDtParams(ui);
-                                get_data({
-                                    view: "__tt",
-                                    navBar: "__nav_l",
-                                    start: 1,
-                                    count: params[1],
-                                    searchBar: "_link_search",
-                                    method: "getSprLnks",
-                                    field: params[2],
-                                    direction: params[3],
-                                    filter: params[0]
-                                    });
-                                };
-                            },webix.ui.datafilter.textWaitDelay);
-                        
-                        this.getParentView().getParentView().hide();
-                        }
-                    };
-                var icons = this._icons_template(config.icons);
-                var row = { css:"webix_range_footer",  cols:[
-                    { width:icons.width }
-                ]};
-                if((config.button || config.icons) && (icons.width*2+button.minWidth) > width)
-                    row.cols[0].width = 0;
-                row.cols.push(config.button ? button : {});
-                row.cols.push(icons);
-                return row;
-                },
-            }, webix.ui.daterange);
-            
-        function dt_formating(d) {
-            return webix.Date.dateToStr("%d-%m-%Y")(d)
-            };
-
-        webix.ui.datafilter.filterDateRange = webix.extend ({
-            compare:function(a, b){
-                return true;
-                },
-            },  webix.ui.datafilter.dateRangeFilter);
-
-        webix.ui.datafilter.customFilterLnkSpr = webix.extend ({
-            render:function(master, config){
-                if (this.init) this.init(config);
-                config.css = "my_filter";
-                return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
-                },
-            _on_key_down:function(e, node, value){
+        let app = $$("main_ui").$scope.app;
+        webix.ui.datafilter.customFilterLnkSpr = Object.create(webix.ui.datafilter.textFilter);
+        webix.ui.datafilter.customFilterLnkSpr.on_key_down = function(e, node, value){
                 var id = this._comp_id;
                 if ((e.which || e.keyCode) == 9) return;
+                if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(function(){
                     let ui = webix.$$(id);
@@ -87,11 +33,11 @@ export default class LinksViewSpr extends JetView{
                             filter: params[0]
                             });
                         };
-                    //if (ui) ui.filterByAll();
-                    },webix.ui.datafilter.textWaitDelay);
+                    }, app.config.searchDelay);
                 }
-            },  webix.ui.datafilter.textFilter);
-        
+        webix.ui.datafilter.customFilterLnkSpr.refresh = fRefresh;
+        webix.ui.datafilter.customFilterLnkSpr.render = fRender;
+
         function delLnk() {
             let cid = $$("__tt").getSelectedItem().id;
             $$("__tt").remove(cid);
@@ -115,40 +61,35 @@ export default class LinksViewSpr extends JetView{
                     old_stri: " ",
                     columns: [
                         {id: "c_tovar", fillspace: true, //sort: 'server',
-                            template:"<span>{common.treetable()} #c_tovar#</span>",
+                            template:"<span>{common.treetable()} #c_tovar#</span><span style='color: red'> #count#</span>",
                             header: [{text: "Наименование"},
                             ],
                             headermenu:false,
                             },
-                        {id: "c_zavod", width: 200,
+                        {id: "c_zavod", width: 200, //sort: 'server',
                             header: [{text: "Производитель"},
-                            //{content: "customFilterLnkSpr"},
+                            {content: "customFilterLnkSpr"},
                             ]
                             },
-                        {id: "c_vnd", width: 160,
+                        {id: "c_vnd", width: 160, //sort: 'server',
                             header: [{text: "Поставщик"},
-                            //{content: "customFilterLnkSpr"},
+                            {content: "customFilterLnkSpr"},
                             ]
                             },
-                        {id: "id_tovar", width: 100,
+                        {id: "id_tovar", width: 100, hidden: true,
                             header: [{text: "Код"},
-                            //{content: "customFilterLnkSpr"},
+                            {content: "customFilterLnkSpr"},
                             ]
                             },
                         {id: "dt", width: 200,
-                            format: dt_formating,
-                            header: [{text: "Дата"},
-                            //{content: "filterDateRange",
-                                //inputConfig:{format:dt_formating, width: 180,},
-                                //suggest:{
-                                    //view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
-                                    //},
-                                //},
+                            format: dt_formating_sec,
+                            css: 'center_p',
+                            header: [{text: "Дата изменения"},
                             ]
                             },
                         {id: "owner", width: 100,
                             header: [{text: "Создал"}, 
-                            //{content: "customFilterLnkSpr"},
+                            {content: "customFilterLnkSpr"},
                             ]
                             }
                         ],
@@ -158,12 +99,6 @@ export default class LinksViewSpr extends JetView{
                             },
                         onBeforeRender: function() {
                             webix.extend(this, webix.ProgressBar);
-                            if (!this.count) {
-                                this.showProgress({
-                                    type: "icon",
-                                    icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                                    });
-                                }
                             },
                         onBeforeSort: (field, direction) => {
                             let start = $$("__tt").config.startPos;
@@ -204,13 +139,14 @@ export default class LinksViewSpr extends JetView{
                                 params["command"] = "?delLnk";
                                 params["sh_prc"] = sh_prc;
                                 params["type"] = "async";
-                                params["callback"] = delLnk; //обновление списка
-                                this.$scope.popunlink.show("Причина разрыва связкии?", params);
+                                params["callback"] = delLnk;
+                                params["parent"] = this.$scope;
+                                this.$scope.popunlink.show("Причина разрыва связки?", params);
                                 };
                             },
                         onKeyPress: function(code, e){
                             if (13 === code) {
-                                this.callEvent("onItemDblClick");
+                                if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                                 }
                             },
                         onBeforeSelect: function (item) {

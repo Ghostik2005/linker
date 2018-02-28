@@ -7,30 +7,11 @@ import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page, checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
-//import LinksViewSpr from "../views/links_form_spr";
-//import LinksViewLnk from "../views/links_form_lnk";
 
 export default class LinksView extends JetView{
     config(){
-        function linksTempl(obj, common, value) {
-            let ni = "<div>" + value + "</div>";
-            //ni = (obj.c_zavod_s) ? ni   + "<br>" + obj.c_zavod_s + "</div>" : ni  + "</div>";
-            let ret = common.treetable(obj, common) + ni;
-            //console.log(obj, value);
-            return ret
-            }
         
-        function delLnk() {
-            let cid = $$(getActDt()).getSelectedItem().id;
-            $$(getActDt()).remove(cid);
-            }
-        
-        var getActView = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
-        //var getActView = {$subview: LinksViewSpr};
-
         var getActDt = function() {
-            //if ($$("_spr_ch").getValue() === 1) return "__tt";
-            //else return "__ttl";
             return ($$("_spr_ch").getValue() === 1) ? "__tt" : "__ttl"
             }
 
@@ -50,20 +31,6 @@ export default class LinksView extends JetView{
             height: document.documentElement.clientHeight * 0.8,
             modal: true,
             on: {
-                //onShow: () => {
-                        //$$("_link_search").focus();
-                        //get_data({
-                            //th: this,
-                            //view: getActDt(),
-                            //navBar: getNavL(),
-                            //start: 1,
-                            //count: 20,
-                            //searchBar: "_link_search",
-                            //method: getMethod(),
-                            //field: 'c_tovar',
-                            //direction: 'asc'
-                            //});
-                    //},
                 onHide: () => {
                     $$(getActDt()).unselectAll();
                     $$("_break").disable();
@@ -139,6 +106,25 @@ export default class LinksView extends JetView{
                                             }
                                         this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
                                         }
+                                    }
+                                },
+                            {view:"button", type: 'htmlbutton', disabled: !true,
+                                label: "<span style='line-height: 20px;'>Сбросить фильтры</span>", width: 220,
+                                click: () => {
+                                    var cv = getActDt();
+                                    var columns = $$(cv).config.columns;
+                                    columns.forEach(function(item){
+                                        if ($$(cv).isColumnVisible(item.id)) {
+                                            if (item.header[1]) {
+                                                if (typeof($$(cv).getFilter(item.id).setValue) === 'function') {
+                                                    $$(cv).getFilter(item.id).setValue('');
+                                                } else {
+                                                    $$(cv).getFilter(item.id).value = '';
+                                                    };
+                                                }
+                                            }
+                                        });
+                                    $$("_link_search").callEvent("onKeyPress", [13,]);
                                     }
                                 },
                             {view:"button", type: 'htmlbutton', id: "_break", disabled: true,

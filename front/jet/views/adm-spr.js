@@ -11,21 +11,15 @@ export default class SprViews extends JetView{
     config(){
 
         function mnn_func(obj) {
-            let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
-                                         : "<div> <span class='red'>нет</span></div>";
-            return ret
+            return (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>" : "<div> <span class='red'>нет</span></div>";
             }
 
         function mandat_func(obj) {
-            let ret = (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
-                                     : "<div><span></span></div>";
-            return ret
+            return (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span></span></div>";
             }
 
         function prescr_func(obj) {
-            let ret = (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
-                                     : "<div><span></span></div>";
-            return ret
+            return (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span></span></div>";
             }
 
 
@@ -231,14 +225,14 @@ export default class SprViews extends JetView{
                         });
                     },
                 onBeforeRender: function() {
-                    $$("_spr_search_adm").focus();
+                    //$$("_spr_search_adm").focus();
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
+                    //if (!this.count) {
+                        //this.showProgress({
+                            //type: "icon",
+                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            //});
+                        //}
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
@@ -258,7 +252,7 @@ export default class SprViews extends JetView{
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
-                        this.callEvent("onItemDblClick");
+                        if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
                     },
                 }
@@ -298,14 +292,14 @@ export default class SprViews extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', disabled: !true, 
-                    label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     click: () => {
                         this.popnew.show("Новый эталон", $$("_spr_search_adm"));
 
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     click: () => {
                         webix.message({
                             text: "Удаление из SPR. Позже.",

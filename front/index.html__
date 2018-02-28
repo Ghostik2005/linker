@@ -7,15 +7,15 @@
     <title>Linker</title>
 
     <link type="text/css" rel="stylesheet" href="libs/webix/webix.css">
-    <link type="text/css" rel="stylesheet" href="myapp.css?v=12">
+    <link type="text/css" rel="stylesheet" href="myapp.css?v=8">
 
-    <!-- Webix Library-->
+    <!-- Webix Library 
     <script type="text/javascript" src="libs/webix/webix.js"></script>
     <script type="text/javascript" src="libs/webix/skin.js"></script>
 
     <!-- The app's logic -->
     <script type="text/javascript"  src="addons/md5.js"></script> 
-    <script type="text/javascript"  src="myapp.js?v=12"></script>
+    <script type="text/javascript"  src="myapp.js?v=8"></script>
 
 
 </head>

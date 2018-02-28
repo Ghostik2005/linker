@@ -32,7 +32,7 @@ export default class DvView extends JetView{
                 { id: "act_ingr",
                     fillspace: 1, sort: "text", headermenu: false,
                     header: [{text: "Действующее вещество"},
-                        {content:"selectFilter"}
+                        {content:"textFilter"}
                         ]
                     },
                 { id: "oa",

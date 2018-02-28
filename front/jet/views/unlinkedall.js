@@ -2,39 +2,23 @@
 
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
-import {last_page} from "../views/globals";
-import {parse_unlinked_item, prcs} from "../views/globals";
+import {last_page, checkKey, cEvent, fRefresh, fRender} from "../views/globals";
+import {parse_unlinked_item, prcs, getDtParams, parseToLink} from "../views/globals";
 
 export default class AllUnlinkedView extends JetView{
     config(){
+        let app = $$("main_ui").$scope.app;
 
-        function getParams(ui) {
-            let c_filter = {
-                        'c_tovar'   : $$(ui).getFilter('c_tovar').value,
-                        'c_vnd'     : $$(ui).getFilter('c_vnd').value,
-                        'c_zavod'   : $$(ui).getFilter('c_zavod').value,
-                        'c_user'    : $$(ui).getFilter('c_user').value
-                        }
-            let count = ui.config.posPpage;
-            let field = ui.config.fi;
-            let direction = ui.config.di;
-            return [c_filter, count, field, direction]
-            }
-
-        webix.ui.datafilter.customFilter = webix.extend ({
-            render:function(master, config){
-                if (this.init) this.init(config);
-                config.css = "my_filter";
-                return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
-                },
-            _on_key_down:function(e, node, value){
+        webix.ui.datafilter.customFilterUnlnk = Object.create(webix.ui.datafilter.textFilter);
+        webix.ui.datafilter.customFilterUnlnk.on_key_down = function(e, node, value){
                 var id = this._comp_id;
                 if ((e.which || e.keyCode) == 9) return;
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout(function(){
+                if (!checkKey(e.keyCode)) return;
+                if (this._filter_ti) window.clearTimeout(this._filter_ti);
+                this._filter_ti=window.setTimeout(function(){
                     let ui = webix.$$(id);
                     if (ui) {
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_a",
@@ -47,37 +31,10 @@ export default class AllUnlinkedView extends JetView{
                             filter: params[0]
                             });
                         };
-                    //if (ui) ui.filterByAll();
-                    },webix.ui.datafilter.textWaitDelay);
-                }
-            },  webix.ui.datafilter.textFilter);
-
-        var top = {//view: 'toolbar',
-                    height: 40,
-                    cols: [
-                        {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_search_all",
-                            keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
-                            on: {
-                                onTimedKeyPress: (code, event) => {
-                                    let count = $$("__dt_a").config.posPpage;
-                                    let field = $$("__dt_a").config.fi;
-                                    let direction = $$("__dt_a").config.di;
-                                    get_data({
-                                        th: this,
-                                        view: "__dt_a",
-                                        navBar: "__nav_a",
-                                        start: 1,
-                                        count: count,
-                                        searchBar: "_search_all",
-                                        method: "getPrcsAll",
-                                        field: field,
-                                        direction: direction
-                                        });
-                                    }
-                                },
-                            },
-                        ]
-                    }
+                    }, app.config.searchDelay);
+                };
+        webix.ui.datafilter.customFilterUnlnk.refresh = fRefresh;
+        webix.ui.datafilter.customFilterUnlnk.render = fRender;
 
         var bottom = {
             view: "toolbar",
@@ -90,7 +47,7 @@ export default class AllUnlinkedView extends JetView{
                         var id = "__dt_a";
                         let ui = webix.$$(id);
                         if (ui) {
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_a",
@@ -113,7 +70,7 @@ export default class AllUnlinkedView extends JetView{
                         var id = "__dt_a";
                         let ui = webix.$$(id);
                         if (ui) {
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_a",
@@ -137,7 +94,7 @@ export default class AllUnlinkedView extends JetView{
                         if (ui) {
                             let start = ui.config.startPos + ui.config.posPpage;
                             start = (start > ui.config.totalPos) ? last_page(id): start;
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_a",
@@ -159,7 +116,7 @@ export default class AllUnlinkedView extends JetView{
                         let ui = webix.$$(id);
                         if (ui) {
                             let start = last_page(id);
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_a",
@@ -204,25 +161,25 @@ export default class AllUnlinkedView extends JetView{
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
                     header: [{text: "Название"},
-                        {content: "customFilter"},
+                        {content: "customFilterUnlnk"},
                         ]
                     },
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "customFilter"},
+                        {content: "customFilterUnlnk"},
                         ]
                     },
                 { id: "c_zavod", sort: "server",
                     width: 200,
                     header: [{text: "Производитель"},
-                        {content: "customFilter"},
+                        {content: "customFilterUnlnk"},
                         ]
                     },
                 { id: "c_user", sort: "server",
                     width: 160,
                     header: [{text: "Пользователь"},
-                        {content: "customFilter"},
+                        {content: "customFilterUnlnk"},
                         ]
                     },
                 ],
@@ -232,19 +189,19 @@ export default class AllUnlinkedView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
+                    //if (!this.count) {
+                        //this.showProgress({
+                            //type: "icon",
+                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
+                            //});
+                        //}
                     },
                 onBeforeSort: (field, direction) => {
                     var id = "__dt_a";
                     let ui = webix.$$(id);
                     if (ui) {
                         let start = ui.config.startPos;
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_a",
@@ -258,41 +215,22 @@ export default class AllUnlinkedView extends JetView{
                             });
                         };
                     },
+                //onResize: function () {
+                    //if (this.isColumnVisible('c_user')) {
+                        //this.getFilter('c_user').value = this.$scope.app.config.user;
+                        //if  (this.$scope.app.config.role !== this.$scope.app.config.admin) {
+                            //this.getFilter('c_user').value = this.$scope.app.config.user;
+                            //this.getFilter('c_user').readOnly = true;
+                        //} else {
+                            //this.getFilter('c_user').readOnly = false;
+                            //}
+                        //}
+                    //},
                 onItemDblClick: () => {
                     let item = $$("__dt_a").getSelectedItem();
+                    console.log('item', item);
                     if (this.app.config.role === this.app.config.admin || item.c_user === this.app.config.user) {
-                        //разрешено редактирование только админами или текущий пользовватель совпадает с ответственным
-                        let suppl_dt = $$("_suppl").getList()
-                        let data = suppl_dt.data.order;
-                        let cid;
-                        //console.log('item', item);
-                        data.forEach(function(d_item, i, data) {
-                            if (suppl_dt.getItem(d_item).c_vnd === item.c_vnd) {
-                                cid = suppl_dt.getItem(d_item).id;
-                                };
-                            });
-                        if (cid) {
-                            suppl_dt.getItem(cid).count += 1;
-                            $$("_suppl").setValue(cid);
-                            setTimeout(function() {
-                                prcs.add(item, 0);
-                                prcs.setCursor(cid);
-                                //console.log(prcs.data.order);
-                                parse_unlinked_item(this, item);
-                                }, 800);
-                        } else {
-                            let p_item = {"id": 'new', "count": 1, "c_vnd": item.c_vnd, "id_vnd": item.id_vnd}
-                            suppl_dt.add(p_item);
-                            $$("_suppl").setValue('new');
-                            setTimeout(function() {
-                                prcs.clearAll();
-                                prcs.add(item, 0);
-                                let iid = prcs.data.order[0];
-                                prcs.setCursor(iid);
-                                //console.log(prcs.data.order);
-                                parse_unlinked_item(this, item);
-                                }, 800);
-                            };
+                        parseToLink(item);
                         this.getRoot().hide();
                     } else {
                         webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
@@ -300,7 +238,7 @@ export default class AllUnlinkedView extends JetView{
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
-                        this.callEvent("onItemDblClick");
+                        if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
                     },
                 onAfterLoad: function() {
@@ -319,7 +257,7 @@ export default class AllUnlinkedView extends JetView{
                     var id = "__dt_a";
                     let ui = webix.$$(id);
                     if (ui) {
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_a",
@@ -340,7 +278,6 @@ export default class AllUnlinkedView extends JetView{
             body: {
                 view: "layout",
                 rows: [
-                    //top,
                     sprv,
                     bottom,
                     ]}
@@ -356,6 +293,14 @@ export default class AllUnlinkedView extends JetView{
         this.getRoot().hide()
         }
     init() {
-        $$("__dt_a").getFilter('c_user').value = this.app.config.user;
+        if ($$("__dt_a").isColumnVisible('c_user')) {
+            $$("__dt_a").getFilter('c_user').value = this.app.config.user;
+            if  (this.app.config.role !== this.app.config.admin) {
+                $$("__dt_a").getFilter('c_user').value = this.app.config.user;
+                $$("__dt_a").getFilter('c_user').readOnly = true;
+            } else {
+                $$("__dt_a").getFilter('c_user').readOnly = false;
+                }
+            }
         }
     }

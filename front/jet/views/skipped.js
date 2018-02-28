@@ -3,50 +3,30 @@
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
+import {checkKey, getDtParams, fRender, fRefresh, cEvent} from "../views/globals";
 import ConfirmView from "../views/yes-no";
+import {dt_formating_sec, dt_formating} from "../views/globals";
 
 export default class SkippedView extends JetView{
     config(){
-        
-        function dt_formating(d) {
-            return webix.Date.dateToStr("%d-%m-%Y")(d)
-            };
 
-        function dt_formating_sec(d) {
-            return webix.Date.dateToStr("%d-%m-%Y  %G:%i:%s")(d)
-            };
-            
+        let app = $$("main_ui").$scope.app;
+
         function delSkip () {
             let item_id = $$("__dt_s").getSelectedId()
             $$("__dt_s").remove(item_id)
             }
 
-        function getParams(ui) {
-            let c_filter = {
-                        'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
-                        'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
-                        'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
-                        }
-            let count = ui.config.posPpage;
-            let field = ui.config.fi;
-            let direction = ui.config.di;
-            return [c_filter, count, field, direction]
-            }
-
-        webix.ui.datafilter.customFilterSkip = webix.extend ({
-            render:function(master, config){
-                if (this.init) this.init(config);
-                config.css = "my_filter";
-                return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
-                },
-            _on_key_down:function(e, node, value){
+        webix.ui.datafilter.customFilterSkip = Object.create(webix.ui.datafilter.textFilter);
+        webix.ui.datafilter.customFilterSkip.on_key_down = function(e, node, value){
                 var id = this._comp_id;
                 if ((e.which || e.keyCode) == 9) return;
+                if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(function(){
                     let ui = webix.$$(id);
                     if (ui) {
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_s",
@@ -59,39 +39,10 @@ export default class SkippedView extends JetView{
                             filter: params[0]
                             });
                         };
-                    //if (ui) ui.filterByAll();
-                    },webix.ui.datafilter.textWaitDelay);
+                    }, app.config.searchDelay);
                 }
-            },  webix.ui.datafilter.textFilter);
-
-
-            
-        var top = {//view: 'toolbar',
-                    height: 40,
-                    cols: [
-                        {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_search_skip",
-                            keyPressTimeout: 900, tooltip: "!слово - исключить из поиска",
-                            on: {
-                                onTimedKeyPress: (code, event) => {
-                                    let count = $$("__dt_s").config.posPpage;
-                                    let field = $$("__dt_s").config.fi;
-                                    let direction = $$("__dt_s").config.di;
-                                    get_data({
-                                        th: this,
-                                        view: "__dt_s",
-                                        navBar: "__nav_s",
-                                        start: 1,
-                                        count: count,
-                                        searchBar: "_search_skip",
-                                        method: "getPrcsSkip",
-                                        field: field,
-                                        direction: direction
-                                        });
-                                    }
-                                },
-                            },
-                        ]
-                    }
+        webix.ui.datafilter.customFilterSkip.refresh = fRefresh;
+        webix.ui.datafilter.customFilterSkip.render = fRender;
 
         var bottom = {
             view: "toolbar",
@@ -104,7 +55,7 @@ export default class SkippedView extends JetView{
                         var id = "__dt_s";
                         let ui = webix.$$(id);
                         if (ui) {
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_s",
@@ -127,7 +78,7 @@ export default class SkippedView extends JetView{
                         var id = "__dt_s";
                         let ui = webix.$$(id);
                         if (ui) {
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_s",
@@ -151,7 +102,7 @@ export default class SkippedView extends JetView{
                         if (ui) {
                             let start = ui.config.startPos + ui.config.posPpage;
                             start = (start > ui.config.totalPos) ? last_page(id): start;
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_s",
@@ -173,7 +124,7 @@ export default class SkippedView extends JetView{
                         let ui = webix.$$(id);
                         if (ui) {
                             let start = last_page(id);
-                            let params = getParams(ui);
+                            let params = getDtParams(ui);
                             get_data({
                                 view: id,
                                 navBar: "__nav_s",
@@ -264,7 +215,7 @@ export default class SkippedView extends JetView{
                     let ui = webix.$$(id);
                     if (ui) {
                         let start = ui.config.startPos;
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_s",
@@ -292,7 +243,7 @@ export default class SkippedView extends JetView{
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
-                        this.callEvent("onItemDblClick");
+                        if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
                     },
                 onAfterLoad: function() {
@@ -311,7 +262,7 @@ export default class SkippedView extends JetView{
                     var id = "__dt_s";
                     let ui = webix.$$(id);
                     if (ui) {
-                        let params = getParams(ui);
+                        let params = getDtParams(ui);
                         get_data({
                             view: id,
                             navBar: "__nav_s",
@@ -333,7 +284,6 @@ export default class SkippedView extends JetView{
             body: {
                 view: "layout",
                 rows: [
-                    //top,
                     sprv,
                     bottom,
                     ]}
