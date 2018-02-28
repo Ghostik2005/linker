@@ -298,7 +298,17 @@ export default class NewformView extends JetView{
                                         let res = request(url, params, !0).response;
                                         res = checkVal(res, 's');
                                         if (res && res.new && this.$$("new_form").config.spr) {
-                                            delPrc(params, this)
+                                            delPrc(params, this);
+                                            //связываем со справочником
+                                            //let pars = {"user": params["user"], "sh_prc": params["sh_prc"], "id_spr": res.datas[0]};
+                                            //url = this.app.config.r_url + "?setLnk";
+                                            //this.hide();
+                                            //request(url, pars).then(function(data) {
+                                                //data = checkVal(data, 'a');
+                                                //if (data) {
+                                                    //delPrc(params, this)
+                                                    //};
+                                                //})
                                         } else {
                                             console.log("bar", this.$$("new_form").config.search_bar)
                                             this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);

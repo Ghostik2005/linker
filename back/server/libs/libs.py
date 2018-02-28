@@ -1271,9 +1271,11 @@ WHERE r.SH_PRC = ?
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 if result:
                     if sh_prc:
-                        sql = """delete from PRC where SH_PRC = ?"""
-                        opt = (sh_prc,)
-                        t1 = self.db.execute({"sql": sql, "options": opt})
+                        pars = {'sh_prc': sh_prc, 'user': user, 'id_spr': result}
+                        t1 = self.setLnk(params=pars, x_hash=x_hash)
+                        #sql = """delete from PRC where SH_PRC = ?"""
+                        #opt = (sh_prc,)
+                        #t1 = self.db.execute({"sql": sql, "options": opt})
                     self._insGr(params, result)
                     params['id_spr'] = result
                     self.setBar(params, x_hash)
