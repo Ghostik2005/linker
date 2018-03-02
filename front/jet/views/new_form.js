@@ -294,23 +294,13 @@ export default class NewformView extends JetView{
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
                                         let url = this.app.config.r_url + "?setSpr";
-                                        console.log(params);
+
                                         let res = request(url, params, !0).response;
                                         res = checkVal(res, 's');
                                         if (res && res.new && this.$$("new_form").config.spr) {
                                             delPrc(params, this);
-                                            //связываем со справочником
-                                            //let pars = {"user": params["user"], "sh_prc": params["sh_prc"], "id_spr": res.datas[0]};
-                                            //url = this.app.config.r_url + "?setLnk";
-                                            //this.hide();
-                                            //request(url, pars).then(function(data) {
-                                                //data = checkVal(data, 'a');
-                                                //if (data) {
-                                                    //delPrc(params, this)
-                                                    //};
-                                                //})
                                         } else {
-                                            console.log("bar", this.$$("new_form").config.search_bar)
+
                                             this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
                                             };
                                         this.$$("new_form").config.spr = false;
@@ -330,8 +320,6 @@ export default class NewformView extends JetView{
             this.$$("new_form").parse(item);
             this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
-            //this.getRoot().getBody().parse(item);
-            //console.log('parse', item);
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()

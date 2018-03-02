@@ -41,25 +41,8 @@ export default class LinksView extends JetView{
                 rows: [
                         {cols: [
                             {view: "text", label: "", placeholder: "Строка поиска", id: "_link_search", height: 40, fillspace: true,
-                                tooltip: "поиск от двух символов", //keyPressTimeout: 900, 
+                                tooltip: "поиск от двух символов", 
                                 on: {
-                                    //onTimedKeyPress: function(code, event) {
-                                        //let th = this.$scope;
-                                        //let count = $$("__tt").config.posPpage;
-                                        //let field = $$("__tt").config.fi;
-                                        //let direction = $$("__tt").config.di;
-                                        //get_data({
-                                            //th: th,
-                                            //view: "__tt",
-                                            //navBar: getNavL(),
-                                            //start: 1,
-                                            //count: count,
-                                            //searchBar: "_link_search",
-                                            //method: getMethod(),
-                                            //field: field,
-                                            //direction: direction
-                                            //});
-                                        //},
                                     onKeyPress: function(code, event) {
                                         clearTimeout(this.config._keytimed);
                                         if (checkKey(code)) {

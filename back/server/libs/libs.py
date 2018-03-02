@@ -100,6 +100,16 @@ class API:
         self.start = 1
         self.count = 20
 
+    def _form_exclude(self, search_re):
+        exclude = []
+        for i in range(search_re.count('!')):
+            ns = search_re.find('!')
+            ne = search_re.find(' ', ns)
+            te = search_re[ns+1: ne if ne > 0 else None]
+            exclude.append(te)
+            search_re = search_re.replace("!" + te, '')
+        return exclude, search_re
+
     def _check(self, x_hash):
         #проверка валидности ключа
         ret = False
@@ -213,7 +223,7 @@ WHERE r.SH_PRC = ?
             search_re = params.get('search')
             search_field = params.get('s_field')
             user = params.get('user')
-            us_stri = '' if user == 'admin' else """and u."USER" = '%s'""" % user
+            us_stri = '' if user == 'admin' or 'Краснов' else """and u."USER" = '%s'""" % user
             #stri = ""
             table = 'r'
             if field == 'c_vnd':
@@ -261,7 +271,6 @@ WHERE r.SH_PRC = ?
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-
     def getPrcsSkip(self, params=None, x_hash=None):
         if self._check(x_hash):
             filt = params.get('c_filter')
@@ -281,7 +290,22 @@ WHERE r.SH_PRC = ?
                     s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
                     ssss.append(pref % s)
                 if pars['c_tovar']:
-                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    sti = "lower(r.C_TOVAR) like lower('%%')"
+                    exclude, pars['c_tovar'] = self._form_exclude(pars['c_tovar'])
+                    
+                    pars['c_tovar'] = pars['c_tovar'].split()
+                    s = [] if len(pars['c_tovar']) > 0 else [sti,]
+                    for i in range(len(pars['c_tovar'])):
+                        ts1 = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'][i].strip() + "%')"
+                        if i == 0:
+                            s.append(ts1)
+                        else:
+                            s.append('and %s' % ts1)
+                    if len(exclude) > 0:
+                        for i in range(len(exclude)):
+                            ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                            s.append('and %s' % ts3)
+                    s = ' '.join(s)
                     ssss.append(pref % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
@@ -295,7 +319,7 @@ WHERE r.SH_PRC = ?
             search_re = params.get('search')
             search_field = params.get('s_field')
             user = params.get('user')
-            us_stri = '' if user == 'admin' else """and u."USER" = '%s'""" % user
+            us_stri = '' if user == 'admin' or 'Краснов' else """and u."USER" = '%s'""" % user
             table = 'r'
             if field == 'c_vnd':
                 table = 'v'
@@ -316,6 +340,7 @@ WHERE r.SH_PRC = ?
             ROWS ? to ?
             """.format(stri, us_stri, field, direction)
             opt = (start_p, end_p)
+            #print(sql)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
@@ -526,7 +551,6 @@ WHERE r.SH_PRC = ?
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
     def getVendorAll(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -763,7 +787,6 @@ WHERE r.SH_PRC = ?
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
     def getSezonAll(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -1386,17 +1409,17 @@ WHERE r.SH_PRC = ?
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
-            exclude = []
             cbars = params.get('cbars')
             cbars = cbars.split(',')
-            for i in range(search_re.count('!')):
-                ns = search_re.find('!')
-                ne = search_re.find(' ', ns)
-                te = search_re[ns+1: ne if ne > 0 else None]
-                exclude.append(te)
-                search_re = search_re.replace("!" + te, '')
+            exclude, search_re = self._form_exclude(search_re)
+            #for i in range(search_re.count('!')):
+                #ns = search_re.find('!')
+                #ne = search_re.find(' ', ns)
+                #te = search_re[ns+1: ne if ne > 0 else None]
+                #exclude.append(te)
+                #search_re = search_re.replace("!" + te, '')
             search_re = search_re.split()
-            stri = []
+            stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
                 ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
                 if i == 0:
@@ -1407,7 +1430,7 @@ WHERE r.SH_PRC = ?
                 for i in range(len(exclude)):
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
-            stri = ' '.join(stri) if len(stri) > 0 else sti
+            stri = ' '.join(stri)
             sql = """
 select count(*)
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
@@ -1666,13 +1689,13 @@ ROWS ? to ?
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
             zavod = []
-            exclude = []
-            for i in range(search_re.count('!')):
-                ns = search_re.find('!')
-                ne = search_re.find(' ', ns)
-                te = search_re[ns+1: ne if ne > 0 else None]
-                exclude.append(te)
-                search_re = search_re.replace("!" + te, '')
+            exclude, search_re = self._form_exclude(search_re)
+            #for i in range(search_re.count('!')):
+                #ns = search_re.find('!')
+                #ne = search_re.find(' ', ns)
+                #te = search_re[ns+1: ne if ne > 0 else None]
+                #exclude.append(te)
+                #search_re = search_re.replace("!" + te, '')
             for i in range(search_re.count('+')):
                 ns = search_re.find('+')
                 ne = search_re.find(' ', ns)
@@ -1680,7 +1703,7 @@ ROWS ? to ?
                 zavod.append(te)
                 search_re = search_re.replace("+" + te, '')
             search_re = search_re.split()
-            stri = []
+            stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
                 ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
                 if i == 0:
@@ -1695,7 +1718,7 @@ ROWS ? to ?
                 for i in range(len(exclude)):
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
-            stri = ' '.join(stri) if len(stri) > 0 else sti
+            stri = ' '.join(stri)
             sql = """
 SELECT count(*)
 FROM SPR r
@@ -1765,6 +1788,277 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                 }
                 _return.append(r)
             t2 = time.time() - st_t
+            ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p, "time": (t1, t2)}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getSprSearchAdm(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            end_p = int(params.get('count', self.count)) + start_p - 1
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
+            start_p = 1 if start_p == 0 else start_p
+            search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
+            filt = params.get('c_filter')
+            in_st = []
+            in_c = []
+            exclude, search_re = self._form_exclude(search_re)
+            search_re = search_re.split()
+            stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            if len(exclude) > 0:
+                for i in range(len(exclude)):
+                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    stri.append('and %s' % ts3)
+            stri = ' '.join(stri)
+            if filt:
+                pars = {}
+                pars['id_spr'] = filt.get('id_spr')
+                pars['id_zavod'] = filt.get('id_zavod')
+                pars['id_strana'] = filt.get('id_strana')
+                pars['c_dv'] = filt.get('c_dv')
+                pars['c_group'] = filt.get('c_group')
+                pars['c_nds'] = filt.get('c_nds')
+                pars['c_hran'] = filt.get('c_hran')
+                pars['c_sezon'] = filt.get('c_sezon')
+                pars['mandat'] = filt.get('mandat')
+                pars['prescr'] = filt.get('prescr')
+                dt = filt.get('dt')
+                ssss = []
+                if dt:
+                    pars['start_dt'] = dt.get('start')
+                    pars['end_dt'] = dt.get('end')
+                    if pars['start_dt'] and not pars['end_dt']:
+                        pars['start_dt'] = pars['start_dt'].split()[0]
+                        s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))""".format(pars['start_dt'])
+                        ssss.append(s)
+                    elif pars['start_dt'] and pars['end_dt']:
+                        pars['end_dt'] = pars['end_dt'].split()[0]
+                        s = """and (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))""".format(pars['start_dt'], pars['end_dt'])
+                        ssss.append(s)
+                if pars['id_spr']:
+                    s = "and r.id_spr = %s" % pars['id_spr']
+                    ssss.append(s)
+                if pars['id_zavod']:
+                    s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and lower(z.C_ZAVOD) like lower('%" + pars['id_zavod'] + "%')"
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)"
+                    in_st.append(s)
+                if pars['id_strana']:
+                    s = "join spr_strana s on (s.ID_SPR = r.ID_STRANA) and lower(s.C_STRANA) like lower('%" + pars['id_strana'] + "%')"
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)"
+                    in_st.append(s)
+                if pars['c_dv']:
+                    s = "join dv d on (d.ID = r.ID_DV) and lower(d.ACT_INGR) like lower('%" + pars['c_dv'] + "%')"
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT join dv d on (d.ID = r.ID_DV)"
+                    in_st.append(s)
+                if pars['c_hran']:
+                    s = """join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3 and c2.CD_GROUP = '%s'
+                    ) on (cc2 = r.ID_SPR)""" % pars['c_hran']
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = """LEFT join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                    ) on (cc2 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['mandat']:
+                    if (pars['mandat']) == 1:
+                        s = """INNER join 
+                            (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                            from GROUPS g4
+                            inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                            ) on (cc4 = r.ID_SPR) and mandat is not null"""
+                        in_c.insert(0, s)
+                        in_st.insert(0, s)
+                    else:
+                        s = """left join 
+                            (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                            from GROUPS g4
+                            inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                            ) on (cc4 = r.ID_SPR)"""
+                        in_c.append(s)
+                        in_st.append(s)
+                        ssss.append(" and mandat is null")
+                else:
+                    s = """left join 
+                        (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                        from GROUPS g4
+                        inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                        ) on (cc4 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['prescr']:
+                    if (pars['prescr']) == 1:
+                        s = f"""INNER join 
+                            (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                            from GROUPS g5
+                            inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                            ) on (cc5 = r.ID_SPR) and presc is not null"""
+                        in_c.insert(0, s)
+                        in_st.insert(0, s)
+                    else:
+                        s = """left join 
+                            (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                            from GROUPS g5
+                            inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                            ) on (cc5 = r.ID_SPR)"""
+                        in_c.append(s)
+                        in_st.append(s)
+                        ssss.append(" and presc is null")
+                else:
+                    s = """left join 
+                        (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                        from GROUPS g5
+                        inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                        ) on (cc5 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_group']:
+                    s = """join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1 and c.CD_GROUP = '%s'
+                    ) on (cc = r.ID_SPR)""" % pars['c_group']
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = """LEFT join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) on (cc = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_nds']:
+                    s = """join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2 and c1.CD_GROUP = '%s'
+                    ) on (cc1 = r.ID_SPR)""" % pars['c_nds']
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = """LEFT join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                    ) on (cc1 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_sezon']:
+                    s = """join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6 and c3.CD_GROUP = '%s'
+                    ) on (cc3 = r.ID_SPR)""" % pars['c_sezon']
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = """left join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                    ) on (cc3 = r.ID_SPR)"""
+                    in_st.append(s)
+                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT FROM SPR r""")
+                sql = '\n'.join(in_st)
+                in_c.insert(0, """select count(*) from spr r""")
+                sql_c = '\n'.join(in_c)
+                stri += ' ' + ' '.join(ssss)
+            else:
+                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT
+                FROM SPR r
+                LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)
+                LEFT join dv d on (d.ID = r.ID_DV)
+                LEFT join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) on (cc = r.ID_SPR)
+                LEFT join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                    ) on (cc1 = r.ID_SPR)
+                LEFT join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                    ) on (cc2 = r.ID_SPR)
+                LEFT join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                    ) on (cc3 = r.ID_SPR)
+                LEFT join 
+                    (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                    from GROUPS g4
+                    inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                    ) on (cc4 = r.ID_SPR)
+                LEFT join 
+                    (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                    from GROUPS g5
+                    inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                    ) on (cc5 = r.ID_SPR)"""
+                sql_c = """SELECT count(*) FROM SPR r"""
+            sql_cc = sql + "\nWHERE %s" % stri
+            sql += """\nWHERE {0}
+                ORDER by r.{1} {2} ROWS ? to ?"""
+            sql_c += """ WHERE {0}""".format(stri)
+            sql = sql.format(stri, field, direction)
+            t1 = time.time() - st_t
+            opt = (start_p, end_p)
+            #print(sql)
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            st_t = time.time()
+            if result:
+                sql = sql_c
+                #sql = sql_cc
+                opt = ()
+                #print(sql)
+                tot = self.db.request({"sql": sql, "options": opt})[0][0]
+                #tot = len(self.db.request({"sql": sql, "options": opt})[0])
+            else:
+                tot = 0
+            t2 = time.time() - t1 - st_t
+            for row in result:
+                r = {
+                    "id_spr"        : row[0],
+                    "c_tovar"       : row[1],
+                    "id_dv"         : row[2],
+                    "id_zavod"      : row[3],
+                    "id_strana"     : row[4],
+                    "c_dv"          : row[5],
+                    "c_group"       : row[6],
+                    "c_nds"         : row[7],
+                    "c_hran"        : row[8],
+                    "c_sezon"       : row[9],
+                    "c_mandat"      : row[10],
+                    "c_prescr"      : row[11],
+                    "dt"            : str(row[12])
+                }
+                _return.append(r)
             ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p, "time": (t1, t2)}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -1877,8 +2171,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
-            exclude = []
-            
             filt = params.get('c_filter')
             pref = 'and %s'
             stri_1 = ""
@@ -1902,7 +2194,8 @@ or
                         """.format(pars['start_dt'])
                         ssss.append(pref % s)
                     elif pars['start_dt'] and pars['end_dt']:
-                        s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= '{1}') or (r.DT >= '{0}' AND r.DT <= '{1}'))".format(pars['start_dt'], pars['end_dt'])
+                        pars['end_dt'] = pars['end_dt'].split()[0]
+                        s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))) or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))".format(pars['start_dt'], pars['end_dt'])
                         ssss.append(pref % s)
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
@@ -1917,15 +2210,9 @@ or
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append(pref % s)
                 stri_1 = ' '.join(ssss)
-
-            for i in range(search_re.count('!')):
-                ns = search_re.find('!')
-                ne = search_re.find(' ', ns)
-                te = search_re[ns+1: ne if ne > 0 else None]
-                exclude.append(te)
-                search_re = search_re.replace("!" + te, '')
+            exclude, search_re = self._form_exclude(search_re)
             search_re = search_re.split()
-            stri = []
+            stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
                 ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
                 if i == 0:
@@ -1936,7 +2223,7 @@ or
                 for i in range(len(exclude)):
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
-            stri = ' '.join(stri) if len(stri) > 0 else sti
+            stri = ' '.join(stri)
             #stri += stri_1
             sql = """select count(*)
                     from spr r
@@ -2049,7 +2336,8 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
                         #s = " (CAST(r.CHANGE_DT as DATE) = '%s' or CAST(r.DT as DATE) = '%s')" % (pars['start_dt'], pars['start_dt'])
                         ssss.append(pref % s)
                     elif pars['start_dt'] and pars['end_dt']:
-                        s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= '{1}') or (r.DT >= '{0}' AND r.DT <= '{1}'))".format(pars['start_dt'], pars['end_dt'])
+                        pars['end_dt'] = pars['end_dt'].split()[0]
+                        s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))) or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))".format(pars['start_dt'], pars['end_dt'])
                         ssss.append(pref % s)
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
@@ -2065,15 +2353,14 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
                     ssss.append(pref % s)
                 if pars['spr']:
                     qwe = pars.get('spr')
-                    exclude = []
-                    for i in range(qwe.count('!')):
-                        ns = qwe.find('!')
-                        ne = qwe.find(' ', ns)
-                        te = qwe[ns+1: ne if ne > 0 else None]
-                        exclude.append(te)
-                        qwe = qwe.replace("!" + te, '')
+                    exclude, qwe = self._form_exclude(qwe)
+                    #for i in range(qwe.count('!')):
+                        #ns = qwe.find('!')
+                        #ne = qwe.find(' ', ns)
+                        #te = qwe[ns+1: ne if ne > 0 else None]
+                        #exclude.append(te)
+                        #qwe = qwe.replace("!" + te, '')
                     qwe = qwe.split()
-                    stri = []
                     for i in range(len(qwe)):
                         s = "lower(s.C_TOVAR) like lower('%" + qwe[i].strip() + "%')"
                         ssss.append(pref % s)
@@ -2085,7 +2372,7 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
                     #ssss.append(pref % s)
                 stri_1 = ' '.join(ssss)
             search_re = search_re.split()
-            stri = []
+            stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
                 ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
                 if i == 0:
@@ -2093,7 +2380,7 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
                 else:
                     stri.append('and %s' % ts1)
             stri.append(stri_1)
-            stri = ' '.join(stri) if len(stri) > 0 else sti
+            stri = ' '.join(stri)
             sql = """
 select count(*)
 from LNK r
@@ -2209,7 +2496,6 @@ rows ? to ?
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-
     def skipLnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             sh_prc = params.get('sh_prc')
@@ -2235,7 +2521,6 @@ rows ? to ?
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
 
 class fLock:
@@ -2294,7 +2579,6 @@ def getip(log):
         except Exception as e:
             continue
     return eip, iip
-
 
 class logs:
     """
@@ -2691,7 +2975,6 @@ def handle_commandline(profile, index):
         index = kwargs.pop("index")
     return args, kwargs, profile, index
 
-
 class UDPSocket(socket.socket):
 
     def __init__(self, bind_addr=('127.0.0.1', 0), std_addr=('127.0.0.1', 4222),
@@ -2726,7 +3009,6 @@ class UDPSocket(socket.socket):
 
     def read(self, n=8192):
         return self.recv(n)
-
 
 ###########old sqls
 """

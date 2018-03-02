@@ -113,6 +113,57 @@ export var fRefresh = function(master, node, value){
     cEvent(node, "keydown", this.on_key_down);
     };
 
+export var rRefresh = function(master, node, value){
+    if (master.$destructed) return;
+    var select = webix.$$(value.richselect);
+    node.$webix = value.richselect;
+    node.style.marginLeft = "-10px";
+    value.compare = value.compare || this.compare;
+    value.prepare = value.prepare || this.prepare;
+    master.registerFilter(node, value, this);
+    var data = value.inputConfig.options;
+    var options = value.options;
+    var list = select.getPopup().getList();
+    var optview = webix.$$(options);
+    node.firstChild.appendChild(select.$view.parentNode);
+    if (list.parse){
+        list.clearAll();
+        list.parse(data);
+        if ((!this.$noEmptyOption && value.emptyOption !== false) || value.emptyOption){
+            var emptyOption = { id:"", value: value.emptyOption||"", $empty: true };
+            list.add(emptyOption,0);
+            }
+        };
+    if (value.value) this.setValue(node, value.value);
+    select.render();
+    webix.delay(select.resize, select);
+    }
+
+export var rRender = function(chFunc) {
+    return function(master, config){
+        if (!config.richselect){
+            var d = webix.html.create("div", { "class" : "webix_richfilter" });
+            var richconfig = {
+                container:d,
+                view:this.inputtype,
+                options:[]
+                };
+            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
+            webix.extend(richconfig, inputConfig, true);
+            if (config.separator) richconfig.separator = config.separator;
+            if (config.suggest) richconfig.suggest = config.suggest;
+            var richselect = webix.ui(richconfig);
+            richselect.attachEvent("onChange", chFunc);
+            config.richselect = richselect.config.id;
+            //console.log('master', master);
+            //console.log('master._d', master._destroy_with_me);
+            //master._destroy_with_me.push(richselect);
+            };
+        config.css = "webix_div_filter";
+        return " ";
+        }
+    }
+
 export var fRender = function(master, config){
     if (this.init) this.init(config);
     config.css = "my_filter";
@@ -477,7 +528,23 @@ export function getDtParams(ui) {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             };
+    } else if (ui.config.id === "__dt_as") {
+        c_filter = {
+            'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
+            'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
+            'id_zavod'  : ($$(ui).isColumnVisible('id_zavod')) ? $$(ui).getFilter('id_zavod').value : undefined,
+            'id_strana' : ($$(ui).isColumnVisible('id_strana')) ? $$(ui).getFilter('id_strana').value : undefined,
+            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').value : undefined,
+            'c_group'   : ($$(ui).isColumnVisible('c_group')) ? $$(ui).getFilter('c_group').value : undefined,
+            'c_nds'     : ($$(ui).isColumnVisible('c_nds')) ? $$(ui).getFilter('c_nds').getValue() : undefined,
+            'c_hran'    : ($$(ui).isColumnVisible('c_hran')) ? $$(ui).getFilter('c_hran').getValue() : undefined,
+            'c_sezon'   : ($$(ui).isColumnVisible('c_sezon')) ? $$(ui).getFilter('c_sezon').getValue() : undefined,
+            'mandat'    : ($$(ui).isColumnVisible('mandat')) ? $$(ui).getFilter('mandat').getValue() : undefined,
+            'prescr'    : ($$(ui).isColumnVisible('prescr')) ? $$(ui).getFilter('prescr').getValue() : undefined,
+
+            };
         }
+        
     return [c_filter, ui.config.posPpage, ui.config.fi, ui.config.di]
     }
 

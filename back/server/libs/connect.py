@@ -232,6 +232,16 @@ if "__main__" == __name__:
     sql = "select r.id_spr, r.c_tovar from spr r WHERE lower(r.C_TOVAR) like lower('%анальгин%') order by r.c_tovar asc ROWS 1 to 20"
     sql = "insert INTO ROLES (id, name) values (0, 'Пользователь')"
     opt = ()
+    sql = """
+SELECT r.ID, r."USER", r.PASSWD, r."GROUP", r.SESSION, r.INN, r.ID_ROLE
+FROM USERS r"""
+    sql = """
+insert into USERS ("USER", PASSWD, INN, ID_ROLE)
+values ('Краснов', '66291526', '9999999999', 34)
+    """
+    sql = """
+update USERS set "GROUP" = 999999 where "USER" = 'Краснов'
+    """
     rr = fb.execute({"sql": sql, "options": opt})
     if rr == -1:
         print("sql connection error")
