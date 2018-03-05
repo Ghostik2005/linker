@@ -1,14 +1,29 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
+import {u_roles, checkVal, request} from "../views/globals";
 
 export default class NewUserView extends JetView{
     config(){
+        
+        function check_s(value) {
+            let url = this.$scope.app.config.r_url + "?check" + this.config._params.type
+            let params = {};
+            params['check'] = value;
+            params['user'] = this.$scope.app.config.user;
+            var ret = false;
+            let res = request(url, params, !0).response;
+            res = checkVal(res, 's');
+            if (res || this.config._params.id) {
+                ret = true
+                };
+            return ret;
+            }
+        
         return {view: "cWindow",
             modal: true,
             on: {
                 onHide: () => {
-                    //console.log(this.$$("new_user"));
                     this.$$("new_user").clear();
                     },
                 onShow: () => {
@@ -21,11 +36,15 @@ export default class NewUserView extends JetView{
             body: { view: "form",
                 localId: "new_user",
                 margin: 0,
+                _params: {},
                 rules:{
+                    "c_user": check_s,
                     },
                 elements: [
                     {rows: [
-                        {view: "text", labelPosition: 'top', label: "Пользователь:", value: "", name: "c_user"},
+                        {view: "text", labelPosition: 'top', label: "Пользователь:", value: "", name: "c_user",
+                            required: true, invalidMessage: "Такое имя уже есть"
+                            },
                         {height: 10, width: 600},
                         {view: "label", label: "Пароль:"},
                         {cols: [
@@ -56,40 +75,15 @@ export default class NewUserView extends JetView{
                                     }
                                 },
                             ]},
-                        {view: "label", label:"Группа:", name: "g_name"},
+                        {view: "text", labelPosition: 'top', label:"Группа:", name: 'id_group'},
+                        {view: "text", labelPosition: 'top', label: "Список ИНН:", value: "", name: "c_inn"},
+                        {view: "label", label:"Роль пользователя:"},
                         {cols: [
-                            {view:"combo", value: "", name: 'id_group', disabled: true,
+                            {view:"combo", label: "", value: "", name: "id_role", disabled: !true, localId: '_rolesC',
                                 options:  {
                                     body: {
-                                        template:"#c_group#",
-                                        yCount:7,
-                                        }
-                                    },
-                                on: {
-                                    onAfterRender: function() {
-                                        }
-                                    },
-                                },
-                            {view: "button", type: 'htmlbutton',
-                                label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'></span>",
-                                width: 30, disabled: true,
-                                on: {
-                                    onAfterRender: function () {
-                                        //if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
-                                        }
-                                    },
-                                click: () => {
-                                    }
-                                },
-                            ]},
-                        {view: "label", label:"Роль пользователя:", name: "r_name"},
-                        {cols: [
-                            {view:"combo", label: "", value: "", name: "id_role", disabled: true,
-                                options:  {
-                                    body: {
-                                        template:"#c_role#",
-                                        yCount:7,
-                                        data: [{"id": "0", "c_role" : "Пользователь"}, {"id": "34", "c_role": "Всемогущий"}]
+                                        template:"#r_name#",
+                                        yCount:5,
                                         }
                                     },
                                 on: {
@@ -99,34 +93,7 @@ export default class NewUserView extends JetView{
                                 },
                             {view: "button", type: 'htmlbutton', 
                                 label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'></span>",
-                                width: 30, disabled: true,
-                                on: {
-                                    onAfterRender: function () {
-                                        //if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
-                                        }
-                                    },
-                                click: () => {
-                                    }
-                                },
-                            ]},
-                        {view: "label", label:"Статус:", name: 'st_name'},
-                        {cols: [
-                            {view:"combo", label: "", value: "", name: "id_status", disabled: true,
-                                options:  {
-                                    body: {
-                                        template:"#c_status#",
-                                        yCount:10,
-                                        data: [{"id": 1, "c_status": "active"}, {"id": 2, "c_status": "deleted"}],
-                                        }
-                                    },
-                                on: {
-                                    onAfterRender: function() {
-                                        }
-                                    },
-                                },
-                            {view: "button", type: 'htmlbutton', 
-                                label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'></span>",
-                                width: 30, disabled: true,
+                                width: 30, disabled: !true,
                                 on: {
                                     onAfterRender: function () {
                                         //if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
@@ -151,13 +118,31 @@ export default class NewUserView extends JetView{
                                         }
                                     },
                                 click: () => {
-                                    let ff = this.$$("new_user").getValues();
-                                    console.log('form', ff);
-                                    webix.message({
-                                        'type': 'debug',
-                                        'text': 'сохранение изменений. пока недоступно'
-                                        });
-                                    //this.hide();
+                                    let valid = this.$$("new_user").validate({hidden:false, disabled:false});
+                                    if (valid) {
+                                        let params = this.$$("new_user").getValues();
+                                        params.user = this.app.user;
+                                        let url = (params.id) ? this.app.config.r_url + "?updUser" : this.app.config.r_url + "?setUser";
+                                        if (checkVal(request(url, params, !0).response, 's')) {
+                                            url = this.app.config.r_url + "?getUsersAll";
+                                            console.log(params);
+                                            request(url, params).then(function(data) {
+                                                data = checkVal(data, 'a');
+                                                if (data) {
+                                                    $$("users_dc").clearAll();
+                                                    $$("users_dc").parse(data);
+                                                    let th = $$("__dtu_g");
+                                                    th.clearAll();
+                                                    th.parse($$("users_dc"));
+                                                    };
+                                                })
+                                            //this.hide();
+                                            }
+                                        webix.message({
+                                            'type': 'debug',
+                                            'text': 'сохранение изменений'
+                                            });
+                                        }
                                     }
                                 }
                             ]}
@@ -169,14 +154,24 @@ export default class NewUserView extends JetView{
     show(new_head, item){
         console.log('show.item', item);
         if (item) {
-            //if (item.c_status == 'active') item.c_status = 1
-            //else item.c_status = 2;
             this.$$("new_user").parse(item);
+            this.$$("new_user").config._params.id = item.id;
+            this.$$("new_user").config._params.type = 'User';
+        } else {
+            this.$$("new_user").clear();
+            this.$$("new_user").config._params = {};
             }
-        console.log('form', this.$$("new_user").getValues());
+            
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()
         }
+        
+    init() {
+        let th = this.$$('_rolesC');
+        th.getList().clearAll();
+        th.getList().parse(u_roles);
+        }
+        
     hide(){
         this.getRoot().hide()
         }

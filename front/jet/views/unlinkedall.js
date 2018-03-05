@@ -4,11 +4,28 @@ import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
 import {last_page, checkKey, cEvent, fRefresh, fRender} from "../views/globals";
 import {parse_unlinked_item, prcs, getDtParams, parseToLink} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 
 export default class AllUnlinkedView extends JetView{
     config(){
         let app = $$("main_ui").$scope.app;
-
+        var filtFunc = function(id){
+            let ui = webix.$$(id);
+            if (ui) {
+                let params = getDtParams(ui);
+                get_data({
+                    view: id,
+                    navBar: "__nav_a",
+                    start: 1,
+                    count: params[1],
+                    searchBar: undefined,
+                    method: "getPrcsAll",
+                    field: params[2],
+                    direction: params[3],
+                    filter: params[0]
+                    });
+                };
+            }
         webix.ui.datafilter.customFilterUnlnk = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.customFilterUnlnk.on_key_down = function(e, node, value){
                 var id = this._comp_id;
@@ -16,21 +33,7 @@ export default class AllUnlinkedView extends JetView{
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_ti) window.clearTimeout(this._filter_ti);
                 this._filter_ti=window.setTimeout(function(){
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_a",
-                            start: 1,
-                            count: params[1],
-                            searchBar: undefined,
-                            method: "getPrcsAll",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    filtFunc(id)
                     }, app.config.searchDelay);
                 };
         webix.ui.datafilter.customFilterUnlnk.refresh = fRefresh;
@@ -45,21 +48,7 @@ export default class AllUnlinkedView extends JetView{
                     label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                     click: () => {
                         var id = "__dt_a";
-                        let ui = webix.$$(id);
-                        if (ui) {
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: id,
-                                navBar: "__nav_a",
-                                start: 1,
-                                count: params[1],
-                                searchBar: undefined,
-                                method: "getPrcsAll",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            };
+                        filtFunc(id);
                         }
                     },
                 {view: "button", type: 'htmlbutton',
@@ -182,6 +171,19 @@ export default class AllUnlinkedView extends JetView{
                         {content: "customFilterUnlnk"},
                         ]
                     },
+                {id: "dt", width: 200, sort: 'server',
+                    format: dt_formating_sec,
+                    css: 'center_p',
+                    header: [{text: "Дата добавления"}, 
+                        {content: "dateRangeFilter", compare: compareTrue,
+                            readonly: !true, disabled: !true,
+                            inputConfig:{format:dt_formating, width: 180,},
+                            suggest:{
+                                view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
+                                },
+                            },
+                        ]
+                    },
                 ],
             on: {
                 "data->onParse":function(i, data){
@@ -189,43 +191,13 @@ export default class AllUnlinkedView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    //if (!this.count) {
-                        //this.showProgress({
-                            //type: "icon",
-                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            //});
-                        //}
                     },
                 onBeforeSort: (field, direction) => {
                     var id = "__dt_a";
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let start = ui.config.startPos;
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_a",
-                            start: start,
-                            count: params[1],
-                            searchBar: undefined,
-                            method: "getPrcsAll",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    $$(id).config.fi = field;
+                    $$(id).config.di = direction;
+                    filtFunc(id);
                     },
-                //onResize: function () {
-                    //if (this.isColumnVisible('c_user')) {
-                        //this.getFilter('c_user').value = this.$scope.app.config.user;
-                        //if  (this.$scope.app.config.role !== this.$scope.app.config.admin) {
-                            //this.getFilter('c_user').value = this.$scope.app.config.user;
-                            //this.getFilter('c_user').readOnly = true;
-                        //} else {
-                            //this.getFilter('c_user').readOnly = false;
-                            //}
-                        //}
-                    //},
                 onItemDblClick: () => {
                     let item = $$("__dt_a").getSelectedItem();
                     console.log('item', item);
@@ -255,21 +227,7 @@ export default class AllUnlinkedView extends JetView{
             on: {
                 onShow: () => {
                     var id = "__dt_a";
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_a",
-                            start: 1,
-                            count: params[1],
-                            searchBar: undefined,
-                            method: "getPrcsAll",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    filtFunc(id);
                     },
                 onHide: () => {
                     $$("_spr_search").focus();
@@ -302,5 +260,29 @@ export default class AllUnlinkedView extends JetView{
                 $$("__dt_a").getFilter('c_user').readOnly = false;
                 }
             }
+        $$($$("__dt_a").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$($$("__dt_a").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+            if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            this._filter_timer=window.setTimeout(function(){
+                var id = "__dt_a";
+                let ui = webix.$$(id);
+                if (ui) {
+                    let params = getDtParams(ui);
+                    get_data({
+                        view: id,
+                        navBar: "__nav_a",
+                        start: 1,
+                        count: params[1],
+                        searchBar: undefined,
+                        method: "getPrcsAll",
+                        field: params[2],
+                        direction: params[3],
+                        filter: params[0]
+                        });
+                    };
+                },webix.ui.datafilter.textWaitDelay);
+            this.getParentView().getParentView().hide();
+            })
+        
         }
     }

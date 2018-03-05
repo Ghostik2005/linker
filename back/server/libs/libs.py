@@ -193,7 +193,6 @@ WHERE r.SH_PRC = ?
         st_t = time.time()
         if self._check(x_hash):
             filt = params.get('c_filter')
-            pref = 'and %s'
             stri = ""
             if filt:
                 pars = {}
@@ -204,16 +203,28 @@ WHERE r.SH_PRC = ?
                 ssss = []
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
-                    ssss.append(pref % s)
+                    ssss.append('and %s' % s)
                 if pars['c_user']:
                     s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
-                    ssss.append(pref % s)
+                    ssss.append('and %s' % s)
                 if pars['c_tovar']:
                     s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
-                    ssss.append(pref % s)
+                    ssss.append('and %s' % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
-                    ssss.append(pref % s)
+                    ssss.append('and %s' % s)
+                dt = filt.get('dt')
+                if dt:
+                    pars['start_dt'] = dt.get('start')
+                    pars['end_dt'] = dt.get('end')
+                    if pars['start_dt'] and not pars['end_dt']:
+                        pars['start_dt'] = pars['start_dt'].split()[0]
+                        s = """(r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))""".format(pars['start_dt'])
+                        ssss.append('and %s' % s)
+                    elif pars['start_dt'] and pars['end_dt']:
+                        pars['end_dt'] = pars['end_dt'].split()[0]
+                        s = """ (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))""".format(pars['start_dt'], pars['end_dt'])
+                        ssss.append('and %s' % s)
                 stri = ' '.join(ssss)
             start_p = int(params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
@@ -223,16 +234,21 @@ WHERE r.SH_PRC = ?
             search_re = params.get('search')
             search_field = params.get('s_field')
             user = params.get('user')
-            us_stri = '' if user == 'admin' or 'Краснов' else """and u."USER" = '%s'""" % user
-            #stri = ""
-            table = 'r'
+            sql = """SELECT r.ID, r."USER", r.ID_ROLE FROM USERS r WHERE r."USER" = ?"""
+            opt = (user,)
+            id_role = int(self.db.request({"sql": sql, "options": opt})[0][2])
+            us_stri = '' if id_role in [10, 34] else """and u."USER" = '%s'""" % user
+            table = 'r.'
             if field == 'c_vnd':
-                table = 'v'
+                table = 'v.'
             elif field == 'c_user':
-                table = 'u'
+                table = 'u.'
                 field = '"USER"'
-            field = '.'.join([table, field])
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND
+            elif field == "dt":
+                table = ''
+                field = "ch_date"
+            field = ''.join([table, field])
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
             INNER JOIN VND v on (r.ID_VND = v.ID_VND)
@@ -254,7 +270,8 @@ WHERE r.SH_PRC = ?
                     "id_org"  : row[7],
                     "c_index" : row[8],
                     "c_user"  : row[9],
-                    "c_vnd"   : row[10]
+                    "c_vnd"   : row[10],
+                    "dt"      : str(row[11])
                 }
                 _return.append(r)
             sql = """select count(*)
@@ -292,7 +309,6 @@ WHERE r.SH_PRC = ?
                 if pars['c_tovar']:
                     sti = "lower(r.C_TOVAR) like lower('%%')"
                     exclude, pars['c_tovar'] = self._form_exclude(pars['c_tovar'])
-                    
                     pars['c_tovar'] = pars['c_tovar'].split()
                     s = [] if len(pars['c_tovar']) > 0 else [sti,]
                     for i in range(len(pars['c_tovar'])):
@@ -310,6 +326,20 @@ WHERE r.SH_PRC = ?
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append(pref % s)
+                dt = filt.get('dt')
+                if dt:
+                    pars['start_dt'] = dt.get('start')
+                    pars['end_dt'] = dt.get('end')
+                    if pars['start_dt'] and not pars['end_dt']:
+                        pars['start_dt'] = pars['start_dt'].split()[0]
+                        s = """((r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))
+                        or (r.CHANGE_DT > CAST('{0}' as TIMESTAMP) AND r.CHANGE_DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP))))""".format(pars['start_dt'])
+                        ssss.append('and %s' % s)
+                    elif pars['start_dt'] and pars['end_dt']:
+                        pars['end_dt'] = pars['end_dt'].split()[0]
+                        s = """ ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))
+                                or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))""".format(pars['start_dt'], pars['end_dt'])
+                        ssss.append('and %s' % s)
                 stri = ' '.join(ssss)
             start_p = int(params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
@@ -319,14 +349,20 @@ WHERE r.SH_PRC = ?
             search_re = params.get('search')
             search_field = params.get('s_field')
             user = params.get('user')
-            us_stri = '' if user == 'admin' or 'Краснов' else """and u."USER" = '%s'""" % user
-            table = 'r'
+            sql = """SELECT r.ID, r."USER", r.ID_ROLE FROM USERS r WHERE r."USER" = ?"""
+            opt = (user,)
+            id_role = int(self.db.request({"sql": sql, "options": opt})[0][2])
+            us_stri = '' if id_role in [10, 34] else """and u."USER" = '%s'""" % user
+            table = 'r.'
             if field == 'c_vnd':
-                table = 'v'
+                table = 'v.'
             elif field == 'c_user':
-                table = 'u'
+                table = 'u.'
                 field = '"USER"'
-            field = '.'.join([table, field])
+            elif field == "dt":
+                table = ''
+                field = "ch_date"
+            field = ''.join([table, field])
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, v.C_VND,
             CASE 
             WHEN r.CHANGE_DT is null THEN r.DT
@@ -1323,17 +1359,121 @@ WHERE r.SH_PRC = ?
                 r = {
                     "id"        : row[0],
                     "c_user"    : row[1],
-                    "c_pwrd"    : row[2],
                     "id_group"  : row[3],
                     "c_inn"     : row[4],
                     "c_role"    : row[5],
-                    "id_role"   : str(row[6]),
-                    "c_status"   : "active",
-                    "id_status"  : 1,
+                    "id_role"   : 1 if row[6] == 0 else row[6],
+                    #"c_status"   : "active",
+                    #"id_status"  : 1,
                     "dt"        : ""
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updUser(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            new_user = params.get('c_user')
+            passwd = params.get('c_pwrd')
+            group = params.get('id_group')
+            id_role = params.get('id_role')
+            if id_role == 1:
+                id_role = 0
+            u_id = params.get('id')
+            if id_role in (10, 34):
+                group = 999999
+            inn = params.get('c_inn')
+            if u_id:
+                sql = """update USERS set "USER" = ?, "GROUP" = ?, PASSWD = ?, INN = ?, ID_ROLE = ? where id = ? returning id"""
+                opt = (new_user, group, passwd, inn, id_role, u_id)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'       : res[0][0],
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "add error"}
+            else:
+                ret = {"result": False, "ret_val": "id error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def checkUser(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = """select count(*)
+                from users r
+                where r."USER" = ?
+                """
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setUser(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            new_user = params.get('c_user')
+            passwd = params.get('c_pwrd')
+            group = params.get('id_group')
+            id_role = params.get('id_role')
+            if id_role == 1:
+                id_role = 0
+            if id_role in (10, 34):
+                group = 999999
+            inn = params.get('c_inn')
+            sql = """insert into USERS ("USER", "GROUP", PASSWD, INN, ID_ROLE) values (?, ?, ?, ?, ?) returning id"""
+            opt = (new_user, group, passwd, inn, id_role)
+            res = self.db.execute({"sql": sql, "options": opt})
+            if res[0]:
+                _ret = {
+                    'id'       : res[0][0],
+                    "c_user"   : new_user,
+                    "id_group" : group,
+                    "c_inn"    : inn,
+                    "id_role"  : id_role,
+                    "dt"       : ""
+                }
+                ret = {"result": True, "ret_val": _ret}
+            else:
+                ret = {"result": False, "ret_val": "add error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getUser(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            id_u = params.get('id')
+            sql = """select r.ID, r."USER", r.PASSWD, r."GROUP", r.INN, a.NAME, r.ID_ROLE from users r
+                INNER JOIN ROLES a on (a.ID = r.ID_ROLE) WHERE r.ID = ?"""
+            opt = (id_u,)
+            res = self.db.execute({"sql": sql, "options": opt})
+            if res[0]:
+                _ret = {
+                    "id"        : res[0][0],
+                    "c_user"    : res[0][1],
+                    "c_pwrd"    : res[0][2],
+                    "id_group"  : res[0][3],
+                    "c_inn"     : res[0][4],
+                    "c_role"    : res[0][5],
+                    "id_role"   : 1 if res[0][6] == 0 else res[0][6],
+                    "dt"        : ""
+                }
+                ret = {"result": True, "ret_val": _ret}
+            else:
+                ret = {"result": False, "ret_val": "add error"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2225,12 +2365,6 @@ or
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
             #stri += stri_1
-            sql = """select count(*)
-                    from spr r
-                    WHERE %s 
-            """ % stri
-            opt = ()
-            count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """
 select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
 from spr r
@@ -2245,6 +2379,15 @@ ROWS ? to ?
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
+            if result:
+                sql = """select count(*)
+                        from spr r
+                        WHERE %s 
+                """ % stri
+                opt = ()
+                count = self.db.request({"sql": sql, "options": opt})[0][0]
+            else:
+                count = 0
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
                 r = {
@@ -2306,8 +2449,18 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
             filt = params.get('c_filter')
-            pref = 'and %s'
-            stri_1 = ""
+            search_re = search_re.split()
+            stri = [] if len(search_re) > 0 else [sti,]
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            in_st = []
+            in_c = []
+            ssss = []
+            stri = ' '.join(stri)
             if filt:
                 pars = {}
                 pars['c_vnd'] = filt.get('c_vnd')
@@ -2322,91 +2475,91 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
                     if id_role not in (10, 34):
                         pars['owner'] = user
                 dt = filt.get('dt')
-                ssss = []
                 if dt:
                     pars['start_dt'] = dt.get('start')
                     pars['end_dt'] = dt.get('end')
                     if pars['start_dt'] and not pars['end_dt']:
                         pars['start_dt'] = pars['start_dt'].split()[0]
-                        s = """
-    ((r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))
-    or 
-    (r.CHANGE_DT > CAST('{0}' as TIMESTAMP) AND r.CHANGE_DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP))))
-                        """.format(pars['start_dt'])
-                        #s = " (CAST(r.CHANGE_DT as DATE) = '%s' or CAST(r.DT as DATE) = '%s')" % (pars['start_dt'], pars['start_dt'])
-                        ssss.append(pref % s)
+                        s = """((r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))
+                        or (r.CHANGE_DT > CAST('{0}' as TIMESTAMP) AND r.CHANGE_DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP))))""".format(pars['start_dt'])
+                        ssss.append('and %s' % s)
                     elif pars['start_dt'] and pars['end_dt']:
                         pars['end_dt'] = pars['end_dt'].split()[0]
-                        s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))) or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))".format(pars['start_dt'], pars['end_dt'])
-                        ssss.append(pref % s)
-                if pars['c_vnd']:
-                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
-                    ssss.append(pref % s)
-                if pars['owner']:
-                    s = "lower(r.OWNER) like lower('%" + pars['owner'] + "%')"
-                    ssss.append(pref % s)
+                        s = """ ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))
+                                or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))""".format(pars['start_dt'], pars['end_dt'])
+                        ssss.append('and %s' % s)
                 if pars['c_tovar']:
                     s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
-                    ssss.append(pref % s)
+                    ssss.append('and %s' % s)
+                if pars['owner']:
+                    s = "lower(r.OWNER) like lower('%" + pars['owner'] + "%')"
+                    ssss.append('and %s' % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
-                    ssss.append(pref % s)
                 if pars['spr']:
                     qwe = pars.get('spr')
                     exclude, qwe = self._form_exclude(qwe)
-                    #for i in range(qwe.count('!')):
-                        #ns = qwe.find('!')
-                        #ne = qwe.find(' ', ns)
-                        #te = qwe[ns+1: ne if ne > 0 else None]
-                        #exclude.append(te)
-                        #qwe = qwe.replace("!" + te, '')
                     qwe = qwe.split()
-                    for i in range(len(qwe)):
-                        s = "lower(s.C_TOVAR) like lower('%" + qwe[i].strip() + "%')"
-                        ssss.append(pref % s)
+                    sq = []
                     if len(exclude) > 0:
+                        for i in range(len(qwe)):
+                            s = "lower(s.C_TOVAR) like lower('%" + qwe[i].strip() + "%')"
+                            sq.append('and %s' % s)
                         for i in range(len(exclude)):
                             s = "lower(s.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
-                            ssss.append(pref % s)
-                    #s = "lower(s.C_TOVAR) like lower('%" + pars['spr'] + "%')"
-                    #ssss.append(pref % s)
-                stri_1 = ' '.join(ssss)
-            search_re = search_re.split()
-            stri = [] if len(search_re) > 0 else [sti,]
-            for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
-                if i == 0:
-                    stri.append(ts1)
+                            sq.append('and %s' % s)
+                        in_c.append("LEFT JOIN SPR s on (s.ID_SPR = r.ID_SPR) ")
+                        ssss.append(' '.join(sq))
+                        in_st.append("LEFT JOIN SPR s on (s.ID_SPR = r.ID_SPR) ")
+                    else:
+                        for i in range(len(qwe)):
+                            s = "lower(s.C_TOVAR) like lower('%" + qwe[i].strip() + "%')"
+                            sq.append('and %s' % s)
+                        sq = "JOIN SPR s on (s.ID_SPR = r.ID_SPR) " + ' '.join(sq)
+                        in_c.insert(0, sq)
+                        in_st.insert(0, sq)
                 else:
-                    stri.append('and %s' % ts1)
-            stri.append(stri_1)
-            stri = ' '.join(stri)
-            sql = """
-select count(*)
-from LNK r
-{0}
-{1}
-WHERE {2} 
-            """.format("LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)" if 'v.C_VND' in stri else '', 'LEFT OUTER JOIN SPR s on (s.ID_SPR = r.ID_SPR)' if 's.C_TOVAR' in stri else '', stri)
-            opt = ()
-            count = self.db.request({"sql": sql, "options": opt})[0][0]
-            sql = """
-SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT, r.ID_SPR, s.C_TOVAR,
-    CASE 
-    WHEN r.CHANGE_DT is null THEN r.DT
-    ELSE r.CHANGE_DT
-    END as ch_date
-FROM LNK r 
-LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)
-LEFT OUTER JOIN SPR s on (s.ID_SPR = r.ID_SPR)
-WHERE {0} 
-order by {1} {2}
-rows ? to ?
-            """.format(stri, field, direction)
+                    s = """LEFT JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_vnd']:
+                    s = "JOIN VND v on (v.ID_VND = r.ID_VND) and lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)"
+                    in_st.append(s)
+                in_st.insert(0, """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT, r.ID_SPR, s.C_TOVAR,
+                                CASE 
+                                WHEN r.CHANGE_DT is null THEN r.DT
+                                ELSE r.CHANGE_DT
+                                END as ch_date FROM LNK r""")
+                sql = '\n'.join(in_st)
+                in_c.insert(0, "select count(*) from LNK r")
+                sql_c = '\n'.join(in_c)
+                stri += ' ' + ' '.join(ssss)
+            else:
+                sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.CHANGE_DT, r.ID_SPR, s.C_TOVAR,
+                        CASE 
+                        WHEN r.CHANGE_DT is null THEN r.DT
+                        ELSE r.CHANGE_DT
+                        END as ch_date
+                    FROM LNK r 
+                    LEFT OUTER JOIN VND v on (v.ID_VND = r.ID_VND)
+                    LEFT OUTER JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
+                sql_c = """select count(*) from LNK r"""
+            sql += """\nWHERE {0} ORDER by {1} {2} ROWS ? to ?"""
+            sql_c += """ WHERE {0}""".format(stri)
+            sql = sql.format(stri, field, direction)
             opt = (start_p, end_p)
-            _return = []
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
+            if result:
+                sql = sql_c
+                opt = ()
+                count = self.db.request({"sql": sql, "options": opt})[0][0]
+            else:
+                count = 0
+            _return = []
             for row in result:
                 r = {
                     "id"          : row[0],
@@ -2522,6 +2675,24 @@ rows ? to ?
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getRoles(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """SELECT r.ID, r.NAME FROM ROLES r"""
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            print(result)
+            for row in result:
+                r = {
+                    "id"        : 1 if row[0] == 0 else row[0],
+                    "r_name"    : row[1],
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
 class fLock:
     """

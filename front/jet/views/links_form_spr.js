@@ -11,6 +11,24 @@ import {dt_formating_sec, dt_formating} from "../views/globals";
 export default class LinksViewSpr extends JetView{
     config(){
         let app = $$("main_ui").$scope.app;
+        
+        var filtFunc = function(id) {
+            let ui = webix.$$(id);
+            if (ui) {
+                let params = getDtParams(ui);
+                get_data({
+                    view: id,
+                    navBar: "__nav_l",
+                    start: 1,
+                    count: params[1],
+                    searchBar: "_link_search",
+                    method: "getSprLnks",
+                    field: params[2],
+                    direction: params[3],
+                    filter: params[0]
+                    });
+                };
+            }
         webix.ui.datafilter.customFilterLnkSpr = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.customFilterLnkSpr.on_key_down = function(e, node, value){
                 var id = this._comp_id;
@@ -18,21 +36,7 @@ export default class LinksViewSpr extends JetView{
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(function(){
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_l",
-                            start: 1,
-                            count: params[1],
-                            searchBar: "_link_search",
-                            method: "getSprLnks",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    filtFunc(id)
                     }, app.config.searchDelay);
                 }
         webix.ui.datafilter.customFilterLnkSpr.refresh = fRefresh;
@@ -101,22 +105,10 @@ export default class LinksViewSpr extends JetView{
                             webix.extend(this, webix.ProgressBar);
                             },
                         onBeforeSort: (field, direction) => {
-                            let start = $$("__tt").config.startPos;
-                            let ui = webix.$$("__tt");
-                            if (ui) {
-                                let params = getDtParams(ui);
-                                get_data({
-                                    view: "__tt",
-                                    navBar: "__nav_l",
-                                    start: start,
-                                    count: params[1],
-                                    searchBar: "_link_search",
-                                    method: "getSprLnks",
-                                    field: params[2],
-                                    direction: params[3],
-                                    filter: params[0]
-                                    });
-                                };
+                            var id = "__tt"
+                            $$(id).config.fi = field;
+                            $$(id).config.di = direction;
+                            filtFunc(id);
                             },
                         onItemDblClick: function (item, ii, iii) {
                             let level = this.getSelectedItem().$level;
@@ -168,22 +160,8 @@ export default class LinksViewSpr extends JetView{
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                             click: () => {
-                                let start = 1;
-                                let ui = webix.$$("__tt");
-                                if (ui) {
-                                    let params = getDtParams(ui);
-                                    get_data({
-                                        view: "__tt",
-                                        navBar: "__nav_l",
-                                        start: start,
-                                        count: params[1],
-                                        searchBar: "_link_search",
-                                        method: "getSprLnks",
-                                        field: params[2],
-                                        direction: params[3],
-                                        filter: params[0]
-                                        });
-                                    };
+                                let id = "__tt";
+                                filtFunc(id);
                                 }
                             },
                         {view: "button", type: 'htmlbutton',

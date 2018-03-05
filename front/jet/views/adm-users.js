@@ -2,12 +2,13 @@
 
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
-import {request, checkVal} from "../views/globals";
+import {request, checkVal, users} from "../views/globals";
 
 export default class UsersView extends JetView{
     config(){
         var sprv = {view: "datatable",
             localId: "__dtu",
+            id: "__dtu_g",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -43,12 +44,12 @@ export default class UsersView extends JetView{
                     header: [{text: "Роль пользователя"},
                         ]
                     },
-                { id: "c_status", sort: "text",
-                    width: 150,
-                    header: [{text: "Статус"},
-                        ]
-                    },
-                { id: "dt", 
+                //{ id: "c_status", sort: "text",
+                    //width: 150,
+                    //header: [{text: "Статус"},
+                        //]
+                    //},
+                { id: "dt", hidden: true,
                     width: 250,
                     header: [{text: "Дата заведения"},
                         ]
@@ -60,15 +61,14 @@ export default class UsersView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
+                    let url = this.$scope.app.config.r_url + "?getUser";
+                    let params = {};
+                    params.id = item.id
+                    params.user = this.$scope.app.user;
+                    item = checkVal(request(url, params, !0).response, 's');
                     this.$scope.popnewuser.show('Редактирование пользователя', item);
                     },
                 onAfterLoad: function() {
@@ -137,14 +137,6 @@ export default class UsersView extends JetView{
         this.popnewuser = this.ui(NewUserView);
         let th = this.$$("__dtu");
         th.clearAll();
-        let user = this.app.config.user;
-        let url = this.app.config.r_url + "?getUsersAll"
-        let params = {"user": user};
-        request(url, params).then(function(data) {
-            data = checkVal(data, 'a');
-            if (data) {
-                th.parse(data);
-                };
-            })
+        th.parse(users);
         }
     }

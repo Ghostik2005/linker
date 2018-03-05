@@ -5,7 +5,7 @@ import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
 import {checkKey, getDtParams, fRender, fRefresh, cEvent} from "../views/globals";
 import ConfirmView from "../views/yes-no";
-import {dt_formating_sec, dt_formating} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 
 export default class SkippedView extends JetView{
     config(){
@@ -17,6 +17,24 @@ export default class SkippedView extends JetView{
             $$("__dt_s").remove(item_id)
             }
 
+        var filtFunc = function(id){
+            let ui = webix.$$(id);
+            if (ui) {
+                let params = getDtParams(ui);
+                get_data({
+                    view: id,
+                    navBar: "__nav_s",
+                    start: 1,
+                    count: params[1],
+                    searchBar: undefined,
+                    method: "getPrcsSkip",
+                    field: params[2],
+                    direction: params[3],
+                    filter: params[0]
+                    });
+                };
+            }
+        
         webix.ui.datafilter.customFilterSkip = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.customFilterSkip.on_key_down = function(e, node, value){
                 var id = this._comp_id;
@@ -24,21 +42,7 @@ export default class SkippedView extends JetView{
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(function(){
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_s",
-                            start: 1,
-                            count: params[1],
-                            searchBar: undefined,
-                            method: "getPrcsSkip",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    filtFunc(id)
                     }, app.config.searchDelay);
                 }
         webix.ui.datafilter.customFilterSkip.refresh = fRefresh;
@@ -184,17 +188,18 @@ export default class SkippedView extends JetView{
                         {content: "customFilterSkip"},
                         ]
                     },
-                {id: "dt", width: 200, //sort: 'server',
+                {id: "dt", width: 200, sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
                     header: [{text: "Дата изменения"}, 
-                    //{content: "filterDateRange",
-                        //inputConfig:{format:dt_formating, width: 180,},
-                        //suggest:{
-                            //view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
-                            //},
-                        //},
-                    ]
+                        {content: "dateRangeFilter", compare: compareTrue,
+                            readonly: !true, disabled: !true,
+                            inputConfig:{format:dt_formating, width: 180,},
+                            suggest:{
+                                view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
+                                },
+                            },
+                        ]
                     },
                 ],
             on: {
@@ -203,31 +208,12 @@ export default class SkippedView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
                     },
                 onBeforeSort: (field, direction) => {
                     var id = "__dt_s";
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let start = ui.config.startPos;
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_s",
-                            start: start,
-                            count: params[1],
-                            searchBar: undefined,
-                            method: "getPrcsSkip",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    $$(id).config.fi = field;
+                    $$(id).config.di = direction;
+                    filtFunc(id);
                     },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user
@@ -260,21 +246,7 @@ export default class SkippedView extends JetView{
             on: {
                 onShow: () => {
                     var id = "__dt_s";
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_s",
-                            start: 1,
-                            count: params[1],
-                            searchBar: undefined,
-                            method: "getPrcsSkip",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    filtFunc(id);
                     },
                 onHide: () => {
                     $$("__dt_s").clearAll();
@@ -300,5 +272,28 @@ export default class SkippedView extends JetView{
         }
     init() {
         this.popconfirm = this.ui(ConfirmView);
+        $$($$("__dt_s").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$($$("__dt_s").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+            if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            this._filter_timer=window.setTimeout(function(){
+                var id = "__dt_s";
+                let ui = webix.$$(id);
+                if (ui) {
+                    let params = getDtParams(ui);
+                    get_data({
+                        view: id,
+                        navBar: "__nav_s",
+                        start: 1,
+                        count: params[1],
+                        searchBar: undefined,
+                        method: "getPrcsSkip",
+                        field: params[2],
+                        direction: params[3],
+                        filter: params[0]
+                        });
+                    };
+                },webix.ui.datafilter.textWaitDelay);
+            this.getParentView().getParentView().hide();
+            })
         }
     }

@@ -11,6 +11,25 @@ import UnlinkView from "../views/unlink";
 export default class LinksViewLnk extends JetView{
     config(){
         let app = $$("main_ui").$scope.app;
+
+        var filtFunc = function(id){
+            let ui = webix.$$(id);
+            if (ui) {
+                let params = getDtParams(ui);
+                get_data({
+                    view: id,
+                    navBar: "__nav_ll",
+                    start: 1,
+                    count: params[1],
+                    searchBar: "_link_search",
+                    method: "getLnkSprs",
+                    field: params[2],
+                    direction: params[3],
+                    filter: params[0]
+                    });
+                };
+            }
+
         webix.ui.datafilter.cFilt = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.cFilt.on_key_down = function(e, node, value){
                 var id = this._comp_id;
@@ -18,21 +37,7 @@ export default class LinksViewLnk extends JetView{
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(function(){
-                    let ui = webix.$$(id);
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: id,
-                            navBar: "__nav_ll",
-                            start: 1,
-                            count: params[1],
-                            searchBar: "_link_search",
-                            method: "getLnkSprs",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        };
+                    filtFunc(id);
                     },app.config.searchDelay);
                 }
         webix.ui.datafilter.cFilt.refresh = fRefresh;
@@ -93,8 +98,9 @@ export default class LinksViewLnk extends JetView{
                         {id: "dt", width: 200, sort: 'server',
                             format: dt_formating_sec,
                             css: 'center_p',
-                            header: [{text: "Дата изменения"}, 
+                            header: [{text: "Дата изменения"},
                             {content: "dateRangeFilter", compare: compareTrue,
+                                readonly: !true, disabled: !true,
                                 inputConfig:{format:dt_formating, width: 180,},
                                 suggest:{
                                     view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
@@ -104,7 +110,6 @@ export default class LinksViewLnk extends JetView{
                             },
                         {id: "owner", width: 100, sort: 'server',
                             header: [{text: "Создал"}, 
-                            //{content: "customFilterLnkSpr"},
                             {content: "cFilt"},
                             ]
                             }
@@ -117,24 +122,10 @@ export default class LinksViewLnk extends JetView{
                             webix.extend(this, webix.ProgressBar);
                             },
                         onBeforeSort: (field, direction) => {
-                            let start = $$("__ttl").config.startPos;
-                            $$("__ttl").config.fi = field;
-                            $$("__ttl").config.di = direction;
-                            let ui = webix.$$("__ttl");
-                            if (ui) {
-                                let params = getDtParams(ui);
-                                get_data({
-                                    view: "__ttl",
-                                    navBar: "__nav_ll",
-                                    start: start,
-                                    count: params[1],
-                                    searchBar: "_link_search",
-                                    method: "getLnkSprs",
-                                    field: params[2],
-                                    direction: params[3],
-                                    filter: params[0]
-                                    });
-                                };
+                            var id = "__ttl";
+                            $$(id).config.fi = field;
+                            $$(id).config.di = direction;
+                            filtFunc(id);
                             },
                         onItemDblClick: (item, ii, iii) => {
                             let sh_prc = $$("__ttl").getSelectedItem().id;
@@ -166,22 +157,8 @@ export default class LinksViewLnk extends JetView{
                         {view: "button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
                             click: () => {
-                                let start = 1;
-                                let ui = webix.$$("__ttl");
-                                if (ui) {
-                                    let params = getDtParams(ui);
-                                    get_data({
-                                        view: "__ttl",
-                                        navBar: "__nav_ll",
-                                        start: start,
-                                        count: params[1],
-                                        searchBar: "_link_search",
-                                        method: "getLnkSprs",
-                                        field: params[2],
-                                        direction: params[3],
-                                        filter: params[0]
-                                        });
-                                    };
+                                let id = "__ttl"
+                                filtFunc(id);
                                 }
                             },
                         {view: "button", type: 'htmlbutton',

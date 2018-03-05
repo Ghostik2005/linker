@@ -2,6 +2,22 @@
 
 import {JetApp, JetView} from "webix-jet";
 
+export var users = new webix.DataCollection({
+        id: "users_dc",
+        on: {
+            onAfterLoad: function() {
+                }
+            }
+        });
+
+export var u_roles = new webix.DataCollection({
+        id: "roles_dc",
+        on: {
+            onAfterLoad: function() {
+                }
+            }
+        });
+
 export var barcodes = new webix.DataCollection({
         id: "bars_dc",
         on: {
@@ -190,7 +206,7 @@ export function checkVal(result, mode) {
         ret_value = undefined;
         err = 'error';
         }
-    if (err) webix.message({'type': 'debug', 'text': err});
+    if (err) console.log(err);
     return ret_value;
     }
 
@@ -345,7 +361,6 @@ export function parseToLink(item){
             }, 800);
         };
     }
-
 
 export function get_bars(th, id_spr) {
     let user = th.app.config.user;
@@ -521,12 +536,14 @@ export function getDtParams(ui) {
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').value : undefined,
+            'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.id === "__dt_s") {
         c_filter = {
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.id === "__dt_as") {
         c_filter = {
@@ -567,6 +584,7 @@ export function init_first(app) {
     setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
     setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
     setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
+    setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getRoles", "store": "roles_dc"});
     }
 
 export function get_prcs(th, id_vnd) {
