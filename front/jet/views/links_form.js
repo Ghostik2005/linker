@@ -102,7 +102,8 @@ export default class LinksView extends JetView{
                                                 if (typeof($$(cv).getFilter(item.id).setValue) === 'function') {
                                                     $$(cv).getFilter(item.id).setValue('');
                                                 } else {
-                                                    $$(cv).getFilter(item.id).value = '';
+                                                    let qq = $$(cv).getFilter(item.id);
+                                                    if (!qq.readOnly) qq.value = '';
                                                     };
                                                 }
                                             }

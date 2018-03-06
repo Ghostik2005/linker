@@ -17,7 +17,7 @@ class fb_local:
     def __init__(self, log):
         try:
             config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker/con111f.ini', encoding='UTF-8')
+            config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
             init = config['init']
             self.prod_params = {
                     'uri': init['uri'],
@@ -29,6 +29,7 @@ class fb_local:
             self.production = False
             self.prod_params = {}
         self.log = log
+        self.log("Production" if self.production else "Test")
         self.connect_params = {
                 "host": "localhost",
                 "database": "spr",
@@ -235,13 +236,9 @@ if "__main__" == __name__:
     sql = """
 SELECT r.ID, r."USER", r.PASSWD, r."GROUP", r.SESSION, r.INN, r.ID_ROLE
 FROM USERS r"""
-    sql = """
-insert into USERS ("USER", PASSWD, INN, ID_ROLE)
-values ('Краснов', '66291526', '9999999999', 34)
-    """
-    sql = """
-update USERS set "GROUP" = 999999 where "USER" = 'Краснов'
-    """
+    sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM,
+    r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL
+FROM SPR_ROLES r"""
     rr = fb.execute({"sql": sql, "options": opt})
     if rr == -1:
         print("sql connection error")

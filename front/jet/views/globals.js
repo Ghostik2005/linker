@@ -335,6 +335,12 @@ export function parseToLink(item){
     let suppl_dt = $$("_suppl").getList()
     let data = suppl_dt.data.order;
     let cid;
+    console.log('item to parse', item);
+    let app = $$("main_ui").$scope.app
+    let url = app.config.r_url + "?setWork"
+    let params = {"user": app.config.user, "sh_prc": item.sh_prc};
+    let res = checkVal(request(url, params, !0).response, 's');
+    console.log('res', res);
     data.forEach(function(d_item, i, data) {
         if (suppl_dt.getItem(d_item).c_vnd === item.c_vnd) {
             cid = suppl_dt.getItem(d_item).id;

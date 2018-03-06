@@ -113,7 +113,7 @@ export default class LinksViewSpr extends JetView{
                         onItemDblClick: function (item, ii, iii) {
                             let level = this.getSelectedItem().$level;
                             if (level === 1) {
-                                if (this.$scope.app.config.role === this.$scope.app.config.admin) {
+                                if (app.config.roles[app.config.role].spredit)  {
                                     item = item.row;
                                     item = get_spr(this.$scope, item);
                                     item["s_name"] = "Страна: " + item.c_strana;

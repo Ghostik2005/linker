@@ -237,6 +237,7 @@ export default class LinksViewLnk extends JetView{
         }
 
     init() {
+        let app = $$("main_ui").$scope.app;
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
         $$($$("__ttl").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
@@ -265,7 +266,7 @@ export default class LinksViewLnk extends JetView{
             $$("__ttl").getFilter('dt').setValue({'start':new Date()});
             }
         if ($$("__ttl").isColumnVisible('owner')) {
-            if  (this.app.config.role !== this.app.config.admin) {
+            if  (!app.config.roles[app.config.role].lnkdel) {
                 $$("__ttl").getFilter('owner').value = this.app.config.user;;
                 $$("__ttl").getFilter('owner').readOnly = true;
             } else {

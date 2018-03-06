@@ -15,9 +15,7 @@ export default class BodyView extends JetView{
             }
         }
     ready(view) {
-        //let user = view.$scope.app.config.user;
-        //let u1 = (location.hostname === 'localhost') ? "http://localhost:8080/" : "/linker/";
-        //if (user === '') location.href = u1;
+
         }
     }
 

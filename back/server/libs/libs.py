@@ -15,9 +15,6 @@ import traceback
 import subprocess
 from urllib.parse import unquote
 from libs.lockfile import LockWait
-#import psycopg2
-#import zlib
-#from io import BytesIO
 from libs.connect import fb_local
 
 """
@@ -26,55 +23,6 @@ CREATE INDEX IDX_SPR1 ON SPR
 CREATE DESCENDING INDEX IDX_SPR2 ON SPR
   (C_TOVAR);
 commit;
-
-"""
-
-
-"""
-//Firebird
-CREATE TRIGGER tr_Update ON Contractor
-AFTER UPDATE
-AS
-/**Объявляем переменные**/
-DECLARE VARIABLE    
-            new_Name                    NVARCHAR (max);
-            new_LegalAddress                NVARCHAR (max);
-            new_INN                     NVARCHAR (max);
-            uid                     NVARCHAR (max);
- 
-            old_Name                    NVARCHAR (max);
-            old_LegalAddress                NVARCHAR (max);
-               old_INN                      NVARCHAR (max);
- 
-BEGIN
-/**Присваиваем значение переменным**/
- SELECT new_Name into :Name,
-        new_LegalAddress into :(SELECT Name FROM dbo.Address ad WHERE ins.LegalAddress = ad.id),
-     new_INN into :INN,
-     uid into :"uid"
- FROM   INSERTED  ins /**Измененные значения полей таблицы**/
- 
- 
-SELECT old_Name into :Name,
-       old_LegalAddress into :(SELECT Name FROM dbo.Address ad WHERE del.LegalAddress = ad.id),
-     old_INN into :INN
- FROM   DELETED del    /**Старые значения полей таблицы**/
- 
- 
- /**Проверяем изменилось ли значение выбранных полей, если да то записываем в таблицу истории изменений**/
- IF (old_Name<>new_Name)
- THEN   insert into dbo.IstoriyaIzmeneniyaNeskoljkoP (UidKontragenta,NazvaniePolya,StaroeZnacheniePolya,NovoeZnacheniePolya,DataIzmeneniya)
-    values (uid,’Наименование’,old_Name,new_Name,GETDATE())
- 
- IF (old_LegalAddress<>new_LegalAddress)
- THEN insert into dbo.IstoriyaIzmeneniyaNeskoljkoP (UidKontragenta,NazvaniePolya,StaroeZnacheniePolya,NovoeZnacheniePolya,DataIzmeneniya)
-    values (uid,’Юридический адрес’,old_LegalAddress,new_LegalAddress,GETDATE())
- 
- IF (old_INN<>new_INN)
- THEN   insert into dbo.IstoriyaIzmeneniyaNeskoljkoP (UidKontragenta,NazvaniePolya,StaroeZnacheniePolya,NovoeZnacheniePolya,DataIzmeneniya)
-    values (uid,’ИНН’,old_INN,new_INN,GETDATE())
-END
-
 """
 
 
@@ -146,10 +94,32 @@ class API:
         return json.dumps(ret, ensure_ascii=False)
 
     def getVersion(self, params=None, x_hash=None):
-        user = params.get('user')
         if self._check(x_hash):
+            user = params.get('user')
+            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
+            sql = """UPDATE PRC r
+            SET r.IN_WORK = -1
+            where r.IN_WORK = (select u.ID from USERS u where u."USER" = ?)"""
+            opt = (user,)
+            res = self.db.execute({"sql": sql, "options": opt})
             prod = {'version': self.log.version, 'prod': self.db.production};
-            ret = {"result": True, "ret_val": prod}
+            sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM, r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL FROM SPR_ROLES r"""
+            opt = ()
+            res = self.db.execute({"sql": sql, "options": opt})
+            r = {}
+            for row in res:
+                r[row[0]] = {
+                    'skipped': row[1] == 1,
+                    'spradd': row[2] == 1,
+                    'adm': row[3] == 1,
+                    'spredit': row[4] == 1,
+                    'useradd': row[5] == 1,
+                    'userdel': row[6] == 1,
+                    'lnkdel': row[7] == 1,
+                    'vendoradd': row[8] == 1
+                    }
+            ret_v= {'info': prod, 'cfg': r}
+            ret = {"result": True, "ret_val": ret_v}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -441,13 +411,6 @@ WHERE r.SH_PRC = ?
         if self._check(x_hash):
             id_vnd = params.get('id_vnd')
             user = params.get('user')
-            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
-            sql = """UPDATE PRC r
-            SET r.IN_WORK = -1
-            where r.IN_WORK = (select u.ID from USERS u where u."USER" = ?)
-            """
-            opt = (user,)
-            res = self.db.execute({"sql": sql, "options": opt})
             t1 = time.time() - st_t
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
             from prc r
@@ -476,7 +439,6 @@ WHERE r.SH_PRC = ?
                 _return.append(r)
             t3 = 0
             if len(in_work) > 0:
-                #ins = tuple(in_work)
                 sql = """UPDATE PRC r
                     SET r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)
                     where r.SH_PRC in (%s)""" %(', '.join([f'\'{q}\'' for q in in_work]))
@@ -484,6 +446,24 @@ WHERE r.SH_PRC = ?
                 res = self.db.execute({"sql": sql, "options": opt})
                 t3 = time.time() - st_t
             ret = {"result": True, "ret_val": _return, "time": (t1, t2, t3)}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setWork(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            _return = []
+            sh_prc = params.get('sh_prc')
+            user = params.get('user')
+            sql = """UPDATE PRC r SET r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)
+                where r.SH_PRC = ? returning new.sh_prc"""
+            opt = (user, sh_prc)
+            res = self.db.execute({"sql": sql, "options": opt})
+            if res[0][0]:
+                _return.append(res[0][0])
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "upd error"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -1516,7 +1496,7 @@ WHERE r.SH_PRC = ?
                     "data"        : []
                 }
                 idc += 1
-                sql = """select r.id_spr, s.c_tovar from spr_barcode r
+                sql = """select r.id_spr, s.c_tovar, r.ch_date from spr_barcode r
                 join spr s on (r.id_spr = s.id_spr)
                 where r.barcode = ? order by s.id_spr ASC"""
                 opt = (row[0],)
@@ -1526,7 +1506,7 @@ WHERE r.SH_PRC = ?
                         "id_spr"    : rrr[0],
                         "c_tovar"   : rrr[1],
                         "id_state"  : "active",
-                        "dt"        : "",
+                        "dt"        : str(rrr[2]) or '',
                         "owner"     : ""
                     }
                     r['data'].append(rr)
@@ -1592,7 +1572,7 @@ where quantity >= {1} AND quantity <= {2}
             opt = ()
             count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """
-select id, c_tovar, quantity 
+select id, c_tovar, quantity
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
         CASE 
         WHEN qty is null THEN 0
@@ -1625,14 +1605,14 @@ ROWS ? to ?
                     "barcode"     : st1,
                     "data"        : [],
                 }
-                sql = """select r.barcode from spr_barcode r where r.id_spr = ? order by r.barcode ASC"""
+                sql = """select r.barcode, r.ch_date from spr_barcode r where r.id_spr = ? order by r.barcode ASC"""
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
                 for rrr in res:
                     rr = {
                         "barcode"   : rrr[0],
                         "id_state"  : "active",
-                        "dt"        : "",
+                        "dt"        : str(rrr[1]) or '',
                         "owner"     : "",
                         "count"     : ''
                     }
@@ -1673,13 +1653,14 @@ ROWS ? to ?
         if self._check(x_hash):
             id_spr = params.get("id_spr")
             if id_spr:
-                sql = """select r.barcode from spr_barcode r where r.id_spr = ?"""
+                sql = """select r.barcode , r.ch_date from spr_barcode r where r.id_spr = ?"""
                 opt = (id_spr,)
                 t = self.db.request({"sql": sql, "options": opt})
                 _return = []
                 for row_b in t:
                     r = {
-                        "barcode"   : row_b[0]
+                        "barcode"   : row_b[0],
+                        "dt"        : str(row_b[1]) or '',
                         }
                     _return.append(r)
                 ret = {"result": True, "ret_val": _return}
@@ -2168,7 +2149,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
             sql = sql.format(stri, field, direction)
             t1 = time.time() - st_t
             opt = (start_p, end_p)
-            #print(sql)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
@@ -2176,7 +2156,6 @@ WHERE {0} ORDER by r.{1} {2} ROWS ? to ?
                 sql = sql_c
                 #sql = sql_cc
                 opt = ()
-                #print(sql)
                 tot = self.db.request({"sql": sql, "options": opt})[0][0]
                 #tot = len(self.db.request({"sql": sql, "options": opt})[0])
             else:
@@ -2551,11 +2530,13 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
             sql_c += """ WHERE {0}""".format(stri)
             sql = sql.format(stri, field, direction)
             opt = (start_p, end_p)
+            print(sql)
             result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
             if result:
                 sql = sql_c
                 opt = ()
+                print(sql)
                 count = self.db.request({"sql": sql, "options": opt})[0][0]
             else:
                 count = 0
@@ -2682,7 +2663,6 @@ WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
-            print(result)
             for row in result:
                 r = {
                     "id"        : 1 if row[0] == 0 else row[0],
@@ -3183,6 +3163,10 @@ class UDPSocket(socket.socket):
 
 ###########old sqls
 """
+update roles set NAME = 'Суперадмин' where id = 34 returning new.name
+update roles set NAME = 'Сводильщик' where id = 9 returning new.name
+
+
 ALTER TABLE PRC ADD 
 IN_WORK Integer NOT NULL;
 COMMIT;
@@ -3278,4 +3262,64 @@ CREATE DESCENDING INDEX IDX_LNK2 ON LNK
 CREATE DESCENDING INDEX IDX_LNK3 ON LNK
   (CHANGE_DT);
 commit;
+
+SET TERM ^ ;
+ALTER TRIGGER PRC_BU ACTIVE
+BEFORE UPDATE POSITION 0
+AS
+BEGIN
+    if (new.SH_PRC != old.SH_PRC or new.ID_VND != old.ID_VND or new.ID_TOVAR != old.ID_TOVAR or new.N_FG != old.N_FG or new.N_CENA != old.N_CENA or
+        new.C_TOVAR != old.C_TOVAR or new.C_ZAVOD != old.C_ZAVOD or new.ID_ORG != old.ID_ORG or new.C_INDEX != old.C_INDEX or new.DT != old.DT) 
+    THEN new.CHANGE_DT = current_timestamp;
+END^
+SET TERM ; ^
+
+SET TERM ^ ;
+ALTER TRIGGER LNK_BI0 ACTIVE
+BEFORE INSERT POSITION 0
+AS
+begin
+  new.CHANGE_DT = current_timestamp;
+  new.newflag = 1;
+  if (new.dt is Null) then new.dt = current_timestamp;
+end^
+SET TERM ; ^
+
+ALTER TABLE SPR_BARCODE ADD 
+CH_DATE Timestamp;
+
+SET TERM ^;
+CREATE TRIGGER SPR_BARCODE_BI FOR SPR_BARCODE
+ACTIVE BEFORE INSERT POSITION 0
+AS
+BEGIN
+    new.CH_DATE = CURRENT_TIMESTAMP;
+END^
+SET TERM ;^
+commit;
+
+CREATE TABLE SPR_ROLES
+(
+  ID_ROLE INTEGER,
+  SKIPPED SMALLINT DEFAULT 0 NOT NULL,
+  SPRADD SMALLINT DEFAULT 0 NOT NULL,
+  SPREDIT SMALLINT DEFAULT 0 NOT NULL,
+  ADM SMALLINT DEFAULT 0 NOT NULL,
+  VENDORADD SMALLINT DEFAULT 0 NOT NULL,
+  USERADD SMALLINT DEFAULT 0 NOT NULL,
+  USERDEL SMALLINT DEFAULT 0 NOT NULL,
+  LNKDEL SMALLINT DEFAULT 0 NOT NULL
+);
+CREATE UNIQUE INDEX SPR_ROLES_IDX1 ON SPR_ROLES (ID_ROLE);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON SPR_ROLES TO  SYSDBA WITH GRANT OPTION;
+commit;
+
+INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL) VALUES (0, 0, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL) VALUES (9, 1, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL) VALUES (10, 1, 1, 1, 1, 1, 0, 0, 1);
+INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL) VALUES (34, 1, 1, 1, 1, 1, 1, 1, 1);
+INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL) VALUES (35, 1, 1, 1, 1, 1, 1, 1, 1);
+
+
 """

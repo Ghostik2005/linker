@@ -10,6 +10,7 @@ import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
 export default class NewformView extends JetView{
     config(){
+        let app = $$("main_ui").$scope.app;
         function strana_filter(item, value) {
             value = value.toString().toLowerCase()
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
@@ -120,7 +121,7 @@ export default class NewformView extends JetView{
                                     {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                         on: {
                                             onAfterRender: function () {
-                                                if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
+                                                if (app.config.roles[app.config.role].vendoradd) this.enable();
                                                 }
                                             },
                                         click: () => {
@@ -153,7 +154,7 @@ export default class NewformView extends JetView{
                                     {view: "button", type: "base", label: "+", width: 30, disabled: true,
                                         on: {
                                             onAfterRender: function () {
-                                                if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
+                                                if (app.config.roles[app.config.role].vendoradd) this.enable();
                                                 }
                                             },
                                         click: () => {
@@ -267,7 +268,7 @@ export default class NewformView extends JetView{
                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
+                                        if (app.config.roles[app.config.role].spredit) this.enable();
                                         }
                                     },
                                 click: () => {

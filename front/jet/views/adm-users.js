@@ -2,10 +2,11 @@
 
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
-import {request, checkVal, users} from "../views/globals";
+import {request, checkVal, users, checkKey} from "../views/globals";
 
 export default class UsersView extends JetView{
     config(){
+        let app = $$("main_ui").$scope.app;
         var sprv = {view: "datatable",
             localId: "__dtu",
             id: "__dtu_g",
@@ -88,32 +89,40 @@ export default class UsersView extends JetView{
         var top = {//view: 'layout',
             height: 40,
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска. Позже.", 
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
                     keyPressTimeout: 900, tooltip: "Поиск по пользователю",
                     on: {
-                        onTimedKeyPress: function(code, event) {
-                            //let th = this.$scope;
-                            //let count = $$("__dt").config.posPpage;
-                            //get_data({
-                                //th: th,
-                                //view: "__dt",
-                                //navBar: "__nav",
-                                //start: 1,
-                                //count: count,
-                                //searchBar: "_spr_search",
-                                //method: "getSprSearch"
-                                //});
+                        onKeyPress: function(code, event) {
+                            clearTimeout(this.config._keytimed);
+                            if (checkKey(code)) {
+                                this.config._keytimed = setTimeout( () => {
+                                    let value = this.getValue().toString().toLowerCase();
+                                    this.$scope.$$("__dtu").filter(function(obj){
+                                        return obj.c_user.toString().toLowerCase().indexOf(value) != -1;
+                                        })
+                                    }, this.$scope.app.config.searchDelay);
+                                };
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: !true, 
+                {view:"button", type: 'htmlbutton', disabled: true, 
                     label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    on: {
+                        onAfterRender: function () {
+                            if (app.config.roles[app.config.role].useradd) this.enable();
+                            }
+                        },
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');
                         }
                     },
                 {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
                     label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    on: {
+                        onAfterRender: function () {
+                            if (app.config.roles[app.config.role].userdel) this.enable();
+                            }
+                        },
                     click: () => {
                         webix.message({
                             text: "Удаление пользователя. Позже.",

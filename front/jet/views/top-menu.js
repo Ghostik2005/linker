@@ -14,10 +14,7 @@ import {prcs, delPrc, checkKey} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
-        var w = (this.app.config.role === this.app.config.admin) ? 210 : 1
-        var w1 = (this.app.config.role === this.app.config.admin) ? 140 : 1
-        var d = (this.app.config.role === this.app.config.admin) ? false : true
-        //console.log(this);
+        let app = $$("main_ui").$scope.app;
         return {
             rows: [
                 {view: 'toolbar',
@@ -48,7 +45,12 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                         {view:"button", id: '_skip', type: 'htmlbutton',
-                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: w, disabled: d,
+                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210, disabled: true,
+                            on: {
+                                onAfterRender: function () {
+                                    if (app.config.roles[app.config.role].skipped) this.enable();
+                                    }
+                                },
                             click: () => {
                                 this.popskipped.show("Пропущенные товары")
                                 }
@@ -73,8 +75,6 @@ export default class TopmenuView extends JetView{
                     rows: [
                         {cols: [
                             {view: "label", label: "", name: "_name", fillspace: 1},
-                            //{width: 20},
-                            //{view: "label", label: "", css: 'right', name: "_count", width: 220},
                             ]},
                         {cols: [
                             {view: "label", label: "", css: "header", name: "_vendor"},
@@ -94,14 +94,6 @@ export default class TopmenuView extends JetView{
                                     get_prcs(this, id_vnd);
                                     }
                                 },
-                            //{view: "button", type: "htmlbutton",
-                                //label: "<span class='butt'>Посмотреть все из сессии</span>", width: 230,
-                                //click: () => {
-                                    //let suppl = $$("_suppl").getValue();
-                                    //suppl = $$("_suppl").getList().getItem(suppl).c_vnd
-                                    //this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
-                                    //}
-                                //},
                             ]},
                     ]},
                 {view: 'toolbar',
@@ -150,12 +142,12 @@ export default class TopmenuView extends JetView{
                                 this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', id: "_add",  width: w1, disabled: d,
+                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
                                 onAfterRender: function () {
-                                    if (this.$scope.app.config.role === this.$scope.app.config.admin) this.enable();
+                                    if (app.config.roles[app.config.role].spradd) this.enable();
                                     }
                                 },
                             click: () => {

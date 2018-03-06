@@ -201,7 +201,7 @@ export default class AllUnlinkedView extends JetView{
                 onItemDblClick: () => {
                     let item = $$("__dt_a").getSelectedItem();
                     console.log('item', item);
-                    if (this.app.config.role === this.app.config.admin || item.c_user === this.app.config.user) {
+                    if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
                         parseToLink(item);
                         this.getRoot().hide();
                     } else {
@@ -251,9 +251,10 @@ export default class AllUnlinkedView extends JetView{
         this.getRoot().hide()
         }
     init() {
+        let app = $$("main_ui").$scope.app;
         if ($$("__dt_a").isColumnVisible('c_user')) {
             $$("__dt_a").getFilter('c_user').value = this.app.config.user;
-            if  (this.app.config.role !== this.app.config.admin) {
+            if  (!app.config.roles[app.config.role].lnkdel) {
                 $$("__dt_a").getFilter('c_user').value = this.app.config.user;
                 $$("__dt_a").getFilter('c_user').readOnly = true;
             } else {

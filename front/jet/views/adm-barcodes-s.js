@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
-import {last_page, request, checkVal} from "../views/globals";
+import {last_page, request, checkVal, dt_formating_sec} from "../views/globals";
 import NewbarView from "../views/new_bar.js";
 import ConfirmBarView from "../views/bar-yes-no.js";
 
@@ -43,12 +43,18 @@ export default class BarcodesSView extends JetView{
                         }
                     });
                 th.remove(rem);
-                parseArr.forEach(function(it, i, parseArr) {
-                    if (it.length > 1) {
-                        let newI = {"barcode": it, "id_state": "active", "dt": '', "owner": '', 'count': ""};
-                        th.add(newI, 0, id_spr);
-                        }
+                url = th.$scope.app.config.r_url + "?getBar";
+                let r1 = checkVal(request(url, params, !0).response, 's');
+                r1.forEach(function(it, i, r1) {
+                    let newI = {"barcode": it.barcode, "id_state": "active", "dt": it.dt, "owner": '', 'count': ""};
+                    th.add(newI, 0, id_spr);
                     });
+                //parseArr.forEach(function(it, i, parseArr) {
+                    //if (it.length > 1) {
+                        //let newI = {"barcode": it, "id_state": "active", "dt": '', "owner": '', 'count': ""};
+                        //th.add(newI, 0, id_spr);
+                        //}
+                    //});
                 if (op) th.open(id_spr);
                 let pitem = $$("__dtd").getItem(id_spr);
                 pitem.count = (pitem.$count > 0) ? pitem.$count : "";
@@ -74,12 +80,14 @@ export default class BarcodesSView extends JetView{
             fi: 'c_tovar',
             di: 'asc',
             columns: [
-                {id: "barcode", header: "Штрих-код" , fillspace: true, sort: "server", headermenu: false,
+                {id: "barcode", header: "Штрих-код" , fillspace: true, headermenu: false, //sort: "server",
                     template:"<span>{common.treetable()} #barcode#</span><span style='color: red'> #count#</span>" 
                     },
                 //{ id: "id_state", width: 150, header: [{text: "Статус"},] },
-                {id: "dt", header: "Дата изменения", width: 180},
-                {id: "owner", header: "Изменил", width: 120}
+                {id: "dt", header: "Дата изменения", width: 200, format: dt_formating_sec,
+                    css: 'center_p',
+                    },
+                {id: "owner", header: "Изменил", width: 120, hidden: true,}
                 ],
             on: {
                 "data->onParse":function(i, data){
@@ -87,12 +95,6 @@ export default class BarcodesSView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    //if (!this.count) {
-                        //this.showProgress({
-                            //type: "icon",
-                            //icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            //});
-                        //}
                     },
                 onBeforeSort: (field, direction) => {
                     let th = this;

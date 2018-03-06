@@ -46,7 +46,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.061.1645",
+        version:        "18.065.1515",
         start:          "/login",
         admin:          "34",
         user:           "",
@@ -57,7 +57,14 @@ webix.ready( () => {
         x_api:          "x_login",
         debug:          true,
         searchDelay:    1000,
-        lch:            0
+        lch:            0,
+        //roles:          {'0': {'skipped': false, 'spradd': false, 'adm': false, 'spredit': false, 'useradd': false, 'userdel': false, 'lnkdel': false, 'vendoradd': false},
+                         //'9': {'skipped': true, 'spradd': false, 'adm': false, 'spredit': false, 'useradd': false, 'userdel': false, 'lnkdel': false, 'vendoradd': false},
+                         //'10': {'skipped': true, 'spradd': true, 'adm': true, 'spredit': true, 'useradd': false, 'userdel': false, 'lnkdel': true, 'vendoradd': true},
+                         //'34': {'skipped': true, 'spradd': true, 'adm': true, 'spredit': true, 'useradd': true, 'userdel': true, 'lnkdel': true, 'vendoradd': true},
+                         //'35': {'skipped': true, 'spradd': true, 'adm': true, 'spredit': true, 'useradd': true, 'userdel': true, 'lnkdel': true, 'vendoradd': true}
+                        //}
+        roles:          {}
     });
     
     webix.attachEvent("onBeforeAjax", 
@@ -68,37 +75,6 @@ webix.ready( () => {
 
     app.render();
 
-    //webix.ui.datafilter.customFilterLnkSpr = webix.extend ({
-        //render:function(master, config){
-            //if (this.init) this.init(config);
-            //config.css = "my_filter";
-            //return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
-            //},
-        //_on_key_down:function(e, node, value){
-            //var id = this._comp_id;
-            //if ((e.which || e.keyCode) == 9) return;
-            //if (!checkKey(e.keyCode)) return;
-            //if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            //this._filter_timer=window.setTimeout(function(){
-                //let ui = webix.$$(id);
-                //if (ui) {
-                    //let params = getDtParams(ui);
-                    //get_data({
-                        //view: id,
-                        //navBar: "__nav_ll",
-                        //start: 1,
-                        //count: params[1],
-                        //searchBar: "_link_search",
-                        //method: "getLnkSprs",
-                        //field: params[2],
-                        //direction: params[3],
-                        //filter: params[0]
-                        //});
-                    //};
-                ////if (ui) ui.filterByAll();
-                //},webix.ui.datafilter.textWaitDelay);
-            //}
-        //},  webix.ui.datafilter.textFilter);
     
     init_first(app);
 });
