@@ -60,7 +60,7 @@ export default class NewUserView extends JetView{
                                 _vis: false,
                                 on: {
                                     onAfterRender: function () {
-                                        if (app.config.roles[app.config.role].useradd) this.enable();
+                                        if (app.config.roles[app.config.role].userdel) this.enable();
                                         }
                                     },
                                 click:  () => {
@@ -102,7 +102,7 @@ export default class NewUserView extends JetView{
                                 width: 30, disabled: true,
                                 on: {
                                     onAfterRender: function () {
-                                        if (app.config.roles[app.config.role].useradd) this.enable();
+                                        if (app.config.roles[app.config.role].userdel) this.enable();
                                         }
                                     },
                                 click: () => {
@@ -118,7 +118,7 @@ export default class NewUserView extends JetView{
                                     }
                                 },
                             {},
-                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
+                             (app.config.roles[app.config.role].useradd) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
                                         if (app.config.roles[app.config.role].useradd) this.enable();
@@ -146,7 +146,7 @@ export default class NewUserView extends JetView{
                                             }
                                         }
                                     }
-                                }
+                                } : {width: 1},
                             ]}
                         ]}
                     ]

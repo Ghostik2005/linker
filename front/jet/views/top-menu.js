@@ -44,7 +44,7 @@ export default class TopmenuView extends JetView{
                                 get_suppl("_suppl", this)
                                 }
                             },
-                        {view:"button", id: '_skip', type: 'htmlbutton',
+                        (app.config.roles[app.config.role].skipped) ? {view:"button", id: '_skip', type: 'htmlbutton',
                             label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210, disabled: true,
                             on: {
                                 onAfterRender: function () {
@@ -54,7 +54,7 @@ export default class TopmenuView extends JetView{
                             click: () => {
                                 this.popskipped.show("Пропущенные товары")
                                 }
-                            },
+                            } : {width: 1},
                         {view:"button", type: 'htmlbutton',
                             label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Все несвязанные</span>", width: 210,
                             click: () => {
@@ -97,6 +97,7 @@ export default class TopmenuView extends JetView{
                             ]},
                     ]},
                 {view: 'toolbar',
+                    id: "_tb",
                     height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
@@ -142,7 +143,7 @@ export default class TopmenuView extends JetView{
                                 this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true,
+                        (app.config.roles[app.config.role].spradd) ? {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
@@ -157,9 +158,9 @@ export default class TopmenuView extends JetView{
                                 item['c_tovar'] = name.toUpperCase();
                                 this.popnew.show("Добавление в справочник", $$("_spr_search"), item);
                                 }
-                            },
+                            } : {width: 1},
                         {view:"button", type: 'htmlbutton', id: "_link",
-                            label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", width: 200,
+                            label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", width: 1,
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc

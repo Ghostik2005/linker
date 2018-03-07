@@ -47,7 +47,7 @@ export default class UnlinkView extends JetView{
                                 }
                             },
                         {},
-                        {view: "button", type: "base", label: "Устарела", width: 120, height: 44, disabled: true,
+                        (app.config.roles[app.config.role].lnkdel) ? {view: "button", type: "base", label: "Устарела", width: 120, height: 44, disabled: true,
                             on: {
                                 onAfterRender: function () {
                                     if (app.config.roles[app.config.role].lnkdel) this.enable();
@@ -56,7 +56,7 @@ export default class UnlinkView extends JetView{
                             click: () => {
                                 unlnk(this, "delete");
                                 }
-                            }
+                            } : {width: 1}
                         ]}
                     ],
             on: {

@@ -16,7 +16,7 @@ export default class HeaderView extends JetView{
                 {view: "label", label: "Манускрипт солюшн: Линкер | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
                 {},
-                {view:"button", id: '_adm', css: "butt", type: 'htmlbutton',
+                {view:"button", css: "butt", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
                     click: () => {
                         if (app.config.roles[app.config.role].adm) {
@@ -26,7 +26,7 @@ export default class HeaderView extends JetView{
                             }
                         }
                     },
-                {view:"button", id: '_merge', css: "butt", type: 'htmlbutton',
+                {view:"button", css: "butt", type: 'htmlbutton',
                     label: "<span class='butt'>Линкер</span>", width: 80,
                     click: () => {
                         this.app.show("/start/body");

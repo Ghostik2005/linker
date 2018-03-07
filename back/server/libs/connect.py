@@ -29,7 +29,10 @@ class fb_local:
             self.production = False
             self.prod_params = {}
         self.log = log
-        self.log("Production" if self.production else "Test")
+        if callable(self.log):
+            self.log("Production" if self.production else "Test")
+        else:
+            print("Production" if self.production else "Test", flush=True)
         self.connect_params = {
                 "host": "localhost",
                 "database": "spr",
@@ -237,7 +240,7 @@ if "__main__" == __name__:
 SELECT r.ID, r."USER", r.PASSWD, r."GROUP", r.SESSION, r.INN, r.ID_ROLE
 FROM USERS r"""
     sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM,
-    r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL
+    r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL, r.N_ROLE
 FROM SPR_ROLES r"""
     rr = fb.execute({"sql": sql, "options": opt})
     if rr == -1:

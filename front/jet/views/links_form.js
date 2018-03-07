@@ -34,6 +34,8 @@ export default class LinksView extends JetView{
                 onHide: () => {
                     $$(getActDt()).unselectAll();
                     $$("_break").disable();
+                    $$("_break").define('width', 1)
+                    $$("_break").resize()
                     $$("_spr_search").focus();
                     }
                 },
@@ -112,7 +114,7 @@ export default class LinksView extends JetView{
                                     }
                                 },
                             {view:"button", type: 'htmlbutton', id: "_break", disabled: true,
-                                label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
+                                label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 1,
                                 click: () => {
                                     $$(getActDt()).callEvent("onItemDblClick");
                                     }

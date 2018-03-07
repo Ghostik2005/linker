@@ -10,6 +10,14 @@ export var users = new webix.DataCollection({
             }
         });
 
+export var adm_roles = new webix.DataCollection({
+        id: "admroles_dc",
+        on: {
+            onAfterLoad: function() {
+                }
+            }
+        });
+
 export var u_roles = new webix.DataCollection({
         id: "roles_dc",
         on: {
@@ -448,7 +456,7 @@ export function get_data(inp_params) {
                 webix.storage.session.put(view, hist);
             } else {
                 $$(view).clearAll();
-                webix.message('error');
+                //webix.message('error');
                 };
             $$(view).hideProgress();
             });

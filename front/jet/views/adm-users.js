@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
 import {request, checkVal, users, checkKey} from "../views/globals";
+import RolesView from "../views/adm_roles";
 
 export default class UsersView extends JetView{
     config(){
@@ -76,7 +77,7 @@ export default class UsersView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").enable();
+                    if (app.config.roles[app.config.role].userdel) this.$$("_del").enable();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -120,7 +121,6 @@ export default class UsersView extends JetView{
                     label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
                     on: {
                         onAfterRender: function () {
-                            if (app.config.roles[app.config.role].userdel) this.enable();
                             }
                         },
                     click: () => {
@@ -130,6 +130,17 @@ export default class UsersView extends JetView{
                             })
                         }
                     },
+                (app.config.roles[app.config.role].userdel) ? {view:"button", type: 'htmlbutton', disabled: true, localId: "_aroles",
+                    label: "<span class='webix_icon fa-user-secret'></span><span style='line-height: 20px;'> Роли</span>", width: 140,
+                    on: {
+                        onAfterRender: function () {
+                            if (app.config.roles[app.config.role].userdel) this.enable();
+                            }
+                        },
+                    click: () => {
+                        this.poproles.show("Админка ролей")
+                        }
+                    } : {width: 1},
                 ]
             }
 
@@ -143,6 +154,7 @@ export default class UsersView extends JetView{
         }
         
     init() {
+        this.poproles = this.ui(RolesView);
         this.popnewuser = this.ui(NewUserView);
         let th = this.$$("__dtu");
         th.clearAll();

@@ -147,6 +147,8 @@ export default class LinksViewLnk extends JetView{
                             },
                         onAfterSelect: function (item) {
                             $$("_break").enable();
+                            $$("_break").define('width', 220)
+                            $$("_break").resize()
                             }
                         },
                     },

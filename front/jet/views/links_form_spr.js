@@ -147,8 +147,13 @@ export default class LinksViewSpr extends JetView{
                             let level = this.getSelectedItem().$level;
                             if (level === 1) {
                                 $$("_break").disable();
+                                $$("_break").define('width', 1)
+                                $$("_break").resize()
                             } else if (level === 2) {
                                 $$("_break").enable();
+                                $$("_break").define('width', 220)
+                                $$("_break").resize()
+                                
                                 };
                             }
                         },

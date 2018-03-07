@@ -265,7 +265,7 @@ export default class NewformView extends JetView{
                                     }
                                 },
                             {},
-                            {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
+                            (app.config.roles[app.config.role].spredit) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
                                 on: {
                                     onAfterRender: function () {
                                         if (app.config.roles[app.config.role].spredit) this.enable();
@@ -308,7 +308,7 @@ export default class NewformView extends JetView{
                                         this.hide();
                                         };
                                     }
-                                }
+                                } : {width: 1}
                             ]}
                         ]}
                     ],

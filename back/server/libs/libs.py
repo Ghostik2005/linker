@@ -23,6 +23,12 @@ CREATE INDEX IDX_SPR1 ON SPR
 CREATE DESCENDING INDEX IDX_SPR2 ON SPR
   (C_TOVAR);
 commit;
+ALTER TABLE SPR_ROLES ADD N_ROLE Varchar(256)
+update SPR_ROLES s set s.N_ROLE = 'user' where s.ID_ROLE = 0;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'linker' where s.ID_ROLE = 9;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'admin' where s.ID_ROLE = 10;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'superadmin' where s.ID_ROLE = 34;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'qqq' where s.ID_ROLE = 35;
 """
 
 
@@ -91,6 +97,116 @@ class API:
                     with open(f_name, 'wb') as f_obj:
                         f_obj.write(user.encode())
                     ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2])}}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def killAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            action = params.get('action')
+            sql = """SELECT r."USER" from USERS r WHERE r.ID_ROLE in (%s)""" % (','.join([str(a) for a in action]))
+            opt = ()
+            res = self.db.execute({"sql": sql, "options": opt})
+            users = []
+            for row in res:
+                users.append(row[0])
+            k_list = glob.glob(os.path.join(self.p_path, '*'))
+            for f_name in k_list:
+                if 'x_login' in f_name:
+                    continue
+                with open(f_name, 'rb') as f_obj:
+                    fuser = f_obj.read().decode().strip()
+                if fuser in users:
+                    try: os.remove(f_name)
+                    except: pass
+                    else: print('Удалили %s' % f_name, flush=True)
+            ret = {"result": True, "ret_val": True}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setAdmRoles(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            values = params.get('values')
+            if values:
+                #меняем местами столбцы и строки
+                datas = {}
+                for val in values:
+                    upd = {'user': val.get('user'), 'admin': val.get('admin'), 'linker': val.get('linker'), 'superadmin': val.get('superadmin'), 'qqq': val.get('qqq')}
+                    datas[val.get('id')] = upd
+                rrr = {'user': {}, 'admin': {}, 'superadmin': {}, 'qqq': {}, 'linker': {}}
+                for k in datas.keys():
+                    kv = datas.get(k)
+                    for kk in kv.keys():
+                        item = {k: kv.get(kk)}
+                        rrr[kk].update(item)
+                opt = []
+                for k in rrr:
+                    v = rrr.get(k)
+                    opt_l = [1 if v.get('skipped') or v.get('skipped')==1 else 0, 1 if v.get('spradd') or v.get('spradd')==1 else 0, 1 if v.get('spredit') or v.get('spredit')==1 else 0,
+                             1 if v.get('adm') or v.get('adm')==1 else 0, 1 if v.get('vendoradd') or v.get('vendoradd')==1 else 0, 1 if v.get('useradd') or v.get('useradd')==1 else 0,
+                             1 if v.get('userdel') or v.get('userdel')==1 else 0, 1 if v.get('lnkdel') or v.get('lnkdel')==1 else 0, k]
+                    opt.append(opt_l)
+                sql = """update SPR_ROLES SET SKIPPED = ?, SPRADD = ?, SPREDIT = ?, ADM = ?, VENDORADD = ?, USERADD = ?, USERDEL = ?, LNKDEL = ? where N_ROLE = ? returning new.ID_ROLE"""
+                re = []
+                for op in opt:
+                    o = op.pop()
+                    sql_e = """select SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL from SPR_ROLES where n_role = ?"""
+                    r1 = self.db.execute({"sql": sql_e, "options": (o,)})
+                    r1 = r1[0]
+                    if tuple(op) == r1:
+                        continue
+                    op.append(o)
+                    res = self.db.execute({"sql": sql, "options": tuple(op)})
+                    if res:
+                        re.append(res[0][0])
+                ret = {"result": True, "ret_val": re}
+            else:
+                ret = {"result": False, "ret_val": 'обновлять нечего'}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getAdmRoles(self, params=None, x_hash=None):
+        descr = {
+            'skipped': 'Просмотр пропущенных',
+            'spradd': 'Добавление в справочник',
+            'adm': 'Администрирование',
+            'spredit': 'Редактирование справочника',
+            'useradd': 'Добавление пользователей',
+            'userdel': 'Удаление пользователей',
+            'lnkdel': 'Удаление связок',
+            'vendoradd': 'Добавление производителей'
+            }
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """SELECT r.N_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM, r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL FROM SPR_ROLES r"""
+            opt = ()
+            res = self.db.execute({"sql": sql, "options": opt})
+            r = {'skipped': {}, 'spradd': {}, 'adm': {}, 'spredit': {}, 'useradd': {},
+                'userdel': {}, 'lnkdel': {}, 'vendoradd': {}
+                }
+            for row in res:
+                name = row[0]
+                r['skipped'].update({name: row[1] == 1})
+                r['spradd'].update({name: row[2] == 1})
+                r['spredit'].update({name: row[3] == 1})
+                r['adm'].update({name: row[4] == 1})
+                r['vendoradd'].update({name: row[5] == 1})
+                r['useradd'].update({name: row[6] == 1})
+                r['userdel'].update({name: row[7] == 1})
+                r['lnkdel'].update({name: row[8] == 1})
+            rr = []
+            for k in r.keys():
+                kv = r.get(k)
+                rrr = {'act_name': descr.get(k), 'id': k}
+                for kk in kv.keys():
+                    item = {kk: kv.get(kk)}
+                    rrr.update(item)
+                rr.append(rrr)
+            ret = {"result": True, "ret_val": rr}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def getVersion(self, params=None, x_hash=None):

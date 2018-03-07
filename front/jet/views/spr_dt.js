@@ -210,6 +210,9 @@ export default class SprView extends JetView{
                 "data->onParse":function(i, data){
                     this.clearAll();
                     $$("_link").disable();
+                    $$("_link").define('width', 1)
+                    $$("_link").resize();
+                    //$$("_tb").refresh();
                     },
                 onBeforeSort: (field, direction) => {
                     let th = this;
@@ -255,6 +258,9 @@ export default class SprView extends JetView{
                     },
                 onBeforeSelect: () => {
                     $$("_link").enable();
+                    $$("_link").define('width', 200)
+                    $$("_link").resize();
+                    //$$("_tb").refresh();
                     //$$("_add").enable();
                     },
                 onKeyPress: function(code, e){
