@@ -3,8 +3,8 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import History from "../views/history";
-import {get_spr, get_data, sezon} from "../views/globals";
-import {last_page, get_bars, checkKey, dt_formating_sec, dt_formating} from "../views/globals";
+import {get_spr, get_data} from "../views/globals";
+import {last_page, checkKey, dt_formating_sec, dt_formating} from "../views/globals";
 import {compareTrue, fRefresh, fRender, rRefresh, rRender, getDtParams} from "../views/globals";
 
 export default class SprViews extends JetView{

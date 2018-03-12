@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
 import {last_page} from "../views/globals";
-import {checkKey, getDtParams, fRender, fRefresh, cEvent} from "../views/globals";
+import {checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
 import ConfirmView from "../views/yes-no";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 

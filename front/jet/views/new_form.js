@@ -4,8 +4,7 @@ import {JetView} from "webix-jet";
 import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
-import {strana, vendor, dv} from "../views/globals";
-import {sezon, nds, group, hran} from "../views/globals";
+import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
 export default class NewformView extends JetView{

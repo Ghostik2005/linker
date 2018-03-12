@@ -3,9 +3,8 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import NewformView from "../views/new_form";
-import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, checkKey, getDtParams} from "../views/globals";
+import {checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 export default class LinksView extends JetView{

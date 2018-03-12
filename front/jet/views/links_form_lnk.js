@@ -2,10 +2,9 @@
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page, checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, cEvent} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 export default class LinksViewLnk extends JetView{

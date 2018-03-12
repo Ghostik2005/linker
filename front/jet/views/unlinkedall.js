@@ -2,8 +2,8 @@
 
 import {JetView} from "webix-jet";
 import {get_data} from "../views/globals";
-import {last_page, checkKey, cEvent, fRefresh, fRender} from "../views/globals";
-import {parse_unlinked_item, prcs, getDtParams, parseToLink} from "../views/globals";
+import {last_page, checkKey, fRefresh, fRender} from "../views/globals";
+import {getDtParams, parseToLink} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 
 export default class AllUnlinkedView extends JetView{

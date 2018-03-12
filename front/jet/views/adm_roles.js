@@ -1,9 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_spr} from "../views/globals";
-import {get_data, adm_roles, checkVal, request} from "../views/globals";
-import {last_page, get_bars} from "../views/globals";
+import {checkVal, request} from "../views/globals";
 import ConfirmView from "../views/yes-no"
 
 export default class RolesView extends JetView{
@@ -27,30 +25,35 @@ export default class RolesView extends JetView{
                     },
                 {id: "user", fillspace: 1, css: "col_center", template: "{common.checkbox()}", //template: user_func,
                     header: [{text: "Имя роли", colspan: 5, css: "col_center"},
-                        {text: "Пользователь"}
+                        //{text: "Пользователь"}
+                        {text: $$("roles_dc").getItem(1).r_name}
                         ],
                     },
                 { id: "linker", fillspace: 1, css: "col_center", template: "{common.checkbox()}", //template: linker_func,
                     header: [{},
-                        {text: "Сводильщик"},
+                        //{text: "Сводильщик"},
+                        {text: $$("roles_dc").getItem(9).r_name},
                         ],
                     },
                 { id: "admin", css: "col_center", template: "{common.checkbox()}", //template: admin_func,
                     fillspace: 1, 
                     header: [{},
-                        {text: "Администратор"},
+                        //{text: "Администратор"},
+                        {text: $$("roles_dc").getItem(10).r_name},
                         ]
                     },
                 { id: "superadmin", css: "col_center", template: "{common.checkbox()}", //template: superadmin_func,
                     fillspace: 1, 
                     header: [{},
-                        {text: "СуперАдмин"},
+                        //{text: "СуперАдмин"},
+                        {text: $$("roles_dc").getItem(34).r_name},
                         ]
                     },
                 { id: "qqq", css: "col_center", template: "{common.checkbox()}", //template: qqq_func,
                     fillspace: 1,
                     header: [{},
-                        {text: "qqq"},
+                        //{text: "qqq"},
+                        {text: $$("roles_dc").getItem(35).r_name},
                         ]
                     },
                 ],

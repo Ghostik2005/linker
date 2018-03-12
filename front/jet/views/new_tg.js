@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {get_refs, allTg, tg, get_tg} from "../views/globals";
+import {allTg, tg, get_tg} from "../views/globals";
 
 
 export default class NewtgView extends JetView{

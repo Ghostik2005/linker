@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page, checkKey, getDtParams, fRender, fRefresh, cEvent} from "../views/globals";
+import {last_page, checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import {dt_formating_sec, dt_formating} from "../views/globals";
 

@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, prcs, delPrc} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 
 
 export default class NewstriView extends JetView{
