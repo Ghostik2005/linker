@@ -46,7 +46,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.071.1545",
+        version:        "18.080.1700",
         start:          "/login",
         admin:          "34",
         user:           "",
@@ -75,6 +75,10 @@ webix.ready( () => {
 
     app.render();
 
+    app.attachEvent("app:error:resolve", function(name, error) {
+        window.console.error(error);
+        webix.message({"type": "error", "text": "возникла ошибка, данные в консоле. Мы работаем над ее исправлением"});
+        })
     
     init_first(app);
 });

@@ -85,7 +85,9 @@ button {
     }
 
 .webix_view.webix_dtable {
-    font-size: larger;
+    color: black;
+    /*font-size: larger;
+    font-size: 120%;*/
     }
 
 .col_center {
@@ -141,3 +143,11 @@ button {
     text-align: center !important;
     }
 
+.lay_pg {
+    background-color: #3498db;
+    }
+
+.p_center_p {
+    margin-left: -5px !important;
+    text-align: center !important;
+    }

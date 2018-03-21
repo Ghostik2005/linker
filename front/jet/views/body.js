@@ -8,6 +8,7 @@ export default class BodyView extends JetView{
     config(){
         return {view: "layout",
             css: 'margin-zero',
+            id: "__body",
             rows:[
                 {$subview: TopmenuView, name: "top_menu"},
                 {$subview: SprView, name: "spr_dt"},

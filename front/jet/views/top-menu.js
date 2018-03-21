@@ -6,7 +6,7 @@ import NewformView from "../views/new_form";
 import LinksView from "../views/links_form";
 import ConfirmView from "../views/yes-no";
 import {filter_1, get_suppl, get_prcs} from "../views/globals";
-import {parse_unlinked_item, get_data} from "../views/globals";
+import {parse_unlinked_item, get_data_test} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import AllUnlinkedView from "../views/unlinkedall";
 import SkippedView from "../views/skipped";
@@ -14,7 +14,7 @@ import {prcs, delPrc, checkKey} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         return {
             rows: [
                 {view: 'toolbar',
@@ -100,46 +100,34 @@ export default class TopmenuView extends JetView{
                     id: "_tb",
                     height: 40,
                     cols: [
-                        {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
-                            tooltip: "поиск от двух символов", //keyPressTimeout: 900,
+                        {view: "text", label: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
+                            tooltip: "поиск от двух символов", 
                             on: {
-                                //onTimedKeyPress: function() {
-                                    //let th = this.$scope;
-                                    //let count = $$("__dt").config.posPpage;
-                                    //get_data({
-                                        //th: th,
-                                        //view: "__dt",
-                                        //navBar: "__nav",
-                                        //start: 1,
-                                        //count: count,
-                                        //searchBar: "_spr_search",
-                                        //method: "getSprSearch"
-                                        //});
-                                    //},
                                 onKeyPress: function(code, event) {
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(function () {
-                                            let th = this.$scope;
-                                            let count = $$("__dt").config.posPpage;
-                                            get_data({
-                                                th: th,
-                                                view: "__dt",
-                                                navBar: "__nav",
-                                                start: 1,
-                                                count: count,
-                                                searchBar: "_spr_search",
-                                                method: "getSprSearch"
-                                                });
+                                            let ui = this.getRoot().getBody().getChildViews()[2].getChildViews()[0];
+                                            if (ui) {
+                                                get_data_test({
+                                                    view: ui,
+                                                    navBar: this.getRoot().getBody().getChildViews()[2].getChildViews()[1],
+                                                    start: 1,
+                                                    count: ui.config.posPpage,
+                                                    searchBar: ui.config.searchBar,
+                                                    method: ui.config.searchMethod
+                                                    });
+                                                }
                                             }, this.$scope.app.config.searchDelay);
                                         }
                                     }
                                 },
                             },
-                        {view: "button", type: 'htmlbutton', width: 35,
+                        {view: "button", type: 'htmlbutton', width: 35, disabled: true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
-                                let hist = webix.storage.session.get("__dt");
+                                let nm = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].config.name;
+                                let hist = webix.storage.session.get(nm);
                                 this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
@@ -164,7 +152,7 @@ export default class TopmenuView extends JetView{
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
-                                let id_spr = $$("__dt").getSelectedItem().id_spr
+                                let id_spr = this.getRoot().getBody().getChildViews()[2].getChildViews()[0].getSelectedItem().id_spr
                                 let params = {};
                                 params["th"] = this;
                                 params["command"] = "?setLnk";

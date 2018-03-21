@@ -25,7 +25,7 @@ export default class UnlinkView extends JetView{
                         if (act === "return") {
                             let item = checkVal(request(th.app.config.r_url + "?getPrcsItem", {"user": user, "sh_prc": sh_prc}, !0).response, 's').datas;
                             parseToLink(item);
-                            pars.parent.getRoot().getParentView().$scope.hide();
+                            if (!app.config.roles[app.config.role].skipped) pars.parent.getRoot().getParentView().$scope.hide();
                             }
                         };
                     })

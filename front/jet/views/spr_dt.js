@@ -4,10 +4,17 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
-import {last_page} from "../views/globals";
+import {last_page, getDtParams} from "../views/globals";
+import PagerView from "../views/pager_view";
 
 export default class SprView extends JetView{
     config(){
+
+        var filtFunc = () => {
+            let old_v = this.$$("__page").getValue();
+            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.$$("__page").refresh();
+            }
 
         function mnn_func(obj) {
             let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
@@ -28,104 +35,9 @@ export default class SprView extends JetView{
             }
 
 
-        var bottom = {
-            view: "toolbar",
-            id: "__nav",
-            height: 36,
-            cols: [
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
-                    click: () => {
-                        let start = 1;
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt",
-                            navBar: "__nav",
-                            start: start,
-                            count: count,
-                            searchBar: "_spr_search",
-                            method: "getSprSearch",
-                            field: field,
-                            direction: direction
-                            });
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
-                    click: () => {
-                        let th = this;
-                        let start = $$("__dt").config.startPos - $$("__dt").config.posPpage;
-                        start = (start < 0) ? 1 : start;
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt",
-                            navBar: "__nav",
-                            start: start,
-                            count: count,
-                            searchBar: "_spr_search",
-                            method: "getSprSearch",
-                            field: field,
-                            direction: direction
-                            });
-                        }
-                    },
-                {view: "label", label: "Страница 1 из 1", width: 200, id: "__pager"},
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
-                    click: () => {
-                        let th = this;
-                        let start = $$("__dt").config.startPos + $$("__dt").config.posPpage;
-                        start = (start > $$("__dt").config.totalPos) ? last_page("__dt"): start;
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt",
-                            navBar: "__nav",
-                            start: start,
-                            count: count,
-                            searchBar: "_spr_search",
-                            method: "getSprSearch",
-                            field: field,
-                            direction: direction
-                            });
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
-                    click: () => {
-                        let th = this;
-                        let start = last_page("__dt");
-                        let count = $$("__dt").config.posPpage;
-                        let field = $$("__dt").config.fi;
-                        let direction = $$("__dt").config.di;
-                        get_data({
-                            th: this,
-                            view: "__dt",
-                            navBar: "__nav",
-                            start: start,
-                            count: count,
-                            searchBar: "_spr_search",
-                            method: "getSprSearch",
-                            field: field,
-                            direction: direction
-                            });
-                        }
-                    },
-                {},
-                {view: "label", label: "Всего записей: 0", width: 180, id: "__count"},
-                ]
-            };
-
         var sprv = {view: "datatable",
-            id: "__dt",
+            name: "__dt",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -134,14 +46,18 @@ export default class SprView extends JetView{
             rowHeight:32,
             editable: false,
             //footer: true,
-            headermenu:true,
+            headermenu:{
+                autowidth: true, 
+                },
             startPos: 1,
             posPpage: 20,
-            totalPos: 1250,
+            totalPos: 0,
             fi: 'c_tovar',
             di: 'asc',
             old_stri: "",
-            css: 'dt_css',
+            searchBar: "_spr_search",
+            searchMethod: "getSprSearch",
+            //css: 'dt_css',
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
@@ -160,7 +76,7 @@ export default class SprView extends JetView{
                         ],
                     headermenu:false,
                     },
-                { id: "id_zavod", //sort: "text",
+                { id: "id_zavod", sort: "server",
                     width: 300,
                     header: [{text: "Производитель"},
                         //{content:"textFilter"}
@@ -215,38 +131,17 @@ export default class SprView extends JetView{
                     //$$("_tb").refresh();
                     },
                 onBeforeSort: (field, direction) => {
-                    let th = this;
-                    let start = $$("__dt").config.startPos;
-                    let count = $$("__dt").config.posPpage;
-                    $$("__dt").config.fi = field;
-                    $$("__dt").config.di = direction;
-                    get_data({
-                        th: this,
-                        view: "__dt",
-                        navBar: "__nav",
-                        start: start,
-                        count: count,
-                        searchBar: "_spr_search",
-                        method: "getSprSearch",
-                        field: field,
-                        direction: direction
-                        });
+                    this.$$("__table").config.fi = field;
+                    this.$$("__table").config.di = direction;
+                    filtFunc();
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    if (!this.count) {
-                        this.showProgress({
-                            type: "icon",
-                            icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
-                            });
-                        }
                     },
                 onItemDblClick: function(item) {
-                    //item = this.getItem(item.row);
                     item = this.getSelectedItem();
                     item = item.id_spr;
                     item = get_spr(this.$scope, item);
-                    //console.log('item', item);
                     item["s_name"] = "Страна: " + item.c_strana;
                     item["t_name"] = "Название товара: " + item.c_tovar;
                     item["v_name"] = "Производитель: " + item.c_zavod;
@@ -274,7 +169,7 @@ export default class SprView extends JetView{
             view: "layout",
             rows: [
                 sprv,
-                bottom,
+                {$subview: PagerView},
                 ]}
             
 
@@ -283,4 +178,5 @@ export default class SprView extends JetView{
     init() {
         this.popnew = this.ui(NewformView);
         }
+
     }

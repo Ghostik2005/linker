@@ -2,14 +2,13 @@
 
 import {JetView} from "webix-jet";
 import History from "../views/history";
-import {get_data, checkKey} from "../views/globals";
+import {get_data_test, checkKey, getDtParams} from "../views/globals";
 
 export default class BarcodesView extends JetView{
     config(){
 
         var top = {//view: 'layout',
             height: 40,
-            //rows: [{
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Начните набирать название товара здесь", id: "__s_b", fillspace: true,
                     keyPressTimeout: 900, tooltip: "поиск по ШК", _keytimed: undefined,
@@ -17,27 +16,24 @@ export default class BarcodesView extends JetView{
                         onKeyPress: function(code, event) {
                             clearTimeout(this.config._keytimed);
                             if (checkKey(code)) {
-                                this.config._keytimed = setTimeout(function () {
-                                    let th = this.$scope;
-                                    let v = ($$("__ssearch").getValue() === 1) ? "__dtd" : "__dtdb";
-                                    let n = ($$("__ssearch").getValue() === 1) ? "__nav_b" : "__nav_bb";
-                                    let m = ($$("__ssearch").getValue() === 1) ? "getSprBars" : "getBarsSpr";
-                                    let count = $$(v).config.posPpage;
-                                    let field = $$(v).config.fi;
-                                    let direction = $$(v).config.di;
-                                    let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
-                                    get_data({
-                                        th: th,
-                                        view: v,
-                                        navBar: n,
-                                        start: 1,
-                                        count: count,
-                                        searchBar: "__s_b",
-                                        method: m,
-                                        field: field,
-                                        direction: direction,
-                                        cbars: cbars
-                                        });
+                                this.config._keytimed = setTimeout(() => {
+                                    let ui = this.$scope.getRoot().getChildViews()[1].getChildViews()[0];
+                                    if (ui) {
+                                        let params = getDtParams(ui);
+                                        let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
+                                        get_data_test({
+                                            view: ui,
+                                            navBar: this.$scope.getRoot().getChildViews()[1].getChildViews()[1],
+                                            start: 1,
+                                            count: params[1],
+                                            searchBar: this.$scope.getRoot().getChildViews()[1].getChildViews()[0].config.searchBar,
+                                            method: this.$scope.getRoot().getChildViews()[1].getChildViews()[0].config.searchMethod,
+                                            field: params[2],
+                                            direction: params[3],
+                                            filter: params[0],
+                                            cbars: cbars
+                                            });
+                                        }
                                     }, this.$scope.app.config.searchDelay);
                                 };
                             },
@@ -46,25 +42,25 @@ export default class BarcodesView extends JetView{
                 {view: "button", type: 'htmlbutton', width: 35,
                     label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                     click: () => {
-                        let v = ($$("__ssearch").getValue() === 1) ? "__dtd" : "__dtdb";
-                        let hist = webix.storage.session.get(v);
+                        let v = this.getRoot().getChildViews()[1].getChildViews()[0];
+                        let hist = webix.storage.session.get(v.config.name);
                         this.pophistory.show(hist, $$("__s_b"));
                         },
                     },
-                {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: !true, width: 160, id: "__ssearch",
+                {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, disabled: !true, width: 160, 
                     on: {
-                        onChange: () => {
+                        onChange: function () {
                             $$("__s_b").setValue('');
-                            if ($$("__ssearch").getValue() === 1) {
+                            if (this.getValue() === 1) {
                                 $$("__s_b").define('placeholder', "Начните набирать название товара здесь");
                                 $$("_bar_num").show();
                                 $$("__checkbars").show();
-                                this.show('/start/adm/adm-barcodes/adm-barcodes-s')
-                            } else if ($$("__ssearch").getValue() === 0) {
+                                this.$scope.show('/start/adm/adm-barcodes/adm-barcodes-s')
+                            } else if (this.getValue() === 0) {
                                 $$("__s_b").define('placeholder', "Начните набирать баркод");
                                 $$("_bar_num").hide();
                                 $$("__checkbars").hide();
-                                this.show('/start/adm/adm-barcodes/adm-barcodes-b')
+                                this.$scope.show('/start/adm/adm-barcodes/adm-barcodes-b')
                                 }
                             $$("__s_b").refresh();
                             },

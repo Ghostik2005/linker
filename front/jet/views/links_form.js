@@ -4,37 +4,36 @@ import {JetView} from "webix-jet";
 import History from "../views/history";
 import NewformView from "../views/new_form";
 import {get_data} from "../views/globals";
+import {get_data_test} from "../views/globals";
 import {checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 export default class LinksView extends JetView{
     config(){
         
-        var getActDt = function() {
-            return ($$("_spr_ch").getValue() === 1) ? "__tt" : "__ttl"
+        var getActDt = () => {
+            return this.getRoot().getBody().getChildViews()[2].getChildViews()[0];
             }
 
-        var getNavL = function() {
-            if ($$("_spr_ch").getValue() === 1) return "__nav_l";
-            else return "__nav_ll";
+        var getNavL = () => {
+            return this.getRoot().getBody().getChildViews()[2].getChildViews()[1];
             }
 
-        var getMethod = function() {
-            if ($$("_spr_ch").getValue() === 1) return "getSprLnks";
-            else return "getLnkSprs";
+        var getMethod = () => {
+            return this.getRoot().getBody().getChildViews()[2].getChildViews()[0].config.searchMethod
             }
         
         return {view: "cWindow",
-            id: "__cw",
-            width: document.documentElement.clientWidth * 0.8,
-            height: document.documentElement.clientHeight * 0.8,
+            width: document.documentElement.clientWidth * 0.99,
+            height: document.documentElement.clientHeight * 0.95,
             modal: true,
             on: {
                 onHide: () => {
                     $$(getActDt()).unselectAll();
-                    $$("_break").disable();
-                    $$("_break").define('width', 1)
-                    $$("_break").resize()
+                    $$("_break").hide();
+                    //$$("_break").disable();
+                    //$$("_break").define('width', 1)
+                    //$$("_break").resize()
                     $$("_spr_search").focus();
                     }
                 },
@@ -48,10 +47,10 @@ export default class LinksView extends JetView{
                                         clearTimeout(this.config._keytimed);
                                         if (checkKey(code)) {
                                             this.config._keytimed = setTimeout(function () {
-                                            let ui = webix.$$(getActDt());
+                                            let ui = getActDt();
                                             if (ui) {
                                                 let params = getDtParams(ui);
-                                                get_data({
+                                                get_data_test({
                                                     view: getActDt(),
                                                     navBar: getNavL(),
                                                     start: 1,
@@ -71,7 +70,7 @@ export default class LinksView extends JetView{
                             {view: "button", type: 'htmlbutton', width: 40,
                                 label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                                 click: () => {
-                                    let hist = webix.storage.session.get(getActDt());
+                                    let hist = webix.storage.session.get(getActDt().config.name);
                                     this.pophistory.show(hist, $$("_link_search"));
                                     },
                                 },
@@ -98,12 +97,12 @@ export default class LinksView extends JetView{
                                     var cv = getActDt();
                                     var columns = $$(cv).config.columns;
                                     columns.forEach(function(item){
-                                        if ($$(cv).isColumnVisible(item.id)) {
+                                        if (cv.isColumnVisible(item.id)) {
                                             if (item.header[1]) {
-                                                if (typeof($$(cv).getFilter(item.id).setValue) === 'function') {
-                                                    $$(cv).getFilter(item.id).setValue('');
+                                                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                                                    cv.getFilter(item.id).setValue('');
                                                 } else {
-                                                    let qq = $$(cv).getFilter(item.id);
+                                                    let qq = cv.getFilter(item.id);
                                                     if (!qq.readOnly) qq.value = '';
                                                     };
                                                 }
@@ -112,10 +111,10 @@ export default class LinksView extends JetView{
                                     $$("_link_search").callEvent("onKeyPress", [13,]);
                                     }
                                 },
-                            {view:"button", type: 'htmlbutton', id: "_break", disabled: true,
-                                label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 1,
+                            {view:"button", type: 'htmlbutton', id: "_break", disabled: true, hidden: true,
+                                label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
                                 click: () => {
-                                    $$(getActDt()).callEvent("onItemDblClick");
+                                    getActDt().callEvent("onItemDblClick");
                                     }
                                 },
                             ]},

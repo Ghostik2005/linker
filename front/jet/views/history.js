@@ -20,17 +20,23 @@ export default class History extends JetView{
                 searchBar: undefined,
                 cols: [
                     {view: "list", localId: "_hist", 
-                        readonly: !true, disabled: !true, width: document.documentElement.clientWidth * 0.5,
+                        readonly: !true, disabled: !true,
+                        width: document.documentElement.clientWidth * 0.5,
                         select: true,
                         resizeColumn:true,
                         navigation: "row",
                         editable: false,
                         on: {
                             onItemDblClick: (item) => {
-                                this.$$("_tb").config.searchBar.setValue(item);
+                                let sbar = this.$$("_tb").config.searchBar;
+                                //console.log('type', typeof item);
+                                //console.log('item', item.toString());
+                                //console.log('sbar', sbar);
+                                sbar.setValue(item.toString());
+                                //sbar.refresh();
                                 this.getRoot().hide();
-                                this.$$("_tb").config.searchBar.callEvent('onKeyPress', [13,]);
-                                this.$$("_tb").config.searchBar.focus();
+                                sbar.callEvent('onKeyPress', [13,]);
+                                sbar.focus();
                                 }
                             },
                         },

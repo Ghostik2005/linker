@@ -334,8 +334,11 @@ export function updVendor(item, source) {
 
 export function last_page(view) {
     let total = $$(view).config.totalPos;
-    let ppp = $$(view).config.posPpage;
-    let lp = (Math.ceil(total/ppp) - 1) * ppp + 1
+    let lp = 0;
+    if (total > 0) {
+        let ppp = $$(view).config.posPpage;
+        lp = (Math.ceil(total/ppp) - 1) * ppp + 1
+        };
     return lp
     }
 
@@ -343,12 +346,10 @@ export function parseToLink(item){
     let suppl_dt = $$("_suppl").getList()
     let data = suppl_dt.data.order;
     let cid;
-    console.log('item to parse', item);
     let app = $$("main_ui").$scope.app
     let url = app.config.r_url + "?setWork"
     let params = {"user": app.config.user, "sh_prc": item.sh_prc};
     let res = checkVal(request(url, params, !0).response, 's');
-    console.log('res', res);
     data.forEach(function(d_item, i, data) {
         if (suppl_dt.getItem(d_item).c_vnd === item.c_vnd) {
             cid = suppl_dt.getItem(d_item).id;
@@ -363,9 +364,12 @@ export function parseToLink(item){
             parse_unlinked_item(this, item);
             }, 800);
     } else {
-        let p_item = {"id": 'new', "count": 1, "c_vnd": item.c_vnd, "id_vnd": item.id_vnd}
+        let min = 1000000000000;
+        let max = 2000000000000;
+        var rand = Math.round(min - 0.5 + Math.random() * (max - min + 1));
+        let p_item = {"id": rand, "count": 1, "c_vnd": item.c_vnd, "id_vnd": item.id_vnd}
         suppl_dt.add(p_item);
-        $$("_suppl").setValue('new');
+        $$("_suppl").setValue(rand);
         setTimeout(function() {
             prcs.clearAll();
             prcs.add(item, 0);
@@ -400,69 +404,70 @@ export function get_tg(th, id_spr) {
         };
     }
 
-export function form_navi(view, pager) {
-    let c_page = $$(view).config.startPos / $$(view).config.posPpage;
-    let total_page = $$(view).config.totalPos / $$(view).config.posPpage;
-    total_page = Math.ceil(total_page);
-    let pa = $$(pager).getChildViews()[2]
-    let co = $$(pager).getChildViews()[6]
-    c_page = (total_page !== 0) ? Math.ceil(c_page) : 0;
-    pa.define('label', "Страница " + c_page + " из " + total_page);
-    pa.refresh();
-    co.define('label', "Всего записей: " + $$(view).config.totalPos);
-    co.refresh();
-    }
-
-export function get_data(inp_params) {
-    let cbars = inp_params.cbars;
+export function get_data_test(inp_params) {
     let view = inp_params.view;
     let nav = inp_params.navBar;
-    let start = inp_params.start;
-    let count = inp_params.count;
     let se_s = inp_params.searchBar;
-    let method = inp_params.method;
     let field = (inp_params.field) ? inp_params.field : undefined;
-    let s_field = (inp_params.s_field) ? inp_params.s_field : undefined;
+    //let s_field = (inp_params.s_field) ? inp_params.s_field : undefined;
     let direction = (inp_params.direction) ? inp_params.direction : undefined;
     let search_str = (se_s) ? $$(se_s).getValue() : undefined;
     let c_filter = (inp_params.filter) ? inp_params.filter : undefined;
     let app = $$("main_ui").$scope.app;
     let user = app.config.user;
-    let url = app.config.r_url + "?" + method;
-    let params = {"user": user, "search": search_str, "start": start, "count": count, "field": field, "direction": direction, "c_filter": c_filter, "cbars": cbars};
-    let old_stri = $$(view).config.old_stri;
+    let url = app.config.r_url + "?" + inp_params.method;
+    let params = {"user": user, "search": search_str, "start": inp_params.start, "count": inp_params.count,
+                  "field": field, "direction": direction, "c_filter": c_filter, "cbars": inp_params.cbars};
     let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
     let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
-    if (sl > 1 && rl > 1) { ////////////////////
-        $$(view).config.old_stri = search_str;
-        $$(view).showProgress({
+    if (sl > 1 && rl > 1) {
+        view.showProgress({
             type: "icon",
             icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
             });
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
-                //console.log('data', data);
-                $$(view).parse(data.datas);
-                $$(view).config.startPos = data.start;
-                $$(view).config.totalPos = data.total;
-                form_navi(view, nav);
-                let hist = webix.storage.session.get(view);
+                view.parse(data.datas);
+                view.config.startPos = data.start;
+                view.config.totalPos = data.total;
+                let total_page = Math.ceil(view.config.totalPos / view.config.posPpage);
+                let c_page = (total_page !== 0) ? Math.ceil(view.config.startPos / view.config.posPpage) : 1;
+                let pa = nav.getChildViews()[2]
+                let co = nav.getChildViews()[6]
+                co.define('label', "Всего записей: " + view.config.totalPos);
+                co.refresh();
+                let old_p = nav.$scope.$$("__page").getValue()
+                try {
+                    old_p = +old_p;
+                } catch (ee) {
+                    };
+                if (old_p !==c_page) nav.$scope.$$("__page").config.manual = false;
+                let pa1 = pa.getChildViews();
+                pa1[2].define('label', total_page);
+                pa1[2].refresh();
+                nav.$scope.$$("__page").setValue(c_page);
+                nav.$scope.$$("__page").refresh();
+
+
+                let hist = webix.storage.session.get(view.config.name);
                 if (hist) {
                     hist.push(search_str)
                 } else {
                     hist = [search_str,]
                     }
-                webix.storage.session.put(view, hist);
+                webix.storage.session.put(view.config.name, hist);
             } else {
-                $$(view).clearAll();
-                //webix.message('error');
+                view.clearAll();
                 };
-            $$(view).hideProgress();
+            view.hideProgress();
             });
         } else {
             };
+ 
     }
+
+
 
 export function parse_unlinked_item(th, c_item) {
     c_item = (c_item) ? c_item : $$("prcs_dc").getItem($$("prcs_dc").getCursor());
@@ -499,15 +504,15 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("\\", " ");
     $$("prcs_dc").config.old_stri = s_stri;
     $$("_spr_search").setValue(s_stri);
-    count = $$("__dt").config.posPpage;
-    get_data({
-        th: th,
-        view: "__dt",
-        navBar: "__nav",
+    let vv = $$("__body").getChildViews()[1].getChildViews();
+    count = vv[0].config.posPpage
+    get_data_test({
+        view: vv[0],
+        navBar: vv[1],
         start: 1,
         count: count,
-        searchBar: "_spr_search",
-        method: "getSprSearch"
+        searchBar: vv[0].config.searchBar,
+        method: vv[0].config.searchMethod
         });
     $$("_spr_search").focus();
     }
@@ -528,23 +533,24 @@ export function get_spr(th, id_spr) {
 
 export function getDtParams(ui) {
     let c_filter;
-    if (ui.config.id === "__ttl") {
+    if (ui.config.name === "__ttl") {
         c_filter = {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
+            'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             'spr'       : ($$(ui).isColumnVisible('spr')) ? $$(ui).getFilter('spr').value : undefined,
             'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
             };
-    } else if (ui.config.id === "__tt") {
+    } else if (ui.config.name === "__tt") {
         c_filter = {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
             };
-    } else if (ui.config.id === "__dt_a") {
+    } else if (ui.config.name === "__dt_a") {
         c_filter = {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
@@ -552,14 +558,14 @@ export function getDtParams(ui) {
             'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').value : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
-    } else if (ui.config.id === "__dt_s") {
+    } else if (ui.config.name === "__dt_s") {
         c_filter = {
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
-    } else if (ui.config.id === "__dt_as") {
+    } else if (ui.config.name === "__dt_as") {
         c_filter = {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
@@ -572,7 +578,6 @@ export function getDtParams(ui) {
             'c_sezon'   : ($$(ui).isColumnVisible('c_sezon')) ? $$(ui).getFilter('c_sezon').getValue() : undefined,
             'mandat'    : ($$(ui).isColumnVisible('mandat')) ? $$(ui).getFilter('mandat').getValue() : undefined,
             'prescr'    : ($$(ui).isColumnVisible('prescr')) ? $$(ui).getFilter('prescr').getValue() : undefined,
-
             };
         }
         
@@ -667,15 +672,21 @@ export function get_suppl(view, th) {
     }
 
 export function delPrc(inp_data, th) {
-    //let sh_prc = inp_data.sh_prc;
-    //console.log('sh', sh_prc);
     let cursor = prcs.getCursor();
+    let data = $$("prcs_dc").data.order;
+    let _c;
+    data.forEach(function(item, i, data) {
+        if (item === cursor) _c = i
+        });
+    if (_c === $$("prcs_dc").count()-1) _c = 0;
+    else _c += 1
+    let new_cursor = $$("prcs_dc").data.order[+_c]
     prcs.remove(cursor);
     if (prcs.count() < 1){
         get_suppl("_suppl", th)
     } else {
-        cursor = prcs.data.order[0];
-        prcs.setCursor(cursor);
+        //cursor = prcs.data.order[0];
+        prcs.setCursor(new_cursor);
         parse_unlinked_item();
         let ll = $$("_suppl").getList();
         let cc = $$("_suppl").getValue();

@@ -242,6 +242,9 @@ FROM USERS r"""
     sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM,
     r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL, r.N_ROLE
 FROM SPR_ROLES r"""
+    sql = """SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD,
+    r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE
+FROM PRC r where r.SH_PRC = 'f4821862885c29533d538b90720b4a33'"""
     rr = fb.execute({"sql": sql, "options": opt})
     if rr == -1:
         print("sql connection error")

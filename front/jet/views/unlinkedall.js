@@ -1,132 +1,37 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_data} from "../views/globals";
+import {get_data_test} from "../views/globals";
 import {last_page, checkKey, fRefresh, fRender} from "../views/globals";
 import {getDtParams, parseToLink} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
+import PagerView from "../views/pager_view";
 
 export default class AllUnlinkedView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
-        var filtFunc = function(id){
-            let ui = webix.$$(id);
-            if (ui) {
-                let params = getDtParams(ui);
-                get_data({
-                    view: id,
-                    navBar: "__nav_a",
-                    start: 1,
-                    count: params[1],
-                    searchBar: undefined,
-                    method: "getPrcsAll",
-                    field: params[2],
-                    direction: params[3],
-                    filter: params[0]
-                    });
-                };
+        let app = this.app;
+        
+        var filtFunc = () => {
+            let old_v = this.$$("__page").getValue();
+            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.$$("__page").refresh();
             }
+            
         webix.ui.datafilter.customFilterUnlnk = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.customFilterUnlnk.on_key_down = function(e, node, value){
-                var id = this._comp_id;
                 if ((e.which || e.keyCode) == 9) return;
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_ti) window.clearTimeout(this._filter_ti);
                 this._filter_ti=window.setTimeout(function(){
-                    filtFunc(id)
+                    filtFunc()
                     }, app.config.searchDelay);
                 };
         webix.ui.datafilter.customFilterUnlnk.refresh = fRefresh;
         webix.ui.datafilter.customFilterUnlnk.render = fRender;
 
-        var bottom = {
-            view: "toolbar",
-            id: "__nav_a",
-            height: 36,
-            cols: [
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
-                    click: () => {
-                        var id = "__dt_a";
-                        filtFunc(id);
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
-                    click: () => {
-                        let start = $$("__dt_a").config.startPos - $$("__dt_a").config.posPpage;
-                        start = (start < 0) ? 1 : start;
-                        var id = "__dt_a";
-                        let ui = webix.$$(id);
-                        if (ui) {
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: id,
-                                navBar: "__nav_a",
-                                start: start,
-                                count: params[1],
-                                searchBar: undefined,
-                                method: "getPrcsAll",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            };
-                        }
-                    },
-                {view: "label", label: "Страница 1 из 1", width: 200, id: "__pager_a"},
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
-                    click: () => {
-                        var id = "__dt_a";
-                        let ui = webix.$$(id);
-                        if (ui) {
-                            let start = ui.config.startPos + ui.config.posPpage;
-                            start = (start > ui.config.totalPos) ? last_page(id): start;
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: id,
-                                navBar: "__nav_a",
-                                start: start,
-                                count: params[1],
-                                searchBar: undefined,
-                                method: "getPrcsAll",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            };
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
-                    click: () => {
-                        var id = "__dt_a";
-                        let ui = webix.$$(id);
-                        if (ui) {
-                            let start = last_page(id);
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: id,
-                                navBar: "__nav_a",
-                                start: start,
-                                count: params[1],
-                                searchBar: undefined,
-                                method: "getPrcsAll",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            };
-                        }
-                    },
-                {},
-                {view: "label", label: "Всего записей: 0", width: 180, id: "__count_a"},
-                ]
-            };
-
         var sprv = {view: "datatable",
-            id: "__dt_a",
+            name: "__dt_a",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -134,12 +39,16 @@ export default class AllUnlinkedView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            headermenu:true,
+            headermenu:{
+                autowidth: true, 
+                },
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
             fi: 'c_tovar',
             di: 'asc',
+            searchBar: undefined,
+            searchMethod: "getPrcsAll",
             old_stri: " ",
             columns: [
                 {id: "id_tovar", width: 80, //sort: "server",
@@ -193,14 +102,12 @@ export default class AllUnlinkedView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onBeforeSort: (field, direction) => {
-                    var id = "__dt_a";
-                    $$(id).config.fi = field;
-                    $$(id).config.di = direction;
-                    filtFunc(id);
+                    this.$$("__table").config.fi = field;
+                    this.$$("__table").config.di = direction;
+                    filtFunc();
                     },
                 onItemDblClick: () => {
-                    let item = $$("__dt_a").getSelectedItem();
-                    console.log('item', item);
+                    let item = this.$$("__table").getSelectedItem();
                     if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
                         parseToLink(item);
                         this.getRoot().hide();
@@ -226,8 +133,7 @@ export default class AllUnlinkedView extends JetView{
             modal: true,
             on: {
                 onShow: () => {
-                    var id = "__dt_a";
-                    filtFunc(id);
+                    filtFunc();
                     },
                 onHide: () => {
                     $$("_spr_search").focus();
@@ -237,7 +143,7 @@ export default class AllUnlinkedView extends JetView{
                 view: "layout",
                 rows: [
                     sprv,
-                    bottom,
+                    {$subview: PagerView},
                     ]}
                 }
         return _view
@@ -252,38 +158,25 @@ export default class AllUnlinkedView extends JetView{
         }
     init() {
         let app = $$("main_ui").$scope.app;
-        if ($$("__dt_a").isColumnVisible('c_user')) {
-            $$("__dt_a").getFilter('c_user').value = this.app.config.user;
+        let th = this;
+        if (this.$$("__table").isColumnVisible('c_user')) {
+            this.$$("__table").getFilter('c_user').value = this.app.config.user;
             if  (!app.config.roles[app.config.role].lnkdel) {
-                $$("__dt_a").getFilter('c_user').value = this.app.config.user;
-                $$("__dt_a").getFilter('c_user').readOnly = true;
+                this.$$("__table").getFilter('c_user').value = this.app.config.user;
+                this.$$("__table").getFilter('c_user').readOnly = true;
             } else {
-                $$("__dt_a").getFilter('c_user').readOnly = false;
+                this.$$("__table").getFilter('c_user').readOnly = false;
                 }
             }
-        $$($$("__dt_a").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$($$("__dt_a").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                var id = "__dt_a";
-                let ui = webix.$$(id);
-                if (ui) {
-                    let params = getDtParams(ui);
-                    get_data({
-                        view: id,
-                        navBar: "__nav_a",
-                        start: 1,
-                        count: params[1],
-                        searchBar: undefined,
-                        method: "getPrcsAll",
-                        field: params[2],
-                        direction: params[3],
-                        filter: params[0]
-                        });
-                    };
+                let old_v = th.$$("__page").getValue();
+                th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                th.$$("__page").refresh();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
-        
         }
     }

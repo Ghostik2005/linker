@@ -17,7 +17,7 @@ export default class NewformView extends JetView{
             };
         function zavod_filter(item, value) {
             value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            //value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
             return item.c_zavod.toString().toLowerCase().search(value) != -1;
             };
         function dv_filter(item, value) {
@@ -289,18 +289,15 @@ export default class NewformView extends JetView{
                                         params["id_usloviya"] = right_f.id_usloviya;
                                         params["id_group"] = right_f.id_group;
                                         params["id_nds"] = right_f.id_nds;
-                                        params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc
-                                                                                            : undefined;
+                                        params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
                                         let url = this.app.config.r_url + "?setSpr";
-
                                         let res = request(url, params, !0).response;
                                         res = checkVal(res, 's');
                                         if (res && res.new && this.$$("new_form").config.spr) {
                                             delPrc(params, this);
                                         } else {
-
                                             this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
                                             };
                                         this.$$("new_form").config.spr = false;

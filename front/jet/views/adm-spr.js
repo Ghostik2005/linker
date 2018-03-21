@@ -3,48 +3,37 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import History from "../views/history";
-import {get_spr, get_data} from "../views/globals";
+import {get_spr, get_data_test} from "../views/globals";
 import {last_page, checkKey, dt_formating_sec, dt_formating} from "../views/globals";
 import {compareTrue, fRefresh, fRender, rRefresh, rRender, getDtParams} from "../views/globals";
+import PagerView from "../views/pager_view";
 
 export default class SprViews extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
-        var filtFunc = function(id){
-            let ui = webix.$$(id);
-            if (ui) {
-                let params = getDtParams(ui);
-                get_data({
-                    view: id,
-                    navBar: "__nav_as",
-                    start: 1,
-                    count: params[1],
-                    searchBar: "_spr_search_adm",
-                    method: "getSprSearchAdm",
-                    field: params[2],
-                    direction: params[3],
-                    filter: params[0]
-                    });
-                };
+        let app = this.app;
+        
+        var filtFunc = () => {
+            let old_v = this.$$("__page").getValue();
+            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.$$("__page").refresh();
             }
+            
         webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
         webix.ui.datafilter.richFilt.refresh = rRefresh;
         webix.ui.datafilter.richFilt.render = rRender(function(){
-            let id = "__dt_as"
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout( () => {
-                filtFunc(id);
+                filtFunc();
                 },app.config.searchDelay);
             })
 
         webix.ui.datafilter.txtFilt = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.txtFilt.on_key_down = function(e, node, value){
-                var id = this._comp_id;
                 if ((e.which || e.keyCode) == 9) return;
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(() => {
-                    filtFunc(id);
+                    filtFunc();
                     },app.config.searchDelay);
                 }
         webix.ui.datafilter.txtFilt.refresh = fRefresh;
@@ -85,108 +74,9 @@ export default class SprViews extends JetView{
             tgList.push(tt);
             })
 
-        //console.log('tg_list', tgList)
-
-        var bottom = {
-            view: "toolbar",
-            id: "__nav_as",
-            height: 36,
-            cols: [
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
-                    click: () => {
-                        let ui = webix.$$("__dt_as")
-                        let start = 1;
-                        if (ui) {
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: "__dt_as",
-                                navBar: "__nav_as",
-                                start: start,
-                                count: params[1],
-                                searchBar: "_spr_search_adm",
-                                method: "getSprSearchAdm",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            }
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
-                    click: () => {
-                        let th = this;
-                        let start = $$("__dt_as").config.startPos - $$("__dt_as").config.posPpage;
-                        start = (start < 0) ? 1 : start;
-                        let ui = webix.$$("__dt_as")
-                        if (ui) {
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: "__dt_as",
-                                navBar: "__nav_as",
-                                start: start,
-                                count: params[1],
-                                searchBar: "_spr_search_adm",
-                                method: "getSprSearchAdm",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            }
-                        }
-                    },
-                {view: "label", label: "Страница 1 из 1", width: 200, id: "__pager"},
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
-                    click: () => {
-                        let start = $$("__dt_as").config.startPos + $$("__dt_as").config.posPpage;
-                        start = (start > $$("__dt_as").config.totalPos) ? last_page("__dt_as"): start;
-                        let ui = webix.$$("__dt_as")
-                        if (ui) {
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: "__dt_as",
-                                navBar: "__nav_as",
-                                start: start,
-                                count: params[1],
-                                searchBar: "_spr_search_adm",
-                                method: "getSprSearchAdm",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            }
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
-                    click: () => {
-                        let start = last_page("__dt_as");
-                        let ui = webix.$$("__dt_as")
-                        if (ui) {
-                            let params = getDtParams(ui);
-                            get_data({
-                                view: "__dt_as",
-                                navBar: "__nav_as",
-                                start: start,
-                                count: params[1],
-                                searchBar: "_spr_search_adm",
-                                method: "getSprSearchAdm",
-                                field: params[2],
-                                direction: params[3],
-                                filter: params[0]
-                                });
-                            }
-                        }
-                    },
-                {},
-                {view: "label", label: "Всего записей: 0", width: 180, id: "__count"},
-                ]
-            };
-
         var sprv = {view: "datatable",
-            id: "__dt_as",
+            name: "__dt_as",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -194,12 +84,16 @@ export default class SprViews extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            headermenu:true,
+            headermenu:{
+                autowidth: true, 
+                },
             startPos: 1,
             posPpage: 20,
             totalPos: 1250,
             fi: 'c_tovar',
             di: 'asc',
+            searchBar: "_spr_search_adm",
+            searchMethod: "getSprSearchAdm",
             old_stri: "",
             css: 'dt_css',
             columns: [
@@ -309,27 +203,11 @@ export default class SprViews extends JetView{
                     this.$scope.$$("_del").disable();
                     },
                 onBeforeSort: (field, direction) => {
-                    let start = $$("__dt_as").config.startPos;
-                    $$("__dt_as").config.fi = field;
-                    $$("__dt_as").config.di = direction;
-                    let ui = webix.$$("__dt_as")
-                    if (ui) {
-                        let params = getDtParams(ui);
-                        get_data({
-                            view: "__dt_as",
-                            navBar: "__nav_as",
-                            start: start,
-                            count: params[1],
-                            searchBar: "_spr_search_adm",
-                            method: "getSprSearchAdm",
-                            field: params[2],
-                            direction: params[3],
-                            filter: params[0]
-                            });
-                        }
+                    this.$$("__table").config.fi = field;
+                    this.$$("__table").config.di = direction;
+                    filtFunc();
                     },
                 onBeforeRender: function() {
-                    //$$("_spr_search_adm").focus();
                     webix.extend(this, webix.ProgressBar);
                     },
                 onItemDblClick: function(item) {
@@ -366,22 +244,7 @@ export default class SprViews extends JetView{
                             clearTimeout(this.config._keytimed);
                             if (checkKey(code)) {
                                 this.config._keytimed = setTimeout(function () {
-                                    let start = 1;
-                                    let ui = webix.$$("__dt_as")
-                                    if (ui) {
-                                        let params = getDtParams(ui);
-                                        get_data({
-                                            view: "__dt_as",
-                                            navBar: "__nav_as",
-                                            start: start,
-                                            count: params[1],
-                                            searchBar: "_spr_search_adm",
-                                            method: "getSprSearchAdm",
-                                            field: params[2],
-                                            direction: params[3],
-                                            filter: params[0]
-                                            });
-                                        }
+                                    filtFunc();
                                     }, this.$scope.app.config.searchDelay);
                                 }
                             }
@@ -390,22 +253,22 @@ export default class SprViews extends JetView{
                 {view: "button", type: 'htmlbutton', width: 35,
                     label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                     click: () => {
-                        let hist = webix.storage.session.get("__dt_as");
+                        let hist = webix.storage.session.get(this.$$("__table").config.name);
                         this.pophistory.show(hist, $$("_spr_search_adm"));
                         },
                     },
                 {view:"button", type: 'htmlbutton', disabled: !true,
                     label: "<span style='line-height: 20px;'>Сбросить фильтры</span>", width: 160,
                     click: () => {
-                        let cv = "__dt_as";
-                        let columns = $$(cv).config.columns;
+                        let cv = this.$$("__table")
+                        let columns = cv.config.columns;
                         columns.forEach(function(item){
-                            if ($$(cv).isColumnVisible(item.id)) {
+                            if (cv.isColumnVisible(item.id)) {
                                 if (item.header[1]) {
-                                    if (typeof($$(cv).getFilter(item.id).setValue) === 'function') {
-                                        $$(cv).getFilter(item.id).setValue('');
+                                    if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                                        cv.getFilter(item.id).setValue('');
                                     } else {
-                                        $$(cv).getFilter(item.id).value = '';
+                                        cv.getFilter(item.id).value = '';
                                         };
                                     }
                                 }
@@ -425,7 +288,6 @@ export default class SprViews extends JetView{
                     click: () => {
                         webix.message({
                             text: "Удаление из SPR. Пока недоступно.",
-                            //type: "debug",
                             type: "error",
                             })
                         }
@@ -439,7 +301,7 @@ export default class SprViews extends JetView{
             rows: [
                 top,
                 sprv,
-                bottom,
+                {$subview: PagerView},
                 ]}
             
 
@@ -448,31 +310,16 @@ export default class SprViews extends JetView{
     init() {
         this.popnew = this.ui(NewformView);
         this.pophistory = this.ui(History);
-        $$($$("__dt_as").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$($$("__dt_as").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        let th = this;
+        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let start = 1;
-                let ui = webix.$$("__dt_as")
-                if (ui) {
-                    let params = getDtParams(ui);
-                    get_data({
-                        view: "__dt_as",
-                        navBar: "__nav_as",
-                        start: start,
-                        count: params[1],
-                        searchBar: "_spr_search_adm",
-                        method: "getSprSearchAdm",
-                        field: params[2],
-                        direction: params[3],
-                        filter: params[0]
-                        });
-                    }
+                let old_v = th.$$("__page").getValue();
+                th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                th.$$("__page").refresh();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
-        //if ($$("__dt_as").isColumnVisible('dt')) {
-            //$$("__dt_as").getFilter('dt').setValue({'start':new Date()});
-            //}
         }
     }

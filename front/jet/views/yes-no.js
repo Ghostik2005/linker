@@ -11,11 +11,6 @@ export default class ConfirmView extends JetView{
             body: { view: "form",
                 margin: 0,
                 _params: {},
-                on: {
-                    onShow: function(id){
-                        $$("_yes").focus();
-                        }
-                    },
                 elements: [
                     //{height: 44},
                     {view: "label", label: "Подтвердите", height: 44, align: "center"},
@@ -29,36 +24,35 @@ export default class ConfirmView extends JetView{
                             },
                         {},
                         {view: "button", type: "base", label: "Да", width: 120, height: 44, localId: "_yes",
-                            click: () => {
-                                let pars = this.getRoot().getBody().config._params;
-                                let sh_prc = (pars.sh_prc) ? pars.sh_prc : undefined;
-                                let user = this.app.config.user;
-                                let url = this.app.config.r_url + pars.command;
-                                let type = (pars.type) ? pars.type : undefined;
-                                let action = (pars.action) ? pars.action : "no_action";
-                                let id_spr = (pars.id_spr) ? pars.id_spr : undefined;
-                                var callback = (pars.callback) ? pars.callback : undefined;
-                                var th = (pars.th) ? pars.th : undefined;
-                                let params = {"user": user, "sh_prc": sh_prc, "action": action, "id_spr": id_spr};
-                                this.hide()
-                                if (type === "sync") {
-                                    ///////////console.log('sync'); //синхронный запрос
-                                } else {
-                                    request(url, params).then(function(data) {
-                                        data = checkVal(data, 'a');
-                                        if (data) {
-                                            if (callback) callback(data, th);
-                                            };
-                                        })
-                                    }
-                                }
+                            //click: () => {
+                                //let pars = this.getRoot().getBody().config._params;
+                                //let sh_prc = (pars.sh_prc) ? pars.sh_prc : undefined;
+                                //let user = this.app.config.user;
+                                //let url = this.app.config.r_url + pars.command;
+                                //let type = (pars.type) ? pars.type : undefined;
+                                //let action = (pars.action) ? pars.action : "no_action";
+                                //let id_spr = (pars.id_spr) ? pars.id_spr : undefined;
+                                //var callback = (pars.callback) ? pars.callback : undefined;
+                                //var th = (pars.th) ? pars.th : undefined;
+                                //let params = {"user": user, "sh_prc": sh_prc, "action": action, "id_spr": id_spr};
+                                //this.hide()
+                                //if (type === "sync") {
+                                    /////////////console.log('sync'); //синхронный запрос
+                                //} else {
+                                    //request(url, params).then(function(data) {
+                                        //data = checkVal(data, 'a');
+                                        //if (data) {
+                                            //if (callback) callback(data, th);
+                                            //};
+                                        //})
+                                    //}
+                                //}
                             }
                         ]}
                     ],
             on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
+                onShow: () => {
+                    this.$$("_yes").focus();
                     }
                 }
             }
@@ -66,7 +60,13 @@ export default class ConfirmView extends JetView{
         }
     show(quest, params){
         this.getRoot().getHead().getChildViews()[0].setValue("Подтвердите действие");
-        if (params) this.getRoot().getBody().config._params = params;
+        if (params) {
+            this.getRoot().getBody().config._params = params;
+            if (params.command === "?setLnk")  {
+                this.getRoot().$scope.$$("_yes").callEvent("onItemClick");
+                return;
+                }
+            }
         this.getRoot().getBody().getChildViews()[0].setValue(quest);
         this.getRoot().show();
         }
@@ -75,6 +75,32 @@ export default class ConfirmView extends JetView{
         }
     getValues() {
         return this.getRoot().getBody().getValues();
+        }
+
+    init() {
+        this.$$("_yes").attachEvent("onItemClick", () => {
+            let pars = this.getRoot().getBody().config._params;
+            let sh_prc = (pars.sh_prc) ? pars.sh_prc : undefined;
+            let user = this.app.config.user;
+            let url = this.app.config.r_url + pars.command;
+            let type = (pars.type) ? pars.type : undefined;
+            let action = (pars.action) ? pars.action : "no_action";
+            let id_spr = (pars.id_spr) ? pars.id_spr : undefined;
+            var callback = (pars.callback) ? pars.callback : undefined;
+            var th = (pars.th) ? pars.th : undefined;
+            let params = {"user": user, "sh_prc": sh_prc, "action": action, "id_spr": id_spr};
+            this.hide()
+            if (type === "sync") {
+                ///////////console.log('sync'); //синхронный запрос
+            } else {
+                request(url, params).then(function(data) {
+                    data = checkVal(data, 'a');
+                    if (data) {
+                        if (callback) callback(data, th);
+                        };
+                    })
+                }
+            })
         }
 
     }
