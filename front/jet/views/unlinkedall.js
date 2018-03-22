@@ -109,6 +109,7 @@ export default class AllUnlinkedView extends JetView{
                 onItemDblClick: () => {
                     let item = this.$$("__table").getSelectedItem();
                     if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
+
                         parseToLink(item);
                         this.getRoot().hide();
                     } else {

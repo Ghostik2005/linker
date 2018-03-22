@@ -29,14 +29,14 @@ export default class History extends JetView{
                         on: {
                             onItemDblClick: (item) => {
                                 let sbar = this.$$("_tb").config.searchBar;
-                                //console.log('type', typeof item);
-                                //console.log('item', item.toString());
-                                //console.log('sbar', sbar);
-                                sbar.setValue(item.toString());
-                                //sbar.refresh();
+                                setTimeout(() => {
+                                //console.log('dbl', this.$$("_tb").config.searchBar);
+                                sbar.setValue(item);
+                                sbar.refresh();
                                 this.getRoot().hide();
                                 sbar.callEvent('onKeyPress', [13,]);
                                 sbar.focus();
+                                }, 50);
                                 }
                             },
                         },
@@ -53,6 +53,7 @@ export default class History extends JetView{
             };
         this.getRoot().getHead().getChildViews()[0].setValue('История поиска');
         this.getRoot().show()
+        //console.log('sb_after_show', this.$$("_tb").config.searchBar);
         }
         
     init() {

@@ -125,9 +125,10 @@ export default class SprView extends JetView{
             on: {
                 "data->onParse":function(i, data){
                     this.clearAll();
+                    $$("_link").hide();
                     $$("_link").disable();
-                    $$("_link").define('width', 1)
-                    $$("_link").resize();
+                    //$$("_link").define('width', 1)
+                    //$$("_link").resize();
                     //$$("_tb").refresh();
                     },
                 onBeforeSort: (field, direction) => {
@@ -152,9 +153,11 @@ export default class SprView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
+                    console.log('item');
+                    $$("_link").show();
                     $$("_link").enable();
-                    $$("_link").define('width', 200)
-                    $$("_link").resize();
+                    //$$("_link").define('width', 200)
+                    //$$("_link").resize();
                     //$$("_tb").refresh();
                     //$$("_add").enable();
                     },

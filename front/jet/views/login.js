@@ -38,7 +38,7 @@ export default class loginView extends JetView{
                     {view: "button", label: "OK", hotkey: "enter",
                         click: function(){
                             if (validate_user(this)) {
-                                this.$scope.show("/start/body")
+                                this.$scope.show("/start/body");
                                 webix.message('авторизованно');
                             } else {
                                 webix.message({'text': 'не авторизованно', "type" : "debug"});

@@ -368,6 +368,7 @@ export function parseToLink(item){
         let max = 2000000000000;
         var rand = Math.round(min - 0.5 + Math.random() * (max - min + 1));
         let p_item = {"id": rand, "count": 1, "c_vnd": item.c_vnd, "id_vnd": item.id_vnd}
+        $$("_suppl").config.manual = true;
         suppl_dt.add(p_item);
         $$("_suppl").setValue(rand);
         setTimeout(function() {
@@ -502,7 +503,7 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("+", " ");
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
-    $$("prcs_dc").config.old_stri = s_stri;
+    //$$("prcs_dc").config.old_stri = s_stri;
     $$("_spr_search").setValue(s_stri);
     let vv = $$("__body").getChildViews()[1].getChildViews();
     count = vv[0].config.posPpage
@@ -662,7 +663,11 @@ export function get_suppl(view, th) {
             $$(view).getList().clearAll();
             $$(view).getList().parse(data);
             let fid = $$(view).getList().getFirstId();
+            //console.log('fid', fid);
+            
             $$(view).setValue(fid);
+            $$(view).refresh();
+            //$$(view).callEvent('onCange');
         } else {
             webix.message('error');
             };
@@ -704,10 +709,11 @@ export function filter_1(item, value) {
     }
 
 export function after_call(i, ii, iii) {
-    //console.log('iii', iii.status);
+    //let th = $$("main_ui").$scope.app;
     deleteCookie('linker_user');
     deleteCookie('linker_auth_key');
     deleteCookie('linker_role');
+    //th.show("/login")
     location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
     }
 

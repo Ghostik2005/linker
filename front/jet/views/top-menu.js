@@ -20,7 +20,7 @@ export default class TopmenuView extends JetView{
                 {view: 'toolbar',
                     height: 40,
                     cols: [
-                        {view: "combo", name: "suppliers", id: "_suppl",
+                        {view: "combo", name: "suppliers", id: "_suppl", manual: false,
                             readonly: !true, disabled: !true, width: 300,
                             options: {
                                 filter: filter_1,
@@ -32,8 +32,30 @@ export default class TopmenuView extends JetView{
                                 },
                             on: {
                                 onChange: () => {
-                                    let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
-                                    get_prcs(this, id_vnd);
+                                    if ($$("_suppl").config.manual) {
+                                        $$("_suppl").config.manual = false;
+                                    } else {
+                                        let vnd_list = $$("_suppl").getList();
+                                        if (vnd_list.count() > 0) {
+                                            let id_vnd = vnd_list.getItem($$("_suppl").getValue()).id_vnd
+                                            get_prcs(this, id_vnd);
+                                        } else {
+                                            this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].clearAll();
+                                            this.getRoot().getParentView().getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
+                                            let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
+                                            this.getRoot().getParentView().getChildViews()[0].getChildViews()[1].parse(n_item);
+                                            let pager = this.getRoot().getParentView().getChildViews()[1].getChildViews()[1];
+                                            pager.getChildViews()[6].define('label', "Всего записей: 0");
+                                            pager.getChildViews()[6].refresh();
+                                            pager.$scope.$$("__page").config.manual = false;
+                                            pager.$scope.$$("__page").setValue('1');
+                                            pager.$scope.$$("__page").refresh();
+                                            pager.getChildViews()[2].getChildViews()[2].define('label', total_page);
+                                            pager.getChildViews()[2].getChildViews()[2].refresh();
+                                            $$('_link').hide();
+                                            $$('_link').disable();
+                                            };
+                                        };
                                     }
                                 },
                             },
@@ -106,12 +128,12 @@ export default class TopmenuView extends JetView{
                                 onKeyPress: function(code, event) {
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
-                                        this.config._keytimed = setTimeout(function () {
-                                            let ui = this.getRoot().getBody().getChildViews()[2].getChildViews()[0];
+                                        this.config._keytimed = setTimeout(() => {
+                                            let ui = this.$scope.getParentView().getRoot().getChildViews()[1].getChildViews()[0];
                                             if (ui) {
                                                 get_data_test({
                                                     view: ui,
-                                                    navBar: this.getRoot().getBody().getChildViews()[2].getChildViews()[1],
+                                                    navBar: this.$scope.getParentView().getRoot().getChildViews()[1].getChildViews()[1],
                                                     start: 1,
                                                     count: ui.config.posPpage,
                                                     searchBar: ui.config.searchBar,
@@ -123,12 +145,14 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "button", type: 'htmlbutton', width: 35, disabled: true,
+                        {view: "button", type: 'htmlbutton', width: 35, disabled: !true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
                                 let nm = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].config.name;
                                 let hist = webix.storage.session.get(nm);
-                                this.pophistory.show(hist, $$("_spr_search"));
+                                setTimeout(() => {
+                                this.pophistory.show(hist, $$("_tb").getChildViews()[0]) //$$("_spr_search"));
+                                }, 50);
                                 },
                             },
                         (app.config.roles[app.config.role].spradd) ? {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true,
@@ -148,11 +172,11 @@ export default class TopmenuView extends JetView{
                                 }
                             } : {width: 1},
                         {view:"button", type: 'htmlbutton', id: "_link",
-                            label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", width: 1,
+                            label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
-                                let id_spr = this.getRoot().getBody().getChildViews()[2].getChildViews()[0].getSelectedItem().id_spr
+                                let id_spr = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getSelectedItem().id_spr
                                 let params = {};
                                 params["th"] = this;
                                 params["command"] = "?setLnk";

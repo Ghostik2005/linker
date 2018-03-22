@@ -503,6 +503,10 @@ WHERE r.SH_PRC = ?
     def getSupplUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
+            sql = """UPDATE PRC r SET r.IN_WORK = -1 
+where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?) returning 1"""
+            opt = (user,)
+            result = self.db.execute({"sql": sql, "options": opt})
             sql = """select r1, v.C_VND, r2 from (
                 select p.ID_VND as r1, count(p.ID_VND) as r2 from PRC p 
                 inner join USERS u on (u."GROUP" = p.ID_ORG)
@@ -512,7 +516,6 @@ WHERE r.SH_PRC = ?
             inner join VND v on (v.ID_VND = r1)
             order by v.C_VND ASC
             """
-            opt = (user,)
             result = self.db.request({"sql": sql, "options": opt})
             _return = []
             for row in result:
@@ -532,6 +535,11 @@ WHERE r.SH_PRC = ?
         if self._check(x_hash):
             id_vnd = params.get('id_vnd')
             user = params.get('user')
+            sql = """UPDATE PRC r SET r.IN_WORK = -1 
+where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
+            opt = (user,)
+            print(sql)
+            result = self.db.execute({"sql": sql, "options": opt})
             t1 = time.time() - st_t
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
             from prc r
@@ -540,6 +548,7 @@ WHERE r.SH_PRC = ?
             ROWS 1 to 20
             """
             opt = (id_vnd, user)
+            print(sql)
             result = self.db.request({"sql": sql, "options": opt})
             t2 = time.time() - st_t
             _return = []

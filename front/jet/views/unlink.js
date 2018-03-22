@@ -6,7 +6,7 @@ import {request, checkVal, parseToLink} from "../views/globals";
 
 export default class UnlinkView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         function unlnk(th, act) {
             let pars = th.getRoot().getBody().config._params;
             let sh_prc = pars.sh_prc;
@@ -44,6 +44,7 @@ export default class UnlinkView extends JetView{
                         {view: "button", type: "base", label: "Ошибка", width: 120, height: 44,
                             click: () => {
                                 unlnk(this, "return");
+                                $$("_break").hide();
                                 }
                             },
                         {},
