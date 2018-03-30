@@ -16,20 +16,10 @@ import subprocess
 from urllib.parse import unquote
 from libs.lockfile import LockWait
 from libs.connect import fb_local
-import asyncio
+from multiprocessing.dummy import Pool as ThreadPool
 
 """
-CREATE INDEX IDX_SPR1 ON SPR
-  (C_TOVAR);
-CREATE DESCENDING INDEX IDX_SPR2 ON SPR
-  (C_TOVAR);
-commit;
-ALTER TABLE SPR_ROLES ADD N_ROLE Varchar(256)
-update SPR_ROLES s set s.N_ROLE = 'user' where s.ID_ROLE = 0;
-UPDATE SPR_ROLES s SET s.N_ROLE = 'linker' where s.ID_ROLE = 9;
-UPDATE SPR_ROLES s SET s.N_ROLE = 'admin' where s.ID_ROLE = 10;
-UPDATE SPR_ROLES s SET s.N_ROLE = 'superadmin' where s.ID_ROLE = 34;
-UPDATE SPR_ROLES s SET s.N_ROLE = 'qqq' where s.ID_ROLE = 35;
+
 """
 
 
@@ -55,7 +45,9 @@ class API:
         self.start = 1
         self.count = 20
 
-    async def _make_sql(self, sql, opt):
+    def _make_sql(self, params):
+        sql = params.get('sql')
+        opt = params.get('opt')
         res = self.db.request({"sql": sql, "options": opt})
         return res
 
@@ -348,7 +340,18 @@ WHERE r.SH_PRC = ?
             ROWS ? to ?""".format(stri, us_stri, field, direction)
             opt = (start_p, end_p)
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            sql_c = """select count(*) from prc r {2} {3} 
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1} """.format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
+
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+            
+            #result = self.db.request({"sql": sql, "options": opt})
             for row in result:
                 r = {
                     "sh_prc"  : row[0],
@@ -365,16 +368,10 @@ WHERE r.SH_PRC = ?
                     "dt"      : str(row[11])
                 }
                 _return.append(r)
-            sql = """select count(*)
-                from prc r
-                {2} 
-                {3} 
-                WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1}
-                """.format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
-            opt = ()
-
-            tot = self.db.request({"sql": sql, "options": opt})[0][0]
-            ret = {"result": True, "ret_val": {"datas" :_return, "total": tot, "start": start_p}}
+            #sql = sql_c
+            #opt = ()
+            #count = self.db.request({"sql": sql, "options": opt})[0][0]
+            ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -469,7 +466,18 @@ WHERE r.SH_PRC = ?
             opt = (start_p, end_p)
             #print(sql)
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            sql_c = """select count(*) from prc r {2} {3} WHERE r.n_fg = 1 and r.IN_WORK = -1 {0} {1}
+""".format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
+            
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+
+            #result = self.db.request({"sql": sql, "options": opt})
             for row in result:
                 r = {
                     "sh_prc"  : row[0],
@@ -486,15 +494,10 @@ WHERE r.SH_PRC = ?
                     
                 }
                 _return.append(r)
-            sql = """select count(*)
-                from prc r
-                {2} 
-                {3} 
-                WHERE r.n_fg = 1 and r.IN_WORK = -1 {0} {1}
-                """.format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
-            opt = ()
-            tot = self.db.request({"sql": sql, "options": opt})[0][0]
-            ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p}}
+            #sql = sql_c
+            #opt = ()
+            #count = self.db.request({"sql": sql, "options": opt})[0][0]
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
 
@@ -538,7 +541,6 @@ where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?) returning 1"""
             sql = """UPDATE PRC r SET r.IN_WORK = -1 
 where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
             opt = (user,)
-            print(sql)
             result = self.db.execute({"sql": sql, "options": opt})
             t1 = time.time() - st_t
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
@@ -548,7 +550,6 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
             ROWS 1 to 20
             """
             opt = (id_vnd, user)
-            print(sql)
             result = self.db.request({"sql": sql, "options": opt})
             t2 = time.time() - st_t
             _return = []
@@ -598,6 +599,97 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getRefs(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            p_list = [{'sql': "select c_strana, id_spr from spr_strana where flag=1 order by c_strana", 'opt': ()},
+                    {'sql': "select c_zavod, id_spr from spr_zavod where flag=1 order by c_zavod", 'opt': ()},
+                    {'sql': "select r.ID, r.ACT_INGR, r.OA from dv r where r.flag=1 order by r.ACT_INGR", 'opt': ()},
+                    {'sql': "select classifier.nm_group, classifier.cd_group from classifier  where classifier.idx_group = 2", 'opt': ()},
+                    {'sql': "select classifier.nm_group, classifier.cd_group from classifier where classifier.idx_group = 3", 'opt': ()},
+                    {'sql': "select classifier.nm_group, classifier.cd_group from classifier where classifier.idx_group = 6", 'opt': ()},
+                    {'sql': "select classifier.nm_group, classifier.cd_group from classifier where classifier.idx_group = 1", 'opt': ()},
+                    {'sql': "select classifier.nm_group, classifier.cd_group from classifier where classifier.idx_group = 7 order by classifier.nm_group asc", 'opt': ()}
+                    ]
+            pool = ThreadPool(len(p_list))
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            _return = []
+            for row in results[0]:
+                r = {
+                    "id"             : row[1],
+                    "c_strana"       : row[0]
+                }
+                _return.append(r)
+            re = {'strana': _return}
+            _return = []
+            for row in results[1]:
+                r = {
+                    "id"            : row[1],
+                    "c_zavod"       : row[0]
+                }
+                _return.append(r)
+            re['vendor'] = _return
+            _return = []
+            for row in results[2]:
+                if row[2] == 1 :
+                    oa = 'Для аптек'
+                elif row[2] == 2:
+                    oa = 'Для аптек и аптечных пунктов'
+                else:
+                    oa = 'Нет'
+                r = {
+                    "id"        : row[0],
+                    "act_ingr"  : row[1],
+                    "oa"        : oa
+                }
+                _return.append(r)
+            re['dv'] = _return
+            _return = []
+            for row in results[3]:
+                r = {
+                    "id"          : row[1],
+                    "nds"         : row[0]
+                }
+                _return.append(r)
+            re['nds'] = _return
+            _return = []
+            for row in results[4]:
+                r = {
+                    "id"               : row[1],
+                    "usloviya"         : row[0]
+                }
+                _return.append(r)
+            re['hran'] = _return
+            _return = []
+            for row in results[5]:
+                r = {
+                    "id"        : row[1],
+                    "sezon"       : row[0]
+                }
+                _return.append(r)
+            re['sezon'] = _return
+            _return = []
+            for row in results[6]:
+                r = {
+                    "id"            : row[1],
+                    "group"         : row[0]
+                }
+                _return.append(r)
+            re['group'] = _return
+            _return = []
+            for row in results[7]:
+                r = {
+                    "id"            : row[1],
+                    "c_tgroup"         : row[0]
+                }
+                _return.append(r)
+            re['tg'] = _return
+            ret = {"result": True, "ret_val": re}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getStranaAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             sql = "select c_strana, id_spr from spr_strana where flag=1 order by c_strana"
@@ -619,10 +711,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from spr_strana
-                where ID_SPR = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select id_spr from spr_strana where id_spr = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -719,10 +813,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from spr_zavod
-                where ID_SPR = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select id_spr from spr_zavod where id_spr = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -826,10 +922,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from DV
-                where ID = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select idr from dv where id = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -958,10 +1056,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from classifier 
-                where classifier.cd_group = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1061,10 +1161,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from classifier 
-                where classifier.cd_group = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1185,10 +1287,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from classifier 
-                where classifier.cd_group = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1288,10 +1392,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from classifier 
-                where classifier.cd_group = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1517,10 +1623,12 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
         if self._check(x_hash):
             check = params.get('check')
             if check:
-                sql = """select count(*)
-                from users r
-                where r."USER" = ?
-                """
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select r."USER" from users r where r."USER" = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1600,20 +1708,26 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             stri = "lower(r.barcode) like lower('%{0}%')".format(search_re)
-            sql = """select count(*)
-                    from spr_barcode r
-                    WHERE %s 
-            """ % stri
-            opt = ()
-            count = self.db.request({"sql": sql, "options": opt})[0][0]
-            sql = """select distinct r.barcode from spr_barcode r
-            where {0}
-            order by r.{1} {2}
-            ROWS ? to ?""".format(stri, field, direction)
-            t1 = time.time() - st_t
+            sql_c = """select count(*) from spr_barcode r WHERE %s """ % stri
+
+
+            #sql = sql_c
+            #opt = ()
+            #count = self.db.request({"sql": sql, "options": opt})[0][0]
+            sql = """select distinct r.barcode from spr_barcode r where {0} order by r.{1} {2} ROWS ? to ?""".format(stri, field, direction)
             opt = (start_p, end_p)
+
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+            
+            t1 = time.time() - st_t
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            #result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
             idc = 0
             for row in result:
@@ -1681,7 +1795,7 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
-            sql = """
+            sql_c = """
 select count(*)
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
         CASE 
@@ -1699,8 +1813,9 @@ from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty,
     )
 where quantity >= {1} AND quantity <= {2}
             """.format(stri, cbars[0], cbars[1])
-            opt = ()
-            count = self.db.request({"sql": sql, "options": opt})[0][0]
+            #sql = sql_c
+            #opt = ()
+            #count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """
 select id, c_tovar, quantity
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
@@ -1724,7 +1839,16 @@ ROWS ? to ?
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            #result = self.db.request({"sql": sql, "options": opt})
+
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+            
             st_t = time.time()
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
@@ -1805,7 +1929,12 @@ ROWS ? to ?
             id_spr = params.get("id_spr")
             barcode = params.get("barcode")
             if barcode and id_spr:
-                sql = """select count(*) from spr_barcode where id_spr = ? and barcode = ?"""
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select id_spr from spr_barcode where id_spr = ? and barcode = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (id_spr, barcode)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 valid = True if result == 0 else False
@@ -1864,7 +1993,12 @@ ROWS ? to ?
         if self._check(x_hash):
             act_ingr = params.get("act_ingr")
             if act_ingr:
-                sql = """select count(*) from dv where act_ingr = ?"""
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select act_ingr from dv where act_ingr = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (act_ingr,)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 valid = True if result == 0 else False
@@ -1898,7 +2032,12 @@ ROWS ? to ?
         if self._check(x_hash):
             c_zavod = params.get("c_zavod")
             if c_zavod:
-                sql = """select count(*) from spr_zavod where c_zavod = ?"""
+                sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select c_zavod from spr_zavod where c_zavod = ?) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
                 opt = (c_zavod,)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 valid = True if result == 0 else False
@@ -1973,14 +2112,15 @@ ROWS ? to ?
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
-            sql = """
+            sql_c = """
 SELECT count(*)
 FROM SPR r
 {0}
 WHERE {1}
             """.format("LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)" if "z.C_ZAVOD" in stri else '', stri) #new value (try to optimize)
-            opt = ()
-            tot = self.db.request({"sql": sql, "options": opt})[0][0]
+            #sql = sql_c
+            #opt = ()
+            #count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """
 SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc
 FROM SPR r
@@ -2023,7 +2163,16 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            #result = self.db.request({"sql": sql, "options": opt})
+            
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+            
             st_t = time.time()
             for row in result:
                 r = {
@@ -2042,7 +2191,7 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
                 }
                 _return.append(r)
             t2 = time.time() - st_t
-            ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p, "time": (t1, t2)}}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2)}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2283,16 +2432,23 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            #result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
-            if result:
-                sql = sql_c
-                #sql = sql_cc
-                opt = ()
-                tot = self.db.request({"sql": sql, "options": opt})[0][0]
-                #tot = len(self.db.request({"sql": sql, "options": opt})[0])
-            else:
-                tot = 0
+            #if result:
+                #sql = sql_c
+                #opt = ()
+                #count = self.db.request({"sql": sql, "options": opt})[0][0]
+            #else:
+                #count = 0
+
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+                
             t2 = time.time() - t1 - st_t
             for row in result:
                 r = {
@@ -2311,7 +2467,7 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
                     "dt"            : str(row[12])
                 }
                 _return.append(r)
-            ret = {"result": True, "ret_val": {"datas": _return, "total": tot, "start": start_p, "time": (t1, t2)}}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2)}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2412,148 +2568,6 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def getSprLnks_as(self, params=None, x_hash=None):
-        
-        async def mm(params=None, x_hash=None):
-            loop = asyncio.get_event_loop()
-            
-            st_t = time.time()
-            if self._check(x_hash):
-                start_p = int( params.get('start', self.start))
-                end_p = int(params.get('count', self.count)) + start_p
-                start_p = 1 if start_p == 0 else start_p
-                field = params.get('field', 'c_tovar')
-                direction = params.get('direction', 'asc')
-                search_re = params.get('search')
-                search_re = search_re.replace("'", "").replace('"', "")
-                sti = "lower(r.C_TOVAR) like lower('%%')"
-                filt = params.get('c_filter')
-                pref = 'and %s'
-                stri_1 = ""
-                if filt:
-                    pars = {}
-                    pars['c_vnd'] = filt.get('c_vnd')
-                    pars['c_zavod'] = filt.get('c_zavod')
-                    pars['c_tovar'] = filt.get('c_tovar')
-                    pars['owner'] = filt.get('owner')
-                    dt = filt.get('dt')
-                    ssss = []
-                    if dt:
-                        pars['start_dt'] = dt.get('start')
-                        pars['end_dt'] = dt.get('end')
-                        if pars['start_dt'] and not pars['end_dt']:
-                            pars['start_dt'] = pars['start_dt'].split()[0]
-                            s = """
-    ((r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))
-    or 
-    (r.CHANGE_DT > CAST('{0}' as TIMESTAMP) AND r.CHANGE_DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP))))
-                            """.format(pars['start_dt'])
-                            ssss.append(pref % s)
-                        elif pars['start_dt'] and pars['end_dt']:
-                            pars['end_dt'] = pars['end_dt'].split()[0]
-                            s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))) or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))".format(pars['start_dt'], pars['end_dt'])
-                            ssss.append(pref % s)
-                    if pars['c_vnd']:
-                        s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
-                        ssss.append(pref % s)
-                    if pars['owner']:
-                        s = "lower(r.owner) like lower('%" + pars['owner'] + "%')"
-                        ssss.append(pref % s)
-                    if pars['c_tovar']:
-                        s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
-                        ssss.append(pref % s)
-                    if pars['c_zavod']:
-                        s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
-                        ssss.append(pref % s)
-                    stri_1 = ' '.join(ssss)
-                exclude, search_re = self._form_exclude(search_re)
-                search_re = search_re.split()
-                stri = [] if len(search_re) > 0 else [sti,]
-                for i in range(len(search_re)):
-                    ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
-                    if i == 0:
-                        stri.append(ts1)
-                    else:
-                        stri.append('and %s' % ts1)
-                if len(exclude) > 0:
-                    for i in range(len(exclude)):
-                        ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
-                        stri.append('and %s' % ts3)
-                stri = ' '.join(stri)
-                #stri += stri_1
-                sql = """
-    select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
-    from spr r
-    LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)
-    LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-    WHERE {0} 
-    order by r.{1} {2}
-    ROWS ? to ?
-                """.format(stri, field, direction)
-                t1 = time.time() - st_t
-                opt = (start_p, end_p)
-                _return = []
-                result = self.db.request({"sql": sql, "options": opt})
-                st_t = time.time()
-                if result:
-                    sql = """select count(*)
-                            from spr r
-                            WHERE %s 
-                    """ % stri
-                    opt = ()
-                    count = self.db.request({"sql": sql, "options": opt})[0][0]
-                else:
-                    count = 0
-                for row in result:
-                    st1 = ' | '.join([str(row[0]), row[1]])
-                    r = {
-                        "id"          : row[0],
-                        "$row"        : "c_tovar",
-                        "open"        : False,
-                        "c_tovar"     :  st1 if len(row[2]) < 1 else ' | '.join([st1, row[2]]),
-                        #"c_zavod_s"   : row[2],
-                        "data"        : []
-                    }
-                    sql = """
-    SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.OWNER,
-        CASE 
-        WHEN r.CHANGE_DT is null THEN r.DT
-        ELSE r.CHANGE_DT
-        END as ch_date
-    FROM LNK r 
-    LEFT JOIN VND v on (r.ID_VND = v.ID_VND)
-    WHERE r.ID_SPR = ? {0} order by r.C_TOVAR ASC
-                    """.format(stri_1)
-                    opt = (row[0],)
-                    res = self.db.request({"sql": sql, "options": opt})
-                    if len(res) < 1:
-                        continue
-                    for rrr in res:
-                        rr = {
-                            "id"        : rrr[0],
-                            "c_vnd"     : rrr[1],
-                            "id_tovar"  : rrr[2],
-                            "c_tovar"   : rrr[3],
-                            "c_zavod"   : rrr[4],
-                            "dt"        : str(rrr[6]),
-                            "owner"     : rrr[5],
-                            "count"     : ''
-                        }
-                        r['data'].append(rr)
-                    r['count'] = '' if len(r['data']) == 0 else len(r['data'])
-                    _return.append(r)
-                t3 = time.time() - st_t
-                ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
-            else:
-                ret = {"result": False, "ret_val": "access denied"}
-
-            return ret
-
-        loop = asyncio.get_event_loop()
-        retl = loop.run_until_complete(mm(params, x_hash))
-        
-        return json.dumps(retl, ensure_ascii=False)
-
     def getSprLnks(self, params=None, x_hash=None):
         
         st_t = time.time()
@@ -2627,29 +2641,34 @@ or
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
             #stri += stri_1
-            sql = """
-select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
+            sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
 from spr r
 LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)
 LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
 WHERE {0} 
 order by r.{1} {2}
-ROWS ? to ?
-            """.format(stri, field, direction)
+ROWS ? to ? """.format(stri, field, direction)
+            sql_c = """select count(*) from spr r WHERE %s """ % stri
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
-            result = self.db.request({"sql": sql, "options": opt})
+            #result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
-            if result:
-                sql = """select count(*)
-                        from spr r
-                        WHERE %s 
-                """ % stri
-                opt = ()
-                count = self.db.request({"sql": sql, "options": opt})[0][0]
-            else:
-                count = 0
+            #if result:
+                #sql = sql_c
+                #opt = ()
+                #count = self.db.request({"sql": sql, "options": opt})[0][0]
+            #else:
+                #count = 0
+
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
                 r = {
@@ -2666,8 +2685,7 @@ ROWS ? to ?
                     orderby = 'order by r.{0} {1}'.format(s_field, s_direction)
                 else:
                     orderby = 'order by r.C_TOVAR ASC'
-                sql = """
-SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.OWNER,
+                sql = """SELECT r.SH_PRC, v.C_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.OWNER,
     CASE 
     WHEN r.CHANGE_DT is null THEN r.DT
     ELSE r.CHANGE_DT
@@ -2842,17 +2860,24 @@ JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             sql_c += """ WHERE {0}""".format(stri)
             sql = sql.format(stri, field, direction)
             opt = (start_p, end_p)
-            print(sql)
-            result = self.db.request({"sql": sql, "options": opt})
-            st_t = time.time()
-            if result:
-                sql = sql_c
-                opt = ()
-                print(sql)
-                count = self.db.request({"sql": sql, "options": opt})[0][0]
-            else:
-                count = 0
             _return = []
+            #result = self.db.request({"sql": sql, "options": opt})
+
+            #if result:
+                #sql = sql_c
+                #opt = ()
+                #count = self.db.request({"sql": sql, "options": opt})[0][0]
+            #else:
+                #count = 0
+                
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1]
+            
             for row in result:
                 r = {
                     "id"          : row[0],
@@ -3635,5 +3660,17 @@ INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERAD
 INSERT INTO SPR_ROLES (ID_ROLE, SKIPPED, SPRADD, SPREDIT, ADM, VENDORADD, USERADD, USERDEL, LNKDEL) VALUES (35, 1, 1, 1, 1, 1, 1, 1, 1);
 
 ALTER TABLE PRC ADD SOURCE Smallint;
+
+CREATE INDEX IDX_SPR1 ON SPR
+  (C_TOVAR);
+CREATE DESCENDING INDEX IDX_SPR2 ON SPR
+  (C_TOVAR);
+commit;
+ALTER TABLE SPR_ROLES ADD N_ROLE Varchar(256)
+update SPR_ROLES s set s.N_ROLE = 'user' where s.ID_ROLE = 0;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'linker' where s.ID_ROLE = 9;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'admin' where s.ID_ROLE = 10;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'superadmin' where s.ID_ROLE = 34;
+UPDATE SPR_ROLES s SET s.N_ROLE = 'qqq' where s.ID_ROLE = 35;
 
 """
