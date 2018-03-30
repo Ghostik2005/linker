@@ -1,0 +1,143 @@
+.webix_message_area{width: 800px;}
+
+/*http://webix.com/skin-builder/15f2c99c*/
+
+.header {
+    background-color: transparent !important;
+    border-bottom: 1px solid #ffffff;
+    margin-top: 0 !important;
+    color: #404040 !important;
+    }
+
+.ms-logo {
+    width: 36px;
+    height: 36px;
+    margin-top: -3px;
+    /*background-image: url(/codebase/addons/img/ms_logo.jpg);*/
+    display: block;
+    background-repeat: round;
+    }
+
+.ms-logo-text {
+    color: #404040 !important;
+    font-size: 15px !important;
+}
+
+.margin-zero {
+    margin-top: 0 !important;
+    }
+
+:active, :hover, :focus {
+    outline: 0 !important;
+    outline-offset: 0 !important;
+    }
+
+button {
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    }
+
+.webix_input_icon.fa-angle-down {
+    background-color: #e6e6e6 !important;
+    }
+
+.menu_button {
+    font-size: 8px !important;
+    }
+
+.borders {
+    border-left: 1px solid #3498db !important;
+    border-top: 0px !important;
+    }
+
+.green {
+    color: green;
+    }
+
+.red {
+    color: red;
+    }
+
+.butt {
+    color: #3498db;
+    }
+
+.right {
+    text-align: right;
+    }
+
+.small {
+    color: #666666;
+    /*font-size: small !important;*/
+    }
+    
+.comboList {
+    word-break: break-all;
+    }
+
+.webix_list_item {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    }
+
+.dt_css {
+    color: black;
+    }
+
+.webix_view.webix_dtable {
+    font-size: larger;
+    }
+
+.col_center {
+    text-align: center;
+    }
+
+.my_filter select,
+.my_filter input {
+      width: 100%;
+      font-size: inherit;
+      color: #666666 !important;
+      margin-top: -2px;
+      padding: 0 3px;
+      vertical-align: top;
+      border: 1px solid #dddddd;
+      line-height: 24px;
+      -moz-box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      height: 70%;
+      vertical-align: middle;
+      border-radius: 6px;
+      /*font-family: Roboto, Arial;*/
+    }
+
+.my_filter select {
+  padding: 3px;
+}
+
+.custom_list {
+    height: 32px !important;
+    line-height: 32px !important;
+    }
+
+.barcode{
+    /*width: 80px;*/
+    overflow: hidden;
+    float: left;
+}
+.butt1{
+    /*padding-left: 10px;*/
+    /*height: 60px;*/
+    /*padding-top:10px;*/
+    float:right;
+}
+
+.slide1 {
+    font-weight: bolder;
+    color: red;
+    }
+
+.center_p {
+    text-align: center !important;
+    }
+

@@ -127,5 +127,11 @@ button {
   margin-left: -5px !important;
   text-align: center !important;
 }
+.c-radio {
+  margin-top: 6px !important;
+}
+.webix_el_radio .webix_label_right {
+  color: white;
+}
 
 /*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IiIsImZpbGUiOiIuL215YXBwLmNzcyIsInNvdXJjZVJvb3QiOiIifQ==*/
