@@ -284,12 +284,16 @@ WHERE r.SH_PRC = ?
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
                 ssss = []
+                us_s = ''
+                v_s = ''
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
-                    ssss.append('and %s' % s)
+                    #ssss.append('and %s' % s)
+                    v_s = 'and %s' % s
                 if pars['c_user']:
                     s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
-                    ssss.append('and %s' % s)
+                    #ssss.append('and %s' % s)
+                    us_s = 'and %s' % s
                 if pars['c_tovar']:
                     s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
                     ssss.append('and %s' % s)
@@ -331,7 +335,17 @@ WHERE r.SH_PRC = ?
                 table = ''
                 field = "ch_date"
             field = ''.join([table, field])
-            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
+            order = 'order by {0} {1}'.format(field, direction)
+            sql_1 = """left join USERS u on (u."GROUP" = r.ID_ORG)""" if not us_s else """join USERS u on (u."GROUP" = r.ID_ORG) %s""" % us_s
+            sql_2 = """left JOIN VND v on (r.ID_VND = v.ID_VND)""" if not v_s else """JOIN VND v on (r.ID_VND = v.ID_VND) %s""" % v_s
+            sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
+from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {order if 'r.' in order else ''})
+join prc r on r.SH_PRC = rsh
+{sql_1}
+{sql_2}
+{order if 'r.' not in order else ''}"""
+
+            sql_old = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
             INNER JOIN VND v on (r.ID_VND = v.ID_VND)
@@ -339,11 +353,18 @@ WHERE r.SH_PRC = ?
             order by {2} {3}
             ROWS ? to ?""".format(stri, us_stri, field, direction)
             opt = (start_p, end_p)
+            print(sql)
             _return = []
-            sql_c = """select count(*) from prc r {2} {3} 
-WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1} """.format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
-
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            sql_c = """select count(distinct r.sh_prc) from prc r {2} {3} 
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1} """.format(stri, us_stri, 'join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
+#WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1} """.format(stri, us_stri, 'left join USERS u on (u."GROUP" = r.ID_ORG)', 'left join VND v on (r.ID_VND = v.ID_VND)')
+            sql_c = f"""select count(*) from ( select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
+from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} )
+join prc r on r.SH_PRC = rsh
+{sql_1}
+{sql_2})"""
+            print(sql_c)
+            p_list = [{'sql': sql + """ ROWS ? to ?""", 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
             pool.close()
@@ -1709,12 +1730,13 @@ FROM RDB$DATABASE"""
             search_re = search_re.replace("'", "").replace('"', "")
             stri = "lower(r.barcode) like lower('%{0}%')".format(search_re)
             sql_c = """select count(*) from spr_barcode r WHERE %s """ % stri
-
-
+            
+            sql_c = sql_c.replace("WHERE lower(r.barcode) like lower('%%%%')", '')
             #sql = sql_c
             #opt = ()
             #count = self.db.request({"sql": sql, "options": opt})[0][0]
             sql = """select distinct r.barcode from spr_barcode r where {0} order by r.{1} {2} ROWS ? to ?""".format(stri, field, direction)
+            sql = sql.replace("WHERE lower(r.barcode) like lower('%%%%')", '')
             opt = (start_p, end_p)
 
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
@@ -1795,6 +1817,7 @@ FROM RDB$DATABASE"""
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
+            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
             sql_c = """
 select count(*)
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
@@ -1813,6 +1836,7 @@ from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty,
     )
 where quantity >= {1} AND quantity <= {2}
             """.format(stri, cbars[0], cbars[1])
+            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             #sql = sql_c
             #opt = ()
             #count = self.db.request({"sql": sql, "options": opt})[0][0]
@@ -1836,6 +1860,7 @@ where quantity >= {1} AND quantity <= {2}
 order by {3} {4}
 ROWS ? to ?
             """.format(stri, cbars[0], cbars[1], field, direction)
+            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -2112,12 +2137,14 @@ FROM RDB$DATABASE"""
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
+            stri = stri.replace("lower(z.C_ZAVOD) like lower('%%%%') and", '')
             sql_c = """
 SELECT count(*)
 FROM SPR r
 {0}
 WHERE {1}
             """.format("LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)" if "z.C_ZAVOD" in stri else '', stri) #new value (try to optimize)
+            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             #sql = sql_c
             #opt = ()
             #count = self.db.request({"sql": sql, "options": opt})[0][0]
@@ -2159,7 +2186,7 @@ LEFT OUTER join
     ) on (r.ID_SPR = cc5)
 WHERE {0} ORDER by {1} {2} ROWS ? to ?
             """.format(stri, field, direction)
-
+            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -2424,11 +2451,14 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
                     inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
                     ) on (cc5 = r.ID_SPR)"""
                 sql_c = """SELECT count(*) FROM SPR r"""
-            sql_cc = sql + "\nWHERE %s" % stri
+
             sql += """\nWHERE {0}
                 ORDER by r.{1} {2} ROWS ? to ?"""
+            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
             sql_c += """ WHERE {0}""".format(stri)
+            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             sql = sql.format(stri, field, direction)
+            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -2640,7 +2670,7 @@ or
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
-            #stri += stri_1
+            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and","")
             sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
 from spr r
 LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)
@@ -2648,7 +2678,9 @@ LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
 WHERE {0} 
 order by r.{1} {2}
 ROWS ? to ? """.format(stri, field, direction)
+            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             sql_c = """select count(*) from spr r WHERE %s """ % stri
+            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -2833,8 +2865,8 @@ from (
         WHEN r.CHANGE_DT is null THEN r.DT
         ELSE r.CHANGE_DT
         END as ch_date
-        FROM LNK r    
-        {0}
+        FROM (SELECT r.SH_PRC lsh FROM LNK r {0})
+        JOIN LNK r on r.SH_PRC = lsh
     )""")
                 sql = '\n'.join(in_st)
                 in_c.insert(0, "select count(*) from LNK r")
@@ -2848,8 +2880,8 @@ from (
         WHEN r.CHANGE_DT is null THEN r.DT
         ELSE r.CHANGE_DT
         END as ch_date
-        FROM LNK r
-        {0}
+        FROM (SELECT l.SH_PRC lsh FROM LNK l {0})
+        JOIN LNK r on r.SH_PRC = lsh
     )
 JOIN VND v on (v.ID_VND = r.ID_VND)
 join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)
@@ -2858,7 +2890,11 @@ JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             sql =  sql.format("""\nWHERE {0} ORDER by {1} {2}""") + '\nROWS ? to ?'
             stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
             sql_c += """ WHERE {0}""".format(stri)
+            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            print(sql_c)
             sql = sql.format(stri, field, direction)
+            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            print(sql)
             opt = (start_p, end_p)
             _return = []
             #result = self.db.request({"sql": sql, "options": opt})
@@ -3673,4 +3709,21 @@ UPDATE SPR_ROLES s SET s.N_ROLE = 'admin' where s.ID_ROLE = 10;
 UPDATE SPR_ROLES s SET s.N_ROLE = 'superadmin' where s.ID_ROLE = 34;
 UPDATE SPR_ROLES s SET s.N_ROLE = 'qqq' where s.ID_ROLE = 35;
 
+CREATE TABLE A_TEMP_PRC
+(
+  SH_PRC TSTR32 NOT NULL COLLATE WIN1251, 
+  ID_VND TINT32, 
+  ID_TOVAR TSTR32, 
+  N_CENA TINT32, 
+  C_TOVAR TSTR255 COLLATE WIN1251, 
+  C_ZAVOD TSTR255 COLLATE WIN1251, 
+  ID_ORG TINT32 DEFAULT 0 NOT NULL, 
+  SOURCE SMALLINT, 
+  BARCODE VARCHAR(255), 
+  CONSTRAINT T_PK_PRC PRIMARY KEY (SH_PRC)
+);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON A_TEMP_PRC TO  SYSDBA WITH GRANT OPTION;
+ 
+CREATE INDEX IDX_SPR_BARCODE1 ON SPR_BARCODE (BARCODE);
 """

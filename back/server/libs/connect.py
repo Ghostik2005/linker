@@ -236,16 +236,10 @@ if "__main__" == __name__:
     sql = "select r.id_spr, r.c_tovar from spr r WHERE lower(r.C_TOVAR) like lower('%анальгин%') order by r.c_tovar asc ROWS 1 to 20"
     sql = "insert INTO ROLES (id, name) values (0, 'Пользователь')"
     opt = ()
-    sql = """
-SELECT r.ID, r."USER", r.PASSWD, r."GROUP", r.SESSION, r.INN, r.ID_ROLE
-FROM USERS r"""
-    sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM,
-    r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL, r.N_ROLE
-FROM SPR_ROLES r"""
-    sql = """SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD,
-    r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE
-FROM PRC r where r.SH_PRC = 'f4821862885c29533d538b90720b4a33'"""
-    rr = fb.execute({"sql": sql, "options": opt})
+    sql = """SELECT r.ID, r."USER", r.PASSWD, r."GROUP", r.SESSION, r.INN, r.ID_ROLE FROM USERS r"""
+    sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM, r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL, r.N_ROLE FROM SPR_ROLES r"""
+    sql = """SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE FROM PRC r where r.SH_PRC = 'f4821862885c29533d538b90720b4a33'"""
+    rr = fb.execute({"sql": sql1, "options": opt})
     if rr == -1:
         print("sql connection error")
     elif rr == -2:

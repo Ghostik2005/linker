@@ -3,43 +3,19 @@
 
 """
 
-SELECT r.ID_SPR, r.C_TOVAR, bc FROM SPR r
-JOIN (SELECT ss.ID_SPR ssid, bc from SPR_BARCODE ss 
-    JOIN (select rr.BARCODE bc, count(rr.BARCODE) cbc FROM SPR_BARCODE rr
-        GROUP by rr.BARCODE
-        HAVING COUNT(rr.BARCODE) > 1
-        ) on ss.BARCODE = bc
-    ) on r.ID_SPR = ssid
-
 
 сведение по баркоду: к какому баркоду привязывается товар, если существуют несколько одинаковых? к первому попавшемуся? судя по скрипту к первому...
 
-сведение по баркоду: но если один штрихкод привязан к нескольким товарам, то не выполнится
-
-INSERT INTO lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
-select r.SH_PRC, s.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, CURRENT_TIMESTAMP, 'barcode'
-FROM A_TEMP_PRC r
-JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE
+сведение по баркоду: но если один штрихкод привязан к нескольким товарам, то не выполнится - пропукаем такие товары, отпраяляя их на ручное сведение
 
 
 
-
-2cb20da5ad35f6f224e33afce34c91b9
-3b58a5a4a170fdaefda22065f16174da
-23c5f2c7e6d2aea48f2a588935c013ba
-8a5980760059f0dab6a2b9138ae44f4a
-
-17. Используйте глобальные временные таблицы для быстрой вставки
-Для ускорения вставки и обновления используйте временные таблицы (Global Temporary Table – GTT) для массовых вставок и последующего переноса данных в обычные таблицы.
-
-
-30. Используйте производные таблицы
-Используйте производные таблицы (derived tables) для исключения ненужных сортировок: например, вместо
+вместо
 SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD,
     r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE
 FROM PRC r order by r.C_TOVAR DESC
 
-Используйте такой вариант:
+используем
 SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD,
     r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE
     FROM (SELECT r.SH_PRC as FIELD_KEY FROM prc r ORDER BY r.C_TOVAR DESC) T2
@@ -170,13 +146,13 @@ VND_LIST = {
     19981: [u'Аптека-Лекарь-Ост2', '5725000021&src'],
     }
 
-db_path = 'localhost/8025:spr1'
+db_path = 'localhost/8025:spr'
 #db_path = '82.146.40.211:SPR_TEST'
 
 
 db = fdb.connect(**{
                 "host": "localhost",
-                "database": "spr1",
+                "database": "spr",
                 "user": 'SYSDBA',
                 "password":'masterkey',
                 "charset" : 'WIN1251'
@@ -200,121 +176,119 @@ def erase_prc():
     
 
 def prc_sync_lnk():
+    erase_prc()
     dbc = db.cursor()
-    dbc.execute(u"""select * from PRC where
-                    upper(c_tovar) like '%КОШЕК%'
-                    or upper(c_tovar) like '%СОБАК%'
-                    or upper(c_tovar) like 'R.C.%'
-                    or upper(c_tovar) like '%ФРИСКИС%'
-                    or upper(c_tovar) like '%КИТИКЕТ%'
-                    or upper(c_tovar) like '%ПРОПЛАН%'
-                    or upper(c_tovar) like '%ПЕДИГРИ%'
-                    or upper(c_tovar) like '%МЕДИУМ СТАРТЕР%'
-                    or upper(c_tovar) like '%ГРЫЗУН%'
-                    or upper(c_tovar) like '%МЯУДОДЫР%'
-                    or upper(c_tovar) like '%КОРМ Д%'
-                    or upper(c_tovar) like '%ФЕЛИКС%'
-                    or upper(c_tovar) like '%КЭТ ЧАУ%'
-                    or upper(c_tovar) like '%ВИСКАС%'
-                    or upper(c_tovar) like '%КОТОВ%'
-                    or upper(c_tovar) like '%ЖИВОТНЫХ%'
-                    or upper(c_tovar) like '%ЩЕНК%'
-                    or upper(c_tovar) like '%НАПОЛНИТЕЛЬ%'
-                    or upper(c_tovar) like '%ПОРОД%'
-                    or upper(c_tovar) like '%ПОРОД%'
-                    or upper(c_tovar) like '%КОБЕЛЕЙ%'
-                    or upper(c_tovar) like '%КОРМ ДЛЯ%'
-                    or upper(c_tovar) like '%БЛОХ%'
-                    or upper(c_tovar) like '%ЖИВТНЫ%'
-                    or upper(c_tovar) like '%РЫБОК%'
-                    or upper(c_tovar) like '%ПТИЦ%'
-                    or upper(c_tovar) like '%СВИНКИ%'
-                    or upper(c_tovar) like '%УЦЕНКА%'
-                    or upper(c_tovar) like '%/НТВ/%'
-                    or upper(c_tovar) like '%ГОДЕН%'
-                    or upper(c_tovar) like '%СР.ГОД.%'
-                    or upper(c_tovar) like '%ОБУВЬ%'
-                    or upper(c_tovar) like 'ПОДАРОК%'
-                    or upper(c_tovar) like '%МАШИНА%'
-                    or upper(c_tovar) like '%АКВАРИУМ%'
-                    or upper(c_tovar) like '%АКЦИЯ%'""")
-    delrows = dbc.fetchall()
-    print("Удалил по признаку -", len(delrows))
-
+    sql = u"""select count(*) FROM (
+    select c_tovar from PRC where
+     c_tovar  CONTAINING 'КОШЕК'
+    or  c_tovar  CONTAINING 'СОБАК'
+    or upper(c_tovar) like 'R.C.%'
+    or  c_tovar  CONTAINING 'ФРИСКИС'
+    or  c_tovar  CONTAINING 'КИТИКЕТ'
+    or  c_tovar  CONTAINING 'ПРОПЛАН'
+    or  c_tovar  CONTAINING 'ПЕДИГРИ'
+    or  c_tovar  CONTAINING 'МЕДИУМ СТАРТЕР'
+    or  c_tovar  CONTAINING 'ГРЫЗУН'
+    or  c_tovar  CONTAINING 'МЯУДОДЫР'
+    or  c_tovar  CONTAINING 'КОРМ Д'
+    or  c_tovar  CONTAINING 'ФЕЛИКС'
+    or  c_tovar  CONTAINING 'КЭТ ЧАУ'
+    or  c_tovar  CONTAINING 'ВИСКАС'
+    or  c_tovar  CONTAINING 'КОТОВ'
+    or  c_tovar  CONTAINING 'ЖИВОТНЫХ'
+    or  c_tovar  CONTAINING 'ЩЕНК'
+    or  c_tovar  CONTAINING 'НАПОЛНИТЕЛЬ'
+    or  c_tovar  CONTAINING 'ПОРОД'
+    or  c_tovar  CONTAINING 'ПОРОД'
+    or  c_tovar  CONTAINING 'КОБЕЛЕЙ'
+    or  c_tovar  CONTAINING 'КОРМ ДЛЯ'
+    or  c_tovar  CONTAINING 'БЛОХ'
+    or  c_tovar  CONTAINING 'ЖИВТНЫ'
+    or  c_tovar  CONTAINING 'РЫБОК'
+    or  c_tovar  CONTAINING 'ПТИЦ'
+    or  c_tovar  CONTAINING 'СВИНКИ'
+    or  c_tovar  CONTAINING 'УЦЕНКА'
+    or  c_tovar  CONTAINING '/НТВ/'
+    or  c_tovar  CONTAINING 'ГОДЕН'
+    or  c_tovar  CONTAINING 'СР.ГОД.'
+    or  c_tovar  CONTAINING 'ОБУВЬ'
+    or upper(c_tovar) like 'ПОДАРОК%'
+    or  c_tovar  CONTAINING 'МАШИНА'
+    or  c_tovar  CONTAINING 'АКВАРИУМ'
+    or  c_tovar  CONTAINING 'АКЦИЯ'
+    and n_fg!=1 and id_org!=0)"""
+    #dbc.execute(sql)
+    #delrows = dbc.fetchone()
+    #print("Удаляем по признаку -", delrows[0])
+    print("Удаляем по признаку")
     
-    dbc.execute(u"""update PRC set n_fg=1, id_org=0 where
-                    upper(c_tovar) like '%КОШЕК%'
-                    or upper(c_tovar) like '%СОБАК%'
-                    or upper(c_tovar) like 'R.C.%'
-                    or upper(c_tovar) like '%ФРИСКИС%'
-                    or upper(c_tovar) like '%КИТИКЕТ%'
-                    or upper(c_tovar) like '%ПРОПЛАН%'
-                    or upper(c_tovar) like '%ПЕДИГРИ%'
-                    or upper(c_tovar) like '%МЕДИУМ СТАРТЕР%'
-                    or upper(c_tovar) like '%ГРЫЗУН%'
-                    or upper(c_tovar) like '%МЯУДОДЫР%'
-                    or upper(c_tovar) like '%КЭТ ЧАУ%'
-                    or upper(c_tovar) like '%КОРМ Д%'
-                    or upper(c_tovar) like '%ФЕЛИКС%'
-                    or upper(c_tovar) like '%ВИСКАС%'
-                    or upper(c_tovar) like '%КОТОВ%'
-                    or upper(c_tovar) like '%ЖИВОТНЫХ%'
-                    or upper(c_tovar) like '%ЩЕНК%'
-                    or upper(c_tovar) like '%НАПОЛНИТЕЛЬ%'
-                    or upper(c_tovar) like '%ПОРОД%'
-                    or upper(c_tovar) like '%КОБЕЛЕЙ%'
-                    or upper(c_tovar) like '%КОРМ ДЛЯ%'
-                    or upper(c_tovar) like '%БЛОХ%'
-                    or upper(c_tovar) like '%ЖИВТНЫ%'
-                    or upper(c_tovar) like '%РЫБОК%'
-                    or upper(c_tovar) like '%ПТИЦ%'
-                    or upper(c_tovar) like '%СВИНКИ%'
-                    or upper(c_tovar) like '%/НТВ/%'
-                    or upper(c_tovar) like '%УЦЕНКА%'
-                    or upper(c_tovar) like '%/НТВ/%'
-                    or upper(c_tovar) like '%ГОДЕН%'
-                    or upper(c_tovar) like '%СР.ГОД.%'
-                    or upper(c_tovar) like '%ОБУВЬ%'
-                    or upper(c_tovar) like 'ПОДАРОК%'
-                    or upper(c_tovar) like '%МАШИНА%'
-                    or upper(c_tovar) like '%АКВАРИУМ%'
-                    or upper(c_tovar) like '%АКЦИЯ%'""")
+    dbc.execute(u"""update PRC set n_fg=1, id_org=0
+where n_fg!=1
+and 
+(   c_tovar CONTAINING 'КОШЕК'
+or  c_tovar CONTAINING 'СОБАК'
+or  upper(c_tovar) like 'R.C.%'
+or  c_tovar CONTAINING 'ФРИСКИС'
+or  c_tovar CONTAINING 'КИТИКЕТ'
+or  c_tovar CONTAINING 'ПРОПЛАН'
+or  c_tovar CONTAINING 'ПЕДИГРИ'
+or  c_tovar CONTAINING 'МЕДИУМ СТАРТЕР'
+or  c_tovar CONTAINING 'ГРЫЗУН'
+or  c_tovar CONTAINING 'МЯУДОДЫР'
+or  c_tovar CONTAINING 'КЭТ ЧАУ'
+or  c_tovar CONTAINING 'КОРМ Д'
+or  c_tovar CONTAINING 'ФЕЛИКС'
+or  c_tovar CONTAINING 'ВИСКАС'
+or  c_tovar CONTAINING 'КОТОВ'
+or  c_tovar CONTAINING 'ЖИВОТНЫХ'
+or  c_tovar CONTAINING 'ЩЕНК'
+or  c_tovar CONTAINING 'НАПОЛНИТЕЛЬ'
+or  c_tovar CONTAINING 'ПОРОД'
+or  c_tovar CONTAINING 'КОБЕЛЕЙ'
+or  c_tovar CONTAINING 'КОРМ ДЛЯ'
+or  c_tovar CONTAINING 'БЛОХ'
+or  c_tovar CONTAINING 'ЖИВТНЫ'
+or  c_tovar CONTAINING 'РЫБОК'
+or  c_tovar CONTAINING 'ПТИЦ'
+or  c_tovar CONTAINING 'СВИНКИ'
+or  c_tovar CONTAINING '/НТВ/'
+or  c_tovar CONTAINING 'УЦЕНКА'
+or  c_tovar CONTAINING 'ГОДЕН'
+or  c_tovar CONTAINING 'СР.ГОД.'
+or  c_tovar CONTAINING 'ОБУВЬ'
+or  upper(c_tovar) like 'ПОДАРОК%'
+or  c_tovar CONTAINING 'МАШИНА'
+or  c_tovar CONTAINING 'АКВАРИУМ'
+or  c_tovar CONTAINING 'АКЦИЯ'
+)
+""")
     db.commit()
     print('Свожу по кодам')
-    dbc.execute(u"""insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT)
-select distinct p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp as dt
-from prc p join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and
-    (select count(distinct ll.id_spr)
-    from prc pp
-    join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
-    where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' '
-    )=1
-where p.id_vnd in (20269,30144,51066,28178,40267,40277,48929,20129,20378,20229,20276,28176,20576,20176,20153,34157,44735,45277,41977,20577, 20557, 40552, 21271, 29977,22240, 20171, 20277, 20677, 20871, 20377, 22077, 24477, 28162, 28177, 20477, 23478,  20977, 30178, 28132)""")
-
-#Если это не работает, скорее всего в поле  p.id_tovar есть символ % или пусто
-#
-#            where p.id_vnd in (28132)""")51066,28178,
+    sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
+select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
+from prc p 
+join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' '
+    and (select count(distinct ll.id_spr) as ccc
+        from prc pp
+        join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
+        where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
+        ) = 1 
+where p.id_vnd in (20269,30144,51066,28178,40267,40277,48929,20129,20378,20229,20276,28176,20576,20176,20153,34157,44735,45277,41977,20577, 20557, 40552, 21271, 29977,22240, 20171, 20277, 20677, 20871, 20377, 22077, 24477, 28162, 28177, 20477, 23478,  20977, 30178, 28132)
+    """
+    dbc.execute(sql)
+    dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
     db.commit()
-    print('Закончил свдение по кодам')
+    print('Закончил сведение по кодам')
 
-    dbc.execute(u"""select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc""")
-    rows = dbc.fetchall()
-    print("Свёл по коду -", len(rows))
-    dbc.execute(u"""delete from prc pp
-where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
-    db.commit()
-
-    dbc.execute(u"""update lnk set owner='robot'  where owner is null""")
-    db.commit()
     dbc.execute(u"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136""")
     db.commit()
 
-    dbc.execute(u"""select * from prc where id_org<>12 and  id_org <> 0 and n_fg <> 1  and  n_fg= 0 and n_fg<> 12 and id_vnd in (46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,34157,20471,20557,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178)""")
-    rows = dbc.fetchall()
-    print("Стасе из накладных -", len(rows))
+    #dbc.execute(u"""select count(*) from prc where id_org<>12 and  id_org <> 0 and n_fg <> 1  and  n_fg= 0 and n_fg<> 12
+    #and id_vnd in (46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,20271,10001,29271,34071,37471,33771,30371,34157,20471,20557,20577,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178)""")
+    #rows = dbc.fetchone()
+    #print("Стасе из накладных -", rows[0])
 
-    dbc.execute(u"""update prc set id_org = 12
-where id_org<>12 and  id_org <> 0 and n_fg <> 1  and  n_fg= 0 and n_fg<> 12
+    dbc.execute(u"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1  and  n_fg= 0 and n_fg<> 12
 and id_vnd in (46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,20271,10001,29271,34071,37471,33771,30371,34157,20471,20557,20577,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178)""")
     db.commit()
 
@@ -349,13 +323,12 @@ def load_from_nolink(db):
         dbc = db.cursor()
         count_insert = 0
         count_all = 0
-        for id_vnd, v in VND_LIST.items():# .iteritems():
+        for id_vnd, v in VND_LIST.items():
             for path in glob.glob(os.path.join(WORCDIR, "price%s*.nolink" % id_vnd)):
-                #count_insert, count_all = _load_from_nolink(db, dbc, id_vnd, v, path, count_insert, count_all)
                 count_insert, count_all = _upload_to_db(db, dbc, id_vnd, v, path, count_insert, count_all)
                 print("remove:", path, flush=True)
                 try: 
-                    #os.remove(path)
+                    os.remove(path)
                     print("[ OK ]", flush=True)
                 except Exception as e:
                     print("[FAIL]", str(e), flush=True)
@@ -365,25 +338,17 @@ def load_from_nolink(db):
 
 def _upload_to_db(db, dbc, id_vnd, v, path, count_insert, count_all):
     _re = re.compile("\(..\...\)")
-
     rows = []
     with open(path, 'rb') as f:
         rows = f.read()
     rows = rows.decode('utf8').splitlines()
     print("--- Всего в этом файле -", len(rows))
     count_all+=len(rows)
-    st = os.stat(path)
-    dt = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(st.st_mtime))
+    ret = []
     if rows:
-        #создаем временную таблицу
-        #пишем туда все данные
-        #выполняем встроенную процедуру по заполнению таблиц
-        #результаты пишем в какую-нибудь таблицу.
-        #полчаем результаты в скрипт
         c = 0
         ins_params = []
         for row in rows:
-            #print(row)
             fgCont = False
             kod, tovar, zavod, idorg, barcode, sh_brak, series, dt_brak = "", "", "", "0", None, "", "", ""
             try:
@@ -438,201 +403,86 @@ def _upload_to_db(db, dbc, id_vnd, v, path, count_insert, count_all):
                 _id_vnd = 30178
             else:
                 _id_vnd = id_vnd
-
             # Добавление забракованных серий
             if sh_brak and series:
-                print('-'*20)
-                print(sh_brak, series)
-                #sql = "UPDATE OR INSERT INTO BRAK(SH_PRC, SERIES, DT)VALUES(?,?,?)MATCHING(SH_PRC, SERIES);"
-                #dbc.execute(sql, (sh_brak, series, dt_brak))
-                #db.commit()
-
+                #print('-'*20)
+                print('забраковка: ', sh_brak, series)
+                sql = "UPDATE OR INSERT INTO BRAK(SH_PRC, SERIES, DT)VALUES(?,?,?) MATCHING(SH_PRC, SERIES)"
+                dbc.execute(sql, (sh_brak, series, dt_brak))
+                db.commit()
             try:
                 sh_prc = genHash(_id_vnd, tovar, zavod)
             except Exception as Err:
-                #print(Err)
-                #traceback.print_exc()
-                #print('error genHash', path)
                 continue
             barcode = barcode if barcode else None
             source = 1 if len(os.path.basename(path)) < 20 else 2 #1 - прайслистэксперт, 2 - склад
-            inss = (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, -1, source, barcode)
+            inss = (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, source, barcode)
             ins_params.append(inss)
-        sql = """UPDATE or INSERT INTO A_TEMP (ID_VND, ID_TOVAR, N_CENA, SH_PRC, C_TOVAR, C_ZAVOD, ID_ORG, in_work, source, barcode)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-        dbc.executemany(sql, ins_params)
-        dbc.execute('SELECT p.TOT, p.TOT_INS FROM A_T_PR p')
-        #dbc.execute('SELECT p.TOT, p.TOT_INS FROM QWE p')
-        ret = dbc.fetchone()
-        #print(ret)
-        db.commit()
-        #dbc.execute("SELECT p.TOT, p.R_TIME FROM QWE p");
-        #res = dbc.fetchone()
-        #db.commit()
-        #print(res)
-        res=ret
-
-    return res[1], count_all
-
-
-
-def _load_from_nolink(db, dbc, id_vnd, v, path, count_insert, count_all):
-    _re = re.compile("\(..\...\)")
-
-    rows = []
-    with open(path, 'rb') as f:
-        rows = f.read().decode('utf8').splitlines()
-    print("--- Всего в этом файле -", len(rows))
-    count_all+=len(rows)
-    st = os.stat(path)
-    dt = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(st.st_mtime))
-    if rows:            
-        #dbc.execute(u'select dt_prc from VND where id_vnd = %s' % id_vnd)            
-        #row = dbc.fetchone()
-        c = 0
-        for row in rows:
-            fgCont = False
-            kod, tovar, zavod, idorg, barcode, sh_brak, series, dt_brak = "", "", "", "0", "", "", "", ""
-            try:
-                _, kod, tovar, zavod, idorg, sh_brak, series, dt_brak = row.split('\t')[0:8]
-            except:
-                try:
-                    _, kod, tovar, zavod, idorg, barcode = row.split('\t')[0:6]
-                    barcode = barcode.strip()
-                except:
-                    try:
-                        _, kod, tovar, zavod, idorg = row.split('\t')[0:5]
-                    except:
-                        _, kod, tovar, zavod = row.split('\t')[0:4]
-            try:
-                idorg = int(idorg.strip())
-            except:
-                idorg = 0
-            try:
-                cena = 0
-                if id_vnd == 20171:
-                    fgCont = kod.find('/')>-1
-                tovar = tovar.replace(u' /ЖНВЛС/', '')
-            except:
-                fgCont = True
-            if fgCont: 
-                continue
-            if _re.search(tovar):
-                continue
-            try:
-                cena = int(float(cena)*100)
-            except:
-                cena = 0    
-                                
-            # Формируем хеш                 
-            if id_vnd in [28177,28132,28176,28178]:
-                _id_vnd = 28162
-            elif id_vnd in [20577,20576]:
-                _id_vnd = 20557
-            elif id_vnd in [20662]:
-                _id_vnd = 20677
-            elif id_vnd in [20477]:
-                _id_vnd = 20471
-            elif id_vnd in [20177,20153,20176,20129]:
-                _id_vnd = 20171
-            elif id_vnd in [45835,51066]:
-                _id_vnd = 44735
-            elif id_vnd in [20276,20229,20269]:
-                _id_vnd = 20277
-            elif id_vnd in [20378]:
-                _id_vnd = 20377
-            elif id_vnd in [30144]:
-                _id_vnd = 30178
-            else:
-                _id_vnd = id_vnd
-
-            # Добавление забракованных серий
-            if sh_brak and series:
-                print('-'*20)
-                print(sh_brak, series)
-                #sql = "UPDATE OR INSERT INTO BRAK(SH_PRC, SERIES, DT)VALUES(?,?,?)MATCHING(SH_PRC, SERIES);"
-                #dbc.execute(sql, (sh_brak, series, dt_brak))
-                #db.commit()
-
-            try:
-                sh_prc = genHash(_id_vnd, tovar, zavod)
-            except Exception as Err:
-                print(Err)
-                traceback.print_exc()
-                print('error genHash', path)
-                continue
-            if barcode:
-                sql = u"SELECT ID_SPR FROM LNK WHERE SH_PRC='%s'" % (sh_prc)
-                dbc.execute(sql)
-                row = dbc.fetchone()
-                if row:
-                    if barcode.isdigit() and len(barcode)==13:
-                        print(row[0], ";", barcode)
-                        sql = """update spr set barcode='%s' where id_spr = %s and barcode is null""" % (barcode, row[0])
-                        dbc.execute(sql)
-                        db.commit()
-                        try:
-                            sql1 = """insert into spr_barcode (barcode, id_spr) values ('%s', %s)""" % (barcode, row[0])
-                            print(sql1, "add spr_barcode")
-                            dbc.execute(sql1)
-                            db.commit()
-                        except:
-                            continue
-                    continue
-            try:
-                dbc.execute(u"SELECT * FROM LNK WHERE SH_PRC='%s'" % (sh_prc))
-                row = dbc.fetchone()
-            except Exception as e:
-                print('Ошибка2.1', str(e))
-
-            continue
-
-            
-            if row: #если есть такие в LNK то пропускаем
-                continue
-                
-            else:
-                if barcode:
-                    dbc.execute(u"SELECT ID_SPR, BARCODE FROM SPR_BARCODE WHERE BARCODE='%s'" % (barcode))
-                    row = dbc.fetchone()
-                    if row:
-                        dbc.execute(u"""insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)values(?,?,?,?,?,?,current_timestamp, 'barcode')""",
-                        (sh_prc, row[0], id_vnd, kod, tovar, zavod))
-                        db.commit()
-                        continue
-                try:
-                    sql = """select sh_prc, c_index from prc where sh_prc='%s'""" %  sh_prc
-                    dbc.execute(sql)
-                    row = dbc.fetchone()
-                    if row:
-                        tmp = row[1]+1
-                        sql = "UPDATE PRC set c_index=%s where sh_prc='%s'" % (tmp, row[0])
-                        dbc.execute(sql)
-                        db.commit()
-                    else:
-                        sql = """INSERT INTO prc (ID_VND, ID_TOVAR, N_CENA, SH_PRC, C_TOVAR, C_ZAVOD, ID_ORG, in_work)
-VALUES (%s, '%s','%s','%s' , '%s', '%s', '%s', %s)""" % (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, -1)
-                        dbc.execute(sql)
-                        db.commit()
-                        count_insert+=1
-                except Exception as e:
-                    print('Ошибка2.2' , str(e)  )
-            c+=1
-        db.commit()
-        dbc.execute(u'select count(*) from PRC where id_vnd = %s' % id_vnd)
-        n_sum = dbc.fetchone()[0]
-        try:
-            dbc.execute(u"""UPDATE OR INSERT INTO VND (id_vnd, c_vnd, dt_prc, n_sum) VALUES (?, '%s', ?, ?) matching(ID_VND);""" % v[0], (id_vnd, dt, n_sum))
+        sql = """UPDATE or INSERT INTO A_TEMP_PRC (ID_VND, ID_TOVAR, N_CENA, SH_PRC, C_TOVAR, C_ZAVOD, ID_ORG, source, barcode)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        if len(ins_params) > 0:
+            dbc.executemany(sql, ins_params)
             db.commit()
-            return count_insert, count_all
-        except Exception as e:
-            print(v[0], id_vnd, dt, n_sum)
-            print('Ошибка3', str(e))
-            return 0, 0
+            for row in getGen(dbc, "SELECT sh_prc, barcode FROM A_TEMP_PRC WHERE barcode is NOT NULL"):
+                dbc.execute("SELECT l.ID_SPR FROM LNK l WHERE l.SH_PRC = ?", (row[0],))
+                ret = dbc.fetchone()
+                if ret:
+                    dbc.execute("UPDATE spr set barcode = ? where id_spr = ? and barcode is null", (row[1], ret[0]))
+                    dbc.execute("UPDATE or INSERT INTO spr_barcode (barcode, id_spr) values (?, ?) MATCHING (barcode, id_spr)", (row[1], ret[0]))
+            dbc.execute("""DELETE FROM A_TEMP_PRC WHERE sh_prc in 
+(SELECT r.SH_PRC FROM A_TEMP_PRC r
+    JOIN LNK l on l.SH_PRC = r.SH_PRC)""")
+            dbc.execute("""  UPDATE PRC SET PRC.C_INDEX = PRC.C_INDEX + 1
+WHERE PRC.SH_PRC in ( SELECT r.SH_PRC FROM PRC r
+    WHERE EXISTS (SELECT p.SH_PRC FROM A_TEMP_PRC p
+           WHERE p.SH_PRC = r.SH_PRC) )""")
+            dbc.execute("""DELETE FROM A_TEMP_PRC WHERE SH_PRC in (
+SELECT r.SH_PRC FROM PRC r WHERE EXISTS (
+    SELECT p.SH_PRC FROM A_TEMP_PRC p
+    WHERE p.SH_PRC = r.SH_PRC))""")
+            for row in getGen(dbc, """    SELECT r.sh_prc FROM A_TEMP_PRC r 
+JOIN (select rr.BARCODE bc, count(rr.BARCODE) cbc FROM A_TEMP_PRC rr
+    JOIN SPR_BARCODE s on s.BARCODE = rr.BARCODE
+    where rr.BARCODE is NOT NULL GROUP by rr.BARCODE HAVING COUNT(rr.BARCODE) > 1) on bc = r.BARCODE"""):
+                dbc.execute("""INSERT INTO prc (ID_VND, ID_TOVAR, N_CENA, SH_PRC, C_TOVAR, C_ZAVOD, ID_ORG, in_work, source)
+SELECT r.id_vnd, r.id_tovar, r.n_cena, r.sh_prc, r.c_tovar, r.c_zavod, r.id_org, -1, r.source
+FROM A_TEMP_PRC r where r.SH_PRC = ?""", (row[0],))
+                dbc.execute("""DELETE FROM A_TEMP_PRC WHERE SH_PRC = ?""", (row[0],))
+            dbc.execute("""INSERT INTO lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
+select r.SH_PRC, s.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, CURRENT_TIMESTAMP, 'barcode'
+FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE""")
+            dbc.execute("""DELETE FROM A_TEMP_PRC a WHERE a.SH_PRC in (
+select r.SH_PRC FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE) """)
+            dbc.execute("""SELECT COUNT(*) FROM A_TEMP_PRC""")
+            count_i = dbc.fetchone()[0]
+            dbc.execute("""INSERT INTO prc (ID_VND, ID_TOVAR, N_CENA, SH_PRC, C_TOVAR, C_ZAVOD, ID_ORG, in_work, source)
+SELECT r.id_vnd, r.id_tovar, r.n_cena, r.sh_prc, r.c_tovar, r.c_zavod, r.id_org, -1, r.source
+FROM A_TEMP_PRC r """)
+            dbc.execute("""DELETE FROM A_TEMP_PRC""")
+            
+            #dbc.execute('SELECT p.TOT, p.TOT_INS FROM A_T_PR p')
+            #dbc.execute('SELECT p.TOT, p.TOT_INS FROM QWE p')
+            #ret = dbc.fetchone()
+            
+            db.commit()
+            #res=ret
+            #count_insert += res[1]
+            count_insert += count_i
+    return count_insert, count_all
+
+def getGen(dbc, sql):
+    dbc.execute(sql)
+    ret = dbc.fetchall()
+    for row in ret:
+        yield row
+
 
 if "__main__" == __name__:
     #erase_prc()
     t1 = time.time()
     load_from_nolink(db)
-    print('total time', time.time() - t1)
-    #prc_sync_lnk()
+    t2 = time.time()
+    prc_sync_lnk()
+    db.close()
+    print('upload time', t2 - t1)
+    print('sync time', time.time() - t2)
