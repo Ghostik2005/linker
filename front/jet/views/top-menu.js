@@ -25,7 +25,7 @@ export default class TopmenuView extends JetView{
                             options: {
                                 filter: filter_1,
                                 body: {
-                                    css: "big-combo",
+                                    //css: "big-combo",
                                     template: "#c_vnd# - #count#",
                                     yCount: 10
                                     }
@@ -43,6 +43,11 @@ export default class TopmenuView extends JetView{
                                             this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].clearAll();
                                             this.getRoot().getParentView().getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
                                             let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
+                                            $$("_add").hide();
+                                            $$("_left").hide();
+                                            $$("_skip").hide();
+                                            $$("_right").hide();
+                                            $$('_link').hide();
                                             this.getRoot().getParentView().getChildViews()[0].getChildViews()[1].parse(n_item);
                                             let pager = this.getRoot().getParentView().getChildViews()[1].getChildViews()[1];
                                             pager.getChildViews()[6].define('label', "Всего записей: 0");
@@ -50,24 +55,47 @@ export default class TopmenuView extends JetView{
                                             pager.$scope.$$("__page").config.manual = false;
                                             pager.$scope.$$("__page").setValue('1');
                                             pager.$scope.$$("__page").refresh();
-                                            pager.getChildViews()[2].getChildViews()[2].define('label', total_page);
+                                            pager.getChildViews()[2].getChildViews()[2].define('label', '1'); //total_page
                                             pager.getChildViews()[2].getChildViews()[2].refresh();
-                                            $$('_link').hide();
-                                            $$('_link').disable();
                                             };
                                         };
                                     }
                                 },
                             },
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90,
+                            options: [
+                                {id: 1, value: "поставщикам"},
+                                {id: 2, value: "дате"},
+                                {id: 3, value: "источнику"},
+                                ],
+                            on: {
+                                onChange: function() {
+                                    let v = this.getValue();
+                                    $$("_suppl").getList().clearAll();
+                                    $$("_suppl").setValue('');
+                                    if (+v===1) {
+                                        get_suppl("_suppl", this.$scope, "?getSupplUnlnk");
+                                    } else if (+v===2) {
+                                        get_suppl("_suppl", this.$scope, "?getDatesUnlnk");
+                                    } else if (+v===3) {
+                                        get_suppl("_suppl", this.$scope, "?getSourceUnlnk")
+                                    } else {
+                                        webix.message({type: "error", text: 'не сводим'});
+                                        };
+                                    }
+                                }
+                            },
                         {},
                         {view: "button", type: "htmlbutton",
                             label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Обновить с сервера</span>", width: 210,
                             click: () => {
-                                get_suppl("_suppl", this)
+                                (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
+                                (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
+                                                                     get_suppl("_suppl", this, "?getSupplUnlnk");
                                 }
                             },
-                        (app.config.roles[app.config.role].skipped) ? {view:"button", id: '_skip', type: 'htmlbutton',
-                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные (Ctrl+S)</span>", width: 210, disabled: true,
+                         {view:"button", type: 'htmlbutton',
+                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные</span>", width: 150, disabled: true, hidden: !(app.config.roles[app.config.role].skipped),
                             on: {
                                 onAfterRender: function () {
                                     if (app.config.roles[app.config.role].skipped) this.enable();
@@ -76,15 +104,15 @@ export default class TopmenuView extends JetView{
                             click: () => {
                                 this.popskipped.show("Пропущенные товары")
                                 }
-                            } : {width: 1},
+                            },
                         {view:"button", type: 'htmlbutton',
-                            label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Все несвязанные</span>", width: 210,
+                            label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Несвязанные</span>", width: 150,
                             click: () => {
                                 this.popallunlink.show("Все несвязанные товары")
                                 }
                             },
                         {view:"button", id: '_links', type: 'htmlbutton',
-                            label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки (Ctrl+L)</span>", width: 210,
+                            label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки</span>", width: 150,
                             click: () => {
                                 this.poplinks.showWindow("Линки");
                                 }
@@ -109,7 +137,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             {width: 10},
-                            {view: "button", type: "htmlbutton",
+                            {view: "button", type: "htmlbutton", id: "_refresh",
                                 label: "<span class='butt'>Обновить сессию</span>", width: 230, height: 32,
                                 click: () => {
                                     let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
@@ -145,7 +173,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "button", type: 'htmlbutton', width: 35, disabled: !true,
+                        {view: "button", type: 'htmlbutton', width: 35, disabled: true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
                                 let nm = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].config.name;
@@ -155,7 +183,7 @@ export default class TopmenuView extends JetView{
                                 }, 50);
                                 },
                             },
-                        (app.config.roles[app.config.role].spradd) ? {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true,
+                        (app.config.roles[app.config.role].spradd) ? {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true, hidden: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
@@ -188,7 +216,7 @@ export default class TopmenuView extends JetView{
 
                                 }
                             },
-                        {view:"button", type: 'htmlbutton',
+                        {view:"button", type: 'htmlbutton', id: "_left", hidden: true,
                             label: "<span class='webix_icon fa-angle-left'></span><span style='line-height: 20px;'>Ctrl+</span><span class='webix_icon fa-arrow-down'></span>", width: 90,
                             hotkey: "down+ctrl",
                             click: () => {
@@ -205,7 +233,7 @@ export default class TopmenuView extends JetView{
                                 parse_unlinked_item(this);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton',
+                        {view:"button", type: 'htmlbutton', id: "_skip", hidden: true,
                             label: "Пропустить (Ctrl+M)", width: 160,
                             hotkey: "m+ctrl", disabled: !true,
                             click: () => {
@@ -219,7 +247,7 @@ export default class TopmenuView extends JetView{
                                 this.popconfirm.show('Пропустить?', params);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton',
+                        {view:"button", type: 'htmlbutton', id: "_right", hidden: true,
                             label: "<span style='line-height: 20px;'>Ctrl+</span><span class='webix_icon fa-arrow-up'></span><span class='webix_icon fa-angle-right'></span>", width: 90,
                             hotkey: "up+ctrl",
                             click: () => {
@@ -241,7 +269,9 @@ export default class TopmenuView extends JetView{
             }
         }
     init() {
-        get_suppl("_suppl", this);
+        (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
+        (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
+                                             get_suppl("_suppl", this, "?getSupplUnlnk");
         this.popconfirm = this.ui(ConfirmView);
         this.popnew = this.ui(NewformView);
         this.poplinks = this.ui(LinksView);

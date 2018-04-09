@@ -153,7 +153,7 @@ export default class SprView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    console.log('item');
+                    //console.log('item');
                     $$("_link").show();
                     $$("_link").enable();
                     //$$("_link").define('width', 200)

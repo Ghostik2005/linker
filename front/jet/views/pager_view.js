@@ -42,11 +42,16 @@ export default class PagerView extends JetView{
                                         page = this.$$("__page").getValue();
                                         };
                                     let posPpage = this.getRoot().config.parent.config.posPpage;
+                                    console.log('totalpos', this.getRoot().config.parent.config.totalPos);
+                                    console.log('posPPage', posPpage);
                                     let total_pages = Math.ceil(this.getRoot().config.parent.config.totalPos/posPpage)
                                     try {
                                         page = +page
                                     } catch(Err) {
                                         };
+                                    console.log('ui', this.getRoot().config.parent);
+                                    console.log('page', page);
+                                    console.log('tatal_pages', total_pages);
                                     if (typeof page === 'number' && page >= 0 && (total_pages = 0 || page <= (total_pages===0) ? 1 : total_pages)) {
                                         let start = (page-1) * posPpage + 1;
                                         let ui = this.getRoot().config.parent;

@@ -6,7 +6,25 @@ import {deleteCookie} from "../views/globals";
 export default class HeaderView extends JetView{
     config(){
 
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
+
+        function qcode(stri) {
+            let new_stri = '';
+            for (let i=0; i < stri.length; i++) {
+                let s = stri.charCodeAt(i).toString(2);
+                let addi = '';
+                for (let k=0; k < 8 - s.length; k++) { addi += '0'};
+                s = addi + s;
+                addi = '';
+                for (let k=0; k < s.length; k++) {
+                    let b = +s[k];
+                    b = (b===0) ? 1 : 0;
+                    addi += b.toString();
+                    }
+                new_stri += String.fromCharCode(parseInt(addi, 2));
+                }
+            return new_stri
+            }
         
         return {view: 'toolbar',
             css: 'header',
@@ -16,6 +34,14 @@ export default class HeaderView extends JetView{
                 {view: "label", label: "Манускрипт солюшн: Линкер | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
                 {},
+                {view:"button", css: "butt", type: 'htmlbutton',
+                    label: "<span class='butt'>test</span>", width: 80,
+                    click: () => {
+                        let s = app.config.x_api;
+                        let a1 = qcode(s);
+                        console.log('resu', (qcode(a1) === s));
+                        }
+                    },
                 {view:"button", css: "butt", type: 'htmlbutton',
                     label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
                     click: () => {

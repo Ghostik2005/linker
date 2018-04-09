@@ -62,7 +62,7 @@ export default class LinksViewLnk extends JetView{
                     ]
                     },
                 {id: "c_tovar", fillspace: true, sort: 'server',
-                    template:"<span>{common.treetable()} #c_tovar#</span>",
+                    //template:"<span>{common.treetable()} #c_tovar#</span>",
                     header: [{text: "Наименование"},
                     ],
                     headermenu:false,

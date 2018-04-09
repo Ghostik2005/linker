@@ -44,7 +44,7 @@ export default class AllUnlinkedView extends JetView{
                 },
             startPos: 1,
             posPpage: 20,
-            totalPos: 1250,
+            totalPos: 0,
             fi: 'c_tovar',
             di: 'asc',
             searchBar: undefined,

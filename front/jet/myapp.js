@@ -46,7 +46,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.081.1730",
+        version:        "18.099.1755",
         start:          "/login",
         admin:          "34",
         user:           "",
@@ -58,12 +58,6 @@ webix.ready( () => {
         debug:          true,
         searchDelay:    1000,
         lch:            0,
-        //roles:          {'0': {'skipped': false, 'spradd': false, 'adm': false, 'spredit': false, 'useradd': false, 'userdel': false, 'lnkdel': false, 'vendoradd': false},
-                         //'9': {'skipped': true, 'spradd': false, 'adm': false, 'spredit': false, 'useradd': false, 'userdel': false, 'lnkdel': false, 'vendoradd': false},
-                         //'10': {'skipped': true, 'spradd': true, 'adm': true, 'spredit': true, 'useradd': false, 'userdel': false, 'lnkdel': true, 'vendoradd': true},
-                         //'34': {'skipped': true, 'spradd': true, 'adm': true, 'spredit': true, 'useradd': true, 'userdel': true, 'lnkdel': true, 'vendoradd': true},
-                         //'35': {'skipped': true, 'spradd': true, 'adm': true, 'spredit': true, 'useradd': true, 'userdel': true, 'lnkdel': true, 'vendoradd': true}
-                        //}
         roles:          {}
     });
     
@@ -72,26 +66,18 @@ webix.ready( () => {
             headers["x-api-key"] = app.config.x_api;
             }
         );
-        
-    //webix.attachEvent("onAjaxError", function(i) {
-        //console.log('i', i);
-        //}
-    //);
-    
+
     app.render();
 
     window.onerror = function (message, source, lineNr) {
         webix.message({"text": "Возникла ошибка. Мы работаем над ее исправлением. Текст в консоли", "type": "error", width: "800px", delay: "5"}); //
         window.console.log("message:", message);
         window.console.log("source:", source);
-        //window.console.log("linenumber:", lineNr);
-        //return true;
         return false; 
         };
 
     app.attachEvent("app:error:resolve", function(name, error) {
         window.console.error(error);
         })
-    
-    init_first(app);
-});
+
+    });

@@ -468,8 +468,6 @@ export function get_data_test(inp_params) {
  
     }
 
-
-
 export function parse_unlinked_item(th, c_item) {
     c_item = (c_item) ? c_item : $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
@@ -480,6 +478,10 @@ export function parse_unlinked_item(th, c_item) {
     n_item['_count'] = count;
     n_item['_vendor'] = c_item.c_zavod;
     n_item['p_name'] = c_item.c_tovar;
+    $$("_add").show();
+    $$("_left").show();
+    $$("_skip").show();
+    $$("_right").show();
     $$("_names_bar").parse(n_item);
     let buf = c_item.c_tovar.split(' ');
     let sta = 0;
@@ -503,7 +505,6 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("+", " ");
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
-    //$$("prcs_dc").config.old_stri = s_stri;
     $$("_spr_search").setValue(s_stri);
     let vv = $$("__body").getChildViews()[1].getChildViews();
     count = vv[0].config.posPpage
@@ -594,17 +595,42 @@ export function dt_formating(d) {
     };
 
 export function init_first(app) {
-    //console.log('app', app);
     let delay = app.config.searchDelay;
-    setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
-    setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
-    setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getRoles", "store": "roles_dc"});
+    //setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
+    //setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
+    //setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
+    //setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
+    //setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
+    //setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
+    //setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
+    //setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
+    setTimeout(get_refs, 0*delay, {"app": app, "type": "async", "method": "getRoles", "store": "roles_dc"});
+    let url = app.config.r_url + "?getRefs"
+    let params = {"user": app.config.user};
+    request(url, params).then(function(data) {
+        data = checkVal(data, 'a');
+        if (data) {
+            $$("strana_dc").clearAll();
+            $$("strana_dc").parse(data.strana);
+            $$("vendor_dc").clearAll();
+            $$("vendor_dc").parse(data.vendor);
+            $$("dv_dc").clearAll();
+            $$("dv_dc").parse(data.dv);
+            $$("nds_dc").clearAll();
+            $$("nds_dc").parse(data.nds);
+            $$("hran_dc").clearAll();
+            $$("hran_dc").parse(data.hran);
+            $$("sezon_dc").clearAll();
+            $$("sezon_dc").parse(data.sezon);
+            $$("group_dc").clearAll();
+            $$("group_dc").parse(data.group);
+            $$("allTg_dc").clearAll();
+            $$("allTg_dc").parse(data.tg);
+        } else {
+            webix.message('error');
+            };
+        })
+    
     }
 
 export function get_prcs(th, id_vnd) {
@@ -635,7 +661,6 @@ export function get_refs(inp_params){
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
-                //data = data.data;
                 $$(store).clearAll();
                 $$(store).parse(data);
             } else {
@@ -652,28 +677,28 @@ export function get_refs(inp_params){
         };
     }
 
-export function get_suppl(view, th) {
+export function get_suppl(view, th, method) {
     let user = th.app.config.user;
-    let url = th.app.config.r_url + "?getSupplUnlnk"
+    let url = th.app.config.r_url + method
     let params = {"user": user};
-    request(url, params).then(function(data) {
-        data = checkVal(data, 'a');
-        if (data) {
-            //data = data.data;
-            $$(view).getList().clearAll();
-            $$(view).getList().parse(data);
-            let fid = $$(view).getList().getFirstId();
-            //console.log('fid', fid);
-            
-            $$(view).setValue(fid);
-            $$(view).refresh();
-            //$$(view).callEvent('onCange');
-        } else {
-            webix.message('error');
-            };
-        }).then(function() {
-            //init_first(th.app)
-        })
+    if (method === "?getDatesUnlnk") {
+        webix.message({type: "debug", text: 'Сводим по дате'});
+    } else if (method === "?getSourceUnlnk") {
+        webix.message({type: "debug", text: 'Сводим по источнику'});
+    } else if (method === "?getSupplUnlnk") {
+        request(url, params).then(function(data) {
+            data = checkVal(data, 'a');
+            if (data) {
+                $$(view).getList().clearAll();
+                $$(view).getList().parse(data);
+                let fid = $$(view).getList().getFirstId();
+                $$(view).setValue(fid);
+                $$(view).refresh();
+            } else {
+                //webix.message('error');
+                };
+            })
+        }
     }
 
 export function delPrc(inp_data, th) {
@@ -688,7 +713,9 @@ export function delPrc(inp_data, th) {
     let new_cursor = $$("prcs_dc").data.order[+_c]
     prcs.remove(cursor);
     if (prcs.count() < 1){
-        get_suppl("_suppl", th)
+        (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", th, "?getDatesUnlnk") :
+        (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", th, "?getSourceUnlnk") :
+                                             get_suppl("_suppl", th, "?getSupplUnlnk");
     } else {
         //cursor = prcs.data.order[0];
         prcs.setCursor(new_cursor);
@@ -718,8 +745,7 @@ export function after_call(i, ii, iii) {
     }
 
 export function request (url, params, mode) {
-    var req;
-    req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
+    var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
                         : webix.ajax().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
     }
@@ -755,7 +781,6 @@ export function setCookie(name, value, options) {
     }
 
 export function deleteCookie (name) {
-    //var opt = {domain: location.hostname};
     setCookie(name, "", {
         'expires': -1, 'path': '/'
         })

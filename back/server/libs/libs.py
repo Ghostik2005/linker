@@ -115,7 +115,7 @@ class API:
                 if fuser in users:
                     try: os.remove(f_name)
                     except: pass
-                    else: print('Удалили %s' % f_name, flush=True)
+                    #else: print('Удалили %s' % f_name, flush=True)
             ret = {"result": True, "ret_val": True}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -339,38 +339,50 @@ WHERE r.SH_PRC = ?
             sql_1 = """left join USERS u on (u."GROUP" = r.ID_ORG)""" if not us_s else """join USERS u on (u."GROUP" = r.ID_ORG) %s""" % us_s
             sql_2 = """left JOIN VND v on (r.ID_VND = v.ID_VND)""" if not v_s else """JOIN VND v on (r.ID_VND = v.ID_VND) %s""" % v_s
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
-from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {order if 'r.' in order else ''})
+from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''})
 join prc r on r.SH_PRC = rsh
 {sql_1}
 {sql_2}
 {order if 'r.' not in order else ''}"""
 
             sql_old = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
-            from prc r
-            inner join USERS u on (u."GROUP" = r.ID_ORG)
-            INNER JOIN VND v on (r.ID_VND = v.ID_VND)
-            WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1}
-            order by {2} {3}
-            ROWS ? to ?""".format(stri, us_stri, field, direction)
+from prc r
+inner join USERS u on (u."GROUP" = r.ID_ORG)
+INNER JOIN VND v on (r.ID_VND = v.ID_VND)
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1}
+order by {2} {3}""".format(stri, us_stri, field, direction)
+            sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
+from prc r
+{sql_1}
+{sql_2}
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_stri}
+order by {field} {direction}"""
+
+            sql = sql_ if (stri or us_stri) else sql
+            sql = sql + """ ROWS ? to ?"""
             opt = (start_p, end_p)
-            print(sql)
             _return = []
+            '''
             sql_c = """select count(distinct r.sh_prc) from prc r {2} {3} 
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1} """.format(stri, us_stri, 'join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
 #WHERE r.n_fg <> 1 and r.IN_WORK = -1 {0} {1} """.format(stri, us_stri, 'left join USERS u on (u."GROUP" = r.ID_ORG)', 'left join VND v on (r.ID_VND = v.ID_VND)')
-            sql_c = f"""select count(*) from ( select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
+            sql_c = f"""select count(distinct qw) from ( select r.SH_PRC qw
 from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} )
 join prc r on r.SH_PRC = rsh
 {sql_1}
-{sql_2})"""
-            print(sql_c)
-            p_list = [{'sql': sql + """ ROWS ? to ?""", 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+{sql_2})"""'''
+            sql_c = f"""select count(DISTINCT r.SH_PRC) from  PRC r 
+{sql_1}
+{sql_2}
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri}"""
+
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
             
             #result = self.db.request({"sql": sql, "options": opt})
             for row in result:
@@ -485,7 +497,6 @@ join prc r on r.SH_PRC = rsh
             ROWS ? to ?
             """.format(stri, us_stri, field, direction)
             opt = (start_p, end_p)
-            #print(sql)
             _return = []
             sql_c = """select count(*) from prc r {2} {3} WHERE r.n_fg = 1 and r.IN_WORK = -1 {0} {1}
 """.format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
@@ -496,7 +507,7 @@ join prc r on r.SH_PRC = rsh
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
 
             #result = self.db.request({"sql": sql, "options": opt})
             for row in result:
@@ -1745,7 +1756,7 @@ FROM RDB$DATABASE"""
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
             
             t1 = time.time() - st_t
             _return = []
@@ -1872,7 +1883,7 @@ ROWS ? to ?
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
             
             st_t = time.time()
             for row in result:
@@ -2198,7 +2209,7 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
             
             st_t = time.time()
             for row in result:
@@ -2477,7 +2488,7 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
                 
             t2 = time.time() - t1 - st_t
             for row in result:
@@ -2699,7 +2710,7 @@ ROWS ? to ? """.format(stri, field, direction)
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
 
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
@@ -2769,7 +2780,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                ts1 = "r.C_TOVAR CONTAINING '%s'" % search_re[i].strip()
                 if i == 0:
                     stri.append(ts1)
                 else:
@@ -2810,7 +2821,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                         s = """ ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))\nor (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))""".format(pars['start_dt'], pars['end_dt'])
                         ssss.append('and %s' % s)
                 if pars['c_tovar']:
-                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    s = "r.C_TOVAR containing '%s'" + pars['c_tovar']
                     ssss.append('and %s' % s)
                 if pars['id_spr']:
                     s = "r.id_spr like '" + str(pars['id_spr']) + "%'"
@@ -2819,10 +2830,10 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                     s = "r.ID_TOVAR STARTING with '%s'" % pars['id_tovar']
                     ssss.append('and %s' % s)
                 if pars['owner']:
-                    s = "lower(r.OWNER) like lower('%" + pars['owner'] + "%')"
+                    s = "r.OWNER CONTAINING '%s'" % pars['owner']
                     ssss.append('and %s' % s)
                 if pars['c_zavod']:
-                    s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    s = "r.C_ZAVOD CONTAINING'%s'" % pars['c_zavod']
                     ssss.append('and %s' % s)
                 if pars['spr']:
                     qwe = pars.get('spr')
@@ -2831,28 +2842,28 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                     sq = []
                     if len(exclude) > 0:
                         for i in range(len(qwe)):
-                            s = " and lower(s.C_TOVAR) like lower('%" + qwe[i].strip() + "%')"
+                            s = " and s.C_TOVAR CONTAINING '%s'" % qwe[i].strip()
                             sq.append('and %s' % s)
                         for i in range(len(exclude)):
                             s = " and lower(s.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                             sq.append(s)
-                        sq_s = "JOIN SPR s on (s.ID_SPR = rids) " + ' '.join(sq) + "\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
-                        sq_c = "JOIN SPR s on (s.ID_SPR = r.id_spr) " + ' '.join(sq) + "\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
+                        sq_s = "JOIN SPR s on (s.ID_SPR = rids) " + ' '.join(sq) + "\nleft join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
+                        sq_c = "JOIN SPR s on (s.ID_SPR = r.id_spr) " + ' '.join(sq) + "\nleft join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
                         in_c.append(sq_c)
                         in_st.append(sq_s)
                     else:
                         for i in range(len(qwe)):
-                            s = "lower(s.C_TOVAR) like lower('%" + qwe[i].strip() + "%')"
+                            s = "s.C_TOVAR CONTAINING'%s'" % qwe[i].strip()
                             sq.append('and %s' % s)
-                        sq_s = "JOIN SPR s on (s.ID_SPR = rids) " + ' '.join(sq) + "\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
-                        sq_c = "JOIN SPR s on (s.ID_SPR = r.id_spr) " + ' '.join(sq) + "\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
+                        sq_s = "JOIN SPR s on (s.ID_SPR = rids) " + ' '.join(sq) + "\nleft join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
+                        sq_c = "JOIN SPR s on (s.ID_SPR = r.id_spr) " + ' '.join(sq) + "\nleft join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"
                         in_c.insert(0, sq_c)
                         in_st.insert(0, sq_s)
                 else:
                     s = """JOIN SPR s on (s.ID_SPR = rids)\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"""
                     in_st.append(s)
                 if pars['c_vnd']:
-                    s = "JOIN VND v on (v.ID_VND = ridv) and lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    s = "JOIN VND v on (v.ID_VND = ridv) and v.C_VND CONTAINING '%s'" % pars['c_vnd']
                     in_c.insert(0, s.replace('ridv', 'r.id_vnd'))
                     in_st.insert(0, s)
                 else:
@@ -2883,18 +2894,16 @@ from (
         FROM (SELECT l.SH_PRC lsh FROM LNK l {0})
         JOIN LNK r on r.SH_PRC = lsh
     )
-JOIN VND v on (v.ID_VND = r.ID_VND)
-join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)
-JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
+left JOIN VND v on (v.ID_VND = r.ID_VND)
+left join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)
+left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                 sql_c = """select count(*) from LNK r"""
             sql =  sql.format("""\nWHERE {0} ORDER by {1} {2}""") + '\nROWS ? to ?'
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
+            stri = stri.replace("r.C_TOVAR CONTAINING '%%' and", '')
             sql_c += """ WHERE {0}""".format(stri)
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            print(sql_c)
+            sql_c = sql_c.replace("r.C_TOVAR CONTAINING '%%')", '')
             sql = sql.format(stri, field, direction)
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            print(sql)
+            sql = sql.replace("WHERE r.C_TOVAR CONTAINING '%%')", '')
             opt = (start_p, end_p)
             _return = []
             #result = self.db.request({"sql": sql, "options": opt})
@@ -2912,7 +2921,7 @@ JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             pool.close()
             pool.join()
             result = results[0]
-            count = results[1]
+            count = results[1][0][0]
             
             for row in result:
                 r = {

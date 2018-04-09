@@ -2,6 +2,8 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, getCookie, setCookie, deleteCookie} from "../views/globals";
+import {init_first} from "../views/globals";
+import md5 from "../views/md5";
 
 export default class loginView extends JetView{
     config(){
@@ -24,6 +26,7 @@ export default class loginView extends JetView{
                 };
             return ret;
             }
+        var app = this.app;
         var auth = {view: "form",
             id: "auth_box",
             label:"Аутентификация",
@@ -38,6 +41,7 @@ export default class loginView extends JetView{
                     {view: "button", label: "OK", hotkey: "enter",
                         click: function(){
                             if (validate_user(this)) {
+                                init_first(app);
                                 this.$scope.show("/start/body");
                                 webix.message('авторизованно');
                             } else {
@@ -73,6 +77,7 @@ export default class loginView extends JetView{
             this.app.config.user = u;
             this.app.config.role = r;
             this.app.config.x_api = x;
+            init_first(this.app);
             this.show("/start/body");
         } else {
             deleteCookie('linker_user');
