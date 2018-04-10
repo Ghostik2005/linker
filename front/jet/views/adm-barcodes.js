@@ -21,6 +21,7 @@ export default class BarcodesView extends JetView{
                                     if (ui) {
                                         let params = getDtParams(ui);
                                         let cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
+                                        console.log('sb', this.$scope.getRoot().getChildViews()[1].getChildViews()[0].config.searchBar);
                                         get_data_test({
                                             view: ui,
                                             navBar: this.$scope.getRoot().getChildViews()[1].getChildViews()[1],
@@ -55,12 +56,16 @@ export default class BarcodesView extends JetView{
                                 $$("__s_b").define('placeholder', "Начните набирать название товара здесь");
                                 $$("_bar_num").show();
                                 $$("__checkbars").show();
-                                this.$scope.show('/start/adm/adm-barcodes/adm-barcodes-s')
+                                //this.$scope.show('/start/adm/adm-barcodes/adm-barcodes-s')
+                                //this.$scope.app.show('/start/adm/adm-references/adm-barcodes/adm-barcodes-s')
+                                this.$scope.show('adm-barcodes-s')
                             } else if (this.getValue() === 0) {
                                 $$("__s_b").define('placeholder', "Начните набирать баркод");
                                 $$("_bar_num").hide();
                                 $$("__checkbars").hide();
-                                this.$scope.show('/start/adm/adm-barcodes/adm-barcodes-b')
+                                //this.$scope.show('/start/adm/adm-barcodes/adm-barcodes-b')
+                                //this.$scope.app.show('/start/adm/adm-references/adm-barcodes/adm-barcodes-b')
+                                this.$scope.show('adm-barcodes-b')
                                 }
                             $$("__s_b").refresh();
                             },
@@ -138,5 +143,9 @@ export default class BarcodesView extends JetView{
         }
     init() {
         this.pophistory = this.ui(History);
+        this.show('adm-barcodes-s')
+        }
+    ready(){
+        //this.app.show('/start/adm/adm-references/adm-barcodes/adm-barcodes-s')
         }
     }

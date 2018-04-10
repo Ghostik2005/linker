@@ -8,7 +8,7 @@ import {last_page, checkKey, dt_formating_sec, dt_formating} from "../views/glob
 import {compareTrue, fRefresh, fRender, rRefresh, rRender, getDtParams} from "../views/globals";
 import PagerView from "../views/pager_view";
 
-export default class SprViews extends JetView{
+export default class SprView extends JetView{
     config(){
         let app = this.app;
         

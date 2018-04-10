@@ -7,6 +7,7 @@ export default class HeaderView extends JetView{
     config(){
 
         let app = this.app;
+        //console.log('app', app);
 
         function qcode(stri) {
             let new_stri = '';
@@ -34,32 +35,38 @@ export default class HeaderView extends JetView{
                 {view: "label", label: "Манускрипт солюшн: Линкер | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
                 {},
+                //{view:"button", css: "butt", type: 'htmlbutton',
+                    //label: "<span class='butt'>test</span>", width: 80,
+                    //click: () => {
+                        //let s = app.config.x_api;
+                        //let a1 = qcode(s);
+                        //console.log('resu', (qcode(a1) === s));
+                        //}
+                    //},
                 {view:"button", css: "butt", type: 'htmlbutton',
-                    label: "<span class='butt'>test</span>", width: 80,
-                    click: () => {
-                        let s = app.config.x_api;
-                        let a1 = qcode(s);
-                        console.log('resu', (qcode(a1) === s));
-                        }
-                    },
-                {view:"button", css: "butt", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120,
+                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span class = 'butt'>Админка</span>", width: 120, localId: "_adm", hidden: true,
                     click: () => {
                         if (app.config.roles[app.config.role].adm) {
-                            this.app.show("/start/adm/adm-spr");
+                            //this.app.show("/start/adm/adm-spr");
+                            this.app.show("/start/adm/adm-references");
                         } else {
                             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
                             }
                         }
                     },
-                {view:"button", css: "butt", type: 'htmlbutton',
-                    label: "<span class='butt'>Линкер</span>", width: 80,
+                {view:"button", css: "butt", type: 'htmlbutton', localId: "_link",
+                    label: "<span class='butt'>Линкер</span>", width: 80, hidden: true,
+                    on: {
+                        onAfterRender: function () {
+                            if (app.config.roles[app.config.role].adm) this.show();
+                            }
+                        },
                     click: () => {
                         this.app.show("/start/body");
                         }
                     },
                 {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: !true,
-                    label: "<span class='butt'>Выйти</span>", width: 80,
+                    label: "<span class='butt'>Выход</span>", width: 80,
                     click: () => {
                         deleteCookie('linker_user');
                         deleteCookie('linker_auth_key');
@@ -71,5 +78,10 @@ export default class HeaderView extends JetView{
                         }
                     },
             ]}
+        }
+    ready() {
+        let app = this.app;
+        if (app.config.roles[app.config.role].adm) this.$$("_adm").show();
+        if (app.config.roles[app.config.role].adm) this.$$("_link").show();
         }
     }

@@ -8,19 +8,27 @@ export default class TopmenuView extends JetView{
             height: 40,
             cols: [
                 {view: "combo", localId: "_options", value: 1,
-                    readonly: !true, disabled: !true, width: 190,
-                    options: [
-                        {"id": 1, "value": "Справочник"},
-                        {"id": 2, "value": "Страны"},
-                        {"id": 3, "value": "Производители"},
-                        {"id": 4, "value": "Действующие вещества"},
-                        {"id": 5, "value": "Группы"},
-                        {"id": 6, "value": "Штрих-коды"},
-                        {"id": 7, "value": "Сезоны"},
-                        {"id": 8, "value": "Условия хранения"},
-                        {"id": 9, "value": "Ставки НДС"},
-                        {"id": 10, "value": "Пользователи"},
-                        ],
+                    readonly: !true, disabled: !true, width: 220,
+                    options: {
+                        body: {
+                            yCount: 11,
+                            //autowidth: true,
+                            },
+                        //autowidth: true,
+                        data: [
+                            {"id": 1, "value": "Справочники"},
+                            //{"id": 2, "value": "Страны"},
+                            //{"id": 3, "value": "Производители"},
+                            //{"id": 4, "value": "Действующие вещества"},
+                            //{"id": 5, "value": "Группы"},
+                            //{"id": 6, "value": "Штрих-коды"},
+                            //{"id": 7, "value": "Сезоны"},
+                            //{"id": 8, "value": "Условия хранения"},
+                            //{"id": 9, "value": "Ставки НДС"},
+                            {"id": 10, "value": "Пользователи"},
+                            {"id": 11, "value": "Автоматическое сведение"},
+                            ],
+                        },
                     on: {
                         onChange: () => {
                             let id_opt = this.$$("_options").getValue();
@@ -33,7 +41,8 @@ export default class TopmenuView extends JetView{
                                        (+id_opt === 8) ? "/start/adm/adm-hran" :
                                        (+id_opt === 9) ? "/start/adm/adm-nds" :
                                        (+id_opt === 10) ? "/start/adm/adm-users" :
-                                       "/start/adm/adm-spr";
+                                       (+id_opt === 11) ? "/start/adm/adm-linker": //adm-linker-codes" :
+                                       "/start/adm/adm-references";
                             this.app.show(path);
                             }
                         },

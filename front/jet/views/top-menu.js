@@ -43,7 +43,7 @@ export default class TopmenuView extends JetView{
                                             this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].clearAll();
                                             this.getRoot().getParentView().getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
                                             let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
-                                            $$("_add").hide();
+                                            if ($$("_add")) $$("_add").hide();
                                             $$("_left").hide();
                                             $$("_skip").hide();
                                             $$("_right").hide();
@@ -62,7 +62,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90,
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 380, disable: !true,
                             options: [
                                 {id: 1, value: "поставщикам"},
                                 {id: 2, value: "дате"},
@@ -183,12 +183,14 @@ export default class TopmenuView extends JetView{
                                 }, 50);
                                 },
                             },
-                        (app.config.roles[app.config.role].spradd) ? {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true, hidden: true,
+                        //(app.config.roles[app.config.role].spradd) ?
+                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true, hidden: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
                                 onAfterRender: function () {
-                                    if (app.config.roles[app.config.role].spradd) this.enable();
+                                    //if (app.config.roles[app.config.role].spradd) this.enable();
+                                    if (app.config.roles[app.config.role].spradd) this.show();
                                     }
                                 },
                             click: () => {
@@ -198,7 +200,7 @@ export default class TopmenuView extends JetView{
                                 item['c_tovar'] = name.toUpperCase();
                                 this.popnew.show("Добавление в справочник", $$("_spr_search"), item);
                                 }
-                            } : {width: 1},
+                            }, //: {width: 1},
                         {view:"button", type: 'htmlbutton', id: "_link",
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
                             hotkey: "home+ctrl", disabled: true,

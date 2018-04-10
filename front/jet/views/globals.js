@@ -49,7 +49,8 @@ export var prcs = new webix.DataCollection({
             onAfterLoad: function() {
                 let cur_pos = this.data.order[0]
                 this.setCursor(cur_pos);
-                parse_unlinked_item();
+                let th = $$("main_ui");
+                parse_unlinked_item(th);
                 }
             }
         });
@@ -478,7 +479,9 @@ export function parse_unlinked_item(th, c_item) {
     n_item['_count'] = count;
     n_item['_vendor'] = c_item.c_zavod;
     n_item['p_name'] = c_item.c_tovar;
-    $$("_add").show();
+
+    let app_c = $$("main_ui").$scope.app.config;
+    if (app_c.roles[app_c.role].spradd) $$("_add").show();
     $$("_left").show();
     $$("_skip").show();
     $$("_right").show();
@@ -682,9 +685,9 @@ export function get_suppl(view, th, method) {
     let url = th.app.config.r_url + method
     let params = {"user": user};
     if (method === "?getDatesUnlnk") {
-        webix.message({type: "debug", text: 'Сводим по дате'});
+        webix.message({type: "debug", text: 'Будем сводить по дате'});
     } else if (method === "?getSourceUnlnk") {
-        webix.message({type: "debug", text: 'Сводим по источнику'});
+        webix.message({type: "debug", text: 'Будем сводить по источнику'});
     } else if (method === "?getSupplUnlnk") {
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
@@ -719,7 +722,7 @@ export function delPrc(inp_data, th) {
     } else {
         //cursor = prcs.data.order[0];
         prcs.setCursor(new_cursor);
-        parse_unlinked_item();
+        parse_unlinked_item(th);
         let ll = $$("_suppl").getList();
         let cc = $$("_suppl").getValue();
         let iti = ll.getItem(cc);

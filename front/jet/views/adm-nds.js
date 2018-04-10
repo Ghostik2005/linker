@@ -5,7 +5,7 @@ import {nds, addNds, delNds, updNds, request, checkVal} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 
-export default class SeasonsView extends JetView{
+export default class NdsView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
