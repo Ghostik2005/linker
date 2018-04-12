@@ -3225,6 +3225,34 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def setLinkCodes(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            data = params.get('data')
+            for row in data:
+                row.pop('id')
+            print()
+            sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER FROM LNK_CODES r"""
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "process"  : row[0],
+                    "code"     : row[1],
+                    "name"     : row[2],
+                    "inn"      : row[3],
+                    "owner"    : row[4]
+                }
+                if r not in data:
+                    _return.append(r)
+            sql = """delete from LNK_CODES where PROCESS=?, CODE=?, NAME=?, INN=?"""
+            print(_return)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getLinkCodes(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
@@ -3234,7 +3262,7 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
                 r = {
-                    "process"  : True if row[0] else False,
+                    "process"  : row[0],
                     "code"     : row[1],
                     "name"     : row[2],
                     "inn"      : row[3],
