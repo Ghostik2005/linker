@@ -84,19 +84,30 @@ export default class LinkExclView extends JetView{
                 //},
             editable: false,
             columns: [
-                {id: "process", 
-                    width: 150,
+                {id: "process", width: 150, css: "center_p",
                     header: [{text: "Обрабатывать"},
                         {content: "masterCheckbox", css: "center_p"},
                         ],
-                    template:"<span class='center_p'>{common.checkbox()</span>}",
+                    template:"<span class='center_p'>{common.checkbox()}</span>",
                     },
                 {id: "name", fillspace: true,
                     header: [{text: "Наименование исключения"},
                         ]
                     },
-                {id: "options", header: "Параметры исключения" ,
+                {id: "options_st", header: [{text: "Параметры исключения", colspan: 2, css: {"text-align": "center"}},
+                    {text: "Начинается", css: {"text-align": "center"}}],
+                    template:"<span class='center_p'>{common.checkbox()}</span>",
+                    width: 100, css: "center_p",
+                    },
+                {id: "options_in", header: ["",
+                    {text: "Содержит", css: {"text-align": "center"}}],
+                    template:"<span class='center_p'>{common.checkbox()}</span>",
+                    width: 100, css: "center_p",
+                    },
+                { id: "owner", 
                     width: 150,
+                    header: [{text: "Кто добавил"},
+                        ]
                     },
                 ],
             on: {
@@ -122,6 +133,17 @@ export default class LinkExclView extends JetView{
         }
         
     init() {
+        }
 
+    ready(view) {
+        let user = this.app.config.user;
+        let url = this.app.config.r_url + "?getLinkExcludes";
+        let params = {"user": user};
+        request(url, params).then( (data) => {
+            data = checkVal(data, 'a');
+            if (data.length > 0) {
+                this.$$("__table").parse(data);
+                }
+            })
         }
     }

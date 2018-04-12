@@ -9,7 +9,7 @@ import PagerView from "../views/pager_view";
 
 export default class SprView extends JetView{
     config(){
-
+        var app = this.app;
         var filtFunc = () => {
             let old_v = this.$$("__page").getValue();
             this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
@@ -159,7 +159,8 @@ export default class SprView extends JetView{
                     //$$("_link").define('width', 200)
                     //$$("_link").resize();
                     //$$("_tb").refresh();
-                    //$$("_add").enable();
+                    //if (app.config.roles[app.config.role].spradd) $$("_add").show();
+                    //.enable();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {

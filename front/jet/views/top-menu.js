@@ -5,7 +5,7 @@ import History from "../views/history";
 import NewformView from "../views/new_form";
 import LinksView from "../views/links_form";
 import ConfirmView from "../views/yes-no";
-import {filter_1, get_suppl, get_prcs} from "../views/globals";
+import {filter_1, get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
 import {parse_unlinked_item, get_data_test} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import AllUnlinkedView from "../views/unlinkedall";
@@ -37,8 +37,15 @@ export default class TopmenuView extends JetView{
                                     } else {
                                         let vnd_list = $$("_suppl").getList();
                                         if (vnd_list.count() > 0) {
-                                            let id_vnd = vnd_list.getItem($$("_suppl").getValue()).id_vnd
-                                            get_prcs(this, id_vnd);
+                                            let v = $$("_link_by").getValue();
+                                            let id_vnd = vnd_list.getItem($$("_suppl").getValue()).id_vnd;
+                                            if (+v===1) {
+                                                get_prcs(this, id_vnd);
+                                            } else if (+v===2) {
+                                                get_prcs_date(this, id_vnd);
+                                            } else if (+v===3) {
+                                                get_prcs_source(this, id_vnd);
+                                                };
                                         } else {
                                             this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].clearAll();
                                             this.getRoot().getParentView().getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
@@ -62,7 +69,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 380, disable: !true,
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, disable: !true,
                             options: [
                                 {id: 1, value: "поставщикам"},
                                 {id: 2, value: "дате"},
@@ -140,8 +147,10 @@ export default class TopmenuView extends JetView{
                             {view: "button", type: "htmlbutton", id: "_refresh",
                                 label: "<span class='butt'>Обновить сессию</span>", width: 230, height: 32,
                                 click: () => {
-                                    let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
-                                    get_prcs(this, id_vnd);
+                                    if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
+                                        let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
+                                        get_prcs(this, id_vnd);
+                                        };
                                     }
                                 },
                             ]},
@@ -184,13 +193,13 @@ export default class TopmenuView extends JetView{
                                 },
                             },
                         //(app.config.roles[app.config.role].spradd) ?
-                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: true, hidden: true,
+                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: !true, hidden: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
                                 onAfterRender: function () {
                                     //if (app.config.roles[app.config.role].spradd) this.enable();
-                                    if (app.config.roles[app.config.role].spradd) this.show();
+                                    //if (app.config.roles[app.config.role].spradd) this.show();
                                     }
                                 },
                             click: () => {

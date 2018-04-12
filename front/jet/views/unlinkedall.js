@@ -108,12 +108,15 @@ export default class AllUnlinkedView extends JetView{
                     },
                 onItemDblClick: () => {
                     let item = this.$$("__table").getSelectedItem();
-                    if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
-
-                        parseToLink(item);
-                        this.getRoot().hide();
+                    if (+$$("_link_by").getValue() === 1) {
+                        if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
+                            parseToLink(item);
+                            this.getRoot().hide();
+                        } else {
+                            webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
+                            }
                     } else {
-                        webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
+                        webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
                         }
                     },
                 onKeyPress: function(code, e){

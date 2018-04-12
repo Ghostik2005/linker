@@ -42,22 +42,16 @@ export default class PagerView extends JetView{
                                         page = this.$$("__page").getValue();
                                         };
                                     let posPpage = this.getRoot().config.parent.config.posPpage;
-                                    console.log('totalpos', this.getRoot().config.parent.config.totalPos);
-                                    console.log('posPPage', posPpage);
                                     let total_pages = Math.ceil(this.getRoot().config.parent.config.totalPos/posPpage)
                                     try {
                                         page = +page
                                     } catch(Err) {
                                         };
-                                    console.log('ui', this.getRoot().config.parent);
-                                    console.log('page', page);
-                                    console.log('tatal_pages', total_pages);
                                     if (typeof page === 'number' && page >= 0 && (total_pages = 0 || page <= (total_pages===0) ? 1 : total_pages)) {
                                         let start = (page-1) * posPpage + 1;
                                         let ui = this.getRoot().config.parent;
                                         if (ui) {
                                             let params = getDtParams(ui);
-                                            //console.log(this.getRoot().config.parent.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[0]);
                                             let name_ch, cbars;
                                             try {
                                                 name_ch = (this.getRoot().config.parent.$scope.getParentView().getRoot().getChildViews()[1].getChildViews()[0].config.name === "__dtd")
@@ -116,7 +110,6 @@ export default class PagerView extends JetView{
         }
 
     init(view) {
-        //console.log('p view', view.getParentView())
         this.getRoot().config.parent = view.getParentView().$scope.$$("__table");
         }
 

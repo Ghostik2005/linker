@@ -130,7 +130,11 @@ export default class LinksViewLnk extends JetView{
                     params["type"] = "async";
                     params["callback"] = delLnk;
                     params["parent"] = this;
-                    this.popunlink.show("Причина разрыва связки?", params);
+                    if (+$$("_link_by").getValue() === 1) {
+                        this.popunlink.show("Причина разрыва связки?", params);
+                    } else {
+                        webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
+                        }
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {

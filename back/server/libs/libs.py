@@ -20,6 +20,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 """
 
+
 """
 
 
@@ -539,7 +540,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri}"""
         if self._check(x_hash):
             user = params.get('user')
             sql = """UPDATE PRC r SET r.IN_WORK = -1 
-where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?) returning 1"""
+where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
             opt = (user,)
             result = self.db.execute({"sql": sql, "options": opt})
             sql = """select r1, v.C_VND, r2 from (
@@ -565,6 +566,70 @@ where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?) returning 1"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getSourceUnlnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """UPDATE PRC r SET r.IN_WORK = -1 
+where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
+            opt = (user,)
+            result = self.db.execute({"sql": sql, "options": opt})
+            sql = """select iif(r1=0, 10000, r1),
+    CASE 
+    WHEN r1 = 1 THEN 'Прайс-лист'
+    WHEN r1 = 2 THEN 'Склад'
+    ELSE 'Остальное'
+    END
+    as source, r2 from (
+    select p.SOURCE as r1, count(p.SOURCE) as r2 from PRC p 
+    inner join USERS u on (u."GROUP" = p.ID_ORG)
+    WHERE p.N_FG <> 1 and u."USER" = ?
+    GROUP BY p.SOURCE
+    )
+order by r1 DESC
+            """
+            result = self.db.request({"sql": sql, "options": opt})
+            _return = []
+            for row in result:
+                r = {
+                    "id_vnd" : row[0],
+                    "c_vnd": row[1],
+                    "count": row[2]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getDatesUnlnk(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """UPDATE PRC r SET r.IN_WORK = -1 
+where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?) """
+            print(sql)
+            print('-'*30)
+            opt = (user,)
+            result = self.db.execute({"sql": sql, "options": opt})
+            sql = """select CAST(p.DT as DATE) as r3, count(CAST(p.DT as DATE))
+from PRC p 
+inner join USERS u on (u."GROUP" = p.ID_ORG)
+WHERE p.N_FG <> 1 and u."USER" = ?
+GROUP BY r3"""
+            print(sql)
+            result = self.db.request({"sql": sql, "options": opt})
+            _return = []
+            for row in result:
+                r = {
+                    "id_vnd" : str(row[0]),
+                    "c_vnd": str(row[0]),
+                    "count": row[1]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getPrcs(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
@@ -582,6 +647,109 @@ where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
             ROWS 1 to 20
             """
             opt = (id_vnd, user)
+            result = self.db.request({"sql": sql, "options": opt})
+            t2 = time.time() - st_t
+            _return = []
+            in_work = []
+            for row in result:
+                in_work.append(row[0])
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8]
+                }
+                _return.append(r)
+            t3 = 0
+            if len(in_work) > 0:
+                sql = """UPDATE PRC r
+                    SET r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)
+                    where r.SH_PRC in (%s)""" %(', '.join([f'\'{q}\'' for q in in_work]))
+                opt = (user,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "time": (t1, t2, t3)}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getPrcsSou(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            source = params.get('source')
+            user = params.get('user')
+            if 10000 == int(source):
+                source = 0
+            sql = """UPDATE PRC r SET r.IN_WORK = -1 
+where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
+            opt = (user,)
+            result = self.db.execute({"sql": sql, "options": opt})
+            t1 = time.time() - st_t
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT
+from prc r
+inner join USERS u on (u."GROUP" = r.ID_ORG)
+WHERE r.SOURCE = ? and r.n_fg <> 1 and u."USER" = ? and r.IN_WORK = -1
+ORDER by r.DT ASC
+ROWS 1 to 20
+            """
+            opt = (source, user)
+            result = self.db.request({"sql": sql, "options": opt})
+            t2 = time.time() - st_t
+            _return = []
+            in_work = []
+            for row in result:
+                in_work.append(row[0])
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8]
+                }
+                _return.append(r)
+            t3 = 0
+            if len(in_work) > 0:
+                sql = """UPDATE PRC r
+                    SET r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?)
+                    where r.SH_PRC in (%s)""" %(', '.join([f'\'{q}\'' for q in in_work]))
+                opt = (user,)
+                res = self.db.execute({"sql": sql, "options": opt})
+                t3 = time.time() - st_t
+            ret = {"result": True, "ret_val": _return, "time": (t1, t2, t3)}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getPrcsDate(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            da = params.get('date')
+            user = params.get('user')
+            sql = """UPDATE PRC r SET r.IN_WORK = -1 
+where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
+            print(sql)
+            opt = (user,)
+            result = self.db.execute({"sql": sql, "options": opt})
+            print('*'*30)
+            t1 = time.time() - st_t
+            sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT
+from prc r
+inner join USERS u on (u."GROUP" = r.ID_ORG)
+WHERE CAST(r.DT as DATE) = ? and r.n_fg <> 1  and r.IN_WORK = -1 and u."USER" = ?
+ORDER by r.SOURCE DESC
+ROWS 1 to 20"""
+            opt = (da, user)
+            print(sql)
+            print(opt)
             result = self.db.request({"sql": sql, "options": opt})
             t2 = time.time() - st_t
             _return = []
@@ -3057,6 +3225,48 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getLinkCodes(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER FROM LNK_CODES r"""
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "process"  : True if row[0] else False,
+                    "code"     : row[1],
+                    "name"     : row[2],
+                    "inn"      : row[3],
+                    "owner"    : row[4]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getLinkExcludes(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """SELECT r.PROCESS, r.NAME, r.OPTIONS, r.OWNER FROM LNK_EXCLUDES r"""
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "process"   : True if row[0] else False,
+                    "name"      : row[1],
+                    "options_st": True if int(row[2][0]) else False,
+                    "options_in": True if int(row[2][1]) else False,
+                    "owner"     : row[3]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
 class fLock:
     """
     File locking class. Intended for use with the `with` syntax.
@@ -3735,4 +3945,33 @@ GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
  ON A_TEMP_PRC TO  SYSDBA WITH GRANT OPTION;
  
 CREATE INDEX IDX_SPR_BARCODE1 ON SPR_BARCODE (BARCODE);
+
+CREATE TABLE LNK_CODES
+(
+  PROCESS SMALLINT DEFAULT 0 NOT NULL,
+  CODE INTEGER NOT NULL,
+  NAME VARCHAR(255) NOT NULL,
+  INN VARCHAR(255),
+  OWNER VARCHAR(255) NOT NULL
+
+);
+
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON LNK_CODES TO  SYSDBA WITH GRANT OPTION;
+commit;
+
+CREATE TABLE LNK_EXCLUDES
+(
+  PROCESS SMALLINT DEFAULT 0 NOT NULL,
+  NAME VARCHAR(255) NOT NULL,
+  OPTIONS VARCHAR(255) DEFAULT '01' NOT NULL,
+  OWNER VARCHAR(255) NOT NULL
+
+);
+
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON LNK_EXCLUDES TO  SYSDBA WITH GRANT OPTION;
+
+commit;
+
 """

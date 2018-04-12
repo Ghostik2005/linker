@@ -652,6 +652,39 @@ export function get_prcs(th, id_vnd) {
         })
     }
 
+export function get_prcs_source(th, source) {
+    let user = th.app.config.user;
+    let url = th.app.config.r_url + "?getPrcsSou"
+    let params = {"user": user, "source": +source};
+    request(url, params).then(function(data) {
+        data = checkVal(data, 'a');
+        if (data) {
+            //data = data.data;
+            $$("prcs_dc").clearAll();
+            $$("prcs_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
+    }
+
+export function get_prcs_date(th,da) {
+    let user = th.app.config.user;
+    let url = th.app.config.r_url + "?getPrcsDate"
+    let params = {"user": user, "date": da};
+    request(url, params).then(function(data) {
+        data = checkVal(data, 'a');
+        if (data) {
+            //data = data.data;
+            $$("prcs_dc").clearAll();
+            $$("prcs_dc").parse(data);
+        } else {
+            webix.message('error');
+            };
+        })
+    }
+
+
 export function get_refs(inp_params){
     let app = inp_params.app;
     let method = inp_params.method;
@@ -684,24 +717,18 @@ export function get_suppl(view, th, method) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + method
     let params = {"user": user};
-    if (method === "?getDatesUnlnk") {
-        webix.message({type: "debug", text: 'Будем сводить по дате'});
-    } else if (method === "?getSourceUnlnk") {
-        webix.message({type: "debug", text: 'Будем сводить по источнику'});
-    } else if (method === "?getSupplUnlnk") {
-        request(url, params).then(function(data) {
-            data = checkVal(data, 'a');
-            if (data) {
-                $$(view).getList().clearAll();
-                $$(view).getList().parse(data);
-                let fid = $$(view).getList().getFirstId();
-                $$(view).setValue(fid);
-                $$(view).refresh();
-            } else {
-                //webix.message('error');
-                };
-            })
-        }
+    request(url, params).then(function(data) {
+        data = checkVal(data, 'a');
+        if (data) {
+            $$(view).getList().clearAll();
+            $$(view).getList().parse(data);
+            let fid = $$(view).getList().getFirstId();
+            $$(view).setValue(fid);
+            $$(view).refresh();
+        } else {
+            //webix.message('error');
+            };
+        })
     }
 
 export function delPrc(inp_data, th) {

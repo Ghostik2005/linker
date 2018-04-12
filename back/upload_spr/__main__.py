@@ -1,14 +1,7 @@
 #coding: utf-8
 
-
 """
-
-
-сведение по баркоду: к какому баркоду привязывается товар, если существуют несколько одинаковых? к первому попавшемуся? судя по скрипту к первому...
-
 сведение по баркоду: но если один штрихкод привязан к нескольким товарам, то не выполнится - пропукаем такие товары, отпраяляя их на ручное сведение
-
-
 
 вместо
 SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD,
@@ -20,12 +13,9 @@ SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD,
     r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE
     FROM (SELECT r.SH_PRC as FIELD_KEY FROM prc r ORDER BY r.C_TOVAR DESC) T2
     JOIN PRC r ON r.SH_PRC = T2.FIELD_KEY
-
 """
 
-
-
-import sys, os, time, glob, re, traceback
+import sys, os, time, glob, re
 try:
     import libs.fdb as fdb
 except ImportError:
@@ -35,120 +25,8 @@ WORCDIR = os.path.abspath(os.path.dirname(__file__))
 os.chdir(WORCDIR)
 import hashlib
 
-
-VND_LIST = {
-    #28277: [u'Косматея', '5043020515&src'],
-#   33877: [u'Лекрус', '5043020515&src'],
-    22240: [u'Биофарм', '710400493123&src'],
-    28871: [u'Вектор', '710400493123&src'], ############
-    28177: [u'Пульс-М', '5043020515&src'],
-    28178: [u'Пульс-С-Петер', '5043020515&src'],
-#   20477: [u'Ориола-Москва', '5077014090&src'],
-    29271: [u'Реалинк', '710400493123&src'],
-    29977: [u'Форафарм', '5043020515&src'],
-    21271: [u'Фармпартнёр', '710400493123&src'],
-    20277: [u'Протек-Москва', '710400493123&src'],
-    20276: [u'Протек-Ярославль', '710400493123&src'],
-    20229: [u'Протек-Архангельск', '710400493123&src'],
-    20269: [u'Протек-Тверь', '710400493123&src'],
-    20171: [u'Сиа-Тула', '710400493123&src'],
-    20177: [u'Сиа-Москва', '710400493123&src'],
-    20153: [u'Сиа-Новгород', '710400493123&src'],
-    20129: [u'Сиа-Архангельск', '710400493123&src'],
-    20176: [u'Сиа-Ярославль', '710400493123&src'],
-    20577: [u'Катрен-Москва', '5014010199&src'],
-    20557: [u'Катрен-Орел', '710400493123&src'],
-    20576: [u'Катрен-Ярославль', '710400493123&src'],
-    20471: [u'Морон-Тула', '710400493123&src'],
-    20677: [u'Ахолд-Москва', '710400493123&src'],
-    20657: [u'Ахолд-Орёл', '710400493123&src'],
-    34157: [u'Надежда-Ф', '710400493123&src'],
-    20871: [u'Здравсервис', '710400493123&src'],
-    20377: [u'Роста', '710400493123&src'],
-    20378: [u'Роста-Питер', '710400493123&src'],
-    22077: [u'Профитмед', '710400493123&src'],
-    24477: [u'Авеста', '710400493123&src'],
-    28132: [u'Пульс-Б', '402701797950&src'],
-    28176: [u'Пульс-Ярославль', '402701797950&src'],
-    23478: [u'Империя', '710400493123&src'],
-    20977: [u'Арал', '7105507376&src'],
-    30178: [u'БСС', '5725000021&src'],
-    30144: [u'БСС(Кострома)', '5725000021&src'],
-    30371: [u'СиЭсМедика', '5725000021&src'],
-#    33771: [u'М-Сервис', '5725000021&src'],
-#   33971: [u'Епихин', '5725000021&src'],
-    34371: [u'Бобков', '5725000021&src'],
-    40877: [u'Юнифарм', '5725000021&src'],
-    40971: [u'Премьер', '5725000021&src'],
-    41071: [u'Азбука', '5725000021&src'],
-#   34071: [u'Орехов', '5725000021&src'],
-    41371: [u'Хозсфера', '5725000021&src'],
-    41876: [u'Колорит', '5725000021&src'],
-#   37471: [u'Бриз', '5725000021&src'],
-#   31871: [u'Белита', '5725000021&src'],
-#   37571: [u'Окей', '5725000021&src'],
-    30771: [u'Медком', '5725000021&src'],
-    34471: [u'Колинз', '5725000021&src'],
-    40552: [u'Фармкомплект', '5725000021&src'],
-    10000: [u'Забраковка (Ф)', '5725000021&src'],
-    20000: [u'Мониторинг(Н)', '5725000021&src'],
-    30000: [u'БЕЗ МНН', '5725000021&src'],
-    00000: [u'Без поставщика', '5725000021&src'],
-    41977: [u'Ирвиндва', '5725000021&src'],
-    44735: [u'Хелс(АНТЕЙ)', '5725000021&src'],
-    45835: [u'Элли', '5725000021&src'],
-    20271: [u'еФарма', '5725000021&src'],
-    10001: [u'ситиф', '5725000021&src'],
-    41177: [u'Витта', '5725000021&src'],
-    45077: [u'Технология здоровья', '5725000021&src'],
-    19999: [u'Инвентаризация', '5725000021&src'],
-    45277: [u'Фармалайн', '5725000021&src'],
-    39377: [u'Комплект сервис', '5725000021&src'],
-    45377: [u'Омнимедика', '5725000021&src'],
-    45477: [u'Инкос', '5725000021&src'],
-    44677: [u'Альфа-М', '5725000021&src'],
-    45577: [u'Стелмас', '5725000021&src'],
-#   45650: [u'Краснов', '5725000021&src'],
-    19998: [u'ФармаСМ', '5725000021&src'],
-    19996: [u'Асна', '5725000021&src'],
-    19995: [u'Инфоаптека', '5725000021&src'],
-    46676: [u'Ярфарма', '5725000021&src'],
-    19994: [u'Антей(остатки)', '5725000021&src'],
-    19992: [u'еФарма1(остатки)', '5725000021&src'],
-    19991: [u'еФарма2(остатки)', '5725000021&src'],
-    47369: [u'ТК-Альянс)', '5725000021&src'],
-    45177: [u'ЦДК)', '5725000021&src'],
-    46869: [u'Максима', '5725000021&src'],
-    46769: [u'Новожилова', '5725000021&src'],
-    19990: [u'Стандарт-Н', '5725000021&src'],
-    40677: [u'Болеар', '5725000021&src'],
-    44877: [u'Белла', '5725000021&src'],
-    48761: [u'Акцентмед', '5725000021&src'],
-    40277: [u'Гранд-Капитал', '5725000021&src'],
-    40267: [u'Гранд-Капитал(Смоленск)', '5725000021&src'],
-    43136: [u'Норман', '5725000021&src'],
-    19989: [u'Остатки(Опора)', '5725000021&src'],
-    48929: [u'Сервис(Вологда)', '5725000021&src'],
-    48535: [u'Баринов(Вологда)', '5725000021&src'],
-    48435: [u'Интро(Вологда)', '5725000021&src'],
-    48347: [u'Алиди-Норд(Вологда)', '5725000021&src'],
-    19987: [u'М-аптека', '5725000021&src'],
-    51066: [u'Регион В', '5725000021&src'],
-    19986: [u'Остатки МК', '5725000021&src'],
-    51068: [u'МКкомпани(Архангельск)', '5725000021&src'],
-    19985: [u'Остатки МК(Юнико)', '5725000021&src'],
-    51072: [u'АСНА(поставщик))', '5725000021&src'],
-    19984: [u'Остатки Антей(1С-2))', '5725000021&src'],
-    49077: [u'Юнити-М', '5725000021&src'],
-    51078: [u'РЛС', '5725000021&src'],
-    19983: [u'Астра (остатки)', '5725000021&src'],
-    52083: [u'Мелодия здоровья', '5725000021&src'],
-    19981: [u'Аптека-Лекарь-Ост2', '5725000021&src'],
-    }
-
 db_path = 'localhost/8025:spr'
 #db_path = '82.146.40.211:SPR_TEST'
-
 
 db = fdb.connect(**{
                 "host": "localhost",
@@ -178,90 +56,25 @@ def erase_prc():
 def prc_sync_lnk():
     erase_prc()
     dbc = db.cursor()
-    sql = u"""select count(*) FROM (
-    select c_tovar from PRC where
-     c_tovar  CONTAINING 'КОШЕК'
-    or  c_tovar  CONTAINING 'СОБАК'
-    or upper(c_tovar) like 'R.C.%'
-    or  c_tovar  CONTAINING 'ФРИСКИС'
-    or  c_tovar  CONTAINING 'КИТИКЕТ'
-    or  c_tovar  CONTAINING 'ПРОПЛАН'
-    or  c_tovar  CONTAINING 'ПЕДИГРИ'
-    or  c_tovar  CONTAINING 'МЕДИУМ СТАРТЕР'
-    or  c_tovar  CONTAINING 'ГРЫЗУН'
-    or  c_tovar  CONTAINING 'МЯУДОДЫР'
-    or  c_tovar  CONTAINING 'КОРМ Д'
-    or  c_tovar  CONTAINING 'ФЕЛИКС'
-    or  c_tovar  CONTAINING 'КЭТ ЧАУ'
-    or  c_tovar  CONTAINING 'ВИСКАС'
-    or  c_tovar  CONTAINING 'КОТОВ'
-    or  c_tovar  CONTAINING 'ЖИВОТНЫХ'
-    or  c_tovar  CONTAINING 'ЩЕНК'
-    or  c_tovar  CONTAINING 'НАПОЛНИТЕЛЬ'
-    or  c_tovar  CONTAINING 'ПОРОД'
-    or  c_tovar  CONTAINING 'ПОРОД'
-    or  c_tovar  CONTAINING 'КОБЕЛЕЙ'
-    or  c_tovar  CONTAINING 'КОРМ ДЛЯ'
-    or  c_tovar  CONTAINING 'БЛОХ'
-    or  c_tovar  CONTAINING 'ЖИВТНЫ'
-    or  c_tovar  CONTAINING 'РЫБОК'
-    or  c_tovar  CONTAINING 'ПТИЦ'
-    or  c_tovar  CONTAINING 'СВИНКИ'
-    or  c_tovar  CONTAINING 'УЦЕНКА'
-    or  c_tovar  CONTAINING '/НТВ/'
-    or  c_tovar  CONTAINING 'ГОДЕН'
-    or  c_tovar  CONTAINING 'СР.ГОД.'
-    or  c_tovar  CONTAINING 'ОБУВЬ'
-    or upper(c_tovar) like 'ПОДАРОК%'
-    or  c_tovar  CONTAINING 'МАШИНА'
-    or  c_tovar  CONTAINING 'АКВАРИУМ'
-    or  c_tovar  CONTAINING 'АКЦИЯ'
-    and n_fg!=1 and id_org!=0)"""
-    #dbc.execute(sql)
+    sq = """SELECT r.NAME, r.OPTIONS FROM LNK_EXCLUDES r where r.PROCESS = 1"""
+    dbc.execute(sq)
+    ret = dbc.fetchall()
+    ap = []
+    for row in ret:
+        if row[1][1] == '1':
+            st = "c_tovar CONTAINING '%s'" % row[0]
+        else:
+            st = f"upper(c_tovar) like upper('{row[0]}\%')"
+        ap.append(st)
+    ap = ' \nor '.join(ap)
+    sql_c = """select count(*) FROM (select c_tovar from PRC where %s)""" % ap
+    sql = """update PRC set n_fg=1, id_org=0 where n_fg!=1 and (%s)""" % ap
+    
+    #dbc.execute(sql_c)
     #delrows = dbc.fetchone()
     #print("Удаляем по признаку -", delrows[0])
     print("Удаляем по признаку")
-    
-    dbc.execute(u"""update PRC set n_fg=1, id_org=0
-where n_fg!=1
-and 
-(   c_tovar CONTAINING 'КОШЕК'
-or  c_tovar CONTAINING 'СОБАК'
-or  upper(c_tovar) like 'R.C.%'
-or  c_tovar CONTAINING 'ФРИСКИС'
-or  c_tovar CONTAINING 'КИТИКЕТ'
-or  c_tovar CONTAINING 'ПРОПЛАН'
-or  c_tovar CONTAINING 'ПЕДИГРИ'
-or  c_tovar CONTAINING 'МЕДИУМ СТАРТЕР'
-or  c_tovar CONTAINING 'ГРЫЗУН'
-or  c_tovar CONTAINING 'МЯУДОДЫР'
-or  c_tovar CONTAINING 'КЭТ ЧАУ'
-or  c_tovar CONTAINING 'КОРМ Д'
-or  c_tovar CONTAINING 'ФЕЛИКС'
-or  c_tovar CONTAINING 'ВИСКАС'
-or  c_tovar CONTAINING 'КОТОВ'
-or  c_tovar CONTAINING 'ЖИВОТНЫХ'
-or  c_tovar CONTAINING 'ЩЕНК'
-or  c_tovar CONTAINING 'НАПОЛНИТЕЛЬ'
-or  c_tovar CONTAINING 'ПОРОД'
-or  c_tovar CONTAINING 'КОБЕЛЕЙ'
-or  c_tovar CONTAINING 'КОРМ ДЛЯ'
-or  c_tovar CONTAINING 'БЛОХ'
-or  c_tovar CONTAINING 'ЖИВТНЫ'
-or  c_tovar CONTAINING 'РЫБОК'
-or  c_tovar CONTAINING 'ПТИЦ'
-or  c_tovar CONTAINING 'СВИНКИ'
-or  c_tovar CONTAINING '/НТВ/'
-or  c_tovar CONTAINING 'УЦЕНКА'
-or  c_tovar CONTAINING 'ГОДЕН'
-or  c_tovar CONTAINING 'СР.ГОД.'
-or  c_tovar CONTAINING 'ОБУВЬ'
-or  upper(c_tovar) like 'ПОДАРОК%'
-or  c_tovar CONTAINING 'МАШИНА'
-or  c_tovar CONTAINING 'АКВАРИУМ'
-or  c_tovar CONTAINING 'АКЦИЯ'
-)
-""")
+    dbc.execute(sql)
     db.commit()
     print('Свожу по кодам')
     sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
@@ -318,15 +131,19 @@ def genHash(id_vnd, tovar, zavod):
     return sh_prc.hexdigest()
 
 def load_from_nolink(db):
-    global VND_LIST
     if db:
         dbc = db.cursor()
+        sql = """SELECT r.CODE, r.NAME FROM LNK_CODES r where r.PROCESS = 1"""
+        dbc.execute(sql)
+        ret = dbc.fetchall()
         count_insert = 0
         count_all = 0
-        for id_vnd, v in VND_LIST.items():
-            for path in glob.glob(os.path.join(WORCDIR, "price%s*.nolink" % id_vnd)):
+        for id_vnd, v in ret:
+            f_mask = os.path.join(WORCDIR, "price%s*.nolink" % id_vnd)
+            for path in glob.glob(f_mask):
+                print("path:", path, flush=True)
                 count_insert, count_all = _upload_to_db(db, dbc, id_vnd, v, path, count_insert, count_all)
-                print("remove:", path, flush=True)
+                print("- remove: ", flush=True, end='')
                 try: 
                     os.remove(path)
                     print("[ OK ]", flush=True)
@@ -342,7 +159,7 @@ def _upload_to_db(db, dbc, id_vnd, v, path, count_insert, count_all):
     with open(path, 'rb') as f:
         rows = f.read()
     rows = rows.decode('utf8').splitlines()
-    print("--- Всего в этом файле -", len(rows))
+    print("- Всего в файле -", len(rows))
     count_all+=len(rows)
     ret = []
     if rows:

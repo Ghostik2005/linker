@@ -86,10 +86,10 @@ export default class LinkCodesView extends JetView{
             columns: [
                 {id: "process", css: "center_p",
                     width: 150,
-                    header: [{text: "Обрабатывать"},
+                    header: [{text: "Обрабатывать", css: "center_p"},
                         {content: "masterCheckbox", css: "center_p"},
                         ],
-                    template:"<span class='center_p'>{common.checkbox()</span>}",
+                    template:"<span class='center_p'>{common.checkbox()}</span>",
                     },
                 {id: "code", header: "Код поставщика" ,  //headermenu: false,
                     },
@@ -100,7 +100,12 @@ export default class LinkCodesView extends JetView{
                     },
                 { id: "inn", 
                     width: 150,
-                    header: [{text: "ИНН поставщика"},
+                    header: [{text: "Непонятное поле"},
+                        ]
+                    },
+                { id: "owner", 
+                    width: 150,
+                    header: [{text: "Кто добавил"},
                         ]
                     },
                 ],
@@ -127,6 +132,17 @@ export default class LinkCodesView extends JetView{
         }
         
     init() {
+        let user = this.app.config.user;
+        let url = this.app.config.r_url + "?getLinkCodes";
+        let params = {"user": user};
+        request(url, params).then( (data) => {
+            data = checkVal(data, 'a');
+            if (data) {
+                this.$$("__table").parse(data);
+                }
+            })
+        }
+    ready() {
 
         }
     }
