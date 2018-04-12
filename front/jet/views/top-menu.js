@@ -94,7 +94,7 @@ export default class TopmenuView extends JetView{
                             },
                         {},
                         {view: "button", type: "htmlbutton",
-                            label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Обновить с сервера</span>", width: 210,
+                            label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Обновить</span>", width: 150,
                             click: () => {
                                 (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
                                 (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
