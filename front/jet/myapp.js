@@ -17,6 +17,7 @@ webix.ready( () => {
     webix.protoUI({
         name: "cWindow",
         defaults: {
+            resize: true,
             modal: false,
             move: true,
             position: "center"

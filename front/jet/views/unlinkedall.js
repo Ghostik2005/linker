@@ -132,8 +132,8 @@ export default class AllUnlinkedView extends JetView{
                 }
             }
         var _view = {view: "cWindow",
-            width: document.documentElement.clientWidth * 0.8,
-            height: document.documentElement.clientHeight * 0.8,
+            width: document.documentElement.clientWidth * 0.99,
+            height: document.documentElement.clientHeight * 0.95,
             modal: true,
             on: {
                 onShow: () => {
