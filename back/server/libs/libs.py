@@ -606,8 +606,6 @@ order by r1 DESC
             user = params.get('user')
             sql = """UPDATE PRC r SET r.IN_WORK = -1 
 where r.IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = ?) """
-            print(sql)
-            print('-'*30)
             opt = (user,)
             result = self.db.execute({"sql": sql, "options": opt})
             sql = """select CAST(p.DT as DATE) as r3, count(CAST(p.DT as DATE))
@@ -615,7 +613,6 @@ from PRC p
 inner join USERS u on (u."GROUP" = p.ID_ORG)
 WHERE p.N_FG <> 1 and u."USER" = ?
 GROUP BY r3"""
-            print(sql)
             result = self.db.request({"sql": sql, "options": opt})
             _return = []
             for row in result:
@@ -736,10 +733,8 @@ ROWS 1 to 20
             user = params.get('user')
             sql = """UPDATE PRC r SET r.IN_WORK = -1 
 where r.IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = ?)"""
-            print(sql)
             opt = (user,)
             result = self.db.execute({"sql": sql, "options": opt})
-            print('*'*30)
             t1 = time.time() - st_t
             sql = """select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT
 from prc r
@@ -748,8 +743,6 @@ WHERE CAST(r.DT as DATE) = ? and r.n_fg <> 1  and r.IN_WORK = -1 and u."USER" = 
 ORDER by r.SOURCE DESC
 ROWS 1 to 20"""
             opt = (da, user)
-            print(sql)
-            print(opt)
             result = self.db.request({"sql": sql, "options": opt})
             t2 = time.time() - st_t
             _return = []
@@ -3044,7 +3037,12 @@ from (
         WHEN r.CHANGE_DT is null THEN r.DT
         ELSE r.CHANGE_DT
         END as ch_date
-        FROM (SELECT r.SH_PRC lsh FROM LNK r {0})
+        FROM (SELECT r.SH_PRC lsh,         
+        CASE 
+        WHEN r.CHANGE_DT is null THEN r.DT
+        ELSE r.CHANGE_DT
+        END as ch_date
+        FROM LNK r {0})
         JOIN LNK r on r.SH_PRC = lsh
     )""")
                 sql = '\n'.join(in_st)
@@ -3059,7 +3057,12 @@ from (
         WHEN r.CHANGE_DT is null THEN r.DT
         ELSE r.CHANGE_DT
         END as ch_date
-        FROM (SELECT l.SH_PRC lsh FROM LNK l {0})
+        FROM (SELECT r.SH_PRC lsh,         
+        CASE 
+        WHEN r.CHANGE_DT is null THEN r.DT
+        ELSE r.CHANGE_DT
+        END as ch_date
+        FROM LNK l {0})
         JOIN LNK r on r.SH_PRC = lsh
     )
 left JOIN VND v on (v.ID_VND = r.ID_VND)
@@ -3069,9 +3072,9 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             sql =  sql.format("""\nWHERE {0} ORDER by {1} {2}""") + '\nROWS ? to ?'
             stri = stri.replace("r.C_TOVAR CONTAINING '%%' and", '')
             sql_c += """ WHERE {0}""".format(stri)
-            sql_c = sql_c.replace("r.C_TOVAR CONTAINING '%%')", '')
+            sql_c = sql_c.replace("WHERE r.C_TOVAR CONTAINING '%%'", '')
             sql = sql.format(stri, field, direction)
-            sql = sql.replace("WHERE r.C_TOVAR CONTAINING '%%')", '')
+            sql = sql.replace("WHERE r.C_TOVAR CONTAINING '%%'", '')
             opt = (start_p, end_p)
             _return = []
             #result = self.db.request({"sql": sql, "options": opt})
@@ -3230,8 +3233,18 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             user = params.get('user')
             data = params.get('data')
             for row in data:
-                row.pop('id')
-            print()
+                print(row)
+                continue
+                if row.get('change') == 1: #удаленная позиция
+                    sql = """delete from LNK_CODES where CODE=?"""
+                    opt = (row.get('code'),)
+                elif row.get('change') == 50: #измененная позиция
+                    sql = """update LNK_CODES set PROCESS =?, NAME=?, INN=?, OWNER=? where CODE=?"""
+                    opt = (row.get('process'), row.get('name'), row.get('inn'), user, row.get('code'))
+                elif row.get('change') == 2: #новая позиция или измененная позиция
+                    sql = """update or insert into LNK_CODES (PROCESS, NAME, CODE, INN, OWNER) values (?, ?, ?, ?, ?) matching (CODE)"""
+                    opt = (row.get('process'), row.get('name'), row.get('code'), row.get('inn'), user)
+                self.db.execute({"sql": sql, "options": opt})
             sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER FROM LNK_CODES r"""
             opt = ()
             _return = []
@@ -3244,10 +3257,7 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                     "inn"      : row[3],
                     "owner"    : row[4]
                 }
-                if r not in data:
-                    _return.append(r)
-            sql = """delete from LNK_CODES where PROCESS=?, CODE=?, NAME=?, INN=?"""
-            print(_return)
+                _return.append(r)
             ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -3708,10 +3718,8 @@ def parse_args(arg, _param, x_hash, api):
             try:
                 content = call(_param, x_hash)
             except:
-                #print('-'*20)
                 #print('error calling', _param, x_hash)
-                print(traceback.format_exc(), flush=True)
-                #print('-'*20)
+                #print(traceback.format_exc(), flush=True)
                 content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
         else:
             content = json.dumps(u'login please', ensure_ascii=False)

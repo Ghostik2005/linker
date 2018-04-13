@@ -86,8 +86,14 @@ button {
 
 .webix_view.webix_dtable {
     color: black;
-    /*font-size: larger;
-    font-size: 120%;*/
+    /*font-size: larger;*/
+    font-size: 120%;
+    }
+
+.text130 {
+    color: black;
+    /*font-size: larger;*/
+    font-size: 130%;
     }
 
 .col_center {
@@ -110,7 +116,6 @@ button {
       height: 70%;
       vertical-align: middle;
       border-radius: 6px;
-      /*font-family: Roboto, Arial;*/
     }
 
 .my_filter select {
@@ -159,3 +164,40 @@ button {
 .webix_el_radio .webix_label_right {
     color: white;
     }
+    
+.webix_el_combo input{
+    color: black;
+    }
+
+.webix_el_text input {
+    color: black;
+    /*font-size: larger;*/
+    font-size: 120%;
+    }
+
+.raw_text input{
+    color: black;
+    font-size: 100%;
+    }
+
+.webix_el_combo span.webix_input_icon {
+    color: #666666;
+    }
+
+.webix_item_tab {
+    background-color: #d2e3ef;
+    color: #7a7a7a;
+    }
+div.webix_item_tab {
+    border-color: #d2e3ef;
+    }
+
+.webix_ss_filter select {
+    background-color: white;
+    }
+    
+
+
+
+
+    

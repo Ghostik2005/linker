@@ -214,6 +214,7 @@ export default class TopmenuView extends JetView{
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
+                                $$("_link").disable();
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
                                 let id_spr = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getSelectedItem().id_spr
                                 let params = {};

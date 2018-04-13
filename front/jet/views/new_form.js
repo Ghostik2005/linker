@@ -80,7 +80,7 @@ export default class NewformView extends JetView{
                 elements: [
                     {rows: [
                         {view: "label", label:"Название товара:", name: 't_name'},
-                        {view: "text", label: "", value: "", name: "c_tovar", required: true},
+                        {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text"},
                         {height: 10, width: 700},
                         {cols: [
                             {rows: [
@@ -162,13 +162,13 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     ]},
-                                {view:"text", label: "Штрих-код:", value: "", labelPosition:"top", readonly: true, name: "barcode", localId: "_barc",
+                                {view:"text", label: "Штрих-код:", value: "", labelPosition:"top", readonly: true, name: "barcode", localId: "_barc", css: "raw_text",
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
                                         this.popbar.show("Редактирование ш.кодов", id_spr, this);
                                         }
                                     },
-                                {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_tgroup", localId: "_c_tgroup",
+                                {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_tgroup", localId: "_c_tgroup",  css: "raw_text",
                                     readonly: true,
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
@@ -289,7 +289,9 @@ export default class NewformView extends JetView{
                                         params["id_usloviya"] = right_f.id_usloviya;
                                         params["id_group"] = right_f.id_group;
                                         params["id_nds"] = right_f.id_nds;
-                                        params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
+                                        //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
+                                        if (prcs.getItem(prcs.getCursor())) params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc | undefined;
+                                        else params["sh_prc"] = undefined;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
                                         let url = this.app.config.r_url + "?setSpr";
