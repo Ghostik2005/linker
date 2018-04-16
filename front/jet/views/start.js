@@ -2,6 +2,7 @@
 import {JetView} from "webix-jet";
 import HeaderView from "../views/header";
 import FooterView from "../views/footer";
+import {init_first, request, checkVal} from "../views/globals";
 
 export default class StartView extends JetView{
     config() {
@@ -17,5 +18,12 @@ export default class StartView extends JetView{
         return ui;
         }
     init(){
+        let app = this.app;
+        let url = app.config.r_url + "?getVersion";
+        let params = {"user": app.config.user};
+        let res = request(url, params, !0).response;
+        res = checkVal(res, 's');
+        app.config.roles = res.cfg;
+        init_first(app);
         }
     }

@@ -8,7 +8,7 @@ import ConfirmView from "../views/yes-no";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 
-export default class SkippedView extends JetView{
+export default class SkippedBarView extends JetView{
     config(){
 
         let app = this.app;
@@ -131,48 +131,38 @@ export default class SkippedView extends JetView{
                     }
                 }
             }
-        var _view = {view: "cWindow",
-            width: document.documentElement.clientWidth * 0.8,
-            height: document.documentElement.clientHeight * 0.8,
-            modal: true,
-            on: {
-                onShow: () => {
-                    filtFunc();
-                    },
-                onHide: () => {
-                    this.$$("__table").clearAll();
-                    $$("_spr_search").focus();
-                    }
-                },
-            body: {
-                view: "layout",
-                rows: [
-                    sprv,
-                    {$subview: PagerView},
-                    ]}
-                }
+        var _view = {
+            view: "layout",
+            rows: [
+                sprv,
+                {$subview: PagerView},
+                ]}
+            //on: {
+                //onShow: () => {
+                    //filtFunc();
+                    //},
+                //onHide: () => {
+                    //this.$$("__table").clearAll();
+                    //$$("_spr_search").focus();
+                    //}
+                //},
+
         return _view
         }
 
-    show(new_head){
-        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
-        }
-    hide(){
-        this.getRoot().hide()
-        }
     init() {
-        this.popconfirm = this.ui(ConfirmView);
-        let th = this;
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
-            if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout(function(){
-                let old_v = th.$$("__page").getValue();
-                th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                th.$$("__page").refresh();
-                },webix.ui.datafilter.textWaitDelay);
-            this.getParentView().getParentView().hide();
-            })
+        console.log('init tab bar');
+        //this.popconfirm = this.ui(ConfirmView);
+        //let th = this;
+        //$$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        //$$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+            //if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            //this._filter_timer=window.setTimeout(function(){
+                //let old_v = th.$$("__page").getValue();
+                //th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                //th.$$("__page").refresh();
+                //},webix.ui.datafilter.textWaitDelay);
+            //this.getParentView().getParentView().hide();
+            //})
         }
     }

@@ -509,7 +509,9 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
-    let vv = $$("__body").getChildViews()[1].getChildViews();
+    //console.log('vv', $$("__body").getChildViews()[0].getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3]);
+    //let vv = $$("__body").getChildViews()[1].getChildViews();
+    let vv = $$("__body").getChildViews()[0].getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3].getChildViews();
     count = vv[0].config.posPpage
     get_data_test({
         view: vv[0],
@@ -607,7 +609,7 @@ export function init_first(app) {
     //setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
     //setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
     //setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
-    setTimeout(get_refs, 0*delay, {"app": app, "type": "async", "method": "getRoles", "store": "roles_dc"});
+    setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
     let url = app.config.r_url + "?getRefs"
     let params = {"user": app.config.user};
     request(url, params).then(function(data) {

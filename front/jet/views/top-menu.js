@@ -11,11 +11,13 @@ import UnlinkedView from "../views/unlinked";
 import AllUnlinkedView from "../views/unlinkedall";
 import SkippedView from "../views/skipped";
 import {prcs, delPrc, checkKey} from "../views/globals";
+import SprView from "../views/spr_dt";
 
 export default class TopmenuView extends JetView{
     config(){
         let app = this.app;
-        return {
+
+        let tab_1 = {view: "layout",
             rows: [
                 {view: 'toolbar',
                     height: 40,
@@ -25,7 +27,6 @@ export default class TopmenuView extends JetView{
                             options: {
                                 filter: filter_1,
                                 body: {
-                                    //css: "big-combo",
                                     template: "#c_vnd# - #count#",
                                     yCount: 10
                                     }
@@ -47,16 +48,18 @@ export default class TopmenuView extends JetView{
                                                 get_prcs_source(this, id_vnd);
                                                 };
                                         } else {
-                                            this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].clearAll();
-                                            this.getRoot().getParentView().getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
+                                            let vv = this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3].getChildViews();
+                                            vv[0].clearAll()
+                                            console.log('uu', this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[2])
+                                            this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
                                             let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
                                             if ($$("_add")) $$("_add").hide();
                                             $$("_left").hide();
                                             $$("_skip").hide();
                                             $$("_right").hide();
                                             $$('_link').hide();
-                                            this.getRoot().getParentView().getChildViews()[0].getChildViews()[1].parse(n_item);
-                                            let pager = this.getRoot().getParentView().getChildViews()[1].getChildViews()[1];
+                                            this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[1].parse(n_item);
+                                            let pager = vv[1];
                                             pager.getChildViews()[6].define('label', "Всего записей: 0");
                                             pager.getChildViews()[6].refresh();
                                             pager.$scope.$$("__page").config.manual = false;
@@ -101,28 +104,32 @@ export default class TopmenuView extends JetView{
                                                                      get_suppl("_suppl", this, "?getSupplUnlnk");
                                 }
                             },
-                         {view:"button", type: 'htmlbutton',
+                         {view:"button", type: 'htmlbutton', localId: "_skips",
                             label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные</span>", width: 150, disabled: true, hidden: !(app.config.roles[app.config.role].skipped),
                             on: {
                                 onAfterRender: function () {
                                     if (app.config.roles[app.config.role].skipped) this.enable();
-                                    }
+                                    },
+                                onItemClick: () => {
+                                    this.popskipped.show("Пропущенные товары")
+                                    },
                                 },
-                            click: () => {
-                                this.popskipped.show("Пропущенные товары")
-                                }
                             },
-                        {view:"button", type: 'htmlbutton',
+                        {view:"button", type: 'htmlbutton', localId: "_unlnks",
                             label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Несвязанные</span>", width: 150,
-                            click: () => {
-                                this.popallunlink.show("Все несвязанные товары")
-                                }
+                            on: {
+                                onItemClick: () => {
+                                    this.popallunlink.show("Все несвязанные товары")
+                                    },
+                                },
                             },
-                        {view:"button", id: '_links', type: 'htmlbutton',
+                        {view:"button", type: 'htmlbutton', localId: "_links",
                             label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки</span>", width: 150,
-                            click: () => {
-                                this.poplinks.showWindow("Линки");
-                                }
+                            on: {
+                                onItemClick: () => {
+                                    this.poplinks.showWindow("Линки");
+                                    },
+                                },
                             },
                     ]},
                 {view: 'toolbar',
@@ -166,11 +173,12 @@ export default class TopmenuView extends JetView{
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(() => {
-                                            let ui = this.$scope.getParentView().getRoot().getChildViews()[1].getChildViews()[0];
+                                            let ui_1  = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3];
+                                            let ui = ui_1.getChildViews()[0];
                                             if (ui) {
                                                 get_data_test({
                                                     view: ui,
-                                                    navBar: this.$scope.getParentView().getRoot().getChildViews()[1].getChildViews()[1],
+                                                    navBar: ui_1.getChildViews()[1],
                                                     start: 1,
                                                     count: ui.config.posPpage,
                                                     searchBar: ui.config.searchBar,
@@ -188,35 +196,31 @@ export default class TopmenuView extends JetView{
                                 let nm = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].config.name;
                                 let hist = webix.storage.session.get(nm);
                                 setTimeout(() => {
-                                this.pophistory.show(hist, $$("_tb").getChildViews()[0]) //$$("_spr_search"));
+                                    this.pophistory.show(hist, $$("_tb").getChildViews()[0]) //$$("_spr_search"));
                                 }, 50);
                                 },
                             },
-                        //(app.config.roles[app.config.role].spradd) ?
                         {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: !true, hidden: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
-                                onAfterRender: function () {
-                                    //if (app.config.roles[app.config.role].spradd) this.enable();
-                                    //if (app.config.roles[app.config.role].spradd) this.show();
+                                onItemClick: () => {
+                                    let item = {}
+                                    let name = $$("_names_bar").getValues().p_name;
+                                    item['t_name'] = "Название товара:   " + name;
+                                    item['c_tovar'] = name.toUpperCase();
+                                    this.popnew.show("Добавление в справочник", $$("_spr_search"), item);
                                     }
                                 },
-                            click: () => {
-                                let item = {}
-                                let name = $$("_names_bar").getValues().p_name;
-                                item['t_name'] = "Название товара:   " + name;
-                                item['c_tovar'] = name.toUpperCase();
-                                this.popnew.show("Добавление в справочник", $$("_spr_search"), item);
-                                }
-                            }, //: {width: 1},
+                            },
                         {view:"button", type: 'htmlbutton', id: "_link",
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
                             hotkey: "home+ctrl", disabled: true,
                             click: () => {
                                 $$("_link").disable();
-                                let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
-                                let id_spr = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getSelectedItem().id_spr
+                                let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc;
+                                let ui_1 = this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3];
+                                let id_spr = ui_1.getChildViews()[0].getSelectedItem().id_spr
                                 let params = {};
                                 params["th"] = this;
                                 params["command"] = "?setLnk";
@@ -276,7 +280,70 @@ export default class TopmenuView extends JetView{
                                 parse_unlinked_item(this);
                                 }
                             }
-                    ]},
+                        ]
+                    },
+                {$subview: SprView, name: "spr_dt"},
+                ]
+            }
+        
+        return {
+            rows: [
+                {//view: 'toolbar',
+                    height: 1,
+                    cols: [
+                        {fillspace: true},
+                        {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка",
+                            label: "<span class='webix_icon fa-blind'></span>", width: 30,  hidden: !app.config.roles[app.config.role].adm,
+                            on:
+                                {
+                                onItemClick: () => {
+                                    if (app.config.roles[app.config.role].adm) {
+                                        $$("adm_run").callEvent("onItemClick");
+                                    } else {
+                                        webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
+                                        }
+                                    }
+                                },
+                            },
+                        {view:"button", type: 'htmlbutton', tooltip: "Пропущенные",
+                            label: "<span class='webix_icon fa-archive'></span>", width: 30, disabled: true, hidden: !(app.config.roles[app.config.role].skipped),
+                            on: {
+                                onAfterRender: function () {
+                                    if (app.config.roles[app.config.role].skipped) this.enable();
+                                    },
+                                onItemClick: () => {
+                                    this.$$("_skips").callEvent("onItemClick")
+                                    },
+                                },
+                            },
+                        {view:"button", type: 'htmlbutton', tooltip: "Несвязанные",
+                            label: "<span class='webix_icon fa-unlink'></span>", width: 30,
+                            on: {
+                                onItemClick: () => {
+                                    this.$$("_unlnks").callEvent("onItemClick")
+                                    },
+                                },
+                            },
+                        {view:"button", type: 'htmlbutton', tooltip: "Связки",
+                            label: "<span class='webix_icon fa-stumbleupon'></span>", width: 30,
+                            on: {
+                                onItemClick: () => {
+                                    this.$$("_links").callEvent("onItemClick")
+                                    },
+                                },
+                            },
+                        ]
+                    },
+                {view: "tabview",
+                    id: "tabbs",
+                    //fillspace: true,
+                    multiview: true,
+                    cells: [
+                        {header: "<span style='line-height: 20px;'> Линкер</span>", width: 140, 
+                            body: tab_1
+                            },
+                        ],
+                    },
                 ]
             }
         }

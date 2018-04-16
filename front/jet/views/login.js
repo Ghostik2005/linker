@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, getCookie, setCookie, deleteCookie} from "../views/globals";
-import {init_first} from "../views/globals";
+import {init_first, get_refs} from "../views/globals";
 import md5 from "../views/md5";
 
 export default class loginView extends JetView{
@@ -41,7 +41,6 @@ export default class loginView extends JetView{
                     {view: "button", label: "OK", hotkey: "enter",
                         click: function(){
                             if (validate_user(this)) {
-                                init_first(app);
                                 this.$scope.show("/start/body");
                                 webix.message('авторизованно');
                             } else {
