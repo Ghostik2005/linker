@@ -3,7 +3,8 @@
 import {JetView} from "webix-jet";
 import {deleteCookie} from "../views/globals";
 import SkippedBarView from "../views/skipped_bar";
-
+import AllUnlinkedBarView from  "../views/unlinkedall_bar";
+import LinksBarView from "../views/links_form_bar";
 
 export default class HeaderView extends JetView{
     config(){
@@ -57,30 +58,75 @@ export default class HeaderView extends JetView{
                             }
                         },
                     },
-                 {view:"button", type: 'htmlbutton', localId: "_skips",
+                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные",
                     label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>", width: 40, disabled: !(app.config.roles[app.config.role].skipped),
-                    hidden: !(app.config.roles[app.config.role].skipped), hidden: true,
+                    hidden: !(app.config.roles[app.config.role].skipped), 
                     on: {
                         onItemClick: () => {
-                            let vv = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                            vv.addView({
-                                header:"<span style='line-height: 20px;'> Пропущенные</span>", width: 170, close: true,
-                                body: { view: "layout",
-                                    rows: [
-                                        //{$subview: SkippedBarView}
-                                        {$subview: true}
-                                        ]
-                                    },
-                                });
-                            //console.log('this.ui', this.ui);
-                            vv.getMultiview().getChildViews()[1].show();
-                            //vv.getMultiview().getChildViews()[1].show("skipped_bar");
-                            //vv.setValue(vv.getMultiview().getChildViews()[1])
+                            let ui = $$("sk_bar");
+                            if (ui) {
+                                this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].setValue('sk_bar');
+                            } else {
+                                let vv = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0];
+                                var form = this.ui(SkippedBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Пропущенные</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
                             },
                         },
                     },
-                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: !true,
-                    label: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span><span class='butt'>Выход</span>", width: 120,
+
+                {view:"button", type: 'htmlbutton', tooltip: "Несвязанные",
+                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40,
+                    on: {
+                        onItemClick: () => {
+                            let ui = $$("unlnk_bar");
+                            if (ui) {
+                                this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].setValue('unlnk_bar');
+                            } else {
+                                let vv = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0];
+                                var form = this.ui(AllUnlinkedBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Несвязанные</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            },
+                        },
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Связки",
+                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40,
+                    on: {
+                        onItemClick: () => {
+                            let ui = $$("links_bar");
+                            if (ui) {
+                                this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].setValue('links_bar');
+                            } else {
+                                let vv = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0];
+                                var form = this.ui(LinksBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Связки</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            },
+                        },
+                    },
+
+                    
+                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', disabled: !true, tooltip: "Выход",
+                    label: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span>", width: 40,
                     on: {
                         onItemClick: () => {
                             deleteCookie('linker_user');

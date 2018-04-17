@@ -180,6 +180,12 @@ button {
     font-size: 100%;
     }
 
+.raw_page input{
+    text-align: center !important;
+    color: black;
+    font-size: 100%;
+    }
+
 .webix_el_combo span.webix_input_icon {
     color: #666666;
     }
@@ -196,7 +202,9 @@ div.webix_item_tab {
     background-color: white;
     }
     
-
+.webix_after_all_tabs {
+    height: 5px !important;
+    }
 
 
 

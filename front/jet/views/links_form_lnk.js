@@ -165,6 +165,7 @@ export default class LinksViewLnk extends JetView{
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
         let th = this;
+        
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);

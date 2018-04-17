@@ -363,7 +363,7 @@ export function parseToLink(item){
             prcs.add(item, 0);
             prcs.setCursor(cid);
             parse_unlinked_item(this, item);
-            }, 800);
+            }, 200);
     } else {
         let min = 1000000000000;
         let max = 2000000000000;
@@ -378,7 +378,7 @@ export function parseToLink(item){
             let iid = prcs.data.order[0];
             prcs.setCursor(iid);
             parse_unlinked_item(this, item);
-            }, 800);
+            }, 200);
         };
     }
 
@@ -509,10 +509,8 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
-    //console.log('vv', $$("__body").getChildViews()[0].getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3]);
-    //let vv = $$("__body").getChildViews()[1].getChildViews();
-    let vv = $$("__body").getChildViews()[0].getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3].getChildViews();
-    count = vv[0].config.posPpage
+    let vv = $$("__body").getChildViews()[0].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews(); //datatable form
+    count = vv[0].config.posPpage //datatable
     get_data_test({
         view: vv[0],
         navBar: vv[1],

@@ -30,8 +30,8 @@ export default class PagerView extends JetView{
                             }
                         }
                     },
-                {width: 200, type: "wide", css: 'lay_pg', cols: [
-                    {view: "text", label: "Страница", localId: "__page", labelWidth: 70, width: 120, value: "1", css: "center_p", manual: true,
+                {width: 250, type: "wide", css: 'lay_pg', cols: [
+                    {view: "text", label: "Страница", localId: "__page", labelWidth: 70, width: 150, value: "1", css: "raw_page", manual: true,
                         on: {
                             onChange: (new_val, old_val) => {
                                 if (this.$$("__page").config.manual) {

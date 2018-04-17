@@ -3,13 +3,10 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import NewformView from "../views/new_form";
-import LinksView from "../views/links_form";
 import ConfirmView from "../views/yes-no";
 import {filter_1, get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
 import {parse_unlinked_item, get_data_test} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
-import AllUnlinkedView from "../views/unlinkedall";
-import SkippedView from "../views/skipped";
 import {prcs, delPrc, checkKey} from "../views/globals";
 import SprView from "../views/spr_dt";
 
@@ -18,6 +15,7 @@ export default class TopmenuView extends JetView{
         let app = this.app;
 
         let tab_1 = {view: "layout",
+            id: 'app-nav',
             rows: [
                 {view: 'toolbar',
                     height: 40,
@@ -48,18 +46,18 @@ export default class TopmenuView extends JetView{
                                                 get_prcs_source(this, id_vnd);
                                                 };
                                         } else {
-                                            let vv = this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3].getChildViews();
-                                            vv[0].clearAll()
-                                            console.log('uu', this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[2])
-                                            this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[2].getChildViews()[0].setValue('');
+                                            let vv = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
+                                            vv[0].clearAll() //clear datatable
+                                            this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
                                             let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
                                             if ($$("_add")) $$("_add").hide();
                                             $$("_left").hide();
                                             $$("_skip").hide();
                                             $$("_right").hide();
                                             $$('_link').hide();
-                                            this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[1].parse(n_item);
-                                            let pager = vv[1];
+                                            this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1].parse(n_item); //_names_bar
+                                            $$("_spr_search").setValue(''); //search bar
+                                            let pager = vv[1]; //pager
                                             pager.getChildViews()[6].define('label', "Всего записей: 0");
                                             pager.getChildViews()[6].refresh();
                                             pager.$scope.$$("__page").config.manual = false;
@@ -104,30 +102,31 @@ export default class TopmenuView extends JetView{
                                                                      get_suppl("_suppl", this, "?getSupplUnlnk");
                                 }
                             },
-                         {view:"button", type: 'htmlbutton', localId: "_skips",
+                         {view:"button", type: 'htmlbutton', localId: "_skips", 
                             label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные</span>", width: 150, disabled: true, hidden: !(app.config.roles[app.config.role].skipped),
+                            hidden: true,
                             on: {
                                 onAfterRender: function () {
                                     if (app.config.roles[app.config.role].skipped) this.enable();
                                     },
                                 onItemClick: () => {
-                                    this.popskipped.show("Пропущенные товары")
+                                    //this.popskipped.show("Пропущенные товары")
                                     },
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', localId: "_unlnks",
+                        {view:"button", type: 'htmlbutton', localId: "_unlnks", hidden: true,
                             label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Несвязанные</span>", width: 150,
                             on: {
                                 onItemClick: () => {
-                                    this.popallunlink.show("Все несвязанные товары")
+                                    //this.popallunlink.show("Все несвязанные товары")
                                     },
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', localId: "_links",
+                        {view:"button", type: 'htmlbutton', localId: "_links", hidden: true,
                             label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки</span>", width: 150,
                             on: {
                                 onItemClick: () => {
-                                    this.poplinks.showWindow("Линки");
+                                    //this.poplinks.showWindow("Линки");
                                     },
                                 },
                             },
@@ -173,12 +172,12 @@ export default class TopmenuView extends JetView{
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(() => {
-                                            let ui_1  = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3];
-                                            let ui = ui_1.getChildViews()[0];
+                                            let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[2].getChildViews()[0].getChildViews()[3];
+                                            let ui = uu.getChildViews()[0];
                                             if (ui) {
                                                 get_data_test({
                                                     view: ui,
-                                                    navBar: ui_1.getChildViews()[1],
+                                                    navBar: uu.getChildViews()[1],
                                                     start: 1,
                                                     count: ui.config.posPpage,
                                                     searchBar: ui.config.searchBar,
@@ -190,14 +189,13 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "button", type: 'htmlbutton', width: 35, disabled: true,
+                        {view: "button", type: 'htmlbutton', width: 35, disabled: true, hidden: true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
-                                let nm = this.getRoot().getParentView().getChildViews()[1].getChildViews()[0].config.name;
+                                let nm = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0].config.name;
                                 let hist = webix.storage.session.get(nm);
-                                setTimeout(() => {
-                                    this.pophistory.show(hist, $$("_tb").getChildViews()[0]) //$$("_spr_search"));
-                                }, 50);
+                                console.log($$("_spr_search"));
+                                this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
                         {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: !true, hidden: true,
@@ -219,8 +217,8 @@ export default class TopmenuView extends JetView{
                             click: () => {
                                 $$("_link").disable();
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc;
-                                let ui_1 = this.getRoot().getChildViews()[1].getChildViews()[1].getChildViews()[0].getChildViews()[3];
-                                let id_spr = ui_1.getChildViews()[0].getSelectedItem().id_spr
+                                let ui_1 = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0]; //datatable
+                                let id_spr = ui_1.getSelectedItem().id_spr
                                 let params = {};
                                 params["th"] = this;
                                 params["command"] = "?setLnk";
@@ -285,78 +283,45 @@ export default class TopmenuView extends JetView{
                 {$subview: SprView, name: "spr_dt"},
                 ]
             }
+
+        var tabbar = {
+            view: "tabbar",
+            animate: false,
+            //view: "tabview",
+            multiview: true,
+            on: {
+                onOptionRemove: (id) => {
+                    $$(id).destructor();
+                    }
+                },
+            options: [
+                { value: "<span style='line-height: 20px;'> Линкер</span>", id: 'app-nav', close: false, width: 140 }
+                ]
+            };
+
+        var tabmain = {
+            animate: false,
+            cells: [tab_1]
+            };
+
+
         
         return {
             rows: [
-                {//view: 'toolbar',
-                    height: 1,
-                    cols: [
-                        {fillspace: true},
-                        {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка",
-                            label: "<span class='webix_icon fa-blind'></span>", width: 30,  hidden: !app.config.roles[app.config.role].adm,
-                            on:
-                                {
-                                onItemClick: () => {
-                                    if (app.config.roles[app.config.role].adm) {
-                                        $$("adm_run").callEvent("onItemClick");
-                                    } else {
-                                        webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
-                                        }
-                                    }
-                                },
-                            },
-                        {view:"button", type: 'htmlbutton', tooltip: "Пропущенные",
-                            label: "<span class='webix_icon fa-archive'></span>", width: 30, disabled: true, hidden: !(app.config.roles[app.config.role].skipped),
-                            on: {
-                                onAfterRender: function () {
-                                    if (app.config.roles[app.config.role].skipped) this.enable();
-                                    },
-                                onItemClick: () => {
-                                    this.$$("_skips").callEvent("onItemClick")
-                                    },
-                                },
-                            },
-                        {view:"button", type: 'htmlbutton', tooltip: "Несвязанные",
-                            label: "<span class='webix_icon fa-unlink'></span>", width: 30,
-                            on: {
-                                onItemClick: () => {
-                                    this.$$("_unlnks").callEvent("onItemClick")
-                                    },
-                                },
-                            },
-                        {view:"button", type: 'htmlbutton', tooltip: "Связки",
-                            label: "<span class='webix_icon fa-stumbleupon'></span>", width: 30,
-                            on: {
-                                onItemClick: () => {
-                                    this.$$("_links").callEvent("onItemClick")
-                                    },
-                                },
-                            },
-                        ]
-                    },
-                {view: "tabview",
-                    id: "tabbs",
-                    //fillspace: true,
-                    multiview: true,
-                    cells: [
-                        {header: "<span style='line-height: 20px;'> Линкер</span>", width: 140, 
-                            body: tab_1
-                            },
-                        ],
-                    },
+                {height: 1},
+                tabbar,
+                tabmain
                 ]
             }
         }
+
     init() {
         (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
         (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
                                              get_suppl("_suppl", this, "?getSupplUnlnk");
         this.popconfirm = this.ui(ConfirmView);
         this.popnew = this.ui(NewformView);
-        this.poplinks = this.ui(LinksView);
         this.popunlink = this.ui(UnlinkedView);
-        this.popallunlink = this.ui(AllUnlinkedView);
-        this.popskipped = this.ui(SkippedView);
         this.pophistory = this.ui(History);
         }
     }
