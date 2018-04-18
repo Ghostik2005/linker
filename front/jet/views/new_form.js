@@ -181,8 +181,11 @@ export default class NewformView extends JetView{
                                 {view: "form", css: "borders",
                                     localId: "new_f_right",
                                     elements: [
-                                        {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
-                                        {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                        {height: 5},
+                                        {cols: [
+                                            {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
+                                            {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                            ]},
                                         {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
                                             options:  {
                                                 filter: sez_filter,
@@ -290,7 +293,7 @@ export default class NewformView extends JetView{
                                         params["id_group"] = right_f.id_group;
                                         params["id_nds"] = right_f.id_nds;
                                         //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
-                                        if (prcs.getItem(prcs.getCursor())) params["sh_prc"] = prcs.getItem(prcs.getCursor()).sh_prc | undefined;
+                                        if ($$("prcs_dc").getItem($$("prcs_dc").getCursor()).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem($$("prcs_dc").getCursor()).sh_prc || undefined;
                                         else params["sh_prc"] = undefined;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;

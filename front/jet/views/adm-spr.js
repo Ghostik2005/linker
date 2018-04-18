@@ -307,6 +307,11 @@ export default class SprView extends JetView{
 
         return dt
         }
+
+    ready() {
+        $$("_spr_search_adm").callEvent("onKeyPress", [13,]);
+        }
+    
     init() {
         this.popnew = this.ui(NewformView);
         this.pophistory = this.ui(History);

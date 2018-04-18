@@ -9,18 +9,25 @@ import {parse_unlinked_item, get_data_test} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import {prcs, delPrc, checkKey} from "../views/globals";
 import SprView from "../views/spr_dt";
+import SkippedBarView from "../views/skipped_bar";
+import AllUnlinkedBarView from  "../views/unlinkedall_bar";
+import LinksBarView from "../views/links_form_bar";
+import AdmBarView from "../views/adm-bar";
+import SideFormView from "../views/side_form";
+
 
 export default class TopmenuView extends JetView{
     config(){
         let app = this.app;
-
+        //console.log('user', app.config.user);
         let tab_1 = {view: "layout",
             id: 'app-nav',
             rows: [
                 {view: 'toolbar',
+                    css: {"border-top": "0px !important"},
                     height: 40,
                     cols: [
-                        {view: "combo", name: "suppliers", id: "_suppl", manual: false,
+                        {view: "combo", name: "suppliers", id: "_suppl", manual: false, state: false,
                             readonly: !true, disabled: !true, width: 300,
                             options: {
                                 filter: filter_1,
@@ -46,16 +53,17 @@ export default class TopmenuView extends JetView{
                                                 get_prcs_source(this, id_vnd);
                                                 };
                                         } else {
-                                            let vv = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
+                                            //let vv = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
+                                            let vv = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
                                             vv[0].clearAll() //clear datatable
-                                            this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
+                                            this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
                                             let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
                                             if ($$("_add")) $$("_add").hide();
                                             $$("_left").hide();
                                             $$("_skip").hide();
                                             $$("_right").hide();
                                             $$('_link').hide();
-                                            this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1].parse(n_item); //_names_bar
+                                            this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[1].parse(n_item); //_names_bar
                                             $$("_spr_search").setValue(''); //search bar
                                             let pager = vv[1]; //pager
                                             pager.getChildViews()[6].define('label', "Всего записей: 0");
@@ -172,7 +180,7 @@ export default class TopmenuView extends JetView{
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(() => {
-                                            let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[2].getChildViews()[0].getChildViews()[3];
+                                            let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];
                                             let ui = uu.getChildViews()[0];
                                             if (ui) {
                                                 get_data_test({
@@ -192,7 +200,7 @@ export default class TopmenuView extends JetView{
                         {view: "button", type: 'htmlbutton', width: 35, disabled: true, hidden: true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
-                                let nm = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0].config.name;
+                                let nm = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0].config.name;
                                 let hist = webix.storage.session.get(nm);
                                 console.log($$("_spr_search"));
                                 this.pophistory.show(hist, $$("_spr_search"));
@@ -217,7 +225,7 @@ export default class TopmenuView extends JetView{
                             click: () => {
                                 $$("_link").disable();
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc;
-                                let ui_1 = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0]; //datatable
+                                let ui_1 = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0]; //datatable
                                 let id_spr = ui_1.getSelectedItem().id_spr
                                 let params = {};
                                 params["th"] = this;
@@ -277,7 +285,28 @@ export default class TopmenuView extends JetView{
                                 $$("prcs_dc").setCursor(cursor);
                                 parse_unlinked_item(this);
                                 }
-                            }
+                            },
+                        {view:"button", type: 'htmlbutton', hidden: !true,
+                            label: "<span class='webix_icon fa-caret-left'></span>", width: 40, formOpen: false,
+                            hidden: !(app.config.user==='Краснов' || app.config.user==='Беляев'),
+                            //label: "<span class='webix_icon fa-bars'></span>", width: 40, formOpen: false,
+                            on: {
+                                onItemClick: function () {
+                                    let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];
+                                    let ui = uu.getChildViews()[0];
+                                    if (!this.config.formOpen) {
+                                        if (ui.getSelectedItem()) {
+                                            this.define({label: "<span class='webix_icon fa-caret-right'></span>", formOpen: true});
+                                            this.$scope.sideForm.show_f();
+                                            }
+                                    } else {
+                                        this.define({label: "<span class='webix_icon fa-caret-left'></span>", formOpen: false});
+                                        this.$scope.sideForm.hide_f();
+                                        }
+                                    this.refresh();
+                                    }
+                                },
+                            },
                         ]
                     },
                 {$subview: SprView, name: "spr_dt"},
@@ -304,14 +333,110 @@ export default class TopmenuView extends JetView{
             cells: [tab_1]
             };
 
+        var side_bar = {view: 'toolbar',
+            css: 'header',
+            width: 45,
+            rows: [
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40,
+                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>", width: 40, localId: "_adm", hidden: !app.config.roles[app.config.role].adm,
+                    on:
+                        {
+                        onItemClick: () => {
+                            let ui = $$("adm_bar");
+                            if (ui) {
+                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('adm_bar');
+                            } else {
+                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                                var form = this.ui(AdmBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Админка</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            },
+                        }
+                    },
+                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40,
+                    label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>", width: 40, disabled: !(app.config.roles[app.config.role].skipped),
+                    hidden: !(app.config.roles[app.config.role].skipped), 
+                    on: {
+                        onItemClick: () => {
+                            let ui = $$("sk_bar");
+                            if (ui) {
+                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('sk_bar');
+                            } else {
+                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                                var form = this.ui(SkippedBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Пропущенные</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            },
+                        },
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40,
+                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40,
+                    on: {
+                        onItemClick: () => {
+                            let ui = $$("unlnk_bar");
+                            if (ui) {
+                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('unlnk_bar');
+                            } else {
+                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                                var form = this.ui(AllUnlinkedBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Несвязанные</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            },
+                        },
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40,
+                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40,
+                    on: {
+                        onItemClick: () => {
+                            let ui = $$("links_bar");
+                            if (ui) {
+                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('links_bar');
+                            } else {
+                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                                var form = this.ui(LinksBarView);
+                                var formRoot = form.getRoot();
+                                var tabConfig = {
+                                    id: formRoot.config.id,
+                                    value: "<span style='line-height: 20px;'>Связки</span>", width: 170, close: true
+                                    };
+                                vv.getChildViews()[2].addView(formRoot);
+                                vv.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            },
+                        },
+                    },
+                {}
+                ]
+            };
 
         
         return {
-            rows: [
-                {height: 1},
-                tabbar,
-                tabmain
-                ]
+            cols: [
+                side_bar,
+                {rows: [
+                    {height: 1},
+                    tabbar,
+                    tabmain
+                    ]
+                }]
             }
         }
 
@@ -319,6 +444,7 @@ export default class TopmenuView extends JetView{
         (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
         (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
                                              get_suppl("_suppl", this, "?getSupplUnlnk");
+        this.sideForm = this.ui(SideFormView);
         this.popconfirm = this.ui(ConfirmView);
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkedView);

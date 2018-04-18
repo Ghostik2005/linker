@@ -110,8 +110,12 @@ export default class AllUnlinkedBarView extends JetView{
                     let item = this.$$("__table").getSelectedItem();
                     if (+$$("_link_by").getValue() === 1) {
                         if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
+                            $$("_suppl").config.state = true;
                             parseToLink(item);
-                            this.getRoot().hide();
+                            setTimeout(()=> {
+                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('app-nav');
+                                }, 300);
+                            //this.getRoot().hide();
                         } else {
                             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
                             }

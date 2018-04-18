@@ -5,6 +5,7 @@
 .header {
   background-color: transparent !important;
   border-bottom: 1px solid #ffffff;
+  border-top: 0px;
   margin-top: 0 !important;
   color: #404040 !important;
 }

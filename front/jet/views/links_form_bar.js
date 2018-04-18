@@ -12,7 +12,6 @@ export default class LinksBarView extends JetView{
     config(){
         
         var getActDt = () => {
-            //console.log(this.getRoot().getChildViews());
             return this.getRoot().getChildViews()[2].getChildViews()[0];
             }
 
@@ -130,6 +129,7 @@ export default class LinksBarView extends JetView{
             }
         this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
         this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
+        $$("_link_search").callEvent("onKeyPress", [13,]);
         }
 
     init() {

@@ -1,11 +1,61 @@
 "use strict";
 
+/*
+сниппет
+webix.ui({ 
+  view:"datatable",
+  subview:{
+    borderless:true,
+    view:"form",
+    elements:[
+      { view:"text", name:"title", label:"Title"},
+      { view:"text", name:"year", label:"Year"},
+      { cols:[
+        { }, { view:"button", value:"Save", click:function(){
+          var form = this.getFormView();
+          var values = form.getValues();
+          var changed = form.getDirtyValues();
+          var master = form.getMasterView();
+          
+          master.updateItem(values.id, changed);
+          master.closeSub(values.id)
+        }}
+      ]}
+    ]
+  },
+  on:{
+    onItemDblClick: function(id) {
+        this.openSub(id);
+        },
+    onSubViewCreate:function(view, item){
+      view.setValues(item);
+    }
+  },
+  columns:[
+    { id:"title",   header:"Title", sort:"string",
+     template:"{common.subrow()} #title#", fillspace:true },
+    { id:"year",    header:"Year",      width:100, sort:"int"},
+    { id:"votes",   header:"Votes",     width:100,  sort:"int"}
+  ],
+  autoheight:true,
+  data:[
+    { id:1, title:"The Shawshank Redemption", year:1994, votes:678790 },
+    { id:2, title:"The Godfather", year:1972, votes:511495 },
+    { id:3, title:"The Godfather: Part II", year:1974, votes:319352 }
+  ]
+});
+
+
+*/
+
+
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import {get_data} from "../views/globals";
 import {last_page, getDtParams} from "../views/globals";
 import PagerView from "../views/pager_view";
+import SideFormView from "../views/side_form";
 
 export default class SprView extends JetView{
     config(){
@@ -34,8 +84,12 @@ export default class SprView extends JetView{
             return ret
             }
 
+        var fform = {
+            template: "возмажно здесь будет карточка товара для редактирования", height: 40
+            };
 
         var sprv = {view: "datatable",
+            subview: fform,
             name: "__dt",
             localId: "__table",
             navigation: "row",
@@ -71,6 +125,7 @@ export default class SprView extends JetView{
                     headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
+                    template:"{common.subrow()} #c_tovar#",
                     header: [{text: "Название"},
                         //{content:"textFilter"}
                         ],
@@ -153,14 +208,10 @@ export default class SprView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    //console.log('item');
-                    $$("_link").show();
-                    $$("_link").enable();
-                    //$$("_link").define('width', 200)
-                    //$$("_link").resize();
-                    //$$("_tb").refresh();
-                    //if (app.config.roles[app.config.role].spradd) $$("_add").show();
-                    //.enable();
+                    if ($$("prcs_dc").count() > 0) {
+                        $$("_link").show();
+                        $$("_link").enable();
+                        }
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {

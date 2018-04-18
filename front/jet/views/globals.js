@@ -50,8 +50,13 @@ export var prcs = new webix.DataCollection({
                 let cur_pos = this.data.order[0]
                 this.setCursor(cur_pos);
                 let th = $$("main_ui");
-                parse_unlinked_item(th);
-                }
+                let state = $$("_suppl").config.state;
+                if (state) {
+                    $$("_suppl").config.state = false;
+                } else {
+                    parse_unlinked_item(th);
+                    };
+                },
             }
         });
 
@@ -359,11 +364,20 @@ export function parseToLink(item){
     if (cid) {
         suppl_dt.getItem(cid).count += 1;
         $$("_suppl").setValue(cid);
-        setTimeout(function() {
-            prcs.add(item, 0);
-            prcs.setCursor(cid);
-            parse_unlinked_item(this, item);
-            }, 200);
+        setTimeout(function(){
+            let ii = prcs.getItem(item.id);
+            if (!ii) {
+                prcs.add(item, 0);
+                let iid = prcs.data.order[0];
+                prcs.setCursor(iid);
+                //prcs.setCursor(cid);
+                //prcs.setCursor(item.id);
+                parse_unlinked_item(this, item);
+            } else {
+                prcs.setCursor(item.id);
+                parse_unlinked_item(this, item);
+                }
+            }, 400);
     } else {
         let min = 1000000000000;
         let max = 2000000000000;
@@ -372,13 +386,13 @@ export function parseToLink(item){
         $$("_suppl").config.manual = true;
         suppl_dt.add(p_item);
         $$("_suppl").setValue(rand);
-        setTimeout(function() {
+        setTimeout(function(){
             prcs.clearAll();
             prcs.add(item, 0);
             let iid = prcs.data.order[0];
             prcs.setCursor(iid);
             parse_unlinked_item(this, item);
-            }, 200);
+        }, 400);
         };
     }
 
@@ -420,6 +434,7 @@ export function get_data_test(inp_params) {
     let url = app.config.r_url + "?" + inp_params.method;
     let params = {"user": user, "search": search_str, "start": inp_params.start, "count": inp_params.count,
                   "field": field, "direction": direction, "c_filter": c_filter, "cbars": inp_params.cbars};
+    if (search_str === "") search_str="%%";
     let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
     let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
     if (sl > 1 && rl > 1) {
@@ -450,8 +465,6 @@ export function get_data_test(inp_params) {
                 pa1[2].refresh();
                 nav.$scope.$$("__page").setValue(c_page);
                 nav.$scope.$$("__page").refresh();
-
-
                 let hist = webix.storage.session.get(view.config.name);
                 if (hist) {
                     hist.push(search_str)
@@ -470,7 +483,8 @@ export function get_data_test(inp_params) {
     }
 
 export function parse_unlinked_item(th, c_item) {
-    c_item = (c_item) ? c_item : $$("prcs_dc").getItem($$("prcs_dc").getCursor());
+    //c_item = (c_item) ? c_item : $$("prcs_dc").getItem($$("prcs_dc").getCursor());
+    c_item = c_item || $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
@@ -479,7 +493,6 @@ export function parse_unlinked_item(th, c_item) {
     n_item['_count'] = count;
     n_item['_vendor'] = c_item.c_zavod;
     n_item['p_name'] = c_item.c_tovar;
-
     let app_c = $$("main_ui").$scope.app.config;
     if (app_c.roles[app_c.role].spradd) $$("_add").show();
     $$("_left").show();
@@ -495,21 +508,20 @@ export function parse_unlinked_item(th, c_item) {
         for (var n=0; n < tmp.length; n++ ){
             let ttt = parseInt(tmp[n], 10);
             let q = !isNaN(tmp[n]);
-            if( q ){
-                s_stri += ' ' + tmp[n];
-                }
+            if (q) s_stri += ' ' + tmp[n];
             }
         }
     s_stri = s_stri.replace('"', " ");
     s_stri = s_stri.replace('!', " ");
     s_stri = s_stri.replace("-", " ");
     s_stri = s_stri.replace(".", " ");
+    s_stri = s_stri.replace(",", " ");
     s_stri = s_stri.replace("*", " ");
     s_stri = s_stri.replace("+", " ");
     s_stri = s_stri.replace("/", " ");
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
-    let vv = $$("__body").getChildViews()[0].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews(); //datatable form
+    let vv = $$('app-nav').getChildViews()[3].getChildViews(); //datatable form
     count = vv[0].config.posPpage //datatable
     get_data_test({
         view: vv[0],
