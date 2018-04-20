@@ -2,6 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal} from "../views/globals";
+import uplMenuView from "../views/v_upl.js";
 
 export default class LinkFilesView extends JetView{
     config(){
@@ -15,7 +16,7 @@ export default class LinkFilesView extends JetView{
                     keyPressTimeout: 900, tooltip: "Поиск",
                     on: {
                         onKeyPress: function(code, event) {
-                            return
+                            return /////////////////////////////////
                             clearTimeout(this.config._keytimed);
                             if (checkKey(code)) {
                                 this.config._keytimed = setTimeout( () => {
@@ -36,26 +37,27 @@ export default class LinkFilesView extends JetView{
                             }
                         },
                     click: () => {
-                        webix.message({"text": "Добавление файла", "type": "debug", width: "400px", delay: "5"});
+                        this.pop_upl.show_window("Загрузка файла");
+                        //webix.message({"text": "Добавление файла", "type": "debug", width: "400px", delay: "5"});
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "del",
-                    label: "<span class='webix_icon fa-minus'></span><span style='line-height: 20px;'> файл</span>", width: 130,
-                    click: () => {
-                        webix.message({"text": "Удаление файла", "type": "debug", width: "400px", delay: "5"});
-                        }
-                    },
-                {view:"button", type: 'htmlbutton', disabled: true,
-                    label: "<span class='webix_icon fa-play'></span><span style='line-height: 20px;'> Обработать</span>", width: 130,
-                    on: {
-                        onAfterRender: function () {
-                            if (app.config.roles[app.config.role].useradd) this.enable();
-                            }
-                        },
-                    click: () => {
-                        webix.message({"text": "Сведение", "type": "debug", width: "400px", delay: "5"});
-                        }
-                    },
+                //{view:"button", type: 'htmlbutton', disabled: true, localId: "del",
+                    //label: "<span class='webix_icon fa-minus'></span><span style='line-height: 20px;'> файл</span>", width: 130,
+                    //click: () => {
+                        //webix.message({"text": "Удаление файла", "type": "debug", width: "400px", delay: "5"});
+                        //}
+                    //},
+                //{view:"button", type: 'htmlbutton', disabled: true,
+                    //label: "<span class='webix_icon fa-play'></span><span style='line-height: 20px;'> Обработать</span>", width: 130,
+                    //on: {
+                        //onAfterRender: function () {
+                            //if (app.config.roles[app.config.role].useradd) this.enable();
+                            //}
+                        //},
+                    //click: () => {
+                        //webix.message({"text": "Сведение", "type": "debug", width: "400px", delay: "5"});
+                        //}
+                    //},
                 ]
             }
 
@@ -73,19 +75,24 @@ export default class LinkFilesView extends JetView{
                 //},
             editable: false,
             columns: [
-                {id: "process", 
-                    width: 150,
-                    header: [{text: "Обрабатывать"},
-                        {content: "masterCheckbox", css: "center_p"},
-                        ],
-                    template:"<span class='center_p'>{common.checkbox()</span>}",
+                {id: "uin", width: 170,
+                    header: [{text: "Идентификатор задания"},
+                        ]
                     },
-                {id: "name", fillspace: true,
-                    header: [{text: "Имя файла"},
+                {id: "vendor", fillspace: 1,
+                    header: [{text: "Поставщик"},
+                        ]
+                    },
+                {id: "customer", fillspace: 1,
+                    header: [{text: "Клиент"},
+                        ]
+                    },
+                {id: "count", width: 130,
+                    header: [{text: "Осталось позиций"},
                         ]
                     },
                 { id: "dt", 
-                    width: 250,
+                    width: 200,
                     header: [{text: "Время добавления"},
                         ]
                     },
@@ -98,7 +105,7 @@ export default class LinkFilesView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onAfterSelect: () => {
-                    this.$$("del").enable();
+                    //this.$$("del").enable();
                     },
                 },
             }
@@ -113,6 +120,6 @@ export default class LinkFilesView extends JetView{
         }
         
     init() {
-
+        this.pop_upl = this.ui(uplMenuView);
         }
     }

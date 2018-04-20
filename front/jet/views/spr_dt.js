@@ -85,7 +85,7 @@ export default class SprView extends JetView{
             }
 
         var fform = {
-            template: "возмажно здесь будет карточка товара для редактирования", height: 40
+            template: "возможно здесь будет карточка товара для редактирования", height: 40
             };
 
         var sprv = {view: "datatable",

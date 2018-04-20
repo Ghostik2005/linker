@@ -20,7 +20,6 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 """
 
-
 """
 
 
@@ -3506,7 +3505,7 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
 
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
@@ -3517,16 +3516,16 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
          }
          
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
          }
 
         if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
@@ -3986,6 +3985,13 @@ CREATE TABLE LNK_EXCLUDES
 GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
  ON LNK_EXCLUDES TO  SYSDBA WITH GRANT OPTION;
 
+commit;
+
+ALTER TABLE PRC ADD UIN Varchar(255);
+commit;
+ALTER TABLE A_TEMP_PRC ADD UIN Varchar(255);
+commit;
+CREATE INDEX IDX_PRC1 ON PRC (UIN);
 commit;
 
 """

@@ -139,6 +139,7 @@ export default class AllUnlinkedBarView extends JetView{
         var _view = {
             id: "unlnk_bar",
             view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
                 {$subview: PagerView},

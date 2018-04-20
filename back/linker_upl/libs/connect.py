@@ -17,7 +17,7 @@ class fb_local:
     def __init__(self, log):
         try:
             config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker/conf1.ini', encoding='UTF-8')
+            config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
             init = config['init']
             self.prod_params = {
                     'uri': init['uri'],
@@ -233,7 +233,9 @@ if "__main__" == __name__:
     fb = fb_local('l')
     opt = ()
     sql = """SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE FROM PRC r where r.SH_PRC = 'f4821862885c29533d538b90720b4a33'"""
-    sqls = []
+    sqls = [
+"""UPDATE PRC SET SOURCE = 0 WHERE SOURCE is NULL"""
+    ]
 
     for ss in sqls:
         fb.execute({"sql": ss, "options": opt})

@@ -69,10 +69,10 @@ export default class LinksBarView extends JetView{
                                 console.log('id', hh[i].id);
                                 if (value===0) {
                                     this.app.config.lch = 0;
-                                    hh[i].value = "<span style='line-height: 20px;'>Связки</span>";
+                                    hh[i].value = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
                                 } else if (value===1) {
                                     this.app.config.lch = 1;
-                                    hh[i].value = "<span style='line-height: 20px;'>Связки:Эталоны</span>"
+                                    hh[i].value = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 16px; font-size: 80%'>Связки:Эталоны</span>"
                                     }
                                 }
                             };
@@ -112,6 +112,7 @@ export default class LinksBarView extends JetView{
         var _view = {
             id: "links_bar",
             view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
                 {height: 10},
@@ -124,7 +125,8 @@ export default class LinksBarView extends JetView{
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
         for(var i = 0; i < hh.length; i++) {
             if ('links_bar' === hh[i].id){
-                hh[i].value = (this.app.config.lch===1) ? "<span style='line-height: 20px;'>Связки:Эталоны</span>" : "<span style='line-height: 20px;'>Связки</span>";
+                hh[i].value = (this.app.config.lch===1) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px; font-size: 80%'>Связки:Эталоны</span>"
+                                                        : "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
                 }
             }
         this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();

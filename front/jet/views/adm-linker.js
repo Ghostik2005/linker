@@ -29,7 +29,7 @@ export default class LinkerView extends JetView{
                             ]
                         }
                     },
-                {header: "<span class='webix_icon fa-file'></span><span style='line-height: 20px;'> Файлы на сведении</span>", width: 240, //close: true,
+                {header: "<span class='webix_icon fa-file'></span><span style='line-height: 20px;'> Задания на сведении</span>", width: 240, //close: true,
                     body: { view: "layout",
                         rows: [
                             {$subview: LinkFilesView},
@@ -41,6 +41,7 @@ export default class LinkerView extends JetView{
 
         return {
             view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 {height: 3},
                 tabv,

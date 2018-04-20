@@ -15,6 +15,7 @@ import LinksBarView from "../views/links_form_bar";
 import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
 
+import {request} from "../views/globals";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -335,9 +336,35 @@ export default class TopmenuView extends JetView{
 
         var side_bar = {view: 'toolbar',
             css: 'header',
-            width: 45,
+            width: 44,
             rows: [
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40,
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, wide: false,
+                    label: "<span class='webix_icon fa-arrow-from-left', style='color: #3498db'></span>", width: 40, maxWidth: 40,
+                    on:
+                        {
+                        onItemClick: function() {
+                            //let params = {"user": app.config.user};
+                            //request("http://saas.local/linker_upl?process", params).then(function(data) {
+                                //console.log(data);
+                                //})
+                            if (this.config.wide) {
+                                this.define({label: "<span class='webix_icon fa-arrow-from-right', style='color: #3498db'></span>", wide: false});
+                            } else {
+                                this.define({label: "<span class='webix_icon fa-arrow-from-left', style='color: #3498db'></span>", wide: true});
+                                };
+                            this.refresh();
+                            },
+                        }
+                    },
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40,
+                    label: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>", width: 40,  maxWidth: 40,
+                    on:
+                        {
+                        onItemClick: function() {
+                            },
+                        }
+                    },
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40,
                     label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>", width: 40, localId: "_adm", hidden: !app.config.roles[app.config.role].adm,
                     on:
                         {
@@ -351,7 +378,7 @@ export default class TopmenuView extends JetView{
                                 var formRoot = form.getRoot();
                                 var tabConfig = {
                                     id: formRoot.config.id,
-                                    value: "<span style='line-height: 20px;'>Админка</span>", width: 170, close: true
+                                    value: "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>", width: 170, close: true
                                     };
                                 vv.getChildViews()[2].addView(formRoot);
                                 vv.getChildViews()[1].addOption(tabConfig, true);
@@ -359,7 +386,7 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
-                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40,
+                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, maxWidth: 40,
                     label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>", width: 40, disabled: !(app.config.roles[app.config.role].skipped),
                     hidden: !(app.config.roles[app.config.role].skipped), 
                     on: {
@@ -373,7 +400,7 @@ export default class TopmenuView extends JetView{
                                 var formRoot = form.getRoot();
                                 var tabConfig = {
                                     id: formRoot.config.id,
-                                    value: "<span style='line-height: 20px;'>Пропущенные</span>", width: 170, close: true
+                                    value: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>", width: 170, close: true
                                     };
                                 vv.getChildViews()[2].addView(formRoot);
                                 vv.getChildViews()[1].addOption(tabConfig, true);
@@ -382,7 +409,7 @@ export default class TopmenuView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40,
-                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40,
+                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40, maxWidth: 40,
                     on: {
                         onItemClick: () => {
                             let ui = $$("unlnk_bar");
@@ -394,7 +421,7 @@ export default class TopmenuView extends JetView{
                                 var formRoot = form.getRoot();
                                 var tabConfig = {
                                     id: formRoot.config.id,
-                                    value: "<span style='line-height: 20px;'>Несвязанные</span>", width: 170, close: true
+                                    value: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>", width: 170, close: true
                                     };
                                 vv.getChildViews()[2].addView(formRoot);
                                 vv.getChildViews()[1].addOption(tabConfig, true);
@@ -403,7 +430,7 @@ export default class TopmenuView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40,
-                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40,
+                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40, maxWidth: 40,
                     on: {
                         onItemClick: () => {
                             let ui = $$("links_bar");
@@ -415,7 +442,7 @@ export default class TopmenuView extends JetView{
                                 var formRoot = form.getRoot();
                                 var tabConfig = {
                                     id: formRoot.config.id,
-                                    value: "<span style='line-height: 20px;'>Связки</span>", width: 170, close: true
+                                    value: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>", width: 170, close: true
                                     };
                                 vv.getChildViews()[2].addView(formRoot);
                                 vv.getChildViews()[1].addOption(tabConfig, true);
@@ -431,6 +458,7 @@ export default class TopmenuView extends JetView{
         return {
             cols: [
                 side_bar,
+                //{view: "resizer", //height: 500, width: 2, borderless: true},
                 {rows: [
                     {height: 1},
                     tabbar,

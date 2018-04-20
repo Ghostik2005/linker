@@ -136,6 +136,7 @@ export default class SkippedBarView extends JetView{
         var _view = {
             id: "sk_bar",
             view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
                 {$subview: PagerView},
