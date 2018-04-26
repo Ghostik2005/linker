@@ -13,9 +13,9 @@ export default class SprView extends JetView{
         let app = this.app;
         
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
             }
             
         webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
@@ -92,7 +92,7 @@ export default class SprView extends JetView{
             totalPos: 1250,
             fi: 'c_tovar',
             di: 'asc',
-            searchBar: "_spr_search_adm",
+            searchBar: undefined,
             searchMethod: "getSprSearchAdm",
             old_stri: "",
             css: 'dt_css',
@@ -189,7 +189,6 @@ export default class SprView extends JetView{
                     css: 'center_p',
                     header: [{text: "Дата изменения"}, 
                     {content: "dateRangeFilter", compare: compareTrue,
-                        readonly: !true, disabled: !true,
                         inputConfig:{format:dt_formating, width: 180,},
                         suggest:{
                             view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
@@ -200,7 +199,7 @@ export default class SprView extends JetView{
             on: {
                 "data->onParse":function(i, data){
                     this.clearAll();
-                    this.$scope.$$("_del").disable();
+                    this.$scope.$$("_del").hide();
                     },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
@@ -218,13 +217,13 @@ export default class SprView extends JetView{
                     item["t_name"] = "Название товара: " + item.c_tovar;
                     item["v_name"] = "Производитель: " + item.c_zavod;
                     item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search_adm"), item);
+                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, this.$scope.$$("_sb"), item);
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").enable();
+                    this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -237,7 +236,7 @@ export default class SprView extends JetView{
         var top = {
             height: 40,
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", id: "_spr_search_adm",
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", localId: "_sb", //id: "_spr_search_adm",
                     tooltip: "поиск от двух символов, !слово - исключить из поиска",
                     on: {
                         onKeyPress: function(code, event) {
@@ -254,13 +253,16 @@ export default class SprView extends JetView{
                     label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                     click: () => {
                         let hist = webix.storage.session.get(this.$$("__table").config.name);
-                        this.pophistory.show(hist, $$("_spr_search_adm"));
+                        this.pophistory.show(hist, this.$$("_sb"));
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: !true,
-                    label: "<span style='line-height: 20px;'>Сбросить фильтры</span>", width: 160,
+                {view:"button", //type: 'htmlbutton',
+                    tooltip: "Сбросить фильтры",
+                    type:"imageButton", image: './addons/img/unfilter.svg',
+                    //label: "<span style='line-height: 20px;'>Сбросить фильтры</span>",
+                    width: 40,
                     click: () => {
-                        let cv = this.$$("__table")
+                        let cv = this.$$("__table");
                         let columns = cv.config.columns;
                         columns.forEach(function(item){
                             if (cv.isColumnVisible(item.id)) {
@@ -273,23 +275,25 @@ export default class SprView extends JetView{
                                     }
                                 }
                             });
-                        $$("_spr_search_adm").callEvent("onKeyPress", [13,]);
+                        this.$$("_sb").callEvent("onKeyPress", [13,]);
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: !true, 
-                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                {view:"button", type: 'htmlbutton', tooltip: "Добавить эталон",
+                    label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
-                        this.popnew.show("Новый эталон", $$("_spr_search_adm"));
+                        this.popnew.show("Новый эталон", this.$$("_sb"));
 
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить эталон",
+                    label: "<span style='color: red', class='webix_icon fa-times'>", width: 40,
                     click: () => {
                         webix.message({
                             text: "Удаление из SPR. Пока недоступно.",
                             type: "error",
                             })
+                        this.$$("__table").unselectAll();
+                        this.$$("_del").hide();
                         }
                     },
                 ]
@@ -309,7 +313,8 @@ export default class SprView extends JetView{
         }
 
     ready() {
-        $$("_spr_search_adm").callEvent("onKeyPress", [13,]);
+        this.$$("__table").config.searchBar = this.$$("_sb")
+        this.$$("_sb").callEvent("onKeyPress", [13,]);
         }
     
     init() {
@@ -320,9 +325,10 @@ export default class SprView extends JetView{
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let old_v = th.$$("__page").getValue();
-                th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                th.$$("__page").refresh();
+                let thh = th.getRoot().getChildViews()[2].$scope;
+                let old_v = thh.$$("__page").getValue();
+                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                thh.$$("__page").refresh();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })

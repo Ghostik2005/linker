@@ -28,41 +28,26 @@ export default class LinkExclView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, 
+                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd, 
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> исключение</span>", width: 130,
-                    on: {
-                        onAfterRender: function () {
-                            if (app.config.roles[app.config.role].useradd) this.enable();
-                            }
-                        },
                     click: () => {
                         webix.message({"text": "Добавление исключения", "type": "debug", width: "400px", delay: "5"});
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "del",
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "del",
                     label: "<span class='webix_icon fa-minus'></span><span style='line-height: 20px;'> исключение</span>", width: 130,
                     click: () => {
                         webix.message({"text": "Удаление исключения", "type": "debug", width: "400px", delay: "5"});
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true,
+                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd,
                     label: "<span class='webix_icon fa-check'></span><span style='line-height: 20px;'> Применить</span>", width: 130,
-                    on: {
-                        onAfterRender: function () {
-                            if (app.config.roles[app.config.role].useradd) this.enable();
-                            }
-                        },
                     click: () => {
                         webix.message({"text": "Применение изменений", "type": "debug", width: "400px", delay: "5"});
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true,
+                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd,
                     label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 130,
-                    on: {
-                        onAfterRender: function () {
-                            if (app.config.roles[app.config.role].useradd) this.enable();
-                            }
-                        },
                     click: () => {
                         webix.message({"text": "Отменение изменений", "type": "debug", width: "400px", delay: "5"});
                         }
@@ -118,7 +103,7 @@ export default class LinkExclView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onAfterSelect: () => {
-                    this.$$("del").enable();
+                    this.$$("del").show();
                     },
                 },
             }

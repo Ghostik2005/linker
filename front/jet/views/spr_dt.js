@@ -60,10 +60,11 @@ import SideFormView from "../views/side_form";
 export default class SprView extends JetView{
     config(){
         var app = this.app;
+        
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
 
         function mnn_func(obj) {
@@ -125,7 +126,7 @@ export default class SprView extends JetView{
                     headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
-                    template:"{common.subrow()} #c_tovar#",
+                    //template:"{common.subrow()} #c_tovar#",
                     header: [{text: "Название"},
                         //{content:"textFilter"}
                         ],
@@ -181,10 +182,6 @@ export default class SprView extends JetView{
                 "data->onParse":function(i, data){
                     this.clearAll();
                     $$("_link").hide();
-                    $$("_link").disable();
-                    //$$("_link").define('width', 1)
-                    //$$("_link").resize();
-                    //$$("_tb").refresh();
                     },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
@@ -195,22 +192,35 @@ export default class SprView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onItemDblClick: function(item) {
-                    item = this.getSelectedItem();
-                    item = item.id_spr;
-                    item = get_spr(this.$scope, item);
-                    item["s_name"] = "Страна: " + item.c_strana;
-                    item["t_name"] = "Название товара: " + item.c_tovar;
-                    item["v_name"] = "Производитель: " + item.c_zavod;
-                    item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                    this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                    let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
+                    if (!side_but.config.formOpen) {
+                        item = this.getSelectedItem();
+                        item = item.id_spr;
+                        item = get_spr(this.$scope, item);
+                        item["s_name"] = "Страна: " + item.c_strana;
+                        item["t_name"] = "Название товара: " + item.c_tovar;
+                        item["v_name"] = "Производитель: " + item.c_zavod;
+                        item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                        this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                    }
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-                onBeforeSelect: () => {
+                onAfterSelect: function() {
+                    let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
+                    if (side_but.config.formOpen) {
+                        let item = this.$scope.$$("__table").getSelectedItem();
+                        item = item.id_spr;
+                        item = get_spr(this.$scope, item);
+                        item["s_name"] = "Страна: " + item.c_strana;
+                        item["t_name"] = "Название товара: " + item.c_tovar;
+                        item["v_name"] = "Производитель: " + item.c_zavod;
+                        item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                        this.$scope.getParentView().sideForm.parse_f("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                        }
                     if ($$("prcs_dc").count() > 0) {
                         $$("_link").show();
-                        $$("_link").enable();
                         }
                     },
                 onKeyPress: function(code, e){

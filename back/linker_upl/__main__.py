@@ -127,6 +127,7 @@ def prepare_server(Lock=None, api = None):
     sys.APPCONF["log"](f'\t\t\textrnal  ip-> {sys.extip}')
 
     threads.append(threading.Thread(target=libs.guardian, args=(api,), daemon=True))
+    threads.append(threading.Thread(target=libs.monitor, args=(api,), daemon=True))
 
     for th in threads:
         th.start()

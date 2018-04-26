@@ -1,4 +1,5 @@
 import "./styles/styles.css";
+import "./styles/animate.css";
 //import "./libs/webix/webix.js";
 //import "./libs/webix/skin.js";
 import {JetApp, JetView} from "webix-jet";
@@ -47,9 +48,9 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.109.0820",
+        version:        "18.116.1745",
         start:          "/login",
-        admin:          "34",
+        //admin:          "34",
         user:           "",
         role:           "0",
         r_url:          (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic",
@@ -59,8 +60,10 @@ webix.ready( () => {
         x_api:          "x_login",
         debug:          true,
         searchDelay:    1000,
+        popDelay:       1000,
         lch:            0,
-        roles:          {}
+        roles:          {},
+        expert:         true
     });
     
     webix.attachEvent("onBeforeAjax", 

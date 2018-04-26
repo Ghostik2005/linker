@@ -7,7 +7,6 @@ import {get_refs} from "../views/globals";
 export default class AdmBarView extends JetView{
     config(){
         return {view: "layout",
-            id: "adm_bar",
             css: 'margin-zero',
             rows:[
                 {$subview: AdmTopMenuView, name: "top_menu"},

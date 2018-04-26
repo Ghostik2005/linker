@@ -29,7 +29,7 @@ export default class uplMenuView extends JetView{
                         accept:"application/nolink",
                         urlData:{
                             },
-                        link:"mylist",
+                        link: undefined,//"mylist",
                         upload: "http://saas.local/linker_upl",
                         datatype:"json",
                         on: {
@@ -40,7 +40,8 @@ export default class uplMenuView extends JetView{
                             },
                         },
                     {view:"list",
-                        id:"mylist",
+                        //id:"mylist",
+                        localId: "_f_list",
                         type:"uploader",
                         autoheight:true,
                         borderless:true
@@ -59,7 +60,12 @@ export default class uplMenuView extends JetView{
             }
         return ww
         }
-        
+
+    ready() {
+        this.$$("__upl_1").define({"link": this.$$("_f_list").config.id});
+        this.$$("__upl_1").refresh();
+        }
+    
     show_window(new_head){
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()

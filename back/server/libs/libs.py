@@ -164,6 +164,41 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getTasks(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """select DISTINCT ui, v.C_VND, 'client', t.SOURCE, cou, t.DT FROM (
+    SELECT r.UIN as ui, COUNT(r.UIN) as cou
+    FROM PRC_TASKS r
+    JOIN PRC p on r.UIN = p.UIN
+    where p.N_FG = 0
+    GROUP by r.UIN)
+JOIN PRC t on ui = t.UIN
+JOIN VND v on (v.ID_VND = t.ID_VND)"""
+            opt = ()
+            result = self.db.execute({"sql": sql, "options": opt})
+            _return = []
+            for row in result:
+                if row[3] == 0:
+                    sou = 'Линкер'
+                elif row[3] == 1:
+                    sou = 'PLExpert'
+                elif row[3] == 2:
+                    sou = 'Склад'
+                r = {
+                    "uin"     : row[0],
+                    "vendor"  : row[1],
+                    "customer": row[2],
+                    "source"  : sou,
+                    "count"   : row[4],
+                    "dt"      : str(row[5]),
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getAdmRoles(self, params=None, x_hash=None):
         descr = {
             'skipped': 'Просмотр пропущенных',
@@ -224,12 +259,12 @@ class API:
                 r[row[0]] = {
                     'skipped': row[1] == 1,
                     'spradd': row[2] == 1,
-                    'adm': row[3] == 1,
-                    'spredit': row[4] == 1,
-                    'useradd': row[5] == 1,
-                    'userdel': row[6] == 1,
-                    'lnkdel': row[7] == 1,
-                    'vendoradd': row[8] == 1
+                    'spredit': row[3] == 1,
+                    'adm': row[4] == 1,
+                    'vendoradd': row[5] == 1,
+                    'useradd': row[6] == 1,
+                    'userdel': row[7] == 1,
+                    'lnkdel': row[8] == 1,
                     }
             ret_v= {'info': prod, 'cfg': r}
             ret = {"result": True, "ret_val": ret_v}
@@ -291,7 +326,12 @@ WHERE r.SH_PRC = ?
                     #ssss.append('and %s' % s)
                     v_s = 'and %s' % s
                 if pars['c_user']:
-                    s = "u.\"USER\" containing '" + pars['c_user'] + "'"
+                    if pars['c_user'] == '?':
+                        s = "ru.NAME is null"
+                    else:
+                        #s = "u.\"USER\" containing '" + pars['c_user'] + "'"
+                        #s = "rr.NAME containing '" + pars['c_user'] + "'"
+                        s = "ru.NAME = '" + pars['c_user'] + "'"
                     #ssss.append('and %s' % s)
                     us_s = 'and %s' % s
                 if pars['c_tovar']:
@@ -307,10 +347,12 @@ WHERE r.SH_PRC = ?
                     if pars['start_dt'] and not pars['end_dt']:
                         pars['start_dt'] = pars['start_dt'].split()[0]
                         s = """(r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))""".format(pars['start_dt'])
+                        #s = """(ch_date > CAST('{0}' as TIMESTAMP) AND ch_date < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))""".format(pars['start_dt'])
                         ssss.append('and %s' % s)
                     elif pars['start_dt'] and pars['end_dt']:
                         pars['end_dt'] = pars['end_dt'].split()[0]
                         s = """ (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))""".format(pars['start_dt'], pars['end_dt'])
+                        #s = """ (ch_date >= '{0}' AND ch_date <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))""".format(pars['start_dt'], pars['end_dt'])
                         ssss.append('and %s' % s)
                 stri = ' '.join(ssss)
             start_p = int(params.get('start', self.start))
@@ -324,40 +366,56 @@ WHERE r.SH_PRC = ?
             sql = """SELECT r.ID, r."USER", r.ID_ROLE FROM USERS r WHERE r."USER" = ?"""
             opt = (user,)
             id_role = int(self.db.request({"sql": sql, "options": opt})[0][2])
-            us_stri = '' if id_role in [10, 34] else """and u."USER" = '%s'""" % user
+            ######us_stri = '' if id_role in [10, 34] else """and u."USER" = '%s'""" % user
+            us_stri = ''
             table = 'r.'
             if field == 'c_vnd':
                 table = 'v.'
             elif field == 'c_user':
-                table = 'u.'
-                field = '"USER"'
+                table = 'ru.'
+                field = 'name'
             elif field == "dt":
                 table = ''
                 field = "ch_date"
             field = ''.join([table, field])
             order = 'order by {0} {1}'.format(field, direction)
-            sql_1 = """left join USERS u on (u."GROUP" = r.ID_ORG)""" if not us_s else """join USERS u on (u."GROUP" = r.ID_ORG) %s""" % us_s
+            sql_1 = """left join USERS u on (u."GROUP" = r.ID_ORG)"""# if not us_s else """join USERS u on (u."GROUP" = r.ID_ORG) %s""" % us_s
             sql_2 = """left JOIN VND v on (r.ID_VND = v.ID_VND)""" if not v_s else """JOIN VND v on (r.ID_VND = v.ID_VND) %s""" % v_s
-            sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, {'uss' if us_s else 'u."USER"'}, v.C_VND, r.dt ch_date
-from (select r.sh_prc rsh {'' if not us_s else ', u."USER" uss'} from PRC r  {sql_1 if us_s else ''} WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''})
+            sql_3 = """left join ROLES ru on u.ID_ROLE = ru.ID""" #if not us_s else """join ROLES ru on u.ID_ROLE = ru.ID %s""" % us_s
+            sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
+    CASE
+        WHEN ru.NAME is NULL THEN '?'
+        ELSE ru.NAME
+    END
+from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''})
 join prc r on r.SH_PRC = rsh
-{sql_1 if not us_s else ''}
+{sql_1}
+{sql_3}
 {sql_2}
 {order if 'r.' not in order else ''}"""
-            sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date
+            sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
+    CASE
+        WHEN ru.NAME is NULL THEN '?'
+        ELSE ru.NAME
+    END
 from prc r
 {sql_1}
+{sql_3}
 {sql_2}
-WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_stri}
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_stri} {us_s or ''}
 order by {field} {direction}"""
-            sql = sql_ if (stri or us_stri) else sql
+            sql = sql_ if (stri or us_stri or us_s) else sql
             sql = sql + """ ROWS ? to ?"""
             opt = (start_p, end_p)
             _return = []
             sql_c = f"""select count(DISTINCT r.SH_PRC) from  PRC r 
-{sql_1}
-{sql_2}
-WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri}"""
+{sql_1 if us_s else ''}
+{sql_3 if us_s else ''}
+{sql_2 if v_s else ''}
+WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
+            print(sql)
+            print()
+            print(sql_c)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -376,7 +434,8 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri}"""
                     "c_zavod" : row[6],
                     "id_org"  : row[7],
                     "c_index" : row[8],
-                    "c_user"  : row[9],
+                    #"c_user"  : row[9],
+                    "c_user"  : row[12],
                     "c_vnd"   : row[10],
                     "dt"      : str(row[11])
                 }
@@ -1762,12 +1821,12 @@ FROM RDB$DATABASE"""
             user = params.get('user')
             new_user = params.get('c_user')
             passwd = params.get('c_pwrd')
-            group = params.get('id_group')
+            group = params.get('id_group', -1)
             id_role = params.get('id_role')
             if id_role == 1:
                 id_role = 0
             u_id = params.get('id')
-            if id_role in (10, 34):
+            if id_role in (10, 34) and group == -1:
                 group = 999999
             inn = params.get('c_inn')
             if u_id:
@@ -1816,7 +1875,7 @@ FROM RDB$DATABASE"""
             id_role = params.get('id_role')
             if id_role == 1:
                 id_role = 0
-            if id_role in (10, 34):
+            if id_role in (10, 34) and group == -1:
                 group = 999999
             inn = params.get('c_inn')
             sql = """insert into USERS ("USER", "GROUP", PASSWD, INN, ID_ROLE) values (?, ?, ?, ?, ?) returning id"""
@@ -2876,8 +2935,8 @@ LEFT JOIN VND v on (r.ID_VND = v.ID_VND)
 WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
-                if len(res) < 1:
-                    continue
+                #if len(res) < 1:
+                    #continue
                 for rrr in res:
                     rr = {
                         "id"        : rrr[0],
@@ -3145,7 +3204,7 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             sh_prc = params.get('sh_prc')
             user = params.get('user')
             if sh_prc:
-                sql = """update PRC r set r.N_FG = 0, r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG"""
+                sql = """update PRC r set r.N_FG = 0, r.IN_WORK = -1, r.DT = current_timestamp where r.SH_PRC = ? returning r.SH_PRC, r.N_FG"""
                 opt = (sh_prc,)
                 _return = []
                 result = self.db.execute({"sql": sql, "options": opt})
@@ -3696,7 +3755,7 @@ def parse_args(arg, _param, x_hash, api):
                 content = call(_param, x_hash)
             except:
                 #print('error calling', _param, x_hash)
-                #print(traceback.format_exc(), flush=True)
+                print(traceback.format_exc(), flush=True)
                 content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
         else:
             content = json.dumps(u'login please', ensure_ascii=False)
@@ -3993,5 +4052,17 @@ ALTER TABLE A_TEMP_PRC ADD UIN Varchar(255);
 commit;
 CREATE INDEX IDX_PRC1 ON PRC (UIN);
 commit;
+
+CREATE TABLE PRC_TASKS
+(
+  UIN VARCHAR(255) NOT NULL COLLATE WIN1251,
+  SOURCE SMALLINT,
+  CALLBACK VARCHAR(255) COLLATE WIN1251,
+  DT TDATETIME,
+  CONSTRAINT T_PK_TASKS PRIMARY KEY (UIN)
+);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON PRC_TASKS TO SYSDBA WITH GRANT OPTION;
+cpmmit;
 
 """

@@ -117,12 +117,7 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         },
-                                    {view: "button", type: "base", label: "+", width: 30, disabled: true,
-                                        on: {
-                                            onAfterRender: function () {
-                                                if (app.config.roles[app.config.role].vendoradd) this.enable();
-                                                }
-                                            },
+                                    {view: "button", type: "base", label: "+", width: 30, hidden: !app.config.roles[app.config.role].vendoradd,
                                         click: () => {
                                             let params = {'new_name': 'c_zavod', 'url': "Zavod", "callback": addZavod}
                                             this.popstri.show("Добавление производителя", params);
@@ -150,12 +145,7 @@ export default class NewformView extends JetView{
                                                 }
                                             },
                                         },
-                                    {view: "button", type: "base", label: "+", width: 30, disabled: true,
-                                        on: {
-                                            onAfterRender: function () {
-                                                if (app.config.roles[app.config.role].vendoradd) this.enable();
-                                                }
-                                            },
+                                    {view: "button", type: "base", label: "+", width: 30, hidden: !app.config.roles[app.config.role].vendoradd,
                                         click: () => {
                                             let params = {'new_name': 'act_ingr', 'url': "Dv1", "callback": addDv}
                                             this.popstri.show("Добавление д.вещества", params);
@@ -267,12 +257,7 @@ export default class NewformView extends JetView{
                                     }
                                 },
                             {},
-                            (app.config.roles[app.config.role].spredit) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
-                                on: {
-                                    onAfterRender: function () {
-                                        if (app.config.roles[app.config.role].spredit) this.enable();
-                                        }
-                                    },
+                            (app.config.roles[app.config.role].spredit) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].spredit,
                                 click: () => {
                                     let valid = this.$$("new_form").validate({hidden:false, disabled:false});
                                     if (valid) {
@@ -293,7 +278,8 @@ export default class NewformView extends JetView{
                                         params["id_group"] = right_f.id_group;
                                         params["id_nds"] = right_f.id_nds;
                                         //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
-                                        if ($$("prcs_dc").getItem($$("prcs_dc").getCursor()).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem($$("prcs_dc").getCursor()).sh_prc || undefined;
+                                        let t1 = $$("prcs_dc").getCursor();
+                                        if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
                                         else params["sh_prc"] = undefined;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;

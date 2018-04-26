@@ -69,7 +69,7 @@ export default class SideFormView extends JetView{
                 "id_dv": webix.rules.isNotEmpty
                 },
             elements: [
-                {view: "label", label: "id_spr", name: "idspr"},
+                {view: "label", label: "", name: "idspr"},
                 {rows: [
                     {view: "label", label:"Название товара:", name: 't_name'},
                     {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text"},
@@ -109,12 +109,7 @@ export default class SideFormView extends JetView{
                                             }
                                         },
                                     },
-                                {view: "button", type: "base", label: "+", width: 30, disabled: true,
-                                    on: {
-                                        onAfterRender: function () {
-                                            if (app.config.roles[app.config.role].vendoradd) this.enable();
-                                            }
-                                        },
+                                {view: "button", type: "base", label: "+", width: 30, hidden: !app.config.roles[app.config.role].vendoradd,
                                     click: () => {
                                         let params = {'new_name': 'c_zavod', 'url': "Zavod", "callback": addZavod}
                                         this.popstri.show("Добавление производителя", params);
@@ -142,12 +137,7 @@ export default class SideFormView extends JetView{
                                             }
                                         },
                                     },
-                                {view: "button", type: "base", label: "+", width: 30, disabled: true,
-                                    on: {
-                                        onAfterRender: function () {
-                                            if (app.config.roles[app.config.role].vendoradd) this.enable();
-                                            }
-                                        },
+                                {view: "button", type: "base", label: "+", width: 30, hidden: !app.config.roles[app.config.role].vendoradd,
                                     click: () => {
                                         let params = {'new_name': 'act_ingr', 'url': "Dv1", "callback": addDv}
                                         this.popstri.show("Добавление д.вещества", params);
@@ -173,8 +163,11 @@ export default class SideFormView extends JetView{
                             {view: "form", css: "borders",
                                 localId: "new_f_right",
                                 elements: [
-                                    {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
-                                    {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                    {height: 5},
+                                    {cols: [
+                                        {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
+                                        {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                        ]},
                                     {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
                                         options:  {
                                             filter: sez_filter,
@@ -250,18 +243,13 @@ export default class SideFormView extends JetView{
                             ]}
                         ]},
                     {cols: [
-                        {view: "button", type: "base", label: "Отменить", width: 120, height: 32,
+                        {view: "button", type: "base", label: "Отменить", width: 120, height: 32, hidden: true,
                             click: () => {
                                 this.hide();
                                 }
                             },
                         {},
-                        (app.config.roles[app.config.role].spredit) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
-                            on: {
-                                onAfterRender: function () {
-                                    if (app.config.roles[app.config.role].spredit) this.enable();
-                                    }
-                                },
+                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].spredit,
                             click: () => {
                                 let valid = this.$$("new_form").validate({hidden:false, disabled:false});
                                 if (valid) {
@@ -282,7 +270,8 @@ export default class SideFormView extends JetView{
                                     params["id_group"] = right_f.id_group;
                                     params["id_nds"] = right_f.id_nds;
                                     //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
-                                    if ($$("prcs_dc").getItem($$("prcs_dc").getCursor()).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem($$("prcs_dc").getCursor()).sh_prc || undefined;
+                                    let t1 = $$("prcs_dc").getCursor();
+                                    if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
                                     else params["sh_prc"] = undefined;
                                     params["c_tgroup"] = left_f.c_tgroup;
                                     params["user"] = this.app.config.user;
@@ -293,12 +282,14 @@ export default class SideFormView extends JetView{
                                         delPrc(params, this);
                                     } else {
                                         this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
+                                        barcodes.clearAll();
+                                        this.$$("new_form").clear();
+                                        this.$$("new_form").reconstruct();
                                         };
                                     this.$$("new_form").config.spr = false;
-                                    this.hide();
                                     };
                                 }
-                            } : {width: 1}
+                            }
                         ]}
                     ]}
                 ],
@@ -306,8 +297,10 @@ export default class SideFormView extends JetView{
 
 
         return {view: "cWindow",
+            localId: "sw",
             animate: true,
-            head: false,  
+            head: false,
+            resize: !true,
             modal: !true,
             position: function (state) {
                 state.left = innerWidth - 724; // fixed values
@@ -325,6 +318,20 @@ export default class SideFormView extends JetView{
             body: m_body,
             }
         }
+
+    parse_f(new_head, search_bar, item){
+        this.$$("new_form").config.search_bar = search_bar;
+        if (item) {
+            if (new_head) {
+                item["idspr"] = new_head;
+                }
+            this.$$("new_form").parse(item);
+            this.$$("new_f_right").parse(item);
+            this.$$("new_form").config.spr = true;
+            }
+        //this.getRoot().show()
+        }
+        
     show_f(new_head, search_bar, item){
         this.$$("new_form").config.search_bar = search_bar;
         if (item) {

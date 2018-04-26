@@ -5,10 +5,10 @@ import {JetView} from "webix-jet";
 export default class TopmenuView extends JetView{
     config(){
         return {view: 'toolbar',
+            css: {"border-top": "0px"},
             height: 40,
             cols: [
-                {view: "combo", localId: "_options", value: 1,
-                    readonly: !true, disabled: !true, width: 220,
+                {view: "combo", localId: "_options", value: 1, width: 220,
                     options: {
                         body: {
                             yCount: 11,

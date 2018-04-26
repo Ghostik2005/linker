@@ -20,7 +20,6 @@ export default class History extends JetView{
                 searchBar: undefined,
                 cols: [
                     {view: "list", localId: "_hist", 
-                        readonly: !true, disabled: !true,
                         width: document.documentElement.clientWidth * 0.5,
                         select: true,
                         resizeColumn:true,

@@ -23,14 +23,16 @@ export default class LinksBarView extends JetView{
             return this.getRoot().getChildViews()[2].getChildViews()[0].config.searchMethod
             }
 
-        let sprv = {cols: [
-            {view: "text", label: "", placeholder: "Строка поиска", id: "_link_search", height: 40, fillspace: true,
-                tooltip: "поиск от двух символов", 
+        let sprv = {view: "toolbar",
+            css: {"border-top": "0px"},
+            cols: [
+            {view: "text", label: "", placeholder: "Строка поиска", height: 40, fillspace: true, localId: "_ls", //id: "_link_search",
+                //tooltip: "поиск от двух символов", 
                 on: {
                     onKeyPress: function(code, event) {
                         clearTimeout(this.config._keytimed);
                         if (checkKey(code)) {
-                            this.config._keytimed = setTimeout(function () {
+                            this.config._keytimed = setTimeout( () => {
                             let ui = getActDt();
                             if (ui) {
                                 let params = getDtParams(ui);
@@ -39,7 +41,7 @@ export default class LinksBarView extends JetView{
                                     navBar: getNavL(),
                                     start: 1,
                                     count: params[1],
-                                    searchBar: "_link_search",
+                                    searchBar: this.$scope.$$("_ls").config.id,
                                     method: getMethod(),
                                     field: params[2],
                                     direction: params[3],
@@ -55,34 +57,39 @@ export default class LinksBarView extends JetView{
                 label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                 click: () => {
                     let hist = webix.storage.session.get(getActDt().config.name);
-                    this.pophistory.show(hist, $$("_link_search"));
+                    this.pophistory.show(hist, this.$$("_ls"));
                     },
                 },
-            {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: this.app.config.lch, disabled: !true, width: 150, id: "_spr_ch",
+            {view: "checkbox", labelRight: "<span style='color: white'>Поиск по справочнику</span>", labelWidth: 0, value: this.app.config.lch, width: 150, localId: "_spr_ch",
                 on: {
                     onChange: () => {
-                        $$("_link_search").setValue('');
-                        let value = $$("_spr_ch").getValue();
+                        this.$$("_ls").setValue('');
+                        let value = this.$$("_spr_ch").getValue();
                         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options; //headers
-                        for(var i = 0; i < hh.length; i++) {
-                            if ('links_bar' === hh[i].id){
-                                console.log('id', hh[i].id);
-                                if (value===0) {
-                                    this.app.config.lch = 0;
-                                    hh[i].value = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
-                                } else if (value===1) {
-                                    this.app.config.lch = 1;
-                                    hh[i].value = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 16px; font-size: 80%'>Связки:Эталоны</span>"
-                                    }
-                                }
-                            };
-                        this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
+                        let header_val;
+                        if (value===0) {
+                            this.app.config.lch = 0;
+                            header_val = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
+                        } else if (value===1) {
+                            this.app.config.lch = 1;
+                            header_val = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 16px; font-size: 80%'>Связки:Эталоны</span>"
+                            }
+                        //for(var i = 0; i < hh.length; i++) {
+                            //if (hh[i].id.toString().indexOf('links_bar') > -1){
+                                //hh[i].value = header_val;
+                                //}
+                            //};
+                        //this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
                         this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
+                        this.$$("_ls").callEvent("onKeyPress", [13,]);
                         }
                     }
                 },
-            {view:"button", type: 'htmlbutton', disabled: !true,
-                label: "<span style='line-height: 20px;'>Сбросить фильтры</span>", width: 220,
+            {view:"button", //type: 'htmlbutton',
+                tooltip: "Сбросить фильтры",
+                type:"imageButton", image: './addons/img/unfilter.svg',
+                //label: "<span style='line-height: 20px;'>Сбросить фильтры</span>",
+                width: 40,
                 click: () => {
                     var cv = getActDt();
                     var columns = $$(cv).config.columns;
@@ -98,11 +105,11 @@ export default class LinksBarView extends JetView{
                                 }
                             }
                         });
-                    $$("_link_search").callEvent("onKeyPress", [13,]);
+                    this.$$("_ls").callEvent("onKeyPress", [13,]);
                     }
                 },
-            {view:"button", type: 'htmlbutton', id: "_break", disabled: true, hidden: true,
-                label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать (Ctrl+D)</span>", width: 220,
+            {view:"button", type: 'htmlbutton', hidden: !true, localId: "_br", //////////
+                label: "<span style='color: red', class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать</span>", width: 140,
                 click: () => {
                     getActDt().callEvent("onItemDblClick");
                     }
@@ -110,12 +117,11 @@ export default class LinksBarView extends JetView{
             ]}
 
         var _view = {
-            id: "links_bar",
-            view: "layout",
+            view: "layout", type: "clean",
             css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
-                {height: 10},
+                {height: 1},
                 {$subview: true},
                 ]}
         return _view
@@ -123,15 +129,16 @@ export default class LinksBarView extends JetView{
 
     ready() {
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
-        for(var i = 0; i < hh.length; i++) {
-            if ('links_bar' === hh[i].id){
-                hh[i].value = (this.app.config.lch===1) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px; font-size: 80%'>Связки:Эталоны</span>"
-                                                        : "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
-                }
-            }
-        this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
-        this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
-        $$("_link_search").callEvent("onKeyPress", [13,]);
+        //for(var i = 0; i < hh.length; i++) {
+            //if (hh[i].id.toString().indexOf('links_bar') > -1){
+                //hh[i].value = (this.app.config.lch===1) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px; font-size: 80%'>Связки:Эталоны</span>"
+                                                        //: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
+                //}
+            //}
+        //this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
+        let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
+        this.show(show_t);
+        this.$$("_ls").callEvent("onKeyPress", [13,]);
         }
 
     init() {

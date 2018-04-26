@@ -1,7 +1,6 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import NewformView from "../views/new_form";
 import {get_data} from "../views/globals";
 import {last_page, checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
@@ -13,9 +12,9 @@ export default class LinksViewLnk extends JetView{
         let app = this.app;
     
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
 
         webix.ui.datafilter.cFilt = Object.create(webix.ui.datafilter.textFilter);
@@ -52,7 +51,7 @@ export default class LinksViewLnk extends JetView{
             fi: 'c_tovar',
             di: 'asc',
             old_stri: " ",
-            searchBar: "_link_search",
+            searchBar: undefined,
             searchMethod: "getLnkSprs",
             //css: 'dt_css',
             columns: [
@@ -96,7 +95,6 @@ export default class LinksViewLnk extends JetView{
                     css: 'center_p',
                     header: [{text: "Дата изменения"},
                     {content: "dateRangeFilter", compare: compareTrue,
-                        readonly: !true, disabled: !true,
                         inputConfig:{format:dt_formating, width: 180,},
                         suggest:{
                             view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
@@ -131,7 +129,7 @@ export default class LinksViewLnk extends JetView{
                     params["callback"] = delLnk;
                     params["parent"] = this;
                     if (+$$("_link_by").getValue() === 1) {
-                        this.popunlink.show("Причина разрыва связки?", params);
+                        this.popunlink.show("Причина разрыва связки?", params, this._break);
                     } else {
                         webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
                         }
@@ -144,10 +142,7 @@ export default class LinksViewLnk extends JetView{
                 onBeforeSelect: function (item) {
                     },
                 onAfterSelect: function (item) {
-                    $$("_break").show();
-                    $$("_break").enable();
-                    //$$("_break").define('width', 220)
-                    //$$("_break").resize()
+                    this.$scope._break.show();
                     }
                 },
             } 
@@ -160,20 +155,18 @@ export default class LinksViewLnk extends JetView{
             }
         }
 
-    init() {
-        let app = $$("main_ui").$scope.app;
-        this.popnew = this.ui(NewformView);
-        this.popunlink = this.ui(UnlinkView);
+    ready() {
+        let app = this.app;
         let th = this;
-        
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(() => {
-                let old_v = th.$$("__page").getValue();
-                th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                th.$$("__page").setValue('0');
-                th.$$("__page").refresh();
+                let thh = th.getRoot().getChildViews()[1].$scope;
+                let old_v = thh.$$("__page").getValue();
+                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                thh.$$("__page").setValue('0');
+                thh.$$("__page").refresh();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
@@ -190,8 +183,16 @@ export default class LinksViewLnk extends JetView{
             }
         }
 
+    init() {
+        this.popunlink = this.ui(UnlinkView);
+        }
+
     ready() {
-        $$("_break").hide();
+        this._break = this.getRoot().getParentView().$scope.$$("_br")
+        this._search = this.getRoot().getParentView().$scope.$$("_ls")
+        this.$$("__table").config.searchBar = this._search.config.id;
+        this._break.hide();
+        
         }
         
     }

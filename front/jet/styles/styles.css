@@ -1,4 +1,4 @@
-.webix_message_area{width: 800px;}
+.webix_message_area{width: 600px;}
 
 /*http://webix.com/skin-builder/15f2c99c*/
 
@@ -14,7 +14,6 @@
     width: 36px;
     height: 36px;
     margin-top: -3px;
-    /*background-image: url(/codebase/addons/img/ms_logo.jpg);*/
     display: block;
     background-repeat: round;
     }
@@ -69,7 +68,6 @@ button {
 
 .small {
     color: #666666;
-    /*font-size: small !important;*/
     }
     
 .comboList {
@@ -87,13 +85,11 @@ button {
 
 .webix_view.webix_dtable {
     color: black;
-    /*font-size: larger;*/
     font-size: 120%;
     }
 
 .text130 {
     color: black;
-    /*font-size: larger;*/
     font-size: 130%;
     }
 
@@ -129,14 +125,10 @@ button {
     }
 
 .barcode{
-    /*width: 80px;*/
     overflow: hidden;
     float: left;
 }
 .butt1{
-    /*padding-left: 10px;*/
-    /*height: 60px;*/
-    /*padding-top:10px;*/
     float:right;
 }
 
@@ -172,7 +164,6 @@ button {
 
 .webix_el_text input {
     color: black;
-    /*font-size: larger;*/
     font-size: 120%;
     }
 
@@ -191,10 +182,16 @@ button {
     color: #666666;
     }
 
+.webix_el_richselect span.webix_input_icon {
+    color: #666666;
+    }
+
 .webix_item_tab {
     background-color: #d2e3ef;
     color: #7a7a7a;
+    font-size: 95%;
     }
+    
 div.webix_item_tab {
     border-color: #d2e3ef;
     }
@@ -207,6 +204,9 @@ div.webix_item_tab {
     height: 5px !important;
     }
 
+.webix_cell.webix_dtable_colrow.webix_topcell.webix_selected {
+    color: black;
+    }
 
 
-    
+

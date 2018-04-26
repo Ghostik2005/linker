@@ -45,7 +45,7 @@ export default class NewbarView extends JetView{
                         {cols: [
                             {view: "text", label: "Название", value: "", name: "_new_bar", placeholder: "Введите новый штрихкод", localId: "_nbar", required: !true,
                                 },
-                            {view: "button", type: "htmlbutton", label: "<span class='webix_icon fa-plus'></span>", width: 30, disabled: !true,
+                            {view: "button", type: "htmlbutton", label: "<span class='webix_icon fa-plus'></span>", width: 30, 
                                 click: () => {
                                     let valid = check_b(this.$$("_nbar").getValue());
                                     if (valid) {

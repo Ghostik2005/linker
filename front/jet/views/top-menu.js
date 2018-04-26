@@ -7,14 +7,13 @@ import ConfirmView from "../views/yes-no";
 import {filter_1, get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
 import {parse_unlinked_item, get_data_test} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
-import {prcs, delPrc, checkKey} from "../views/globals";
+import {prcs, delPrc, checkKey, get_spr} from "../views/globals";
 import SprView from "../views/spr_dt";
 import SkippedBarView from "../views/skipped_bar";
 import AllUnlinkedBarView from  "../views/unlinkedall_bar";
 import LinksBarView from "../views/links_form_bar";
 import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
-
 import {request} from "../views/globals";
 
 export default class TopmenuView extends JetView{
@@ -29,7 +28,7 @@ export default class TopmenuView extends JetView{
                     height: 40,
                     cols: [
                         {view: "combo", name: "suppliers", id: "_suppl", manual: false, state: false,
-                            readonly: !true, disabled: !true, width: 300,
+                            width: 300,
                             options: {
                                 filter: filter_1,
                                 body: {
@@ -79,7 +78,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, disable: !true,
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, 
                             options: [
                                 {id: 1, value: "поставщикам"},
                                 {id: 2, value: "дате"},
@@ -103,41 +102,13 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                         {},
-                        {view: "button", type: "htmlbutton",
-                            label: "<span class='webix_icon fa-refresh'></span><span style='line-height: 20px;'> Обновить</span>", width: 150,
+                        {view: "button", type: "htmlbutton", tooltip: "Обновить",
+                            label: "<span class='webix_icon fa-refresh'></span>", width: 40,
                             click: () => {
                                 (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
                                 (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
                                                                      get_suppl("_suppl", this, "?getSupplUnlnk");
                                 }
-                            },
-                         {view:"button", type: 'htmlbutton', localId: "_skips", 
-                            label: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'> Пропущенные</span>", width: 150, disabled: true, hidden: !(app.config.roles[app.config.role].skipped),
-                            hidden: true,
-                            on: {
-                                onAfterRender: function () {
-                                    if (app.config.roles[app.config.role].skipped) this.enable();
-                                    },
-                                onItemClick: () => {
-                                    //this.popskipped.show("Пропущенные товары")
-                                    },
-                                },
-                            },
-                        {view:"button", type: 'htmlbutton', localId: "_unlnks", hidden: true,
-                            label: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'> Несвязанные</span>", width: 150,
-                            on: {
-                                onItemClick: () => {
-                                    //this.popallunlink.show("Все несвязанные товары")
-                                    },
-                                },
-                            },
-                        {view:"button", type: 'htmlbutton', localId: "_links", hidden: true,
-                            label: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'> Связки</span>", width: 150,
-                            on: {
-                                onItemClick: () => {
-                                    //this.poplinks.showWindow("Линки");
-                                    },
-                                },
                             },
                     ]},
                 {view: 'toolbar',
@@ -160,7 +131,7 @@ export default class TopmenuView extends JetView{
                                 },
                             {width: 10},
                             {view: "button", type: "htmlbutton", id: "_refresh",
-                                label: "<span class='butt'>Обновить сессию</span>", width: 230, height: 32,
+                                label: "<span class='butt'>Обновить сессию</span>", width: 200, height: 32,
                                 click: () => {
                                     if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
                                         let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
@@ -175,7 +146,6 @@ export default class TopmenuView extends JetView{
                     height: 40,
                     cols: [
                         {view: "text", label: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
-                            tooltip: "поиск от двух символов", 
                             on: {
                                 onKeyPress: function(code, event) {
                                     clearTimeout(this.config._keytimed);
@@ -198,7 +168,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "button", type: 'htmlbutton', width: 35, disabled: true, hidden: true,
+                        {view: "button", type: 'htmlbutton', width: 35, hidden: true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
                                 let nm = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0].config.name;
@@ -207,7 +177,7 @@ export default class TopmenuView extends JetView{
                                 this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, disabled: !true, hidden: true,
+                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, hidden: true,
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
@@ -222,9 +192,9 @@ export default class TopmenuView extends JetView{
                             },
                         {view:"button", type: 'htmlbutton', id: "_link",
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
-                            hotkey: "home+ctrl", disabled: true,
+                            hotkey: "home+ctrl", 
                             click: () => {
-                                $$("_link").disable();
+                                $$("_link").hide();
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc;
                                 let ui_1 = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0]; //datatable
                                 let id_spr = ui_1.getSelectedItem().id_spr
@@ -258,7 +228,7 @@ export default class TopmenuView extends JetView{
                             },
                         {view:"button", type: 'htmlbutton', id: "_skip", hidden: true,
                             label: "Пропустить (Ctrl+M)", width: 160,
-                            hotkey: "m+ctrl", disabled: !true,
+                            hotkey: "m+ctrl",
                             click: () => {
                                 let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc
                                 let params = {};
@@ -287,21 +257,30 @@ export default class TopmenuView extends JetView{
                                 parse_unlinked_item(this);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton', hidden: !true,
-                            label: "<span class='webix_icon fa-caret-left'></span>", width: 40, formOpen: false,
-                            hidden: !(app.config.user==='Краснов' || app.config.user==='Беляев'),
+                        {view:"button", type: 'htmlbutton', hidden: !true, localId: "sideButton",
+                            label: (document.documentElement.clientWidth > 1200) ? "<span class='webix_icon fa-caret-left'></span>" : "<span class='webix_icon fa-caret-down'></span>",
+                            width: 40, formOpen: false,
+                            hidden: false, // !(app.config.user==='Краснов' || app.config.user==='Беляев'),
                             //label: "<span class='webix_icon fa-bars'></span>", width: 40, formOpen: false,
                             on: {
                                 onItemClick: function () {
                                     let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];
                                     let ui = uu.getChildViews()[0];
                                     if (!this.config.formOpen) {
-                                        if (ui.getSelectedItem()) {
-                                            this.define({label: "<span class='webix_icon fa-caret-right'></span>", formOpen: true});
+                                            this.define({label: (document.documentElement.clientWidth > 1200) ? "<span class='webix_icon fa-caret-right'></span>" : "<span class='webix_icon fa-caret-up'></span>", formOpen: true});
                                             this.$scope.sideForm.show_f();
-                                            }
+                                            let item = (ui) ? ui.getSelectedItem() : undefined;
+                                            if (item) {
+                                                item = item.id_spr;
+                                                item = get_spr(ui.$scope, item);
+                                                item["s_name"] = "Страна: " + item.c_strana;
+                                                item["t_name"] = "Название товара: " + item.c_tovar;
+                                                item["v_name"] = "Производитель: " + item.c_zavod;
+                                                item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                                                this.$scope.sideForm.parse_f("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                                                }
                                     } else {
-                                        this.define({label: "<span class='webix_icon fa-caret-left'></span>", formOpen: false});
+                                        this.define({label: (document.documentElement.clientWidth > 1200) ? "<span class='webix_icon fa-caret-left'></span>" : "<span class='webix_icon fa-caret-down'></span>", formOpen: false});
                                         this.$scope.sideForm.hide_f();
                                         }
                                     this.refresh();
@@ -316,6 +295,10 @@ export default class TopmenuView extends JetView{
 
         var tabbar = {
             view: "tabbar",
+            //moreTemplate:"Show more",
+            popupWidth:170,
+            tabMinWidth:170,
+            tabMoreWidth:70,
             animate: false,
             //view: "tabview",
             multiview: true,
@@ -325,128 +308,321 @@ export default class TopmenuView extends JetView{
                     }
                 },
             options: [
-                { value: "<span style='line-height: 20px;'> Линкер</span>", id: 'app-nav', close: false, width: 140 }
+                {value: "<span style='line-height: 20px;'> Линкер</span>", id: 'app-nav', close: false, width: 172}
                 ]
             };
 
         var tabmain = {
+            view: "multiview",
             animate: false,
             cells: [tab_1]
             };
 
+
         var side_bar = {view: 'toolbar',
+            localId: "sideMenu",
             css: 'header',
-            width: 44,
+            width: (app.config.expert) ? 44 : 140,
             rows: [
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, wide: false,
-                    label: "<span class='webix_icon fa-arrow-from-left', style='color: #3498db'></span>", width: 40, maxWidth: 40,
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left',
+                    label: "<span class='webix_icon fa-bars', style='color: #3498db'></span>", width: 40,
                     on:
                         {
                         onItemClick: function() {
-                            //let params = {"user": app.config.user};
-                            //request("http://saas.local/linker_upl?process", params).then(function(data) {
-                                //console.log(data);
-                                //})
-                            if (this.config.wide) {
-                                this.define({label: "<span class='webix_icon fa-arrow-from-right', style='color: #3498db'></span>", wide: false});
+                            if (app.config.expert) {
+                                //this.define({label: "<span class='webix_icon fa-arrow-left', style='color: #3498db'></span>"});
+                                app.config.expert = false;
+                                this.$scope.$$("sideMenu").define({width: 140});
+                                this.$scope.$$("sideMenu").resize();
+                                this.$scope.$$("_settings").define({width: 136,
+                                    label: "<span class='webix_icon fa-cogs', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'>       Настройки</span>"});
+                                this.$scope.$$("_settings").refresh();
+                                this.$scope.$$("_settings").resize();
+                                this.$scope.$$("_adm").define({width: 136, label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'>  Админка</span>"});
+                                this.$scope.$$("_adm").refresh();
+                                this.$scope.$$("_adm").resize();
+                                this.$scope.$$("_skipped").define({width: 136, label: "<span class='webix_icon fa-archive', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'> Пропущенные</span>"});
+                                this.$scope.$$("_skipped").refresh();
+                                this.$scope.$$("_skipped").resize();
+                                this.$scope.$$("_unlinked").define({width: 136, label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'> Несвязанные</span>"});
+                                this.$scope.$$("_unlinked").refresh();
+                                this.$scope.$$("_unlinked").resize();
+                                this.$scope.$$("_links").define({width: 136, label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'> Связки</span>"});
+                                this.$scope.$$("_links").refresh();
+                                this.$scope.$$("_links").resize();
                             } else {
-                                this.define({label: "<span class='webix_icon fa-arrow-from-left', style='color: #3498db'></span>", wide: true});
+                                //this.define({label: "<span class='webix_icon fa-bars', style='color: #3498db'></span>"});
+                                app.config.expert = true;
+                                this.$scope.$$("sideMenu").define({width: 44});
+                                this.$scope.$$("sideMenu").resize();
+                                this.$scope.$$("_settings").define({width: 40, label: "<span class='webix_icon fa-cogs', style='color: #3498db'>"});
+                                this.$scope.$$("_settings").refresh();
+                                this.$scope.$$("_settings").resize();
+                                this.$scope.$$("_adm").define({width: 40, label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>"});
+                                this.$scope.$$("_adm").refresh();
+                                this.$scope.$$("_adm").resize();
+                                this.$scope.$$("_skipped").define({width: 40, label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>"});
+                                this.$scope.$$("_skipped").refresh();
+                                this.$scope.$$("_skipped").resize();
+                                this.$scope.$$("_unlinked").define({width: 40, label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>"});
+                                this.$scope.$$("_unlinked").refresh();
+                                this.$scope.$$("_unlinked").resize();
+                                this.$scope.$$("_links").define({width: 40, label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>"});
+                                this.$scope.$$("_links").refresh();
+                                this.$scope.$$("_links").resize();
                                 };
-                            this.refresh();
                             },
                         }
                     },
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40,
-                    label: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>", width: 40,  maxWidth: 40,
-                    on:
-                        {
-                        onItemClick: function() {
-                            },
-                        }
-                    },
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40,
-                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>", width: 40, localId: "_adm", hidden: !app.config.roles[app.config.role].adm,
-                    on:
-                        {
-                        onItemClick: () => {
-                            let ui = $$("adm_bar");
-                            if (ui) {
-                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('adm_bar');
-                            } else {
-                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                                var form = this.ui(AdmBarView);
-                                var formRoot = form.getRoot();
-                                var tabConfig = {
-                                    id: formRoot.config.id,
-                                    value: "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>", width: 170, close: true
-                                    };
-                                vv.getChildViews()[2].addView(formRoot);
-                                vv.getChildViews()[1].addOption(tabConfig, true);
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, localId: "_settings", longPress: false,
+                    label: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>", width: 40, 
+                    on: {
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
                                 }
                             },
+                        onItemClick: function (id, ii, iii) {
+                            webix.html.addCss(this.$view, "bounceIn animated");
+                            setTimeout(() => {
+                                    webix.html.removeCss(this.$view, "bounceIn animated");
+                                  },900)
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            webix.message({type: "debug", text: "Будут персональные настройки пользователя"});
+                            if (this.config.longPress) webix.message({type: "error", text: "LongPress"});
+                            else webix.message({type: "info", text: "ShortPress"});
+                            this.config.longTouch = false
+                            },
                         }
                     },
-                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, maxWidth: 40,
-                    label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>", width: 40, disabled: !(app.config.roles[app.config.role].skipped),
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>", width: 40, localId: "_adm", hidden: !app.config.roles[app.config.role].adm,
+                    on: {
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
+                                }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (ui) {
+                                if (this.config.longPress) {
+                                    let uid = webix.uid();
+                                    var tabConfig = {
+                                        id: uid,
+                                        value: "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>", width: 172, close: true
+                                        };
+                                    let formConfig = {
+                                        id: uid,
+                                        $subview: AdmBarView
+                                        };
+                                    this.config.b_id = uid;
+                                    tab_view.getChildViews()[2].addView(formConfig);
+                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                } else {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                            webix.html.removeCss(this.$view, "bounceIn animated");
+                                          },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                    }
+                            } else {
+                                let uid = webix.uid();
+                                var tabConfig = {
+                                    id: uid,
+                                    value: "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>", width: 172, close: true
+                                    };
+                                let formConfig = {
+                                    id: uid,
+                                    $subview: AdmBarView
+                                    };
+                                this.config.b_id = uid;
+                                tab_view.getChildViews()[2].addView(formConfig);
+                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            this.config.longPress = false;
+                            },
+                        }
+                    },
+                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40,localId: "_skipped", b_id: undefined, longPress: false,
+                    label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>", width: 40, 
                     hidden: !(app.config.roles[app.config.role].skipped), 
                     on: {
-                        onItemClick: () => {
-                            let ui = $$("sk_bar");
-                            if (ui) {
-                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('sk_bar');
-                            } else {
-                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                                var form = this.ui(SkippedBarView);
-                                var formRoot = form.getRoot();
-                                var tabConfig = {
-                                    id: formRoot.config.id,
-                                    value: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>", width: 170, close: true
-                                    };
-                                vv.getChildViews()[2].addView(formRoot);
-                                vv.getChildViews()[1].addOption(tabConfig, true);
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
                                 }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (ui) {
+                                if (this.config.longPress) {
+                                    let uid = webix.uid();
+                                    var tabConfig = {
+                                        id: uid,
+                                        value: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>", width: 172, close: true
+                                        };
+                                    let formConfig = {
+                                        id: uid,
+                                        $subview: SkippedBarView
+                                        };
+                                    this.config.b_id = uid;
+                                    tab_view.getChildViews()[2].addView(formConfig);
+                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                } else {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                            webix.html.removeCss(this.$view, "bounceIn animated");
+                                          },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                    }
+                            } else {
+                                let uid = webix.uid();
+                                var tabConfig = {
+                                    id: uid,
+                                    value: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>", width: 172, close: true
+                                    };
+                                let formConfig = {
+                                    id: uid,
+                                    $subview: SkippedBarView
+                                    };
+                                this.config.b_id = uid;
+                                tab_view.getChildViews()[2].addView(formConfig);
+                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            this.config.longPress = false;
                             },
                         },
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40,
-                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40, maxWidth: 40,
+                {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, localId: "_unlinked", b_id: undefined, longPress: false,
+                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40,
                     on: {
-                        onItemClick: () => {
-                            let ui = $$("unlnk_bar");
-                            if (ui) {
-                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('unlnk_bar');
-                            } else {
-                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                                var form = this.ui(AllUnlinkedBarView);
-                                var formRoot = form.getRoot();
-                                var tabConfig = {
-                                    id: formRoot.config.id,
-                                    value: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>", width: 170, close: true
-                                    };
-                                vv.getChildViews()[2].addView(formRoot);
-                                vv.getChildViews()[1].addOption(tabConfig, true);
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
                                 }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (ui) {
+                                if (this.config.longPress) {
+                                    let uid = webix.uid();
+                                    var tabConfig = {
+                                        id: uid,
+                                        value: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>", width: 172, close: true
+                                        };
+                                    let formConfig = {
+                                        id: uid,
+                                        $subview: AllUnlinkedBarView
+                                        };
+                                    this.config.b_id = uid;
+                                    tab_view.getChildViews()[2].addView(formConfig);
+                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                } else {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                            webix.html.removeCss(this.$view, "bounceIn animated");
+                                          },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                    }
+                            } else {
+                                let uid = webix.uid();
+                                var tabConfig = {
+                                    id: uid,
+                                    value: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>", width: 172, close: true
+                                    };
+                                let formConfig = {
+                                    id: uid,
+                                    $subview: AllUnlinkedBarView
+                                    };
+                                this.config.b_id = uid;
+                                tab_view.getChildViews()[2].addView(formConfig);
+                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            this.config.longPress = false;
                             },
                         },
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40,
-                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40, maxWidth: 40,
+                {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, localId: "_links", b_id: undefined, longPress: false,
+                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40,
                     on: {
-                        onItemClick: () => {
-                            let ui = $$("links_bar");
-                            if (ui) {
-                                this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('links_bar');
-                            } else {
-                                let vv = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                                var form = this.ui(LinksBarView);
-                                var formRoot = form.getRoot();
-                                var tabConfig = {
-                                    id: formRoot.config.id,
-                                    value: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>", width: 170, close: true
-                                    };
-                                vv.getChildViews()[2].addView(formRoot);
-                                vv.getChildViews()[1].addOption(tabConfig, true);
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
                                 }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (ui) {
+                                if (this.config.longPress) {
+                                    let uid = 'links_bar' + webix.uid();
+                                    var tabConfig = {
+                                        id: uid,
+                                        value: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>", width: 172, close: true
+                                        };
+                                    let formConfig = {
+                                        id: uid,
+                                        $subview: LinksBarView
+                                        };
+                                    this.config.b_id = uid;
+                                    tab_view.getChildViews()[2].addView(formConfig);
+                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                } else {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                            webix.html.removeCss(this.$view, "bounceIn animated");
+                                          },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                    }
+                            } else {
+                                let uid = 'links_bar' + webix.uid();
+                                var tabConfig = {
+                                    id: uid,
+                                    value: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>", width: 172, close: true
+                                    };
+                                let formConfig = {
+                                    id: uid,
+                                    $subview: LinksBarView
+                                    };
+                                this.config.b_id = uid;
+                                tab_view.getChildViews()[2].addView(formConfig);
+                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                }
+                            this.config.longPress = false;
                             },
                         },
                     },
@@ -458,7 +634,6 @@ export default class TopmenuView extends JetView{
         return {
             cols: [
                 side_bar,
-                //{view: "resizer", //height: 500, width: 2, borderless: true},
                 {rows: [
                     {height: 1},
                     tabbar,

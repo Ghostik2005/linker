@@ -56,13 +56,8 @@ export default class NewUserView extends JetView{
                                 },
                             {view: "button", type: 'htmlbutton', localId: "_eye",
                                 label: "<span class='webix_icon fa-eye'></span><span style='line-height: 20px;'></span>",
-                                width: 30, disabled: true,
+                                width: 30, hidden: !app.config.roles[app.config.role].userdel,
                                 _vis: false,
-                                on: {
-                                    onAfterRender: function () {
-                                        if (app.config.roles[app.config.role].userdel) this.enable();
-                                        }
-                                    },
                                 click:  () => {
                                     if (this.$$("_eye").config._vis) {
                                         this.$$("_pwrd").define({"type": "password"});
@@ -84,7 +79,7 @@ export default class NewUserView extends JetView{
                         {view: "text", labelPosition: 'top', label: "Список ИНН:", value: "", name: "c_inn"},
                         {view: "label", label:"Роль пользователя:"},
                         {cols: [
-                            {view:"combo", label: "", value: "", name: "id_role", disabled: !true, localId: '_rolesC',
+                            {view:"combo", label: "", value: "", name: "id_role", localId: '_rolesC',
                                 required: true, invalidMessage: "Роль пользователя должна быть указана",
                                 options:  {
                                     body: {
@@ -99,12 +94,7 @@ export default class NewUserView extends JetView{
                                 },
                             {view: "button", type: 'htmlbutton', 
                                 label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'></span>",
-                                width: 30, disabled: true,
-                                on: {
-                                    onAfterRender: function () {
-                                        if (app.config.roles[app.config.role].userdel) this.enable();
-                                        }
-                                    },
+                                width: 30, hidden: !app.config.roles[app.config.role].userdel,
                                 click: () => {
                                     webix.message({type: 'debug', text: 'Пока не реализованно'});
                                     }
@@ -118,12 +108,7 @@ export default class NewUserView extends JetView{
                                     }
                                 },
                             {},
-                             (app.config.roles[app.config.role].useradd) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, disabled: true,
-                                on: {
-                                    onAfterRender: function () {
-                                        if (app.config.roles[app.config.role].useradd) this.enable();
-                                        }
-                                    },
+                            {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].useradd,
                                 click: () => {
                                     let valid = this.$$("new_user").validate({hidden:false, disabled:false});
                                     if (valid) {
@@ -137,23 +122,25 @@ export default class NewUserView extends JetView{
                                                 if (data) {
                                                     $$("users_dc").clearAll();
                                                     $$("users_dc").parse(data);
-                                                    let th = $$("__dtu_g");
-                                                    th.clearAll();
-                                                    th.parse($$("users_dc"));
+                                                    this.$scope.users_dt.clearAll()
+                                                    this.$scope.users_dt.parse($$("users_dc"));
                                                     };
                                                 })
                                             this.hide();
                                             }
                                         }
                                     }
-                                } : {width: 1},
+                                },
                             ]}
                         ]}
                     ]
                 }
             }
         }
-    show(new_head, item){
+    show(new_head, item, users_dt){
+        if (users_dt) {
+            this.users_dt = users_dt;
+            };
         if (item) {
             this.$$("new_user").parse(item);
             this.$$("new_user").config._params.id = item.id;

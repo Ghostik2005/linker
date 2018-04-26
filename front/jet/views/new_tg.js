@@ -119,7 +119,9 @@ export default class NewtgView extends JetView{
                                             }
                                         }
                                     //console.log('p', p)
-                                    if (th) th.$$("_c_tgroup").setValue(p);
+                                    if (th) {th.$$("_c_tgroup").setValue(p);
+                                        th.$$("_c_tgroup").refresh();
+                                        };
                                     if (callback) callback(id_spr, p);
                                     this.hide();
                                     }

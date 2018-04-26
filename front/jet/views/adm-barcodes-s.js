@@ -13,9 +13,9 @@ export default class BarcodesSView extends JetView{
         let app = this.app;
     
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
 
         var delB  = (pars) => {
@@ -85,7 +85,7 @@ export default class BarcodesSView extends JetView{
             old_stri: " ",
             fi: 'c_tovar',
             di: 'asc',
-            searchBar: "__s_b",
+            searchBar: undefined,
             searchMethod: "getSprBars",
             columns: [
                 {id: "barcode", header: "Штрих-код" , fillspace: true, headermenu: false, //sort: "server",
@@ -110,7 +110,7 @@ export default class BarcodesSView extends JetView{
                     },
                 onItemDblClick: function() {
                     var item = this.getSelectedItem();
-                    if (this.$scope.app.config.role === this.$scope.app.config.admin) {
+                    if (app.config.roles[app.config.role].adm) {
                         let level = item.$level;
                         if (level === 1) {
                             this.$scope.popnewbar.show("Редактирование ШК: " + item.barcode, item.id, undefined, editBarCode);
@@ -132,7 +132,8 @@ export default class BarcodesSView extends JetView{
             }
 
         return {
-            view: "layout",
+            view: "layout", type: "clean",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
                 {$subview: PagerView}
@@ -145,6 +146,8 @@ export default class BarcodesSView extends JetView{
         this.popconfirm = this.ui(ConfirmBarView);
         }
     ready() {
-        $$("__s_b").focus();
+        this._search = this.getRoot().getParentView().$scope.$$("_sb");
+        this.$$("__table").config.searchBar = this._search.config.id;
+        this._search.focus();
         }
     }

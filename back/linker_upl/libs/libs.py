@@ -56,10 +56,13 @@ class API:
         self.methods = []
         self.path = w_path
         self.p_path = p_path
+        self.inw_path = os.path.join(self.path, 'in_work')
         if not os.path.exists(self.path):
              os.makedirs(self.path, mode=0o777)
         if not os.path.exists(self.p_path):
              os.makedirs(self.p_path, mode=0o777)
+        if not os.path.exists(self.inw_path):
+             os.makedirs(self.inw_path, mode=0o777)
         self.lock = Lock
         self.exec = sys.executable
         try:
@@ -127,18 +130,22 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def upload_file(self, filename, data, source=None, callback=None):
+    def upload_file(self, filename, data, source=0, callback=None):
         if source == 'linker':
             f_data = data.split(b'\r\n')
             f_data = f_data[4:-2]
             f_data = b'\r\n'.join([i.strip() for i in f_data])
+            source = 2
         else:
             f_data = data
         con, cur = self._connect()
         h_name = hashlib.md5()
         h_name.update(str(filename).encode())
         h_name =  h_name.hexdigest()
-        fname = os.path.join(self.path, h_name)
+        sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
+        cur.execute(sql)
+        con.commit()
+        fname = os.path.join(self.path,f"{h_name}.{source}")
         try: 
             with open(fname, 'wb') as f_obj:
                 f_obj.write(f_data)
@@ -200,7 +207,7 @@ class API:
             return False
 
     def upload_to_db(self, db, dbc, id_vnd, path, count_insert, count_all, source=1):
-        uin = os.path.basename(path)
+        uin = os.path.basename(path).split('.')[0]
         if uin.split('.')[0] != uin:
             uin = None
         _re = re.compile("\(..\...\)")
@@ -397,10 +404,7 @@ class API:
                 st = f"upper(c_tovar) like upper('{row[0]}%')"
             ap.append(st)
         ap = ' \nor '.join(ap)
-        sql = """update PRC set n_fg=1, id_org=0 where n_fg!=1 %s and (%s)""" % (con_ins, ap)
-        print()
-        print(sql)
-        print()
+        sql = """update PRC set n_fg=1, id_org=0 where n_fg!=1 and source != 2 %s and (%s)""" % (con_ins, ap)
         self.log("Удаляем по признаку")
         dbc.execute(sql)
         if callable(db.commit):
@@ -880,6 +884,42 @@ def handle_commandline(profile, index):
         index = kwargs.pop("index")
     return args, kwargs, profile, index
 
+def monitor(api):
+    inw_dir = api.inw_path
+    connection = api.connect_params
+    while True:
+        sql = "select r.uin from PRC_TASKS r"
+        db = fdb.connect(**connection)
+        dbc = db.cursor()
+        dbc.execute(sql)
+        result = dbc.fetchall()
+        for row in result:
+            uin = row[0]
+            sql = f"""SELECT CASE 
+    WHEN not EXISTS(select uin from PRC where uin = '{uin}' and n_fg != 1) THEN 0
+    ELSE 1
+    END
+FROM RDB$DATABASE"""
+            dbc.execute(sql)
+            res = dbc.fetchone()
+            print(uin, res)
+            if int(res[0]) == 0:
+                sql = f"""delete from PRC_TASKS where uin = '{uin}' returning callback"""
+                dbc.execute(sql)
+                callback = dbc.fetchone()[0]
+                db.commit()
+
+                print("form the message")
+                print(f"send message to {callback or 'source'}")
+                try:
+                    os.remove(os.path.join(inw_dir, uin))
+                except:
+                    api.log(traceback.format_exc(), kind="error:removing")
+            else:
+                continue
+        db.close()
+        time.sleep(60)
+
 def guardian(api):
     work_dir = api.path
     log = api.log
@@ -901,29 +941,34 @@ def guardian(api):
                 sql = f"""SELECT count(*) FROM LNK_CODES r where r.PROCESS = 1 and r.CODE = {id_vnd}"""
                 dbc.execute(sql)
                 h_name = os.path.basename(path)
-                if not list(dbc.fetchone())[0]:
+                h_name, source = h_name.split('.')
+                if not list(dbc.fetchone())[0] and int(source) != 2:
                     log('- пропускаем, сведение не разрешено')
                     #переносим файл в несводимые, делаем запись в базе о том, что сведение не разрешено
+                    sql = f"""delete from PRC_TASKS where uin = '{h_name}'"""
+                    dbc.execute(sql)
+                    db.commit()
                     shutil.move(path, os.path.join(api.p_path, h_name))
                     continue
                 else:
                     log('- начинаем сведение')
                     count_insert = 0
                     count_all = 0
-                    count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all)
+                    count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
                     log("- удаляем файл:")
-                    try: 
-                        os.remove(path)
+                    try:
+                        shutil.move(path, os.path.join(api.inw_path, h_name))
+                        #os.remove(path)
                         log("[ OK ]")
                     except Exception as e:
                         log("[FAIL]")
                         log(str(e), kind="error")
                     if count_insert > 0:
                         api.prc_sync_lnk(db, dbc, h_name)
-                        sql = f"""select count(*) from PRC r where r.UIN = '{h_name}'"""
+                        sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
                         dbc.execute(sql)
                         count_insert = dbc.fetchone()[0]
-                api.log(f'inserted: {count_insert}')
+                api.log(f'Добавленно к сведению: {count_insert}')
                 db.close()
         #спим 5 секунд перед тем, как продолжить опрос папки
         time.sleep(5) 

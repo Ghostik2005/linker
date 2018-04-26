@@ -57,7 +57,9 @@ export default class PagerView extends JetView{
                                                 name_ch = (this.getRoot().config.parent.$scope.getParentView().getRoot().getChildViews()[1].getChildViews()[0].config.name === "__dtd")
                                             } catch(err) {
                                                 };
-                                            if (name_ch) cbars = ($$("__checkbars").getValue() === 1) ? "0,100" : $$("_bar_num").getValue();
+                                            if (name_ch) {
+                                                cbars = (this.checkbar.getValue() === 1) ? "0,100" : this.bnum.getValue();
+                                                }
                                             get_data_test({
                                                 view: this.getRoot().config.parent,
                                                 navBar: this.getRoot(),
@@ -107,6 +109,13 @@ export default class PagerView extends JetView{
 
         return pager
 
+        }
+
+    ready(view) {
+        let ch = view.getParentView().getParentView().$scope.$$("_chbar");
+        let b = view.getParentView().getParentView().$scope.$$("_bnum");
+        if (ch) this.checkbar = ch;
+        if (b) this.bnum = b;
         }
 
     init(view) {

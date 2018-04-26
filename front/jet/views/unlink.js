@@ -44,16 +44,11 @@ export default class UnlinkView extends JetView{
                         {view: "button", type: "base", label: "Ошибка", width: 120, height: 44,
                             click: () => {
                                 unlnk(this, "return");
-                                $$("_break").hide();
+                                this._break.hide();
                                 }
                             },
                         {},
-                        (app.config.roles[app.config.role].lnkdel) ? {view: "button", type: "base", label: "Устарела", width: 120, height: 44, disabled: true,
-                            on: {
-                                onAfterRender: function () {
-                                    if (app.config.roles[app.config.role].lnkdel) this.enable();
-                                    }
-                                },
+                        (app.config.roles[app.config.role].lnkdel) ? {view: "button", type: "base", label: "Устарела", width: 120, height: 44, hidden: app.config.roles[app.config.role].lnkdel,
                             click: () => {
                                 unlnk(this, "delete");
                                 }
@@ -69,7 +64,8 @@ export default class UnlinkView extends JetView{
             }
             }
         }
-    show(quest, params){
+    show(quest, params, _break){
+        this._break = _break;
         this.getRoot().getHead().getChildViews()[0].setValue("Подтвердите действие");
         if (params) this.getRoot().getBody().config._params = params;
         this.getRoot().getBody().getChildViews()[0].setValue(quest);

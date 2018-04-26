@@ -8,7 +8,7 @@ export default class RolesView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            id: "__dt_r",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -80,7 +80,7 @@ export default class RolesView extends JetView{
             height: 40,
             cols: [
                 {},
-                {view:"button", type: 'htmlbutton', disabled: !true,
+                {view:"button", type: 'htmlbutton', 
                     label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 140,
                     on: {
                         onAfterRender: function () {
@@ -90,19 +90,10 @@ export default class RolesView extends JetView{
                         this.hide()
                         }
                     },
-                (this.app.config.roles[this.app.config.role].userdel) ? {view:"button", type: 'htmlbutton', disabled: true, 
+                {view:"button", type: 'htmlbutton', hidden: !this.app.config.roles[this.app.config.role].userdel,
                     label: "<span class='webix_icon fa-save'></span><span style='line-height: 20px;'> Сохранить</span>", width: 140,
-                    on: {
-                        onAfterRender: function () {
-                            if (this.$scope.app.config.roles[this.$scope.app.config.role].userdel) this.enable();
-                            }
-                        },
                     click: () => {
-                        webix.message({
-                            text: "Сохраниние ролей. Позже.",
-                            type: "debug",
-                            })
-                        let values = $$("__dt_r").serialize();
+                        let values = this.$$("__table").serialize();
                         let url = this.app.config.r_url + "?setAdmRoles"
                         let params = {"user": this.app.config.user, "values": values};
                         let res = checkVal(request(url, params, !0).response, 's');
@@ -116,7 +107,7 @@ export default class RolesView extends JetView{
                             }
 
                         }
-                    } : {width: 1},
+                    },
                 ]
             }
 
@@ -126,7 +117,7 @@ export default class RolesView extends JetView{
             modal: true,
             on: {
                 onHide: () => {
-                    $$("__dt_r").clearAll();
+                    this.$$("__table").clearAll();
                     },
                 onShow: () => {
                     let url = this.app.config.r_url + "?getAdmRoles";
@@ -134,12 +125,11 @@ export default class RolesView extends JetView{
                     request(url, params).then(function(data) {
                         data = checkVal(data, 'a');
                         if (data) {
-                            $$("__dt_r").parse(data)
-                            //$$("__dt_r").refresh()
+                            this.$scope.$$("__table").parse(data)
                         } else {
-                            $$("__dt_r").clearAll();
+                            this.$scope.$$("__table").clearAll();
                             };
-                        $$("__dt_r").hideProgress();
+                        this.$scope.$$("__table").hideProgress();
                         });
                     }
                 },

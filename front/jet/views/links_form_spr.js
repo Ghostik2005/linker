@@ -14,9 +14,9 @@ export default class LinksViewSpr extends JetView{
         let app = this.app;
         
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
             
         webix.ui.datafilter.customFilterLnkSpr = Object.create(webix.ui.datafilter.textFilter);
@@ -53,7 +53,7 @@ export default class LinksViewSpr extends JetView{
             fi: 'c_tovar',
             di: 'asc',
             old_stri: " ",
-            searchBar: "_link_search",
+            searchBar: undefined,
             searchMethod: "getSprLnks",
             //css: 'dt_css',
             columns: [
@@ -112,7 +112,7 @@ export default class LinksViewSpr extends JetView{
                             item["t_name"] = "Название товара: " + item.c_tovar;
                             item["v_name"] = "Производитель: " + item.c_zavod;
                             item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                            this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_link_search"), item);
+                            this.$scope.popnew.show("Редактирование записи " + item.id_spr, this.$scope._search, item);
                         } else {
                             webix.message({"type": "error", "text": "Редактирование запрещено"})
                             };
@@ -125,7 +125,7 @@ export default class LinksViewSpr extends JetView{
                         params["type"] = "async";
                         params["callback"] = delLnk;
                         params["parent"] = this.$scope;
-                        this.$scope.popunlink.show("Причина разрыва связки?", params);
+                        this.$scope.popunlink.show("Причина разрыва связки?", params, this.$scope._break);
                         };
                     },
                 onKeyPress: function(code, e){
@@ -138,15 +138,9 @@ export default class LinksViewSpr extends JetView{
                 onAfterSelect: function (item) {
                     let level = this.getSelectedItem().$level;
                     if (level === 1) {
-                        $$("_break").hide();
-                        //$$("_break").disable();
-                        //$$("_break").define('width', 1)
-                        //$$("_break").resize()
+                        this.$scope._break.hide();
                     } else if (level === 2) {
-                        $$("_break").show();
-                        //$$("_break").enable();
-                        //$$("_break").define('width', 220)
-                        //$$("_break").resize()
+                        this.$scope._break.show();
                         
                         };
                     }
@@ -165,10 +159,14 @@ export default class LinksViewSpr extends JetView{
     init() {
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
+
         }
 
     ready() {
-        $$("_break").hide();
+        this._break = this.getRoot().getParentView().$scope.$$("_br");
+        this._search = this.getRoot().getParentView().$scope.$$("_ls");
+        this.$$("__table").config.searchBar = this._search.config.id;
+        this._break.hide();
         }
     }
 

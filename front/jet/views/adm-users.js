@@ -10,7 +10,6 @@ export default class UsersView extends JetView{
         let app = $$("main_ui").$scope.app;
         var sprv = {view: "datatable",
             localId: "__dtu",
-            id: "__dtu_g",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -71,13 +70,13 @@ export default class UsersView extends JetView{
                     params.id = item.id
                     params.user = this.$scope.app.user;
                     item = checkVal(request(url, params, !0).response, 's');
-                    this.$scope.popnewuser.show('Редактирование пользователя', item);
+                    this.$scope.popnewuser.show('Редактирование пользователя', item, this);
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    if (app.config.roles[app.config.role].userdel) this.$$("_del").enable();
+                    if (app.config.roles[app.config.role].userdel) this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -106,23 +105,14 @@ export default class UsersView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, 
+                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd, 
                     label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
-                    on: {
-                        onAfterRender: function () {
-                            if (app.config.roles[app.config.role].useradd) this.enable();
-                            }
-                        },
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
+                {view:"button", type: 'htmlbutton', localId: "_del", hidden: true,
                     label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
-                    on: {
-                        onAfterRender: function () {
-                            }
-                        },
                     click: () => {
                         webix.message({
                             text: "Удаление пользователя. Позже.",
@@ -130,17 +120,13 @@ export default class UsersView extends JetView{
                             })
                         }
                     },
-                (app.config.roles[app.config.role].userdel) ? {view:"button", type: 'htmlbutton', disabled: true, localId: "_aroles",
+                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].userdel,
+                    localId: "_aroles",
                     label: "<span class='webix_icon fa-user-secret'></span><span style='line-height: 20px;'> Роли</span>", width: 140,
-                    on: {
-                        onAfterRender: function () {
-                            if (app.config.roles[app.config.role].userdel) this.enable();
-                            }
-                        },
-                    click: () => {
+                                    click: () => {
                         this.poproles.show("Админка ролей")
                         }
-                    } : {width: 1},
+                    },
                 ]
             }
 

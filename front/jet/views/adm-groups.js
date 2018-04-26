@@ -8,7 +8,8 @@ export default class GroupsView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            id: "__dtg",
+            //id: "__dtg",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -65,7 +66,7 @@ export default class GroupsView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").enable();
+                    this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -83,23 +84,23 @@ export default class GroupsView extends JetView{
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dtg").filter(function(obj){
+                            this.$scope.$$("__table").filter(function(obj){
                                 return obj.group.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: !true, 
-                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                {view:"button", type: 'htmlbutton', tooltip: "Добавить группу",
+                    label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
-                        let params = {'type': 'Gr', 'callback': addGr, 'mode': 'new', 'source': this.$$("__dtg")};
+                        let params = {'type': 'Gr', 'callback': addGr, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление группы', params);
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить группу",
+                    label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
-                        let item_id = this.$$("__dtg").getSelectedItem().id
+                        let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
@@ -108,6 +109,7 @@ export default class GroupsView extends JetView{
                         res = checkVal(res, 's');
                         if (res) {
                             delGr(res.id);
+                            this.$$("_del").hide()
                             };
                         }
                     },
@@ -125,7 +127,7 @@ export default class GroupsView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
-        webix.extend(this.$$("__dtg"), webix.ProgressBar);
-        this.$$("__dtg").sync(group.data);
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.$$("__table").sync(group.data);
         }
     }

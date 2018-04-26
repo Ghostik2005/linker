@@ -422,6 +422,7 @@ export function get_tg(th, id_spr) {
 
 export function get_data_test(inp_params) {
     let view = inp_params.view;
+    if (view) view.clearAll();
     let nav = inp_params.navBar;
     let se_s = inp_params.searchBar;
     let field = (inp_params.field) ? inp_params.field : undefined;
@@ -572,7 +573,7 @@ export function getDtParams(ui) {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
-            'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').value : undefined,
+            'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').getText() : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt_s") {

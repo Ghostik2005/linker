@@ -12,9 +12,9 @@ export default class BarcodesBView extends JetView{
         let app = this.app;
         
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
 
         function delB (pars) {
@@ -64,7 +64,7 @@ export default class BarcodesBView extends JetView{
             old_stri: " ",
             fi: 'c_tovar',
             di: 'asc',
-            searchBar: "__s_b",
+            searchBar: undefined,
             searchMethod: "getBarsSpr",
             columns: [
                 {id: "c_tovar", header: "Товар" , fillspace: true, sort: "server", headermenu: false,
@@ -117,7 +117,8 @@ export default class BarcodesBView extends JetView{
             }
 
         return {
-            view: "layout",
+            view: "layout", type: "clean",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
                 {$subview: PagerView}
@@ -127,7 +128,12 @@ export default class BarcodesBView extends JetView{
         }
         
     init() {
-        //webix.extend($$("__dtdb"), webix.ProgressBar);
         this.popconfirm = this.ui(ConfirmBarView);
+        }
+        
+    ready() {
+        this._search = this.getRoot().getParentView().$scope.$$("_sb");
+        this.$$("__table").config.searchBar = this._search.config.id;
+        this._search.focus();
         }
     }

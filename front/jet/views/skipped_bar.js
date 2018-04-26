@@ -20,9 +20,9 @@ export default class SkippedBarView extends JetView{
             }
 
         var filtFunc = () => {
-            let old_v = this.$$("__page").getValue();
-            this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.$$("__page").refresh();
+            let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+            this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+            this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
             }
         
         webix.ui.datafilter.customFilterSkip = Object.create(webix.ui.datafilter.textFilter);
@@ -87,7 +87,6 @@ export default class SkippedBarView extends JetView{
                     css: 'center_p',
                     header: [{text: "Дата изменения"}, 
                         {content: "dateRangeFilter", compare: compareTrue,
-                            readonly: !true, disabled: !true,
                             inputConfig:{format:dt_formating, width: 180,},
                             suggest:{
                                 view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
@@ -110,7 +109,9 @@ export default class SkippedBarView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user
-                    if (this.$scope.app.config.role === this.$scope.app.config.admin) {
+                    let app = this.$scope.app;
+                    if (app.config.roles[app.config.role].adm) {
+                    //if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                         let sh_prc = this.getSelectedItem().sh_prc
                         let params = {};
                         params["command"] = "?returnLnk";
@@ -132,12 +133,50 @@ export default class SkippedBarView extends JetView{
                     }
                 }
             }
-            
+
+        var top_menu = {
+            view: 'toolbar',
+            css: {"border-top": "0px"},
+            height: 40,
+            cols: [
+                {},
+                {view: "button", type: "htmlbutton", tooltip: "Обновить",
+                    label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                    click: () => {
+                        this.$$("__table").callEvent("onBeforeSort");
+                        }
+                    },
+                {view:"button", //type: 'htmlbutton',
+                    tooltip: "Сбросить фильтры",
+                    type:"imageButton", image: './addons/img/unfilter.svg',
+                    //label: "<span style='line-height: 20px;'>Сбросить фильтры</span>",
+                    width: 40,
+                    click: () => {
+                        var cv = this.$$("__table");
+                        var columns = cv.config.columns;
+                        columns.forEach(function(item){
+                            if (cv.isColumnVisible(item.id)) {
+                                if (item.header[1]) {
+                                    if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                                        cv.getFilter(item.id).setValue('');
+                                    } else {
+                                        let qq = cv.getFilter(item.id);
+                                        if (!qq.readOnly) qq.value = '';
+                                        };
+                                    }
+                                }
+                            });
+                        this.$$("__table").callEvent("onBeforeSort");
+                        }
+                    },
+                ]
+            }
+
         var _view = {
-            id: "sk_bar",
-            view: "layout",
-            css: {'border-left': "1px solid #dddddd !important"},
+            view: "layout", type: "clean",
+            //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
+                top_menu,
                 sprv,
                 {$subview: PagerView},
                 ]}
@@ -145,24 +184,35 @@ export default class SkippedBarView extends JetView{
         }
 
     ready() {
-        let old_v = this.$$("__page").getValue();
-        this.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-        this.$$("__page").refresh();
+        let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+        this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+        let th = this;
+        let u = webix.$$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id)
+        u.getChildViews()[1].getChildViews()[1].setValue('Применить');
+        u.getChildViews()[1].getChildViews()[1].define('click', function() {
+            if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            this._filter_timer=window.setTimeout(function(){
+                let thh = th.getRoot().getChildViews()[2].$scope;
+                let old_v = thh.$$("__page").getValue();
+                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                thh.$$("__page").refresh();
+                },webix.ui.datafilter.textWaitDelay);
+            this.getParentView().getParentView().hide();
+            })
+
+
         }
+
+
+
+
+//$$($$("main_ui").getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[1].getChildViews()[1].getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()
+
 
     init() {
         //console.log('init tab bar');
         this.popconfirm = this.ui(ConfirmView);
-        let th = this;
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
-            if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout(function(){
-                let old_v = th.$$("__page").getValue();
-                th.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                th.$$("__page").refresh();
-                },webix.ui.datafilter.textWaitDelay);
-            this.getParentView().getParentView().hide();
-            })
+
         }
     }

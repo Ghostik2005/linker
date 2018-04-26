@@ -65,7 +65,7 @@ export default class CountryView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").enable();
+                    this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -89,15 +89,15 @@ export default class CountryView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', disabled: !true, 
-                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                {view:"button", type: 'htmlbutton', tooltip: "Добавить страну",
+                    label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
                         let params = {'type': 'Strana', 'callback': addStrana, 'mode': 'new', 'source': this.$$("__dtc")};
                         this.popnew.show('Добавление страны', params);
                         }
                     },
-                {view:"button", type: 'htmlbutton', disabled: true, localId: "_del",
-                    label: "<span style='color: red', class='webix_icon fa-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить страну",
+                    label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
                         let item_id = this.$$("__dtc").getSelectedItem().id
                         let params = {};
@@ -108,6 +108,7 @@ export default class CountryView extends JetView{
                         res = checkVal(res, 's');
                         if (res) {
                             delStrana(res.id);
+                            this.$$("_del").hide()
                             };
                         }
                     },
