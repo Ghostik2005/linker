@@ -9,7 +9,6 @@ export default class FooterView extends JetView{
         let res = request(url, params, !0).response;
         res = checkVal(res, 's');
         var prod = (res.info.prod) ? "Production" : "test";
-        //this.app.config.roles = res.cfg;
         return {view: 'toolbar',
             css: 'header',
             cols: [

@@ -7,18 +7,20 @@ import md5 from "../views/md5";
 
 export default class loginView extends JetView{
     config(){
+        var app = this.app;
+        
         function validate_user(th) {
-            let item = $$("auth_box").getValues();
+            let item = th.$scope.$$("auth_box").getValues();
             item.pass = md5(item.pass);
             var ret = false;
-            let url = th.$scope.app.config.r_url + "?login"
+            let url = app.config.r_url + "?login"
             let res = request(url, item, !0).response;
             res = checkVal(res, 's');
             if (res) {
                 ret = true;
-                th.$scope.app.config.user = item.user;
-                th.$scope.app.config.role = res.role;
-                th.$scope.app.config.x_api = res.key;
+                app.config.user = item.user;
+                app.config.role = res.role;
+                app.config.x_api = res.key;
                 var opt = {'path': '/'};
                 setCookie('linker_user', item.user, opt);
                 setCookie('linker_auth_key', res.key, opt);
@@ -26,9 +28,9 @@ export default class loginView extends JetView{
                 };
             return ret;
             }
-        var app = this.app;
+
         var auth = {view: "form",
-            id: "auth_box",
+            localId: "auth_box",
             label:"Аутентификация",
             elements:[
                 {view:"text", label:"Пользователь", name:"user", labelWidth: 120, width: 400,
@@ -42,7 +44,6 @@ export default class loginView extends JetView{
                         click: function(){
                             if (validate_user(this)) {
                                 this.$scope.show("/start/body");
-                                //this.$scope.show("/start/body/top-menu");
                                 webix.message('авторизованно');
                             } else {
                                 webix.message({'text': 'не авторизованно', "type" : "debug"});
@@ -58,7 +59,7 @@ export default class loginView extends JetView{
         var af = {
             view: "layout",
             rows: [
-                {},
+                {height: document.documentElement.clientHeight/4},
                 {cols: [
                     {},
                     auth,
@@ -79,7 +80,6 @@ export default class loginView extends JetView{
             this.app.config.x_api = x;
             init_first(this.app);
             this.show("/start/body");
-            //this.show("/start/body/top-menu");
         } else {
             deleteCookie('linker_user');
             deleteCookie('linker_auth_key');

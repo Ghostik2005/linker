@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_data_test, getDtParams} from "../views/globals";
-import {last_page, request, checkVal} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 import ConfirmBarView from "../views/bar-yes-no.js";
 import PagerView from "../views/pager_view";
 
@@ -122,7 +121,6 @@ export default class BarcodesBView extends JetView{
             rows: [
                 sprv,
                 {$subview: PagerView}
-                //nav_b
                 ]
             }
         }

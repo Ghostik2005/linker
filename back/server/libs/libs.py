@@ -302,7 +302,7 @@ WHERE r.SH_PRC = ?
                 }
                 _return.append(r)
 
-            ret = {"result": True, "ret_val": {"datas" :_return[0]}}
+            ret = {"result": True, "ret_val": {"datas" :_return[0], 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -440,7 +440,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                     "dt"      : str(row[11])
                 }
                 _return.append(r)
-            ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p}}
+            ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -564,7 +564,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
             #sql = sql_c
             #opt = ()
             #count = self.db.request({"sql": sql, "options": opt})[0][0]
-            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p}}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
 
@@ -1784,7 +1784,7 @@ FROM RDB$DATABASE"""
                 ret = result #new id_spr
                 new = True
             _return.append(ret)
-            rett = {"datas": _return, "new": new}
+            rett = {"datas": _return, "new": new, 'params': params}
             ret = {"result": True, "ret_val": rett}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -1984,7 +1984,7 @@ FROM RDB$DATABASE"""
                     r['data'].append(rr)
                 _return.append(r)
             t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
+            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p, 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2105,7 +2105,7 @@ ROWS ? to ?
                 r['count'] = '' if len(r['data']) == 0 else len(r['data'])
                 _return.append(r)
             t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
+            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p, 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2426,7 +2426,7 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
                 }
                 _return.append(r)
             t2 = time.time() - st_t
-            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2)}}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2705,7 +2705,7 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
                     "dt"            : str(row[12])
                 }
                 _return.append(r)
-            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2)}}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2807,7 +2807,6 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?
         return json.dumps(ret, ensure_ascii=False)
 
     def getSprLnks(self, params=None, x_hash=None):
-        
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
@@ -2952,7 +2951,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 r['count'] = '' if len(r['data']) == 0 else len(r['data'])
                 _return.append(r)
             t3 = time.time() - st_t
-            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p}}
+            ret = {"result": True, "ret_val": {"datas": _return, "time": (t1, t3), "total": count, "start": start_p, "params": params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -3144,7 +3143,7 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                     "e_zavod"     : row[11]
                     }
                 _return.append(r)
-            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p}}
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "params": params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)

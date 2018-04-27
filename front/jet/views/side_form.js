@@ -9,7 +9,7 @@ import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
 export default class SideFormView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         function strana_filter(item, value) {
             value = value.toString().toLowerCase()
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
@@ -17,7 +17,6 @@ export default class SideFormView extends JetView{
             };
         function zavod_filter(item, value) {
             value = value.toString().toLowerCase()
-            //value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
             return item.c_zavod.toString().toLowerCase().search(value) != -1;
             };
         function dv_filter(item, value) {
@@ -329,7 +328,6 @@ export default class SideFormView extends JetView{
             this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
             }
-        //this.getRoot().show()
         }
         
     show_f(new_head, search_bar, item){
@@ -339,7 +337,6 @@ export default class SideFormView extends JetView{
             this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
             }
-        //this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()
         }
     hide_f(){

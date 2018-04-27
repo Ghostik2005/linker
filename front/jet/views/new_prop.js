@@ -1,4 +1,4 @@
-//"use strict";
+"use strict";
 
 import {JetView} from "webix-jet";
 import {request, checkVal} from "../views/globals";
@@ -55,7 +55,6 @@ export default class NewPropView extends JetView{
                         {view: "button", type: "base", label: "Сохранить", width: 120,
                             click: () => {
                                 let valid = this.$$("_n_f").validate({hidden:false, disabled:false});
-                                //let valid = true;
                                 if (valid) {
                                     let _f = this.$$("_n_f").getValues();
                                     let params = {};
@@ -77,15 +76,10 @@ export default class NewPropView extends JetView{
                             }
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
             }
-            }
         }
+        
     show(new_head, params){
         this.$$("_n_f").config._params = params;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);

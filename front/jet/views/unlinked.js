@@ -6,7 +6,7 @@ import {parse_unlinked_item} from "../views/globals";
 export default class UnlinkedView extends JetView{
     config(){
         var sprv = {view: "datatable",
-            id: "__unl",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -53,8 +53,8 @@ export default class UnlinkedView extends JetView{
             modal: true,
             on: {
                 onShow: function() {
-                    $$("__unl").clearAll();
-                    $$("__unl").parse($$("prcs_dc"));
+                    this.$scope.$$("__table").clearAll();
+                    this.$scope.$$("__table").parse($$("prcs_dc"));
                     }
                 },
             body: sprv

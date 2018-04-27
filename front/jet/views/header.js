@@ -35,7 +35,7 @@ export default class HeaderView extends JetView{
                 {view: "label", label: "Манускрипт солюшн: Линкер | " + this.app.config.user, css: 'ms-logo-text',
                     height: 36, width: 550},
                 {},
-                {view:"button", id: '_exit', css: "butt", type: 'htmlbutton', tooltip: "Выход",
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Выход",
                     label: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span>", width: 40,
                     on: {
                         onItemClick: () => {

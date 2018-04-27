@@ -1,9 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_data} from "../views/globals";
-import {last_page} from "../views/globals";
-import {checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
+import {checkKey, fRender, fRefresh} from "../views/globals";
 import ConfirmView from "../views/yes-no";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -111,7 +109,6 @@ export default class SkippedBarView extends JetView{
                     let user = this.$scope.app.config.user
                     let app = this.$scope.app;
                     if (app.config.roles[app.config.role].adm) {
-                    //if (this.$scope.app.config.role === this.$scope.app.config.admin) {
                         let sh_prc = this.getSelectedItem().sh_prc
                         let params = {};
                         params["command"] = "?returnLnk";
@@ -129,8 +126,6 @@ export default class SkippedBarView extends JetView{
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-                onBeforeSelect: () => {
-                    }
                 }
             }
 
@@ -146,11 +141,8 @@ export default class SkippedBarView extends JetView{
                         this.$$("__table").callEvent("onBeforeSort");
                         }
                     },
-                {view:"button", //type: 'htmlbutton',
-                    tooltip: "Сбросить фильтры",
-                    type:"imageButton", image: './addons/img/unfilter.svg',
-                    //label: "<span style='line-height: 20px;'>Сбросить фильтры</span>",
-                    width: 40,
+                {view:"button",  tooltip: "Сбросить фильтры",
+                    type:"imageButton", image: './addons/img/unfilter.svg', width: 40,
                     click: () => {
                         var cv = this.$$("__table");
                         var columns = cv.config.columns;
@@ -200,19 +192,9 @@ export default class SkippedBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
-
-
         }
 
-
-
-
-//$$($$("main_ui").getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[1].getChildViews()[1].getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()
-
-
     init() {
-        //console.log('init tab bar');
         this.popconfirm = this.ui(ConfirmView);
-
         }
     }

@@ -4,42 +4,22 @@ import {JetApp, JetView} from "webix-jet";
 
 export var users = new webix.DataCollection({
         id: "users_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var adm_roles = new webix.DataCollection({
         id: "admroles_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var u_roles = new webix.DataCollection({
         id: "roles_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var barcodes = new webix.DataCollection({
         id: "bars_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var tg = new webix.DataCollection({
         id: "tg_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 
@@ -47,7 +27,8 @@ export var prcs = new webix.DataCollection({
         id: "prcs_dc",
         on: {
             onAfterLoad: function() {
-                let cur_pos = this.data.order[0]
+                console.log('this', this);
+                let cur_pos = this.data.order[0];
                 this.setCursor(cur_pos);
                 let th = $$("main_ui");
                 let state = $$("_suppl").config.state;
@@ -62,66 +43,34 @@ export var prcs = new webix.DataCollection({
 
 export var allTg = new webix.DataCollection({
         id: "allTg_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var strana = new webix.DataCollection({
         id: "strana_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var vendor = new webix.DataCollection({
         id: "vendor_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var dv = new webix.DataCollection({
         id: "dv_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var nds = new webix.DataCollection({
         id: "nds_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var sezon = new webix.DataCollection({
         id: "sezon_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var hran = new webix.DataCollection({
         id: "hran_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export var group = new webix.DataCollection({
         id: "group_dc",
-        on: {
-            onAfterLoad: function() {
-                }
-            }
         });
 
 export function compareTrue () {
@@ -132,7 +81,7 @@ export var cEvent = function(a,b,c,d){
     d = d || {};
     d.inner = true;
     webix.event(a,b,c,d);
-};
+    };
 
 export var fRefresh = function(master, node, value){
     node.component = master.config.id;
@@ -338,16 +287,6 @@ export function updVendor(item, source) {
     source.refresh();
     }
 
-export function last_page(view) {
-    let total = $$(view).config.totalPos;
-    let lp = 0;
-    if (total > 0) {
-        let ppp = $$(view).config.posPpage;
-        lp = (Math.ceil(total/ppp) - 1) * ppp + 1
-        };
-    return lp
-    }
-
 export function parseToLink(item){
     let suppl_dt = $$("_suppl").getList()
     let data = suppl_dt.data.order;
@@ -420,21 +359,58 @@ export function get_tg(th, id_spr) {
         };
     }
 
-export function get_data_test(inp_params) {
+
+export function clear_obj(obj) {
+    for (var k in obj) {
+        let val = obj[k];
+        if (typeof(val) === 'object') {
+            val = clear_obj(val)
+        } else {
+            if (val==undefined) {
+                delete obj[k];
+                }
+            }
+        }
+    return obj
+    }
+
+export function gen_params(inp_params) {
     let view = inp_params.view;
-    if (view) view.clearAll();
-    let nav = inp_params.navBar;
+    let app = view.$scope.app;
     let se_s = inp_params.searchBar;
     let field = (inp_params.field) ? inp_params.field : undefined;
-    //let s_field = (inp_params.s_field) ? inp_params.s_field : undefined;
     let direction = (inp_params.direction) ? inp_params.direction : undefined;
     let search_str = (se_s) ? $$(se_s).getValue() : undefined;
     let c_filter = (inp_params.filter) ? inp_params.filter : undefined;
-    let app = $$("main_ui").$scope.app;
     let user = app.config.user;
     let url = app.config.r_url + "?" + inp_params.method;
     let params = {"user": user, "search": search_str, "start": inp_params.start, "count": inp_params.count,
                   "field": field, "direction": direction, "c_filter": c_filter, "cbars": inp_params.cbars};
+    params = clear_obj(params);
+    return params
+    }
+
+export function str_join(obj) {
+    let ret = ''
+    for (var k in obj) {
+        let val = obj[k];
+        if (typeof(val) === 'object') {
+            val = str_join(val)
+        } else {
+            ret += val.toString()
+            }
+        }
+    return ret
+    }
+
+export function get_data_test(inp_params) {
+    let view = inp_params.view;
+    let app = view.$scope.app;
+    if (view) view.clearAll();
+    let nav = inp_params.navBar;
+    let url = app.config.r_url + "?" + inp_params.method;
+    let params = gen_params(inp_params);
+    let search_str = params.search;
     if (search_str === "") search_str="%%";
     let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
     let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
@@ -446,6 +422,11 @@ export function get_data_test(inp_params) {
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
+                if (data.params) {
+                    let c_params = str_join(gen_params(inp_params));
+                    let r_params = str_join(data['params']);
+                    if (r_params !== c_params) return
+                    }
                 view.parse(data.datas);
                 view.config.startPos = data.start;
                 view.config.totalPos = data.total;
@@ -473,8 +454,6 @@ export function get_data_test(inp_params) {
                     hist = [search_str,]
                     }
                 webix.storage.session.put(view.config.name, hist);
-            } else {
-                view.clearAll();
                 };
             view.hideProgress();
             });
@@ -779,17 +758,15 @@ export function filter_1(item, value) {
     }
 
 export function after_call(i, ii, iii) {
-    //let th = $$("main_ui").$scope.app;
     deleteCookie('linker_user');
     deleteCookie('linker_auth_key');
     deleteCookie('linker_role');
-    //th.show("/login")
     location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
     }
 
 export function request (url, params, mode) {
     var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
-                        : webix.ajax().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
+                        : webix.ajax().timeout(90000).headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
     }
 

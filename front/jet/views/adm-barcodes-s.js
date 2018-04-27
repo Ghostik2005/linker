@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_data} from "../views/globals";
-import {last_page, request, checkVal, dt_formating_sec, getDtParams} from "../views/globals";
+import {request, checkVal, dt_formating_sec} from "../views/globals";
 import NewbarView from "../views/new_bar.js";
 import ConfirmBarView from "../views/bar-yes-no.js";
 import PagerView from "../views/pager_view";

@@ -33,6 +33,10 @@ button {
   text-transform: uppercase !important;
   font-weight: 600 !important;
 }
+.webix_el_button button {
+  border-width: 2px !important;
+  /*    border-color: #3498db !important;*/
+}
 .webix_input_icon.fa-angle-down {
   background-color: #e6e6e6 !important;
 }
@@ -41,6 +45,9 @@ button {
 }
 .borders {
   border-left: 1px solid #3498db !important;
+  border-top: 0px !important;
+}
+.webix_layout_toolbar {
   border-top: 0px !important;
 }
 .green {

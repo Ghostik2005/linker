@@ -1,10 +1,9 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_data_test} from "../views/globals";
-import {last_page, checkKey, fRefresh, fRender} from "../views/globals";
+import {checkKey, fRefresh, fRender} from "../views/globals";
 import {rRefresh, rRender} from "../views/globals";
-import {getDtParams, parseToLink} from "../views/globals";
+import {parseToLink} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 
@@ -94,7 +93,6 @@ export default class AllUnlinkedBarView extends JetView{
                                 options: rList
                                 },
                             }
-                        //{content: "customFilterUnlnk"},
                         ]
                     },
                 {id: "dt", width: 200, sort: 'server',
@@ -131,7 +129,6 @@ export default class AllUnlinkedBarView extends JetView{
                             setTimeout(()=> {
                                 this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('app-nav');
                                 }, 300);
-                            //this.getRoot().hide();
                         } else {
                             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
                             }
@@ -164,10 +161,7 @@ export default class AllUnlinkedBarView extends JetView{
                         this.$$("__table").callEvent("onBeforeSort");
                         }
                     },
-                {view:"button", //type: 'htmlbutton',
-                    tooltip: "Сбросить фильтры",
-                    type:"imageButton", image: './addons/img/unfilter.svg',
-                    //label: "<span style='line-height: 20px;'>Сбросить фильтры</span>",
+                {view:"button",  tooltip: "Сбросить фильтры",type:"imageButton", image: './addons/img/unfilter.svg',
                     width: 40,
                     click: () => {
                         var cv = this.$$("__table");
@@ -192,7 +186,6 @@ export default class AllUnlinkedBarView extends JetView{
         
         var _view = {
             view: "layout", type: "clean",
-            //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 top_menu,
                 sprv,
@@ -205,7 +198,7 @@ export default class AllUnlinkedBarView extends JetView{
         let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
         this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
         this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         let th = this;
         if (this.$$("__table").isColumnVisible('c_user')) {
             if  (!app.config.roles[app.config.role].lnkdel) {
@@ -226,14 +219,6 @@ export default class AllUnlinkedBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             });
-        //if (this.$$("__table").isColumnVisible('dt')) {
-            //this.$$("__table").getFilter('dt').setValue({'start':new Date()});
-            //};
-
-
         }
 
-    init() {
-
-        }
     }

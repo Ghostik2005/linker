@@ -12,50 +12,26 @@ export default class ConfirmView extends JetView{
                 margin: 0,
                 _params: {},
                 elements: [
-                    //{height: 44},
                     {view: "label", label: "Подтвердите", height: 44, align: "center"},
                     {cols: [
                         {view: "button", type: "base", label: "Нет", width: 120, height: 44,
                             click: () => {
-                                //webix.message("Очищаем форму и закрываем");
                                 this.getRoot().getBody().config._params = {};
                                 this.hide()
                                 }
                             },
                         {},
-                        {view: "button", type: "base", label: "Да", width: 120, height: 44, localId: "_yes",
-                            //click: () => {
-                                //let pars = this.getRoot().getBody().config._params;
-                                //let sh_prc = (pars.sh_prc) ? pars.sh_prc : undefined;
-                                //let user = this.app.config.user;
-                                //let url = this.app.config.r_url + pars.command;
-                                //let type = (pars.type) ? pars.type : undefined;
-                                //let action = (pars.action) ? pars.action : "no_action";
-                                //let id_spr = (pars.id_spr) ? pars.id_spr : undefined;
-                                //var callback = (pars.callback) ? pars.callback : undefined;
-                                //var th = (pars.th) ? pars.th : undefined;
-                                //let params = {"user": user, "sh_prc": sh_prc, "action": action, "id_spr": id_spr};
-                                //this.hide()
-                                //if (type === "sync") {
-                                    /////////////console.log('sync'); //синхронный запрос
-                                //} else {
-                                    //request(url, params).then(function(data) {
-                                        //data = checkVal(data, 'a');
-                                        //if (data) {
-                                            //if (callback) callback(data, th);
-                                            //};
-                                        //})
-                                    //}
-                                //}
+                        {view: "button", type: "base", label: "Да", width: 120, height: 44,
+                            localId: "_yes"
                             }
                         ]}
                     ],
-            on: {
-                onShow: () => {
-                    this.$$("_yes").focus();
+                on: {
+                    onShow: () => {
+                        this.$$("_yes").focus();
+                        }
                     }
                 }
-            }
             }
         }
     show(quest, params){

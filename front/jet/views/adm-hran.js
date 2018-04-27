@@ -17,7 +17,6 @@ export default class HranView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            //footer: true,
             headermenu:true,
             startPos: 1,
             posPpage: 20,
@@ -50,7 +49,6 @@ export default class HranView extends JetView{
                     this.clearAll();
                     },
                 onBeforeRender: function() {
-                    //webix.extend(this, webix.ProgressBar);
                     if (!this.count) {
                         this.showProgress({
                             type: "icon",
@@ -77,8 +75,7 @@ export default class HranView extends JetView{
                 },
             }
 
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
                     keyPressTimeout: 900, tooltip: "поиск по условиям хранения",

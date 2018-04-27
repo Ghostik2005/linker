@@ -38,7 +38,6 @@ export default class UnlinkView extends JetView{
                 margin: 0,
                 _params: {},
                 elements: [
-                    //{height: 44},
                     {view: "label", label: "Причина разрыва связкии", height: 44, align: "center"},
                     {cols: [
                         {view: "button", type: "base", label: "Ошибка", width: 120, height: 44,
@@ -55,13 +54,7 @@ export default class UnlinkView extends JetView{
                             } : {width: 1}
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
-            }
             }
         }
     show(quest, params, _break){

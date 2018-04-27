@@ -52,8 +52,6 @@ webix.ui({
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
-import {get_data} from "../views/globals";
-import {last_page, getDtParams} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SideFormView from "../views/side_form";
 
@@ -112,36 +110,30 @@ export default class SprView extends JetView{
             old_stri: "",
             searchBar: "_spr_search",
             searchMethod: "getSprSearch",
-            //css: 'dt_css',
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
                         ],
-                    //footer: {text:"Всего:", colspan:5, rowspan: 1, height: 24}
                     },
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
-                        //{content:"textFilter"}
                         ],
                     headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     //template:"{common.subrow()} #c_tovar#",
                     header: [{text: "Название"},
-                        //{content:"textFilter"}
                         ],
                     headermenu:false,
                     },
                 { id: "id_zavod", sort: "server",
                     width: 300,
                     header: [{text: "Производитель"},
-                        //{content:"textFilter"}
                         ]
                     },
                 { id: "id_strana", //sort: "text",
                     width: 200,
                     header: [{text: "Страна"},
-                        //{content:"textFilter"}
                         ]
                     },
                 { id: "c_dv", hidden: true,
@@ -236,12 +228,11 @@ export default class SprView extends JetView{
                 sprv,
                 {$subview: PagerView},
                 ]}
-            
 
         return dt
         }
+
     init() {
         this.popnew = this.ui(NewformView);
         }
-
     }

@@ -9,11 +9,9 @@ export default class LinkFilesView extends JetView{
 
         let app = this.app;
         
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "Поиск",
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", tooltip: "Поиск",
                     on: {
                         onKeyPress: function(code, event) {
                             return /////////////////////////////////
@@ -33,7 +31,6 @@ export default class LinkFilesView extends JetView{
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 130,
                     click: () => {
                         this.pop_upl.show_window("Загрузка файла");
-                        //webix.message({"text": "Добавление файла", "type": "debug", width: "400px", delay: "5"});
                         }
                     },
                 {view: "button", type: "htmlbutton",
@@ -64,9 +61,6 @@ export default class LinkFilesView extends JetView{
             rowHeight: 32,
             fixedRowHeight:false,
             rowLineHeight:32,
-            //headermenu:{
-                //autowidth: true, 
-                //},
             editable: false,
             columns: [
                 {id: "uin", width: 260,
@@ -102,9 +96,6 @@ export default class LinkFilesView extends JetView{
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    },
-                onAfterSelect: () => {
-                    //this.$$("del").enable();
                     },
                 },
             }

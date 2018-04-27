@@ -96,8 +96,4 @@ export default class LinkerView extends JetView{
                 ]
             }
         }
-        
-    init() {
-
-        }
     }

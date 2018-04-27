@@ -19,9 +19,7 @@ import {request} from "../views/globals";
 export default class TopmenuView extends JetView{
     config(){
         let app = this.app;
-        //console.log('user', app.config.user);
-        let tab_1 = {view: "layout",
-            id: 'app-nav',
+        let tab_1 = {view: "layout", id: 'app-nav',
             rows: [
                 {view: 'toolbar',
                     css: {"border-top": "0px !important"},
@@ -53,7 +51,6 @@ export default class TopmenuView extends JetView{
                                                 get_prcs_source(this, id_vnd);
                                                 };
                                         } else {
-                                            //let vv = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
                                             let vv = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
                                             vv[0].clearAll() //clear datatable
                                             this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
@@ -111,10 +108,7 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                     ]},
-                {view: 'toolbar',
-                    id: "_names_bar",
-                    //height: 48,
-                    css: "header",
+                {view: 'toolbar', id: "_names_bar", css: "header",
                     rows: [
                         {cols: [
                             {view: "label", label: "", name: "_name", fillspace: 1},
@@ -130,7 +124,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             {width: 10},
-                            {view: "button", type: "htmlbutton", id: "_refresh",
+                            {view: "button", type: "htmlbutton", 
                                 label: "<span class='butt'>Обновить сессию</span>", width: 200, height: 32,
                                 click: () => {
                                     if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
@@ -141,9 +135,7 @@ export default class TopmenuView extends JetView{
                                 },
                             ]},
                     ]},
-                {view: 'toolbar',
-                    id: "_tb",
-                    height: 40,
+                {view: 'toolbar', height: 40,
                     cols: [
                         {view: "text", label: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
                             on: {
@@ -173,7 +165,6 @@ export default class TopmenuView extends JetView{
                             click: () => {
                                 let nm = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0].config.name;
                                 let hist = webix.storage.session.get(nm);
-                                console.log($$("_spr_search"));
                                 this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
@@ -300,7 +291,6 @@ export default class TopmenuView extends JetView{
             tabMinWidth:170,
             tabMoreWidth:70,
             animate: false,
-            //view: "tabview",
             multiview: true,
             on: {
                 onOptionRemove: (id) => {
@@ -318,10 +308,28 @@ export default class TopmenuView extends JetView{
             cells: [tab_1]
             };
 
+        function add_bar(parent, view) {
+            var tab_view = parent.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+            let header = (view === SkippedBarView) ? "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>" :
+                         (view === AllUnlinkedBarView) ? "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>" :
+                         (view === LinksBarView) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>" :
+                         (view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
+                         ""
+            let uid = webix.uid();
+            var tabConfig = {
+                id: uid,
+                value: header, width: 172, close: true
+                };
+            let formConfig = {
+                id: uid,
+                $subview: view
+                };
+            parent.config.b_id = uid;
+            tab_view.getChildViews()[2].addView(formConfig);
+            tab_view.getChildViews()[1].addOption(tabConfig, true);
+            }
 
-        var side_bar = {view: 'toolbar',
-            localId: "sideMenu",
-            css: 'header',
+        var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'header',
             width: (app.config.expert) ? 44 : 140,
             rows: [
                 {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left',
@@ -330,7 +338,6 @@ export default class TopmenuView extends JetView{
                         {
                         onItemClick: function() {
                             if (app.config.expert) {
-                                //this.define({label: "<span class='webix_icon fa-arrow-left', style='color: #3498db'></span>"});
                                 app.config.expert = false;
                                 this.$scope.$$("sideMenu").define({width: 140});
                                 this.$scope.$$("sideMenu").resize();
@@ -351,7 +358,6 @@ export default class TopmenuView extends JetView{
                                 this.$scope.$$("_links").refresh();
                                 this.$scope.$$("_links").resize();
                             } else {
-                                //this.define({label: "<span class='webix_icon fa-bars', style='color: #3498db'></span>"});
                                 app.config.expert = true;
                                 this.$scope.$$("sideMenu").define({width: 44});
                                 this.$scope.$$("sideMenu").resize();
@@ -388,7 +394,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 }
                             },
-                        onItemClick: function (id, ii, iii) {
+                        onItemClick: function (id, event) {
                             webix.html.addCss(this.$view, "bounceIn animated");
                             setTimeout(() => {
                                     webix.html.removeCss(this.$view, "bounceIn animated");
@@ -420,18 +426,7 @@ export default class TopmenuView extends JetView{
                             let ui = $$(this.config.b_id);
                             if (ui) {
                                 if (this.config.longPress) {
-                                    let uid = webix.uid();
-                                    var tabConfig = {
-                                        id: uid,
-                                        value: "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>", width: 172, close: true
-                                        };
-                                    let formConfig = {
-                                        id: uid,
-                                        $subview: AdmBarView
-                                        };
-                                    this.config.b_id = uid;
-                                    tab_view.getChildViews()[2].addView(formConfig);
-                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                    add_bar(this, AdmBarView);
                                 } else {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
@@ -440,18 +435,7 @@ export default class TopmenuView extends JetView{
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                     }
                             } else {
-                                let uid = webix.uid();
-                                var tabConfig = {
-                                    id: uid,
-                                    value: "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>", width: 172, close: true
-                                    };
-                                let formConfig = {
-                                    id: uid,
-                                    $subview: AdmBarView
-                                    };
-                                this.config.b_id = uid;
-                                tab_view.getChildViews()[2].addView(formConfig);
-                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                add_bar(this, AdmBarView);
                                 }
                             this.config.longPress = false;
                             },
@@ -477,18 +461,7 @@ export default class TopmenuView extends JetView{
                             let ui = $$(this.config.b_id);
                             if (ui) {
                                 if (this.config.longPress) {
-                                    let uid = webix.uid();
-                                    var tabConfig = {
-                                        id: uid,
-                                        value: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>", width: 172, close: true
-                                        };
-                                    let formConfig = {
-                                        id: uid,
-                                        $subview: SkippedBarView
-                                        };
-                                    this.config.b_id = uid;
-                                    tab_view.getChildViews()[2].addView(formConfig);
-                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                    add_bar(this, SkippedBarView);
                                 } else {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
@@ -497,18 +470,7 @@ export default class TopmenuView extends JetView{
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                     }
                             } else {
-                                let uid = webix.uid();
-                                var tabConfig = {
-                                    id: uid,
-                                    value: "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>", width: 172, close: true
-                                    };
-                                let formConfig = {
-                                    id: uid,
-                                    $subview: SkippedBarView
-                                    };
-                                this.config.b_id = uid;
-                                tab_view.getChildViews()[2].addView(formConfig);
-                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                add_bar(this, SkippedBarView);
                                 }
                             this.config.longPress = false;
                             },
@@ -533,18 +495,7 @@ export default class TopmenuView extends JetView{
                             let ui = $$(this.config.b_id);
                             if (ui) {
                                 if (this.config.longPress) {
-                                    let uid = webix.uid();
-                                    var tabConfig = {
-                                        id: uid,
-                                        value: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>", width: 172, close: true
-                                        };
-                                    let formConfig = {
-                                        id: uid,
-                                        $subview: AllUnlinkedBarView
-                                        };
-                                    this.config.b_id = uid;
-                                    tab_view.getChildViews()[2].addView(formConfig);
-                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                    add_bar(this, AllUnlinkedBarView);
                                 } else {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
@@ -553,18 +504,7 @@ export default class TopmenuView extends JetView{
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                     }
                             } else {
-                                let uid = webix.uid();
-                                var tabConfig = {
-                                    id: uid,
-                                    value: "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>", width: 172, close: true
-                                    };
-                                let formConfig = {
-                                    id: uid,
-                                    $subview: AllUnlinkedBarView
-                                    };
-                                this.config.b_id = uid;
-                                tab_view.getChildViews()[2].addView(formConfig);
-                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                add_bar(this, AllUnlinkedBarView);
                                 }
                             this.config.longPress = false;
                             },
@@ -589,18 +529,7 @@ export default class TopmenuView extends JetView{
                             let ui = $$(this.config.b_id);
                             if (ui) {
                                 if (this.config.longPress) {
-                                    let uid = 'links_bar' + webix.uid();
-                                    var tabConfig = {
-                                        id: uid,
-                                        value: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>", width: 172, close: true
-                                        };
-                                    let formConfig = {
-                                        id: uid,
-                                        $subview: LinksBarView
-                                        };
-                                    this.config.b_id = uid;
-                                    tab_view.getChildViews()[2].addView(formConfig);
-                                    tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                    add_bar(this, LinksBarView);
                                 } else {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
@@ -609,18 +538,7 @@ export default class TopmenuView extends JetView{
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                     }
                             } else {
-                                let uid = 'links_bar' + webix.uid();
-                                var tabConfig = {
-                                    id: uid,
-                                    value: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>", width: 172, close: true
-                                    };
-                                let formConfig = {
-                                    id: uid,
-                                    $subview: LinksBarView
-                                    };
-                                this.config.b_id = uid;
-                                tab_view.getChildViews()[2].addView(formConfig);
-                                tab_view.getChildViews()[1].addOption(tabConfig, true);
+                                add_bar(this, LinksBarView);
                                 }
                             this.config.longPress = false;
                             },
@@ -630,7 +548,6 @@ export default class TopmenuView extends JetView{
                 ]
             };
 
-        
         return {
             cols: [
                 side_bar,

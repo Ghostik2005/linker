@@ -8,11 +8,9 @@ export default class LinkExclView extends JetView{
 
         let app = this.app;
         
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "Поиск",
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", tooltip: "Поиск",
                     on: {
                         onKeyPress: function(code, event) {
                             return

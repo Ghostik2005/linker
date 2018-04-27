@@ -3,9 +3,7 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import NewformView from "../views/new_form";
-import {get_data} from "../views/globals";
-import {get_data_test} from "../views/globals";
-import {checkKey, getDtParams} from "../views/globals";
+import {get_data_test, checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 export default class LinksBarView extends JetView{
@@ -26,8 +24,7 @@ export default class LinksBarView extends JetView{
         let sprv = {view: "toolbar",
             css: {"border-top": "0px"},
             cols: [
-            {view: "text", label: "", placeholder: "Строка поиска", height: 40, fillspace: true, localId: "_ls", //id: "_link_search",
-                //tooltip: "поиск от двух символов", 
+            {view: "text", label: "", placeholder: "Строка поиска", height: 40, fillspace: true, localId: "_ls", 
                 on: {
                     onKeyPress: function(code, event) {
                         clearTimeout(this.config._keytimed);
@@ -37,7 +34,7 @@ export default class LinksBarView extends JetView{
                             if (ui) {
                                 let params = getDtParams(ui);
                                 get_data_test({
-                                    view: getActDt(),
+                                    view: ui,
                                     navBar: getNavL(),
                                     start: 1,
                                     count: params[1],
@@ -85,11 +82,8 @@ export default class LinksBarView extends JetView{
                         }
                     }
                 },
-            {view:"button", //type: 'htmlbutton',
-                tooltip: "Сбросить фильтры",
-                type:"imageButton", image: './addons/img/unfilter.svg',
-                //label: "<span style='line-height: 20px;'>Сбросить фильтры</span>",
-                width: 40,
+            {view:"button", width: 40,
+                tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
                 click: () => {
                     var cv = getActDt();
                     var columns = $$(cv).config.columns;
@@ -108,7 +102,7 @@ export default class LinksBarView extends JetView{
                     this.$$("_ls").callEvent("onKeyPress", [13,]);
                     }
                 },
-            {view:"button", type: 'htmlbutton', hidden: !true, localId: "_br", //////////
+            {view:"button", type: 'htmlbutton', hidden: !true, localId: "_br", 
                 label: "<span style='color: red', class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать</span>", width: 140,
                 click: () => {
                     getActDt().callEvent("onItemDblClick");
@@ -129,13 +123,6 @@ export default class LinksBarView extends JetView{
 
     ready() {
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
-        //for(var i = 0; i < hh.length; i++) {
-            //if (hh[i].id.toString().indexOf('links_bar') > -1){
-                //hh[i].value = (this.app.config.lch===1) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px; font-size: 80%'>Связки:Эталоны</span>"
-                                                        //: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
-                //}
-            //}
-        //this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
         let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         this.show(show_t);
         this.$$("_ls").callEvent("onKeyPress", [13,]);
@@ -147,5 +134,4 @@ export default class LinksBarView extends JetView{
         this.pophistory = this.ui(History);
         }
     }
-
 

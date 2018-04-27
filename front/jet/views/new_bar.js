@@ -1,8 +1,7 @@
-//"use strict";
+"use strict";
 
 import {JetView} from "webix-jet";
 import {barcodes, get_bars} from "../views/globals";
-
 
 export default class NewbarView extends JetView{
     config(){
@@ -20,7 +19,6 @@ export default class NewbarView extends JetView{
                     this.$$("_nbar").setValue("");
                     this.$$("b_code").setValue('0000000000000');
                     this.$$("_n_b").reconstruct();
-                    //this.$$("b_list").clearAll();
                     },
                 onShow: () => {
                     this.$$("_nbar").setValue("");
@@ -37,9 +35,6 @@ export default class NewbarView extends JetView{
                 id_spr: undefined,
                 th: undefined,
                 callback: undefined,
-                rules:{
-                    //"_new_bar": check_b,
-                    },
                 elements: [
                     {rows: [
                         {cols: [
@@ -130,13 +125,7 @@ export default class NewbarView extends JetView{
                             ]}
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
-            }
             }
         }
         

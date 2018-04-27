@@ -77,7 +77,6 @@ export default class NewtgView extends JetView{
                                 {view:"list",
                                     localId: "e_list",
                                     width:350,
-                                    //height: document.documentElement.clientHeight * 0.7,
                                     template:"#c_tgroup#",
                                     select:true,
                                     on: {
@@ -103,7 +102,6 @@ export default class NewtgView extends JetView{
                                 click: () => {
                                     this.$$("t_list").selectAll();
                                     let tgs = this.$$("t_list").getSelectedItem();
-                                    //console.log('tgs', tgs);
                                     var p = '';
                                     let th = this.$$("_n_tg").config.th;
                                     let id_spr = this.$$("_n_tg").config.id_spr;
@@ -118,7 +116,6 @@ export default class NewtgView extends JetView{
                                             p = tgs.c_tgroup;
                                             }
                                         }
-                                    //console.log('p', p)
                                     if (th) {th.$$("_c_tgroup").setValue(p);
                                         th.$$("_c_tgroup").refresh();
                                         };
@@ -129,13 +126,7 @@ export default class NewtgView extends JetView{
                             ]}
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
-            }
             }
         }
         

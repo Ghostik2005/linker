@@ -42,14 +42,13 @@ export default class NewDvView extends JetView{
                     "text": webix.rules.isNotEmpty,
                     },
                 elements: [
-                    {view: "text", localId: "_id",label: "ID", value: "", name: "id", placeholder: "Введите значение", readonly: true, //width: 320,
+                    {view: "text", localId: "_id",label: "ID", value: "", name: "id", placeholder: "Введите значение", readonly: true, 
                         required: true, invalidMessage: "Такой ID уже есть"
                         },
-                    {view: "text", label: "Название", value: "", name: "text", placeholder: "Введите значение", //width: 320, 
+                    {view: "text", label: "Название", value: "", name: "text", placeholder: "Введите значение",
                         required: true, invalidMessage: "Введите название"
                         },
-                    {view: "select", label: "Обязательный ассортимент", value: 3, labelWidth: 200, width: 450, name: "oa", //placeholder: "Введите значение",
-                        //required: true, invalidMessage: "Введите название"
+                    {view: "select", label: "Обязательный ассортимент", value: 3, labelWidth: 200, width: 450, name: "oa", 
                         // сделаем загрузку с сервера 
                         options:[
                             {id:3, value:"Нет" }, // the initially selected value
@@ -69,7 +68,6 @@ export default class NewDvView extends JetView{
                         {view: "button", type: "base", label: "Сохранить", width: 120,
                             click: () => {
                                 let valid = this.$$("_n_f").validate({hidden:false, disabled:false});
-                                //let valid = true;
                                 if (valid) {
                                     let _f = this.$$("_n_f").getValues();
                                     let params = {};
@@ -80,28 +78,21 @@ export default class NewDvView extends JetView{
                                     params['oa'] = _f.oa;
                                     let url = (para.mode === 'new') ? this.app.config.r_url + "?set" + para.type
                                                                     : this.app.config.r_url + "?upd" + para.type;
-                                    //console.log(params);
                                     let res = request(url, params, !0).response;
                                     res = checkVal(res, 's');
                                     if (res) {
                                         para.callback(res, para.source);
                                         };
                                     this.hide();
-                                } else {
                                     }
                                 }
                             }
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
             }
-            }
         }
+        
     show(new_head, params){
         this.$$("_n_f").config._params = params;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
@@ -118,9 +109,11 @@ export default class NewDvView extends JetView{
         this.$$("_id").refresh();
         this.getRoot().show();
         }
+        
     hide(){
         this.getRoot().hide()
         }
+        
     getValues() {
         return this.getRoot().getBody().getValues();
         }

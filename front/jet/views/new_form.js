@@ -9,7 +9,7 @@ import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
 export default class NewformView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         function strana_filter(item, value) {
             value = value.toString().toLowerCase()
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");

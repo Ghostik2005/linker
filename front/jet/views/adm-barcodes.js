@@ -7,11 +7,9 @@ import {get_data_test, checkKey, getDtParams} from "../views/globals";
 export default class BarcodesView extends JetView{
     config(){
 
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40,  view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Начните набирать название товара здесь",  fillspace: true, localId: "_sb",
-                    //id: "__s_b",
                     keyPressTimeout: 900, tooltip: "поиск по ШК", _keytimed: undefined,
                     on: {
                         onKeyPress: function(code, event) {
@@ -52,7 +50,6 @@ export default class BarcodesView extends JetView{
                     hidden: function(){
                         return (this.$scope.$$("_chbar").getValue() === 1) 
                         },
-                    //id: "_bar_num",
                     localId: "_bnum",
                     title: webix.template("#value#"),
                     stringResult:true,
@@ -64,7 +61,7 @@ export default class BarcodesView extends JetView{
                             },
                         },
                     },
-                {view: "checkbox", labelRight: "Все", labelWidth: 0, value: 1, width: 60, localId: "_chbar", //id: "__checkbars", 
+                {view: "checkbox", labelRight: "Все", labelWidth: 0, value: 1, width: 60, localId: "_chbar",
                     on: {
                         onChange: () => {
                             this.$$("_sb").focus();
@@ -109,8 +106,5 @@ export default class BarcodesView extends JetView{
     init() {
         this.pophistory = this.ui(History);
         this.show('adm-barcodes-s')
-        }
-    ready(){
-        //this.app.show('/start/adm/adm-references/adm-barcodes/adm-barcodes-s')
         }
     }

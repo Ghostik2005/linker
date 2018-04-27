@@ -1,4 +1,4 @@
-//"use strict";
+"use strict";
 
 import {JetView} from "webix-jet";
 import {request, checkVal} from "../views/globals";
@@ -72,13 +72,7 @@ export default class NewstriView extends JetView{
                             }
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
-            }
             }
         }
     show(new_head, params){

@@ -6,8 +6,7 @@ export default class ConfirmBarView extends JetView{
     config(){
         return {view: "cWindow",
             modal: true,
-            body: { view: "form",
-                margin: 0,
+            body: { view: "form", margin: 0,
                 _params: {},
                 on: {
                     onShow: function(id){
@@ -15,7 +14,6 @@ export default class ConfirmBarView extends JetView{
                         }
                     },
                 elements: [
-                    //{height: 44},
                     {view: "label", label: "Подтвердите", height: 44, align: "center"},
                     {cols: [
                         {view: "button", type: "base", label: "Нет", width: 120, height: 44,
@@ -35,13 +33,7 @@ export default class ConfirmBarView extends JetView{
                             }
                         ]}
                     ],
-            on: {
-                onBeforeShow: function() {
-                    },
-                onShow: function() {
-                    }
                 }
-            }
             }
         }
     show(quest, params){

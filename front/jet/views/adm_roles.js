@@ -16,43 +16,37 @@ export default class RolesView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            //headermenu:true,
             css: 'dt_css',
             columns: [
-                {id: "act_name", width: 375, //css: "col_center",
+                {id: "act_name", width: 375, 
                     header: [{text: "Тип действия"},
                         ],
                     },
-                {id: "user", fillspace: 1, css: "col_center", template: "{common.checkbox()}", //template: user_func,
+                {id: "user", fillspace: 1, css: "col_center", template: "{common.checkbox()}", 
                     header: [{text: "Имя роли", colspan: 5, css: "col_center"},
-                        //{text: "Пользователь"}
                         {text: $$("roles_dc").getItem(1).r_name}
                         ],
                     },
-                { id: "linker", fillspace: 1, css: "col_center", template: "{common.checkbox()}", //template: linker_func,
+                { id: "linker", fillspace: 1, css: "col_center", template: "{common.checkbox()}", 
                     header: [{},
-                        //{text: "Сводильщик"},
                         {text: $$("roles_dc").getItem(9).r_name},
                         ],
                     },
-                { id: "admin", css: "col_center", template: "{common.checkbox()}", //template: admin_func,
+                { id: "admin", css: "col_center", template: "{common.checkbox()}", 
                     fillspace: 1, 
                     header: [{},
-                        //{text: "Администратор"},
                         {text: $$("roles_dc").getItem(10).r_name},
                         ]
                     },
-                { id: "superadmin", css: "col_center", template: "{common.checkbox()}", //template: superadmin_func,
+                { id: "superadmin", css: "col_center", template: "{common.checkbox()}", 
                     fillspace: 1, 
                     header: [{},
-                        //{text: "СуперАдмин"},
                         {text: $$("roles_dc").getItem(34).r_name},
                         ]
                     },
-                { id: "qqq", css: "col_center", template: "{common.checkbox()}", //template: qqq_func,
+                { id: "qqq", css: "col_center", template: "{common.checkbox()}", 
                     fillspace: 1,
                     header: [{},
-                        //{text: "qqq"},
                         {text: $$("roles_dc").getItem(35).r_name},
                         ]
                     },
@@ -61,31 +55,20 @@ export default class RolesView extends JetView{
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
-                onBeforeSort: (field, direction) => {
-                    },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
-                    },
-                onItemDblClick: function(item) {
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-                onBeforeSelect: () => {
-                    },
                 }
             }
 
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
                 {},
                 {view:"button", type: 'htmlbutton', 
                     label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 140,
-                    on: {
-                        onAfterRender: function () {
-                            }
-                        },
                     click: () => {
                         this.hide()
                         }
@@ -105,7 +88,6 @@ export default class RolesView extends JetView{
                             this.popconfirm.show('Отключить всех пользователей?', params);
                             this.hide()
                             }
-
                         }
                     },
                 ]

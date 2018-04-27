@@ -3,9 +3,9 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import History from "../views/history";
-import {get_spr, get_data_test} from "../views/globals";
-import {last_page, checkKey, dt_formating_sec, dt_formating} from "../views/globals";
-import {compareTrue, fRefresh, fRender, rRefresh, rRender, getDtParams} from "../views/globals";
+import {get_spr} from "../views/globals";
+import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
+import {compareTrue, fRefresh, fRender, rRefresh, rRender} from "../views/globals";
 import PagerView from "../views/pager_view";
 
 export default class SprView extends JetView{
@@ -233,7 +233,7 @@ export default class SprView extends JetView{
                 }
             }
 
-        var top = {
+        var top = { view: "toolbar",
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", localId: "_sb", //id: "_spr_search_adm",

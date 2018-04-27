@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {get_data} from "../views/globals";
-import {last_page, checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
+import {checkKey, fRender, fRefresh} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
@@ -61,7 +60,6 @@ export default class LinksViewLnk extends JetView{
                     ]
                     },
                 {id: "c_tovar", fillspace: true, sort: 'server',
-                    //template:"<span>{common.treetable()} #c_tovar#</span>",
                     header: [{text: "Наименование"},
                     ],
                     headermenu:false,

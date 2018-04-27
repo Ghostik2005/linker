@@ -33,6 +33,4 @@ export default class TopmenuView extends JetView{
                 ]
             }
         }
-    init() {
-        }
     }

@@ -1,10 +1,9 @@
-//"use strict";
+"use strict";
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
-import {get_data} from "../views/globals";
-import {last_page, checkKey, getDtParams, fRender, fRefresh} from "../views/globals";
+import {checkKey, fRender, fRefresh} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import {dt_formating_sec, dt_formating} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -55,15 +54,14 @@ export default class LinksViewSpr extends JetView{
             old_stri: " ",
             searchBar: undefined,
             searchMethod: "getSprLnks",
-            //css: 'dt_css',
             columns: [
-                {id: "c_tovar", fillspace: true, //sort: 'server',
+                {id: "c_tovar", fillspace: true, 
                     template:"<span>{common.treetable()} #c_tovar#</span><span style='color: red'> #count#</span>",
                     header: [{text: "Наименование"},
                     ],
                     headermenu:false,
                     },
-                {id: "c_zavod", width: 200, //sort: 'server',
+                {id: "c_zavod", width: 200, 
                     header: [{text: "Производитель"},
                     {content: "customFilterLnkSpr"},
                     ]
@@ -150,7 +148,6 @@ export default class LinksViewSpr extends JetView{
         return {view: "layout",
             rows: [
                 tt,
-                //pg,
                 {$subview: PagerView}
                 ],
             }
@@ -159,7 +156,6 @@ export default class LinksViewSpr extends JetView{
     init() {
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
-
         }
 
     ready() {

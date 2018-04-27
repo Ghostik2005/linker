@@ -76,7 +76,7 @@ export default class VendorsView extends JetView{
                 },
             }
 
-        var top = {//view: 'layout',
+        var top = { view: "toolbar",
             height: 40,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 

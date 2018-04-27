@@ -4,7 +4,6 @@ import {JetView} from "webix-jet";
 import {nds, addNds, delNds, updNds, request, checkVal} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
-
 export default class NdsView extends JetView{
     config(){
 
@@ -17,7 +16,6 @@ export default class NdsView extends JetView{
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            //footer: true,
             headermenu:true,
             startPos: 1,
             posPpage: 20,
@@ -76,8 +74,7 @@ export default class NdsView extends JetView{
                 },
             }
 
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
                     keyPressTimeout: 900, tooltip: "поиск по НДС",

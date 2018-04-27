@@ -5,7 +5,7 @@ import {u_roles, checkVal, request} from "../views/globals";
 
 export default class NewUserView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         function check_s(value) {
             let url = this.$scope.app.config.r_url + "?check" + this.config._params.type
             let params = {};
@@ -85,10 +85,6 @@ export default class NewUserView extends JetView{
                                     body: {
                                         template:"#r_name#",
                                         yCount:5,
-                                        }
-                                    },
-                                on: {
-                                    onAfterRender: function() {
                                         }
                                     },
                                 },

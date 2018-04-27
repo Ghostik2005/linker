@@ -11,7 +11,6 @@ export default class LinkerView extends JetView{
         let app = this.app;
 
         var tabv = {
-            //view:"tabbar",
             view: "tabview",
             multiview: true,
             cells: [
@@ -47,9 +46,5 @@ export default class LinkerView extends JetView{
                 tabv,
                 ]
             }
-        }
-        
-    init() {
-
         }
     }

@@ -7,7 +7,7 @@ import RolesView from "../views/adm_roles";
 
 export default class UsersView extends JetView{
     config(){
-        let app = $$("main_ui").$scope.app;
+        let app = this.app;
         var sprv = {view: "datatable",
             localId: "__dtu",
             navigation: "row",
@@ -45,11 +45,6 @@ export default class UsersView extends JetView{
                     header: [{text: "Роль пользователя"},
                         ]
                     },
-                //{ id: "c_status", sort: "text",
-                    //width: 150,
-                    //header: [{text: "Статус"},
-                        //]
-                    //},
                 { id: "dt", hidden: true,
                     width: 250,
                     header: [{text: "Дата заведения"},
@@ -86,8 +81,7 @@ export default class UsersView extends JetView{
                 },
             }
 
-        var top = {//view: 'layout',
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
                     keyPressTimeout: 900, tooltip: "Поиск по пользователю",
