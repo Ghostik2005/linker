@@ -95,6 +95,7 @@ export var fRefresh = function(master, node, value){
 export var rRefresh = function(master, node, value){
     if (master.$destructed) return;
     var select = webix.$$(value.richselect);
+    node._comp_id = master.config.id;
     node.$webix = value.richselect;
     node.style.marginLeft = "-10px";
     value.compare = value.compare || this.compare;
@@ -116,31 +117,6 @@ export var rRefresh = function(master, node, value){
     if (value.value) this.setValue(node, value.value);
     select.render();
     webix.delay(select.resize, select);
-    }
-
-export var rRender = function(chFunc) {
-    return function(master, config){
-        if (!config.richselect){
-            var d = webix.html.create("div", { "class" : "webix_richfilter" });
-            var richconfig = {
-                container:d,
-                view:this.inputtype,
-                options:[]
-                };
-            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-            webix.extend(richconfig, inputConfig, true);
-            if (config.separator) richconfig.separator = config.separator;
-            if (config.suggest) richconfig.suggest = config.suggest;
-            var richselect = webix.ui(richconfig);
-            richselect.attachEvent("onChange", chFunc);
-            config.richselect = richselect.config.id;
-            //console.log('master', master);
-            //console.log('master._d', master._destroy_with_me);
-            //master._destroy_with_me.push(richselect);
-            };
-        config.css = "webix_div_filter";
-        return " ";
-        }
     }
 
 export var fRender = function(master, config){
@@ -169,7 +145,7 @@ export function checkVal(result, mode) {
         ret_value = undefined;
         err = 'error';
         }
-    if (err) console.log(err);
+    //if (err) console.log(err);
     return ret_value;
     }
 

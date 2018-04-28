@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.117.1640",
+        version:        "18.118.1550",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -58,7 +58,7 @@ webix.ready( () => {
         x_api:          "x_login",
         //debug:          true,
         searchDelay:    1000,
-        popDelay:       700,
+        popDelay:       800,
         lch:            0,
         roles:          {},
         expert:         true
@@ -74,15 +74,17 @@ webix.ready( () => {
 
     console.log('search', location.search);
 
-    window.onerror = function (message, source, lineNr) {
+    window.onerror = function (message, source, lineNr, col, err) {
         webix.message({"text": "Возникла ошибка. Мы работаем над ее исправлением. Текст в консоли", "type": "error", width: "800px", delay: "5"}); //
         window.console.log("message:", message);
         window.console.log("source:", source);
-        return false; 
+        window.console.log("err:", err);
+        var suppr = true;
+        return suppr; 
         };
 
-    app.attachEvent("app:error:resolve", function(name, error) {
-        window.console.error(error);
-        })
+    //app.attachEvent("app:error:resolve", function(name, error) {
+        //window.console.error(error);
+        //})
 
     });

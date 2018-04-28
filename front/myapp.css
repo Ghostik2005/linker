@@ -49,6 +49,7 @@ button {
 }
 .webix_layout_toolbar {
   border-top: 0px !important;
+  border-bottom: 0px !important;
 }
 .green {
   color: green;

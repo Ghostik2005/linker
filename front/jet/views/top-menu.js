@@ -414,7 +414,9 @@ export default class TopmenuView extends JetView{
                             let node = this.getNode();
                             node.onmousedown =  () => {
                                 this.interval = setInterval( () => {
-                                    this.config.longPress = true
+                                    this.config.longPress = true;
+                                    add_bar(this, AdmBarView);
+                                    clearInterval(this.interval);
                                 }, app.config.popDelay);
                                 node.onmouseup = () => {
                                     clearInterval(this.interval);
@@ -424,21 +426,20 @@ export default class TopmenuView extends JetView{
                         onItemClick: function () {
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
-                            if (ui) {
-                                if (this.config.longPress) {
-                                    add_bar(this, AdmBarView);
-                                } else {
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
-                                            webix.html.removeCss(this.$view, "bounceIn animated");
-                                          },900)
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                    }
-                            } else {
-                                add_bar(this, AdmBarView);
-                                }
+                                } else {
+                                    add_bar(this, AdmBarView);
+                                    };
+                                };
                             this.config.longPress = false;
-                            },
+                            }
                         }
                     },
                  {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40,localId: "_skipped", b_id: undefined, longPress: false,
@@ -449,7 +450,9 @@ export default class TopmenuView extends JetView{
                             let node = this.getNode();
                             node.onmousedown =  () => {
                                 this.interval = setInterval( () => {
-                                    this.config.longPress = true
+                                    this.config.longPress = true;
+                                    add_bar(this, SkippedBarView);
+                                    clearInterval(this.interval);
                                 }, app.config.popDelay);
                                 node.onmouseup = () => {
                                     clearInterval(this.interval);
@@ -459,21 +462,20 @@ export default class TopmenuView extends JetView{
                         onItemClick: function () {
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
-                            if (ui) {
-                                if (this.config.longPress) {
-                                    add_bar(this, SkippedBarView);
-                                } else {
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
-                                            webix.html.removeCss(this.$view, "bounceIn animated");
-                                          },900)
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                    }
-                            } else {
-                                add_bar(this, SkippedBarView);
-                                }
+                                } else {
+                                    add_bar(this, SkippedBarView);
+                                    };
+                                };
                             this.config.longPress = false;
-                            },
+                            }
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, localId: "_unlinked", b_id: undefined, longPress: false,
@@ -483,7 +485,9 @@ export default class TopmenuView extends JetView{
                             let node = this.getNode();
                             node.onmousedown =  () => {
                                 this.interval = setInterval( () => {
-                                    this.config.longPress = true
+                                    this.config.longPress = true;
+                                    add_bar(this, AllUnlinkedBarView);
+                                    clearInterval(this.interval);
                                 }, app.config.popDelay);
                                 node.onmouseup = () => {
                                     clearInterval(this.interval);
@@ -493,21 +497,20 @@ export default class TopmenuView extends JetView{
                         onItemClick: function () {
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
-                            if (ui) {
-                                if (this.config.longPress) {
-                                    add_bar(this, AllUnlinkedBarView);
-                                } else {
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
-                                            webix.html.removeCss(this.$view, "bounceIn animated");
-                                          },900)
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                    }
-                            } else {
-                                add_bar(this, AllUnlinkedBarView);
-                                }
+                                } else {
+                                    add_bar(this, AllUnlinkedBarView);
+                                    };
+                                };
                             this.config.longPress = false;
-                            },
+                            }
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, localId: "_links", b_id: undefined, longPress: false,
@@ -517,7 +520,9 @@ export default class TopmenuView extends JetView{
                             let node = this.getNode();
                             node.onmousedown =  () => {
                                 this.interval = setInterval( () => {
-                                    this.config.longPress = true
+                                    this.config.longPress = true;
+                                    add_bar(this, LinksBarView);
+                                    clearInterval(this.interval);
                                 }, app.config.popDelay);
                                 node.onmouseup = () => {
                                     clearInterval(this.interval);
@@ -527,21 +532,20 @@ export default class TopmenuView extends JetView{
                         onItemClick: function () {
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
-                            if (ui) {
-                                if (this.config.longPress) {
-                                    add_bar(this, LinksBarView);
-                                } else {
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
-                                            webix.html.removeCss(this.$view, "bounceIn animated");
-                                          },900)
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                    }
-                            } else {
-                                add_bar(this, LinksBarView);
-                                }
+                                } else {
+                                    add_bar(this, LinksBarView);
+                                    };
+                                };
                             this.config.longPress = false;
-                            },
+                            }
                         },
                     },
                 {}

@@ -11,25 +11,24 @@ export default class SkippedBarView extends JetView{
     config(){
 
         let app = this.app;
+        var vi = this;
 
         var delSkip = () => {
             let item_id = this.$$("__table").getSelectedId()
             this.$$("__table").remove(item_id)
             }
 
-        var filtFunc = () => {
-            let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-            this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
-            }
-        
         webix.ui.datafilter.customFilterSkip = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.customFilterSkip.on_key_down = function(e, node, value){
+                var id = this._comp_id;
+                var vi = webix.$$(id);
                 if ((e.which || e.keyCode) == 9) return;
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout(function(){
-                    filtFunc()
+                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
                     }, app.config.searchDelay);
                 }
         webix.ui.datafilter.customFilterSkip.refresh = fRefresh;
@@ -103,7 +102,9 @@ export default class SkippedBarView extends JetView{
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    filtFunc();
+                    let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+                    vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
                     },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user

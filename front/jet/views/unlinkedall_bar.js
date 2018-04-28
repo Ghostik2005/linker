@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {checkKey, fRefresh, fRender} from "../views/globals";
-import {rRefresh, rRender} from "../views/globals";
+import {rRefresh} from "../views/globals";
 import {parseToLink} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -10,20 +10,20 @@ import PagerView from "../views/pager_view";
 export default class AllUnlinkedBarView extends JetView{
     config(){
         let app = this.app;
+
+        var vi = this;
         
-        var filtFunc = () => {
-            let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-            this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
-            }
-            
         webix.ui.datafilter.customFilterUnlnk = Object.create(webix.ui.datafilter.textFilter);
         webix.ui.datafilter.customFilterUnlnk.on_key_down = function(e, node, value){
+                var id = this._comp_id;
+                var vi = webix.$$(id);
                 if ((e.which || e.keyCode) == 9) return;
                 if (!checkKey(e.keyCode)) return;
                 if (this._filter_ti) window.clearTimeout(this._filter_ti);
                 this._filter_ti=window.setTimeout(function(){
-                    filtFunc()
+                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
                     }, app.config.searchDelay);
                 };
         webix.ui.datafilter.customFilterUnlnk.refresh = fRefresh;
@@ -31,12 +31,35 @@ export default class AllUnlinkedBarView extends JetView{
 
         webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
         webix.ui.datafilter.richFilt.refresh = rRefresh;
-        webix.ui.datafilter.richFilt.render = rRender(function(){
-            if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout( () => {
-                filtFunc();
-                },app.config.searchDelay);
-            })
+
+        webix.ui.datafilter.richFilt.render = function(master, config){
+            if (!config.richselect){
+                var d = webix.html.create("div", { "class" : "webix_richfilter" });
+                var richconfig = {
+                    container:d,
+                    view:this.inputtype,
+                    options:[]
+                    };
+                var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
+                webix.extend(richconfig, inputConfig, true);
+                if (config.separator) richconfig.separator = config.separator;
+                if (config.suggest) richconfig.suggest = config.suggest;
+                var richselect = webix.ui(richconfig);
+                richselect.attachEvent("onChange", function(){
+                    var vid = master.config.id;
+                    var vi = webix.$$(vid);
+                    if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                    this._filter_timer=window.setTimeout( () => {
+                        let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
+                        vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                        vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
+                        },app.config.searchDelay);
+                    });
+                config.richselect = richselect.config.id;
+                };
+            config.css = "webix_div_filter";
+            return " ";
+            }
 
         var rList = [{id: 0, value: "Пользователь"}, {id: 9, value: "Сводильщик"}, {id: 10, value: "Админ"}, {id: 34, value: "Суперадмин"}, {id: 100, value: "?"}];
 
@@ -118,7 +141,9 @@ export default class AllUnlinkedBarView extends JetView{
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    filtFunc();
+                    let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+                    vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
                     },
                 onItemDblClick: () => {
                     let item = this.$$("__table").getSelectedItem();
