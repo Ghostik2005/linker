@@ -15,6 +15,7 @@ import LinksBarView from "../views/links_form_bar";
 import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
 import {request} from "../views/globals";
+import loginTestView from "../views/login_test";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -99,6 +100,15 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                         {},
+                        {view: "button", type: "htmlbutton", tooltip: "test", hidden: true,
+                            label: "<span class='webix_icon fa-train'></span>", width: 40,
+                            on: {
+                                onItemClick: () => {
+                                    this.loginshow.show_w('Вход в систему');
+                                    console.log('test');
+                                    }
+                                },
+                            },
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
                             label: "<span class='webix_icon fa-refresh'></span>", width: 40,
                             click: () => {
@@ -337,6 +347,7 @@ export default class TopmenuView extends JetView{
                 value: header, width: 172, close: true
                 };
             let formConfig = {
+                $scope: parent.$scope,
                 id: uid,
                 $subview: view
                 };
@@ -589,5 +600,6 @@ export default class TopmenuView extends JetView{
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkedView);
         this.pophistory = this.ui(History);
+        this.loginshow = this.ui(loginTestView);
         }
     }

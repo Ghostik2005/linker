@@ -11,6 +11,7 @@ import GroupsView from "../views/adm-groups";
 import HranView from "../views/adm-hran";
 import NdsView from "../views/adm-nds";
 import SeasonsView from "../views/adm-seasons";
+import AdmView from "../views/adm-adm-adm";
 
 export default class LinkerView extends JetView{
     config(){
@@ -81,6 +82,13 @@ export default class LinkerView extends JetView{
                     body: { view: "layout",
                         rows: [
                             {$subview: SeasonsView},
+                            ]
+                        }
+                    },
+                {header: "<span style='line-height: 20px;'>Adm</span>", width: 120, hidden: true,//close: true,
+                    body: { view: "layout",
+                        rows: [
+                            {$subview: AdmView},
                             ]
                         }
                     },

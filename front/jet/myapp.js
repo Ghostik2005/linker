@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.127.1740",
+        version:        "18.128.1650",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -56,7 +56,7 @@ webix.ready( () => {
         router:         EmptyRouter,
         //router:         UrlRouter,
         x_api:          "x_login",
-        //debug:          true,
+        debug:          true,
         searchDelay:    1000,
         popDelay:       800,
         lch:            0,

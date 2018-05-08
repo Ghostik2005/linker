@@ -7,6 +7,7 @@ import {get_spr} from "../views/globals";
 import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
 import {compareTrue, fRefresh, fRender, rRefresh} from "../views/globals";
 import PagerView from "../views/pager_view";
+import SubRow from "../views/sub_row";
 
 export default class SprView extends JetView{
     config(){
@@ -107,6 +108,26 @@ export default class SprView extends JetView{
             editable: false,
             headermenu:{
                 autowidth: true, 
+                },
+            subview: (obj, target) => {
+                //let c_focus = document.activeElement;
+                let item = this.$$("__table").getItem(obj.id);
+                item = item.id_spr;
+                item = get_spr(this, item);
+                item["id"] = obj.id;
+                item["s_name"] = "Страна: " + item.c_strana;
+                item["t_name"] = "Название товара: " + item.c_tovar;
+                item["v_name"] = "Производитель: " + item.c_zavod;
+                item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                var sub = new SubRow(this.app, {
+                    //focus: c_focus,
+                    dt: this.$$("__table"),
+                    item: item,
+                    header: "<span style='color: red; text-transform: uppercase;'>Редактирование записи </span>" + item.id_spr,
+                    search_bar: this.$$("_sb")
+                    });
+                this.ui(sub, { container: target });
+                return sub.getRoot();
                 },
             startPos: 1,
             posPpage: 20,
@@ -233,6 +254,8 @@ export default class SprView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onItemDblClick: function(item) {
+                    this.openSub(this.getSelectedId());
+                    return
                     item = this.getSelectedItem();
                     item = item.id_spr;
                     item = get_spr(this.$scope, item);
