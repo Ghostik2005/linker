@@ -85,6 +85,7 @@ export default class LinksBarView extends JetView{
             {view:"button", width: 40,
                 tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
                 click: () => {
+                    this.$$("_br").hide();
                     var cv = getActDt();
                     var columns = $$(cv).config.columns;
                     columns.forEach(function(item){

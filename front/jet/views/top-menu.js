@@ -248,17 +248,15 @@ export default class TopmenuView extends JetView{
                                 parse_unlinked_item(this);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton', hidden: !true, localId: "sideButton",
-                            label: (document.documentElement.clientWidth > 1200) ? "<span class='webix_icon fa-caret-left'></span>" : "<span class='webix_icon fa-caret-down'></span>",
+                        {view:"button", type: 'htmlbutton', hidden: !true, localId: "sideButton", tooltip: "Информация о товаре",
+                            label: "<span class='webix_icon fa-caret-left'></span>",
                             width: 40, formOpen: false,
-                            hidden: false, // !(app.config.user==='Краснов' || app.config.user==='Беляев'),
-                            //label: "<span class='webix_icon fa-bars'></span>", width: 40, formOpen: false,
                             on: {
                                 onItemClick: function () {
                                     let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];
                                     let ui = uu.getChildViews()[0];
                                     if (!this.config.formOpen) {
-                                            this.define({label: (document.documentElement.clientWidth > 1200) ? "<span class='webix_icon fa-caret-right'></span>" : "<span class='webix_icon fa-caret-up'></span>", formOpen: true});
+                                            this.define({label: "<span class='webix_icon fa-caret-right'></span>", formOpen: true});
                                             this.$scope.sideForm.show_f();
                                             let item = (ui) ? ui.getSelectedItem() : undefined;
                                             if (item) {
@@ -268,10 +266,10 @@ export default class TopmenuView extends JetView{
                                                 item["t_name"] = "Название товара: " + item.c_tovar;
                                                 item["v_name"] = "Производитель: " + item.c_zavod;
                                                 item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                                                this.$scope.sideForm.parse_f("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                                                this.$scope.sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
                                                 }
                                     } else {
-                                        this.define({label: (document.documentElement.clientWidth > 1200) ? "<span class='webix_icon fa-caret-left'></span>" : "<span class='webix_icon fa-caret-down'></span>", formOpen: false});
+                                        this.define({label: "<span class='webix_icon fa-caret-left'></span>", formOpen: false});
                                         this.$scope.sideForm.hide_f();
                                         }
                                     this.refresh();
@@ -304,7 +302,25 @@ export default class TopmenuView extends JetView{
 
         var tabmain = {
             view: "multiview",
+            vis: false,
             animate: false,
+            on: {
+                onViewChange: function(old_id, new_id) {
+                    let v;
+                    if (old_id === 'app-nav') {
+                        v = this.$scope.$$("sideButton").config.formOpen;
+                        this.$scope.sideForm.hide_f();
+                        this.$scope.$$("sideButton").config.formOpen = false;
+                        this.config.vis = v;
+                        };
+                    if (new_id === 'app-nav') {
+                        v = this.config.vis;
+                        if (v) {
+                            this.$scope.$$("sideButton").callEvent("onItemClick");
+                            }
+                        };
+                    },
+                },
             cells: [tab_1]
             };
 

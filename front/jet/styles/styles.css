@@ -54,6 +54,8 @@ button {
 .borders {
     border-left: 1px solid #3498db !important;
     border-top: 0px !important;
+    border-right: 0px !important;
+    border-bottom: 0px !important;
     }
 
 .webix_layout_toolbar {
@@ -219,5 +221,9 @@ div.webix_item_tab {
     color: black;
     }
 
+.webix_view.webix_form.webix_layout_form.no_border {
+    border-width: 0px !important;
+    /* border-left: 3px double !important;*/
+    }
 
 

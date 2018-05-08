@@ -54,6 +54,7 @@ import NewformView from "../views/new_form";
 import {get_spr} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SideFormView from "../views/side_form";
+import SubRow from "../views/sub_row";
 
 export default class SprView extends JetView{
     config(){
@@ -110,6 +111,26 @@ export default class SprView extends JetView{
             old_stri: "",
             searchBar: "_spr_search",
             searchMethod: "getSprSearch",
+            subview: (obj, target) => {
+                //let c_focus = document.activeElement;
+                let item = this.$$("__table").getItem(obj.id);
+                item = item.id_spr;
+                item = get_spr(this, item);
+                item["id"] = obj.id;
+                item["s_name"] = "Страна: " + item.c_strana;
+                item["t_name"] = "Название товара: " + item.c_tovar;
+                item["v_name"] = "Производитель: " + item.c_zavod;
+                item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                var sub = new SubRow(this.app, {
+                    //focus: c_focus,
+                    dt: this.$$("__table"),
+                    item: item,
+                    header: "<span style='color: red; text-transform: uppercase;'>Редактирование записи </span>" + item.id_spr,
+                    search_bar: $$("_spr_search")
+                    });
+                this.ui(sub, { container: target });
+                return sub.getRoot();
+                },
             columns: [
                 {id: "id_mnn", width: 75, template: mnn_func,
                     header: [{text: "МНН"},
@@ -172,8 +193,18 @@ export default class SprView extends JetView{
                 ],
             on: {
                 "data->onParse":function(i, data){
+                    let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
+                    if (side_but.config.formOpen) {
+                        let item = {}
+                        item["s_name"] = "Страна: ";
+                        item["t_name"] = "Название товара: ";
+                        item["v_name"] = "Производитель: ";
+                        item["dv_name"] = "Действующее вещество: ";
+                        this.$scope.getParentView().sideForm.parse_f('', $$("_spr_search"), item);
+                        }
                     this.clearAll();
                     $$("_link").hide();
+                    
                     },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
@@ -185,6 +216,8 @@ export default class SprView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
+                    this.openSub(this.getSelectedId());
+                    return
                     if (!side_but.config.formOpen) {
                         item = this.getSelectedItem();
                         item = item.id_spr;
@@ -194,7 +227,7 @@ export default class SprView extends JetView{
                         item["v_name"] = "Производитель: " + item.c_zavod;
                         item["dv_name"] = "Действующее вещество: " + item.c_dv;
                         this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
-                    }
+                        };
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
@@ -209,7 +242,7 @@ export default class SprView extends JetView{
                         item["t_name"] = "Название товара: " + item.c_tovar;
                         item["v_name"] = "Производитель: " + item.c_zavod;
                         item["dv_name"] = "Действующее вещество: " + item.c_dv;
-                        this.$scope.getParentView().sideForm.parse_f("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                        this.$scope.getParentView().sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
                         }
                     if ($$("prcs_dc").count() > 0) {
                         $$("_link").show();
