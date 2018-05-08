@@ -71,6 +71,9 @@ export default class loginView extends JetView{
         return af
         }
     init() {
+        webix.ajax().headers({'Content-type': 'application/json'}).post('http://freegeoip.net/json/').then(function(data){
+            console.log('ip', data.json().ip)
+            });
         let u = getCookie('linker_user');
         let x = getCookie('linker_auth_key');
         let r = getCookie('linker_role');
