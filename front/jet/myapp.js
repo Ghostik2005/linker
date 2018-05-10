@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.128.1650",
+        version:        "18.130.1800",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -75,7 +75,7 @@ webix.ready( () => {
     console.log('search', location.search);
 
     window.onerror = function (message, source, lineNr, col, err) {
-        webix.message({"text": "Возникла ошибка. Мы работаем над ее исправлением. Текст в консоли", "type": "error", width: "800px", delay: "5"}); //
+        webix.message({"text": "Возникла ошибка - мы работаем над ее исправлением. Текст в консоли", "type": "error", width: "800px", delay: "5"}); //
         window.console.log("message:", message);
         window.console.log("source:", source);
         window.console.log("err:", err);

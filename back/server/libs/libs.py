@@ -3280,20 +3280,7 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                     sql = """update or insert into LNK_CODES (PROCESS, NAME, CODE, INN, OWNER) values (?, ?, ?, ?, ?) matching (CODE)"""
                     opt = (row.get('process'), row.get('name'), row.get('code'), row.get('inn'), user)
                 self.db.execute({"sql": sql, "options": opt})
-            sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER FROM LNK_CODES r"""
-            opt = ()
-            _return = []
-            result = self.db.request({"sql": sql, "options": opt})
-            for row in result:
-                r = {
-                    "process"  : row[0],
-                    "code"     : row[1],
-                    "name"     : row[2],
-                    "inn"      : row[3],
-                    "owner"    : row[4]
-                }
-                _return.append(r)
-            ret = {"result": True, "ret_val": _return}
+            ret = json.loads(self.getLinkCodes(params, x_hash))
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -3315,6 +3302,25 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setLinkExcludes(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            data = params.get('data')
+            for row in data:
+                print(row)
+                continue
+                if row.get('change') == 1: #удаленная позиция
+                    sql = """delete from LNK_EXCLUDE where NAME=?"""
+                    opt = (row.get('name'),)
+                elif row.get('change') == 2: #новая позиция или измененная позиция
+                    sql = """update or insert into LNK_CODES (PROCESS, NAME, OPTIONS, OWNER) values (?, ?, ?, ?) matching (NAME)"""
+                    opt = (row.get('process'), row.get('name'), str(row.get('options_st')) + str(row.get('options_in')), row.get('inn'), user)
+                self.db.execute({"sql": sql, "options": opt})
+            ret = json.loads(self.getLinkExcludes(params, x_hash))
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)

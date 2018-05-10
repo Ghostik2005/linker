@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal} from "../views/globals";
+import {request, checkVal, checkKey} from "../views/globals";
 import NewCodeView from "../views/new_code";
 
 export default class LinkCodesView extends JetView{
@@ -11,17 +11,15 @@ export default class LinkCodesView extends JetView{
         
         var top = {height: 40, view: "toolbar",
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "Поиск",
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка фильтра", 
                     on: {
                         onKeyPress: function(code, event) {
-                            return
                             clearTimeout(this.config._keytimed);
                             if (checkKey(code)) {
                                 this.config._keytimed = setTimeout( () => {
                                     let value = this.getValue().toString().toLowerCase();
-                                    this.$scope.$$("__dtu").filter(function(obj){
-                                        return obj.c_user.toString().toLowerCase().indexOf(value) != -1;
+                                    this.$scope.$$("__table").filter(function(obj){
+                                        return obj.name.toString().toLowerCase().indexOf(value) != -1;
                                         })
                                     }, this.$scope.app.config.searchDelay);
                                 };
@@ -43,11 +41,13 @@ export default class LinkCodesView extends JetView{
                             return obj.change != 1;
                             });
                         this.$$("del").hide();
-                        this.$$("apply").hide();
-                        this.$$("cancel").hide();
+                        if (app.config.roles[app.config.role].useradd) {
+                            this.$$("apply").show();
+                            this.$$("cancel").show();
+                            }
                         }
                     },
-                {view:"button", type: 'htmlbutton', localId: "apply", hidden: !app.config.roles[app.config.role].useradd,
+                {view:"button", type: 'htmlbutton', localId: "apply", hidden: true,
                     label: "<span class='webix_icon fa-check'></span><span style='line-height: 20px;'> Применить</span>", width: 130,
                     click: () => {
                         let data = [];
@@ -59,6 +59,7 @@ export default class LinkCodesView extends JetView{
                         this.$$("del").hide();
                         this.$$("apply").hide();
                         this.$$("cancel").hide();
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         let user = app.config.user;
                         let url = app.config.r_url + "?setLinkCodes";
                         let params = {"user": user, 'data': data};
@@ -70,7 +71,7 @@ export default class LinkCodesView extends JetView{
                             });
                         }
                     },
-                {view:"button", type: 'htmlbutton', localId: "cancel", hidden: !app.config.roles[app.config.role].useradd,
+                {view:"button", type: 'htmlbutton', localId: "cancel", hidden: true,
                     label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 130,
                     click: () => {
                         let user = app.config.user;
@@ -79,6 +80,7 @@ export default class LinkCodesView extends JetView{
                         this.$$("del").hide();
                         this.$$("apply").hide();
                         this.$$("cancel").hide();
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         request(url, params).then( (data) => {
                             data = checkVal(data, 'a');
                             if (data) {
@@ -106,7 +108,7 @@ export default class LinkCodesView extends JetView{
                 {id: "process", css: "center_p", 
                     width: 150,
                     header: [{text: "Обрабатывать", css: "center_p"},
-                        {content: "masterCheckbox", css: "center_p"},
+                        {content: "masterCheckbox", css: "center_p", contentId: "ch1"},
                         ],
                     template:"{common.checkbox()}",
                     },
@@ -134,17 +136,23 @@ export default class LinkCodesView extends JetView{
                     },
                 onCheck: (id, col, value) => {
                     this.$$("__table").getItem(id).change = 2;
-                    this.$$("apply").show();
-                    this.$$("cancel").show();
+                    if (app.config.roles[app.config.role].useradd) {
+                        this.$$("apply").show();
+                        this.$$("cancel").show();
+                        }
                     },
                 onAfterAdd: () => {
-                    this.$$("apply").show();
-                    this.$$("cancel").show();
+                    if (app.config.roles[app.config.role].useradd) {
+                        this.$$("apply").show();
+                        this.$$("cancel").show();
+                        }
                     },
                 onEditorChange: (item, value) => {
                     this.$$("__table").getItem(row).change = 2;
-                    this.$$("apply").show();
-                    this.$$("cancel").show();
+                    if (app.config.roles[app.config.role].useradd) {
+                        this.$$("apply").show();
+                        this.$$("cancel").show();
+                        }
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
@@ -165,6 +173,10 @@ export default class LinkCodesView extends JetView{
         }
         
     init() {
+        this.newcode = this.ui(NewCodeView);
+        }
+        
+    ready() {
         let user = this.app.config.user;
         let url = this.app.config.r_url + "?getLinkCodes";
         let params = {"user": user};
@@ -173,10 +185,6 @@ export default class LinkCodesView extends JetView{
             if (data) {
                 this.$$("__table").parse(data);
                 }
-            })
-        this.newcode = this.ui(NewCodeView);
-        }
-    ready() {
-
+            });
         }
     }

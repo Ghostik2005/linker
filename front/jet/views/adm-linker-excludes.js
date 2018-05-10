@@ -1,7 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal} from "../views/globals";
+import {request, checkVal, checkKey} from "../views/globals";
+import NewExcludeView from "../views/new_exclude";
 
 export default class LinkExclView extends JetView{
     config(){
@@ -10,16 +11,15 @@ export default class LinkExclView extends JetView{
         
         var top = {height: 40, view: "toolbar",
             cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", tooltip: "Поиск",
+                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка фильтра", 
                     on: {
                         onKeyPress: function(code, event) {
-                            return
                             clearTimeout(this.config._keytimed);
                             if (checkKey(code)) {
                                 this.config._keytimed = setTimeout( () => {
                                     let value = this.getValue().toString().toLowerCase();
-                                    this.$scope.$$("__dtu").filter(function(obj){
-                                        return obj.c_user.toString().toLowerCase().indexOf(value) != -1;
+                                    this.$scope.$$("__table").filter(function(obj){
+                                        return obj.name.toString().toLowerCase().indexOf(value) != -1;
                                         })
                                     }, this.$scope.app.config.searchDelay);
                                 };
@@ -29,7 +29,7 @@ export default class LinkExclView extends JetView{
                 {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd, 
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> исключение</span>", width: 130,
                     click: () => {
-                        webix.message({"text": "Добавление исключения", "type": "debug", width: "400px", delay: "5"});
+                        this.newcode.show("Добавление нового исключения", this.$$("__table"));
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "del",
@@ -38,16 +38,46 @@ export default class LinkExclView extends JetView{
                         webix.message({"text": "Удаление исключения", "type": "debug", width: "400px", delay: "5"});
                         }
                     },
-                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd,
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "apply",
                     label: "<span class='webix_icon fa-check'></span><span style='line-height: 20px;'> Применить</span>", width: 130,
                     click: () => {
-                        webix.message({"text": "Применение изменений", "type": "debug", width: "400px", delay: "5"});
+                        let data = [];
+                        this.$$("__table").eachRow( 
+                            (id) => {
+                                let item = this.$$("__table").getItem(id) 
+                                if (item.change > 0) data.push(item);
+                            }, true);
+                        this.$$("del").hide();
+                        this.$$("apply").hide();
+                        this.$$("cancel").hide();
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
+                        let user = app.config.user;
+                        let url = app.config.r_url + "?setLinkExcludes";
+                        let params = {"user": user, 'data': data};
+                        request(url, params).then( (data) => {
+                            data = checkVal(data, 'a');
+                            if (data) {
+                                this.$$("__table").parse(data);
+                                }
+                            });
                         }
                     },
-                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd,
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "cancel",
                     label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 130,
                     click: () => {
-                        webix.message({"text": "Отменение изменений", "type": "debug", width: "400px", delay: "5"});
+                        let user = app.config.user;
+                        let url = app.config.r_url + "?getLinkExcludes";
+                        let params = {"user": user};
+                        this.$$("del").hide();
+                        this.$$("apply").hide();
+                        this.$$("cancel").hide();
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
+                        request(url, params).then( (data) => {
+                            data = checkVal(data, 'a');
+                            if (data) {
+                                this.$$("__table").parse(data);
+                                }
+                            });
                         }
                     },
                 ]
@@ -69,7 +99,7 @@ export default class LinkExclView extends JetView{
             columns: [
                 {id: "process", width: 150, css: "center_p",
                     header: [{text: "Обрабатывать"},
-                        {content: "masterCheckbox", css: "center_p"},
+                        {content: "masterCheckbox", css: "center_p", contentId: "ch1"},
                         ],
                     template:"<span class='center_p'>{common.checkbox()}</span>",
                     },
@@ -100,6 +130,26 @@ export default class LinkExclView extends JetView{
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     },
+                onCheck: (id, col, value) => {
+                    this.$$("__table").getItem(id).change = 2;
+                    if (app.config.roles[app.config.role].useradd) {
+                        this.$$("apply").show();
+                        this.$$("cancel").show();
+                        }
+                    },
+                onAfterAdd: () => {
+                    if (app.config.roles[app.config.role].useradd) {
+                        this.$$("apply").show();
+                        this.$$("cancel").show();
+                        }
+                    },
+                onEditorChange: (item, value) => {
+                    this.$$("__table").getItem(row).change = 2;
+                    if (app.config.roles[app.config.role].useradd) {
+                        this.$$("apply").show();
+                        this.$$("cancel").show();
+                        }
+                    },
                 onAfterSelect: () => {
                     this.$$("del").show();
                     },
@@ -116,6 +166,7 @@ export default class LinkExclView extends JetView{
         }
         
     init() {
+        this.newcode = this.ui(NewExcludeView);
         }
 
     ready(view) {

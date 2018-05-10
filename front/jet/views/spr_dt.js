@@ -112,7 +112,6 @@ export default class SprView extends JetView{
             searchBar: "_spr_search",
             searchMethod: "getSprSearch",
             subview: (obj, target) => {
-                //let c_focus = document.activeElement;
                 let item = this.$$("__table").getItem(obj.id);
                 item = item.id_spr;
                 item = get_spr(this, item);
@@ -122,7 +121,6 @@ export default class SprView extends JetView{
                 item["v_name"] = "Производитель: " + item.c_zavod;
                 item["dv_name"] = "Действующее вещество: " + item.c_dv;
                 var sub = new SubRow(this.app, {
-                    //focus: c_focus,
                     dt: this.$$("__table"),
                     item: item,
                     header: "<span style='color: red; text-transform: uppercase;'>Редактирование записи </span>" + item.id_spr,
@@ -142,7 +140,6 @@ export default class SprView extends JetView{
                     headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
-                    //template:"{common.subrow()} #c_tovar#",
                     header: [{text: "Название"},
                         ],
                     headermenu:false,
@@ -214,9 +211,15 @@ export default class SprView extends JetView{
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     },
+                onSubViewClose: function(id) {
+                    delete this.getItem(id)["$subContent"]
+                    delete this.getItem(id)["$subHeight"]
+                    delete this.getItem(id)["$subOpen"]
+                    },
                 onItemDblClick: function(item) {
                     let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
-                    this.openSub(this.getSelectedId());
+                    let row_id = this.getSelectedId();
+                    this.openSub(row_id);
                     return
                     if (!side_but.config.formOpen) {
                         item = this.getSelectedItem();

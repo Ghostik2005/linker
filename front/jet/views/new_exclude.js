@@ -4,48 +4,29 @@ import {JetView} from "webix-jet";
 //import {request, checkVal} from "../views/globals";
 
 
-export default class NewCodeView extends JetView{
+export default class NewExcludeView extends JetView{
     
     config(){
         var app = this.app;
         var th = this;
         
-        function check_s(value) {
-            let ret = true;
-            if (parseFloat(value) == value) {
-                let parent = th.$$("_n_f").config.parent;
-                if (parent) {
-                    parent.eachRow( 
-                        (id) => {
-                            let item = parent.getItem(id)
-                            if (+item.code === +value) ret = false;
-                        }, true);
-                    }
-            } else {
-                ret = false;
-                }
-            return ret;
-            }
-
         var form = { view: "form",
             localId: "_n_f",
             parent: undefined,
             margin: 0,
             rules:{
-                "code": check_s,
                 "name": webix.rules.isNotEmpty,
-                "inn": webix.rules.isNotEmpty,
                 },
             elements: [
                 {cols: [
-                    {view: "text", localId: "code", label: "Код", value: "", width: 120, name: "code", labelPosition: "top", labelAlign: "center",
-                        required: true, invalidMessage: "Ошибочный код",
+                    {view: "text", label: "Слово исключение", value: "", width: 220, name: "name", labelPosition: "top", labelAlign: "center",
+                        required: true, invalidMessage: "Введите значение", localId: "name",
                         },
-                    {view: "text", label: "Название", value: "", width: 220, name: "name", labelPosition: "top", labelAlign: "center",
-                        required: true, invalidMessage: "Введите значение"
-                        },
-                    {view: "text", label: "Непонятное поле", value: "", width: 150, name: "inn", labelPosition: "top", labelAlign: "center",
-                        required: true, invalidMessage: "Введите значение"
+                    {view:"radio", label:"условие", value:1, width: 220, labelPosition: "top", labelAlign: "center", vertical: false, localId: "conditions",
+                        options:[
+                            {id:0, value:"<span style='color: #666666'>начинается</span>"},
+                            {id:1, value:"<span style='color: #666666'>содержит</span>"}
+                            ]
                         },
                     ]},
                 {height: 15},
@@ -63,6 +44,14 @@ export default class NewCodeView extends JetView{
                                 let _f = this.$$("_n_f").getValues();
                                 _f['change'] = 2;
                                 _f['process'] = 1;
+                                let c = this.$$("conditions").getValue();
+                                if (+c===1) {
+                                    _f['options_st'] = 0;
+                                    _f['options_in'] = 1;
+                                } else if (+c===0) {
+                                    _f['options_st'] = 1;
+                                    _f['options_in'] = 0;
+                                    };
                                 _f['owner'] = app.config.user;
                                 this.$$("_n_f").config.parent.add(_f, 0);
                                 this.hide();
@@ -78,7 +67,7 @@ export default class NewCodeView extends JetView{
             modal: true,
             on: {
                 onShow: () => {
-                    this.$$("code").focus();
+                    this.$$("name").focus();
                     },
                 onHide: () => {
                     this.$$("_n_f").clear();

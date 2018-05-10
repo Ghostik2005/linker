@@ -183,6 +183,9 @@ div.webix_item_tab {
   border-width: 0px !important;
   /* border-left: 3px double !important;*/
 }
+.webix_slider_title.webix_slider_move {
+  color: white !important;
+}
 @charset "UTF-8";
 /*!
  * animate.css -http://daneden.me/animate

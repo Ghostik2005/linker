@@ -1,4 +1,4 @@
-//"use strict";
+"use strict";
 
 import {JetView} from "webix-jet";
 import NewstriView from "../views/new_stri";
@@ -97,6 +97,11 @@ export default class NewformView extends JetView{
                                     on: {
                                         onAfterRender: function() {
                                             this.getList().sync(strana);
+                                            },
+                                        onChange: function(i, ii, iii) {
+                                            console.log("i", i);
+                                            console.log("ii", ii);
+                                            console.log("iii", iii);
                                             }
                                         },
                                     },

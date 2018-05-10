@@ -46,14 +46,6 @@ export default class SubRow extends JetView{
             return item.usloviya.toString().toLowerCase().search(value) != -1;
             };
 
-        function check(item){
-            if (item) {
-                if (item.toString().length > 0 ) return true
-                else return false
-            } else {
-                return false
-                }
-            }
         function addZavod(item) {
             vendor.add(item, 0);
             }
@@ -320,7 +312,7 @@ export default class SubRow extends JetView{
             }
 
         return {cols: [
-            {width: 100}, 
+            {width: 160}, 
             m_body
             ]}
         }
@@ -336,7 +328,7 @@ export default class SubRow extends JetView{
                 item["idspr"] = new_head;
                 }
             this.$$("new_form").parse(item);
-            this.$$("new_f_right").parse(item);
+            //this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
             }
         }

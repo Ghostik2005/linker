@@ -61,7 +61,7 @@ export default class BarcodesView extends JetView{
                             },
                         },
                     },
-                {view: "checkbox", labelRight: "Все", labelWidth: 0, value: 1, width: 60, localId: "_chbar",
+                {view: "checkbox", labelRight: "<span style='color: white'>Все</span>", labelWidth: 0, value: 1, width: 60, localId: "_chbar",
                     on: {
                         onChange: () => {
                             this.$$("_sb").focus();
@@ -73,13 +73,13 @@ export default class BarcodesView extends JetView{
                             },
                         },
                     },
-                {view: "checkbox", labelRight: "Поиск по справочнику", labelWidth: 0, value: 1, width: 160, 
+                {view: "checkbox", labelRight: "<span style='color: white'>Поиск по справочнику</span>", labelWidth: 0, value: 1, width: 160, 
                     on: {
                         onChange: function () {
                             this.$scope.$$("_sb").setValue('');
                             if (this.getValue() === 1) {
                                 this.$scope.$$("_sb").define('placeholder', "Начните набирать название товара");
-                                this.$scope.$$("_bnum").show();
+                                if (this.$scope.$$("_chbar").getValue()===0) this.$scope.$$("_bnum").show();
                                 this.$scope.$$("_chbar").show();
                                 this.$scope.show('adm-barcodes-s')
                             } else if (this.getValue() === 0) {
