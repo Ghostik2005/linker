@@ -27,7 +27,6 @@ export var prcs = new webix.DataCollection({
         id: "prcs_dc",
         on: {
             onAfterLoad: function() {
-                console.log('this', this);
                 let cur_pos = this.data.order[0];
                 this.setCursor(cur_pos);
                 let th = $$("main_ui");

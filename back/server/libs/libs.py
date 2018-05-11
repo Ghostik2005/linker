@@ -3346,6 +3346,42 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+
+    def delSpr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            old_spr = params.get('old_spr')
+            new_spr = params.get('new_spr')
+            user = params.get('user')
+            if old_spr and new_spr:
+                result = None
+                result1 = None
+                sql = "select r.BARCODE from SPR_BARCODE r where r.ID_SPR = ?"
+                opt = (old_spr,)
+                result = self.db.request({"sql": sql, "options": opt})
+                if result:
+                    for row in result:
+                        sql = "insert into SPR_BARCODE (ID_SPR, BARCODE) values (?, ?)"
+                        opt = (new_spr, row[0])
+                        res = self.db.execute({"sql": sql, "options": opt})
+                    sql = "delete from SPR_BARCODE where ID_SPR = ?"
+                    opt = (old_spr,)
+                    res = self.db.execute({"sql": sql, "options": opt})
+                sql = "update LNK set ID_SPR = ? where ID_SPR = ?"
+                opt = (new_spr, old_spr)
+                result = self.db.execute({"sql": sql, "options": opt})
+                sql = "delete from SPR where ID_SPR = ? returning ID_SPR"
+                opt = (old_spr,)
+                result1 = self.db.execute({"sql": sql, "options": opt})
+                if result1:
+                    ret = {"result": True, "ret_val": old_spr}
+                else:
+                    ret = {"result": False, "ret_val": "not deleted"}
+            else:
+                ret = {"result": False, "ret_val": "no id_sprs"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
 class fLock:
     """
     File locking class. Intended for use with the `with` syntax.

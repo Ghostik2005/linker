@@ -302,7 +302,7 @@ export default class SprView extends JetView{
                             }
                         },
                     },
-                {view: "button", type: 'htmlbutton', width: 35,
+                {view: "button", type: 'htmlbutton', width: 38,
                     label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                     click: () => {
                         let hist = webix.storage.session.get(this.$$("__table").config.name);
@@ -312,7 +312,7 @@ export default class SprView extends JetView{
                 {view:"button", 
                     tooltip: "Сбросить фильтры",
                     type:"imageButton", image: './addons/img/unfilter.svg',
-                    width: 35,
+                    width: 38,
                     click: () => {
                         let cv = this.$$("__table");
                         let columns = cv.config.columns;
@@ -331,19 +331,19 @@ export default class SprView extends JetView{
                         }
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить эталон",
-                    label: "<span class='webix_icon fa-plus'></span>", width: 35,
+                    label: "<span class='webix_icon fa-plus'></span>", width: 38,
                     click: () => {
                         this.popnew.show("Новый эталон", this.$$("_sb"));
 
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить эталон",
-                    label: "<span style='color: red', class='webix_icon fa-times'>", width: 35,
+                    label: "<span style='color: red', class='webix_icon fa-times'>", width: 38,
                     click: () => {
                         let item = this.$$("__table").getSelectedItem();
-                        this.poprelink.show("Удаление эталона. Выберите товар, к которому будут привязаны связки удаляемого", item, this)
-                        this.$$("__table").unselectAll();
-                        this.$$("_del").hide();
+                        this.poprelink.show("Удаление эталона. Выберите товар, к которому будут привязаны связки и штрихкоды удаляемого", item, this)
+                        //this.$$("__table").unselectAll();
+                        //this.$$("_del").hide();
                         }
                     },
                 ]

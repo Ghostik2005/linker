@@ -14,7 +14,6 @@ import AllUnlinkedBarView from  "../views/unlinkedall_bar";
 import LinksBarView from "../views/links_form_bar";
 import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
-import {request} from "../views/globals";
 import loginTestView from "../views/login_test";
 
 export default class TopmenuView extends JetView{
@@ -110,7 +109,7 @@ export default class TopmenuView extends JetView{
                                 },
                             },
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
-                            label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                            label: "<span class='webix_icon fa-refresh'></span>", width: 38,
                             click: () => {
                                 (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
                                 (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
@@ -170,7 +169,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "button", type: 'htmlbutton', width: 35, hidden: true,
+                        {view: "button", type: 'htmlbutton', width: 38, hidden: true,
                             label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
                             click: () => {
                                 let nm = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews()[0].config.name;
@@ -260,7 +259,7 @@ export default class TopmenuView extends JetView{
                             },
                         {view:"button", type: 'htmlbutton', hidden: !true, localId: "sideButton", tooltip: "Информация о товаре",
                             label: "<span class='webix_icon fa-caret-left'></span>",
-                            width: 40, formOpen: false,
+                            width: 38, formOpen: false,
                             on: {
                                 onItemClick: function () {
                                     let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];

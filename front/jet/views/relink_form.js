@@ -10,8 +10,6 @@ export default class RelinkFormView extends JetView{
     config(){
         let app = this.app;
 
-        //var vi = this;
-
         webix.ui.datafilter.richFilt_x = Object.create(webix.ui.datafilter.richSelectFilter);
         webix.ui.datafilter.richFilt_x.refresh = rRefresh;
         webix.ui.datafilter.richFilt_x.render = function(master, config){
@@ -111,6 +109,8 @@ export default class RelinkFormView extends JetView{
             parent: undefined,
             searchBar: undefined,
             searchMethod: "getSprSearchAdm",
+            old_spr: undefined,
+            old_id: undefined,
             old_stri: "",
             css: 'dt_css',
             columns: [
@@ -226,13 +226,15 @@ export default class RelinkFormView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getItem(item.row);
-                    console.log('item_selected', item);
-                    console.log('parent_view', this.$scope.$$("__table").config.parent);
-                    webix.message({
-                        text: "Удаление из SPR. Пока недоступно.",
-                        type: "error",
-                        })
-                    this.$scope.hide();
+                    let url = app.config.r_url + "?delSpr";
+                    let params = {"user": app.config.user, "old_spr": this.$scope.$$("__table").config.old_spr, "new_spr": item.id_spr};
+                    let res = request(url, params, !0).response;
+                    res = checkVal(res, 's');
+                    if (res) {
+                        this.config.parent.$$("__table").remove(this.config.old_id);
+                        this.config.parent.$$("_del").hide();
+                        this.$scope.hide();
+                        };
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
@@ -247,43 +249,50 @@ export default class RelinkFormView extends JetView{
             }
 
         var top = { view: "toolbar",
-            height: 40,
-            cols: [
-                {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", localId: "_sb", hidden: !true,
-                    on: {
-                        onKeyPress: function(code, event) {
-                            clearTimeout(this.config._keytimed);
-                            if (checkKey(code)) {
-                                this.config._keytimed = setTimeout(() => {
-                                    var vi = this.$scope.$$("__table").getParentView();
-                                    let old_v = vi.getChildViews()[2].$scope.$$("__page").getValue();
-                                    vi.getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                                    vi.getChildViews()[2].$scope.$$("__page").refresh();
-                                    }, this.$scope.app.config.searchDelay);
-                                }
-                            }
-                        },
+            rows: [
+                {view: "label", label: "наименование удаляемого товара", localId: "old_tovar",
                     },
-                {view:"button", 
-                    tooltip: "Сбросить фильтры",
-                    type:"imageButton", image: './addons/img/unfilter.svg',
-                    width: 35,
-                    click: () => {
-                        let cv = this.$$("__table");
-                        let columns = cv.config.columns;
-                        columns.forEach(function(item){
-                            if (cv.isColumnVisible(item.id)) {
-                                if (item.header[1]) {
-                                    if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                        cv.getFilter(item.id).setValue('');
-                                    } else {
-                                        cv.getFilter(item.id).value = '';
-                                        };
+                {height: 40,
+                    cols: [
+                        {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", localId: "_sb", hidden: !true,
+                            on: {
+                                onKeyPress: function(code, event) {
+                                    clearTimeout(this.config._keytimed);
+                                    if (checkKey(code)) {
+                                        this.config._keytimed = setTimeout(() => {
+                                            var vi = this.$scope.$$("__table").getParentView();
+                                            let old_v = vi.getChildViews()[2].$scope.$$("__page").getValue();
+                                            vi.getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                                            vi.getChildViews()[2].$scope.$$("__page").refresh();
+                                            }, this.$scope.app.config.searchDelay);
+                                        }
                                     }
-                                }
-                            });
-                        this.$$("_sb").callEvent("onKeyPress", [13,]);
-                        }
+                                },
+                            },
+                        {view:"button", localId: "__reset",
+                            tooltip: "Сбросить фильтры",
+                            type:"imageButton", image: './addons/img/unfilter.svg',
+                            width: 38,
+                            on: {
+                                onItemClick: () => {
+                                    let cv = this.$$("__table");
+                                    let columns = cv.config.columns;
+                                    columns.forEach(function(item){
+                                        if (cv.isColumnVisible(item.id)) {
+                                            if (item.header[1]) {
+                                                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                                                    cv.getFilter(item.id).setValue('');
+                                                } else {
+                                                    cv.getFilter(item.id).value = '';
+                                                    };
+                                                }
+                                            }
+                                        });
+                                    this.$$("_sb").callEvent("onKeyPress", [13,]);
+                                    },
+                                },
+                            },
+                        ]
                     },
                 ]
             }
@@ -302,6 +311,7 @@ export default class RelinkFormView extends JetView{
             modal: true,
             on: {
                 onHide: function() {
+                    this.$scope.$$("__table").clearAll();
                     }
                 },
             body: dt
@@ -310,7 +320,11 @@ export default class RelinkFormView extends JetView{
     show(new_head, item, parent){
         if (parent) this.$$("__table").config.parent = parent;
         if (item) {
-            let s = item.c_tovar.split(' ')[1];
+            this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + item.c_tovar);
+            this.$$("__table").config.old_spr = item.id_spr;
+            this.$$("__table").config.old_id = item.id;
+            this.$$("__reset").callEvent("onItemClick");
+            let s = item.c_tovar.split(' ')[0];
             this.$$("__table").config.searchBar.setValue(s)
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);

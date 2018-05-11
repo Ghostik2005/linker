@@ -199,13 +199,11 @@ export default class loginTestView extends JetView{
     init() {
         let k = getCookie("qlks1k8wkgvvlto0");
         if (k) {
-            console.log('переход, есть авторизация');
             return
             this.getRoot().hide()
             this.app.config.x_api = k;
             this.show("/start/body");
         } else {
-            console.log('требуется авторизация');
             return
             deleteCookie("qlks1k8wkgvvlto0");
             this.show_w('Вход в систему');
