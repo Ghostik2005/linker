@@ -112,20 +112,27 @@ class API:
         return True
 
     def upload_nolinks(self, params, x_hash):
-        ########################################################доработать
         #загрузка данных по накладным из json
         if self._check():
             raw_data = params.get("data")
+            source = paramas.get("source", 2)
+            callback = params.get("callback", None)
             data = json.load(raw_data)
-            #ключ словаря - идентификатор накладной, значение - список строк товаров для сведения в фомате tab separated:
+            #ключ словаря - идентификатор накладной, значение - список строк товаров для сведения в фомате tab separated, все как в файле:
             #sh_prc, код поставщика, код товара у поставщика, название товара, изгтовитель, код организации, штрихкод
             name, value = data.popitem()
-            f_name = os.path.join(self.path, name)
+            con, cur = self._connect()
+            h_name = hashlib.md5()
+            h_name.update(str(name).encode())
+            h_name =  h_name.hexdigest()
+            sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
+            cur.execute(sql)
+            con.commit()
+            f_name = os.path.join(self.path,f"{h_name}.{source}")
+            #f_name = os.path.join(self.path, name)
             value = '\n'.join(value)
-            with open(fname, 'wb') as f_obj:
+            with open(f_name, 'wb') as f_obj:
                 f_obj.write(value.encode())
-            #парсим данные и 
-            #помещаем в очередь на обработку
             ret = {"result": True, "ret_val": "accept"}    
         else:
             ret = {"result": False, "ret_val": "access denied"}
