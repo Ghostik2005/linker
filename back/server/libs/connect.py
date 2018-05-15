@@ -158,6 +158,7 @@ class fb_local:
                 ret = -2
                 #self._log(traceback.format_exc(), kind="error:sql")
                 self._log(Err, kind="error:sql")
+                self._log(sql, kind="error:text")
             finally:
                 cur.close()
                 con.close()
@@ -191,6 +192,7 @@ class fb_local:
                 ret = -2 # transaction error
                 #self._log(traceback.format_exc(), kind="error:sql")
                 self._log(Err, kind="error:sql")
+                self._log(sql, kind="error:text")
             finally:
                 cur.close()
                 con.close()
@@ -233,16 +235,26 @@ if "__main__" == __name__:
     fb = fb_local('l')
     opt = ()
     sql = """SELECT r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT, r.IN_WORK, r.CHANGE_DT, r.SOURCE FROM PRC r where r.SH_PRC = 'f4821862885c29533d538b90720b4a33'"""
-    sqls = ["""CREATE TABLE PRC_TASKS
+    sqls = ["""CREATE TABLE ISSUE
 (
-  UIN VARCHAR(255) NOT NULL COLLATE WIN1251,
-  SOURCE SMALLINT,
-  CALLBACK VARCHAR(255) COLLATE WIN1251,
-  DT TDATETIME,
-  CONSTRAINT T_PK_TASKS PRIMARY KEY (UIN)
+  ID TINT32 NOT NULL,
+  C_ISSUE TSTR255 NOT NULL,
+  FLAG SMALLINT,
+  CONSTRAINT PK_ISSUE PRIMARY KEY (ID)
 )""",
+"""CREATE INDEX IDX_IS1 ON ISSUE (c_ISSUE)""",
 """GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
- ON PRC_TASKS TO SYSDBA WITH GRANT OPTION"""]
+ ON ISSUE TO  SYSDBA WITH GRANT OPTION""",
+"""CREATE TABLE SPR_ISSUE
+(
+  ID_SPR TINT32 NOT NULL,
+  ID_IS TSTR32 NOT NULL
+)""",
+"""CREATE UNIQUE INDEX IS_IDX1 ON SPR_ISSUE (ID_SPR,ID_IS)""",
+"""CREATE UNIQUE INDEX IS_IDX2 ON SPR_ISSUE (ID_IS,ID_SPR)""",
+"""GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON SPR_ISSUE TO  SYSDBA WITH GRANT OPTION"""
+    ]
 
     for ss in sqls:
         fb.execute({"sql": ss, "options": opt})

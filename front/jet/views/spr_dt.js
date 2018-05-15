@@ -51,7 +51,7 @@ webix.ui({
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr} from "../views/globals";
+import {get_spr, fRefresh, fRender, checkKey} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SideFormView from "../views/side_form";
 import SubRow from "../views/sub_row";
@@ -65,6 +65,22 @@ export default class SprView extends JetView{
             this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
             this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
+
+        webix.ui.datafilter.txtFilt1 = Object.create(webix.ui.datafilter.textFilter);
+        webix.ui.datafilter.txtFilt1.on_key_down = function(e, node, value){
+                var id = this._comp_id;
+                var vi = webix.$$(id);
+                if ((e.which || e.keyCode) == 9) return;
+                if (!checkKey(e.keyCode)) return;
+                if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                this._filter_timer=window.setTimeout(() => {
+                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
+                    },app.config.searchDelay);
+                }
+        webix.ui.datafilter.txtFilt1.refresh = fRefresh;
+        webix.ui.datafilter.txtFilt1.render = fRender;
 
         function mnn_func(obj) {
             let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
@@ -96,8 +112,8 @@ export default class SprView extends JetView{
             select: true,
             resizeColumn:true,
             fixedRowHeight:false,
-            rowLineHeight:32,
-            rowHeight:32,
+            rowLineHeight:30,
+            rowHeight:30,
             editable: false,
             //footer: true,
             headermenu:{
@@ -119,7 +135,7 @@ export default class SprView extends JetView{
                 item["s_name"] = "Страна: " + item.c_strana;
                 item["t_name"] = "Название товара: " + item.c_tovar;
                 item["v_name"] = "Производитель: " + item.c_zavod;
-                item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                item["dv_name"] = "Д. вещество: " + item.c_dv;
                 var sub = new SubRow(this.app, {
                     dt: this.$$("__table"),
                     item: item,
@@ -136,6 +152,7 @@ export default class SprView extends JetView{
                     },
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
+                        {content:"txtFilt1"}
                         ],
                     headermenu:false,
                     },
@@ -157,6 +174,7 @@ export default class SprView extends JetView{
                 { id: "c_dv", hidden: true,
                     width: 150,
                     header: [{text: "Д. в-во"},
+                        {content:"txtFilt1"}
                         ]
                     },
                 { id: "c_group", hidden: true,
@@ -196,7 +214,7 @@ export default class SprView extends JetView{
                         item["s_name"] = "Страна: ";
                         item["t_name"] = "Название товара: ";
                         item["v_name"] = "Производитель: ";
-                        item["dv_name"] = "Действующее вещество: ";
+                        item["dv_name"] = "Д. вещество: ";
                         this.$scope.getParentView().sideForm.parse_f('', $$("_spr_search"), item);
                         }
                     this.clearAll();
@@ -228,7 +246,7 @@ export default class SprView extends JetView{
                         item["s_name"] = "Страна: " + item.c_strana;
                         item["t_name"] = "Название товара: " + item.c_tovar;
                         item["v_name"] = "Производитель: " + item.c_zavod;
-                        item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                        item["dv_name"] = "Д. вещество: " + item.c_dv;
                         this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
                         };
                     },
@@ -244,7 +262,7 @@ export default class SprView extends JetView{
                         item["s_name"] = "Страна: " + item.c_strana;
                         item["t_name"] = "Название товара: " + item.c_tovar;
                         item["v_name"] = "Производитель: " + item.c_zavod;
-                        item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                        item["dv_name"] = "Д. вещество: " + item.c_dv;
                         this.$scope.getParentView().sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
                         }
                     if ($$("prcs_dc").count() > 0) {

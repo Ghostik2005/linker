@@ -4,6 +4,7 @@ import {JetView} from "webix-jet";
 import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
+import NewIssueView from "../views/new_issue";
 import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
@@ -129,7 +130,7 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     ]},
-                                {view: "label", label:"Действующее вещество:", name: 'dv_name'},
+                                {view: "label", label:"Д. вещество:", name: 'dv_name'},
                                 {cols: [
                                     {view:"combo", label: "", value: "", name: "id_dv", required: true,
                                         options:  {
@@ -157,7 +158,16 @@ export default class NewformView extends JetView{
                                             }
                                         },
                                     ]},
+                                {view: "label", label:"Форма выпуска:"},
+                                {view:"text", label: "", value: "", labelPosition:"left", readonly: true, name: "issue", localId: "_issue", css: "raw_text",
+                                    readonly: true,
+                                    click: () => {
+                                        let id_spr = this.$$("new_form").getValues().id_spr;
+                                        this.popis.show("Редактирование форм выпуска", id_spr, this);
+                                        }
+                                    },
                                 {view:"text", label: "Штрих-код:", value: "", labelPosition:"top", readonly: true, name: "barcode", localId: "_barc", css: "raw_text",
+                                    readonly: true,
                                     click: () => {
                                         let id_spr = this.$$("new_form").getValues().id_spr;
                                         this.popbar.show("Редактирование ш.кодов", id_spr, this);
@@ -271,6 +281,7 @@ export default class NewformView extends JetView{
                                         let params = {};
                                         params["id_spr"] = (left_f.id_spr) ? left_f.id_spr : -1;
                                         params["barcode"] = left_f.barcode;
+                                        params["issue"] = left_f.issue;
                                         params["c_tovar"] = left_f.c_tovar;
                                         params["id_strana"] = left_f.id_strana;
                                         params["id_zavod"] = left_f.id_zavod;
@@ -324,6 +335,7 @@ export default class NewformView extends JetView{
         this.popstri = this.ui(NewstriView);
         this.popbar = this.ui(NewbarView);
         this.poptg = this.ui(NewtgView);
+        this.popis = this.ui(NewIssueView);
         }
     }
 

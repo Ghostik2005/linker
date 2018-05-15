@@ -7,7 +7,7 @@ import ConfirmView from "../views/yes-no";
 import {filter_1, get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
 import {parse_unlinked_item, get_data_test} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
-import {prcs, delPrc, checkKey, get_spr} from "../views/globals";
+import {prcs, delPrc, checkKey, get_spr, getDtParams} from "../views/globals";
 import SprView from "../views/spr_dt";
 import SkippedBarView from "../views/skipped_bar";
 import AllUnlinkedBarView from  "../views/unlinkedall_bar";
@@ -117,12 +117,12 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                     ]},
-                {view: 'toolbar', id: "_names_bar", css: "header",
+                {view: 'toolbar', id: "_names_bar", css: "header", 
                     rows: [
-                        {cols: [
+                        {height: 32, cols: [
                             {view: "label", label: "", name: "_name", fillspace: 1},
                             ]},
-                        {cols: [
+                        {height: 32, cols: [
                             {view: "label", label: "", css: "header", name: "_vendor"},
                             {},
                             {view: "label", label: "", css: 'right', name: "_count", width: 320,
@@ -134,7 +134,7 @@ export default class TopmenuView extends JetView{
                                 },
                             {width: 10},
                             {view: "button", type: "htmlbutton", 
-                                label: "<span class='butt'>Обновить сессию</span>", width: 200, height: 32,
+                                label: "<span class='butt'>Обновить сессию</span>", width: 200, //height: 32,
                                 click: () => {
                                     if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
                                         let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
@@ -155,13 +155,18 @@ export default class TopmenuView extends JetView{
                                             let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];
                                             let ui = uu.getChildViews()[0];
                                             if (ui) {
+                                                let params = getDtParams(ui);
                                                 get_data_test({
                                                     view: ui,
                                                     navBar: uu.getChildViews()[1],
                                                     start: 1,
-                                                    count: ui.config.posPpage,
+                                                    //count: ui.config.posPpage,
                                                     searchBar: ui.config.searchBar,
-                                                    method: ui.config.searchMethod
+                                                    method: ui.config.searchMethod,
+                                                    field: params[2],
+                                                    direction: params[3],
+                                                    filter: params[0],
+                                                    count: params[1],
                                                     });
                                                 }
                                             }, this.$scope.app.config.searchDelay);
@@ -274,7 +279,7 @@ export default class TopmenuView extends JetView{
                                                 item["s_name"] = "Страна: " + item.c_strana;
                                                 item["t_name"] = "Название товара: " + item.c_tovar;
                                                 item["v_name"] = "Производитель: " + item.c_zavod;
-                                                item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                                                item["dv_name"] = "Д. вещество: " + item.c_dv;
                                                 this.$scope.sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
                                                 }
                                     } else {

@@ -11,6 +11,7 @@ import GroupsView from "../views/adm-groups";
 import HranView from "../views/adm-hran";
 import NdsView from "../views/adm-nds";
 import SeasonsView from "../views/adm-seasons";
+import IssueView from "../views/adm-issues";
 import AdmView from "../views/adm-adm-adm";
 
 export default class LinkerView extends JetView{
@@ -25,6 +26,13 @@ export default class LinkerView extends JetView{
                     body: { view: "layout",
                         rows: [
                             {$subview: SprView},
+                            ]
+                        }
+                    },
+                {header: "<span style='line-height: 20px;'>Формы выпуска</span>", width: 120, //close: true,
+                    body: { view: "layout",
+                        rows: [
+                            {$subview: IssueView},
                             ]
                         }
                     },

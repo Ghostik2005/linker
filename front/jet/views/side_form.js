@@ -1,9 +1,6 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import NewstriView from "../views/new_stri";
-import NewbarView from "../views/new_bar";
-import NewtgView from "../views/new_tg";
 import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 
@@ -93,69 +90,50 @@ export default class SideFormView extends JetView{
                                     },
                                 },
                             {view: "label", label:"Производитель:", name: "v_name"},
-                            {cols: [
-                                {view:"combo", label: "", value: "", name: "id_zavod", required: true,
-                                    options:  {
-                                        filter: zavod_filter,
-                                        body: {
-                                            template:"#c_zavod#",
-                                            yCount:7,
-                                            //data: vendor
-                                            }
-                                        },
-                                    on: {
-                                        onAfterRender: function() {
-                                            this.getList().sync(vendor);
-                                            }
-                                        },
-                                    },
-                                {view: "button", type: "base", label: "+", width: 30, hidden: !app.config.roles[app.config.role].vendoradd, hidden: true,
-                                    click: () => {
-                                        let params = {'new_name': 'c_zavod', 'url': "Zavod", "callback": addZavod}
-                                        this.popstri.show("Добавление производителя", params);
+                            {view:"combo", label: "", value: "", name: "id_zavod", required: true,
+                                options:  {
+                                    filter: zavod_filter,
+                                    body: {
+                                        template:"#c_zavod#",
+                                        yCount:7,
+                                        //data: vendor
                                         }
                                     },
-                                ]},
-                            {view: "label", label:"Действующее вещество:", name: 'dv_name'},
-                            {cols: [
-                                {view:"combo", label: "", value: "", name: "id_dv", required: true,
-                                    options:  {
-                                        filter: dv_filter,
-                                        body: {
-                                            autoheight:false,
-                                            view:"list",
-                                            type:{ height:"auto" },
-                                            template: "<div class='comboList'>#act_ingr#</div>",
-                                            height: 200,
-                                            yCount:0,
-                                            //data: dv
-                                            }
-                                        },
-                                    on: {
-                                        onAfterRender: function() {
-                                            this.getList().sync(dv);
-                                            }
-                                        },
-                                    },
-                                {view: "button", type: "base", label: "+", width: 30, hidden: !app.config.roles[app.config.role].vendoradd, hidden: true,
-                                    click: () => {
-                                        let params = {'new_name': 'act_ingr', 'url': "Dv1", "callback": addDv}
-                                        this.popstri.show("Добавление д.вещества", params);
+                                on: {
+                                    onAfterRender: function() {
+                                        this.getList().sync(vendor);
                                         }
                                     },
-                                ]},
+                                },
+                            {view: "label", label:"Д. вещество:", name: 'dv_name'},
+                            {view:"combo", label: "", value: "", name: "id_dv", required: true,
+                                options:  {
+                                    filter: dv_filter,
+                                    body: {
+                                        autoheight:false,
+                                        view:"list",
+                                        type:{ height:"auto" },
+                                        template: "<div class='comboList'>#act_ingr#</div>",
+                                        height: 200,
+                                        yCount:0,
+                                        //data: dv
+                                        }
+                                    },
+                                on: {
+                                    onAfterRender: function() {
+                                        this.getList().sync(dv);
+                                        }
+                                    },
+                                },
+                            {view: "label", label:"Форма выпуска:"},
+                            {view:"text", label: "", value: "", labelPosition:"left", readonly: true, name: "issue", localId: "_issue", css: "raw_text",
+                                readonly: true,
+                                },
                             {view:"text", label: "Штрих-код:", value: "", labelPosition:"top", readonly: true, name: "barcode", localId: "_barc", css: "raw_text",
-                                click: () => {
-                                    let id_spr = this.$$("new_form").getValues().id_spr;
-                                    this.popbar.show("Редактирование ш.кодов", id_spr, this);
-                                    }
+                                readonly: true,
                                 },
                             {view: "text", label: "Товарная группа:", labelPosition:"top", value: "", name: "c_tgroup", localId: "_c_tgroup",  css: "raw_text",
                                 readonly: true,
-                                click: () => {
-                                    let id_spr = this.$$("new_form").getValues().id_spr;
-                                    this.poptg.show("Редактирование товарных групп", id_spr, this);
-                                    }
                                 }
                             ]},
                         {width: 5,},
@@ -342,9 +320,6 @@ export default class SideFormView extends JetView{
         this.getRoot().hide()
         }
     init() {
-        this.popstri = this.ui(NewstriView);
-        this.popbar = this.ui(NewbarView);
-        this.poptg = this.ui(NewtgView);
         }
     }
 

@@ -81,7 +81,7 @@ export default class loginView extends JetView{
             this.app.config.user = u;
             this.app.config.role = r;
             this.app.config.x_api = x;
-            init_first(this.app);
+            //init_first(this.app);
             this.show("/start/body");
         } else {
             deleteCookie('linker_user');

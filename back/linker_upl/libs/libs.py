@@ -112,6 +112,7 @@ class API:
         return True
 
     def upload_nolinks(self, params, x_hash):
+        ########################################################доработать
         #загрузка данных по накладным из json
         if self._check():
             raw_data = params.get("data")

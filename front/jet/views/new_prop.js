@@ -38,7 +38,7 @@ export default class NewPropView extends JetView{
                     "text": webix.rules.isNotEmpty,
                     },
                 elements: [
-                    {view: "text", localId: "_id",label: "ID", value: "", width: 320, name: "id", placeholder: "Введите значение", readonly: true,
+                    {view: "text", localId: "_id",label: "ID", value: "", width: 320, name: "id", placeholder: "Введите значение", readonly: false,
                         required: true, invalidMessage: "Такой ID уже есть"
                         },
                     {view: "text", label: "Название", value: "", width: 320, name: "text", placeholder: "Введите значение",
@@ -83,13 +83,17 @@ export default class NewPropView extends JetView{
     show(new_head, params){
         this.$$("_n_f").config._params = params;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
+        this.$$("_id").define('readonly', false);
+        if (params.id_is) {
+            let _p = {'text': params.text, 'id': params.id_is}
+            this.$$("_n_f").parse(_p);
+            this.$$("_id").define('readonly', true);
+            };
         if (params.text) {
             let _p = {'text': params.text, 'id': params.id}
             this.$$("_n_f").parse(_p);
             this.$$("_id").define('readonly', true);
-        } else {
-            this.$$("_id").define('readonly', false);
-            }
+            };
         this.$$("_id").refresh();
         this.getRoot().show();
         }

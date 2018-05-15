@@ -119,7 +119,7 @@ export default class SprView extends JetView{
                 item["s_name"] = "Страна: " + item.c_strana;
                 item["t_name"] = "Название товара: " + item.c_tovar;
                 item["v_name"] = "Производитель: " + item.c_zavod;
-                item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                item["dv_name"] = "Д. вещество: " + item.c_dv;
                 var sub = new SubRow(this.app, {
                     //focus: c_focus,
                     dt: this.$$("__table"),
@@ -268,7 +268,7 @@ export default class SprView extends JetView{
                     item["s_name"] = "Страна: " + item.c_strana;
                     item["t_name"] = "Название товара: " + item.c_tovar;
                     item["v_name"] = "Производитель: " + item.c_zavod;
-                    item["dv_name"] = "Действующее вещество: " + item.c_dv;
+                    item["dv_name"] = "Д. вещество: " + item.c_dv;
                     this.$scope.popnew.show("Редактирование записи " + item.id_spr, this.$scope.$$("_sb"), item);
                     },
                 onAfterLoad: function() {

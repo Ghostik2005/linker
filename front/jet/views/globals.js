@@ -22,7 +22,6 @@ export var tg = new webix.DataCollection({
         id: "tg_dc",
         });
 
-
 export var prcs = new webix.DataCollection({
         id: "prcs_dc",
         on: {
@@ -42,6 +41,10 @@ export var prcs = new webix.DataCollection({
 
 export var allTg = new webix.DataCollection({
         id: "allTg_dc",
+        });
+
+export var allIs = new webix.DataCollection({
+        id: "allIs_dc",
         });
 
 export var strana = new webix.DataCollection({
@@ -164,6 +167,25 @@ export function updHran(item, source) {
     source.refresh();
     //hran.updateItem(item.id, item.value);
     }
+
+export function addIssue(item) {
+    allIs.add(item);
+    }
+
+export function delIssue(item_id) {
+    allIs.remove(item_id);
+    }
+
+export function updIssue(item, source) {
+    var cid = item.id; 
+    let citem = source.getItem(cid);
+    citem.c_issue = item.value;
+    source.updateItem(cid, citem);
+    source.refresh();
+    }
+
+
+
 
 export function addStrana(item) {
     strana.add(item);
@@ -551,6 +573,11 @@ export function getDtParams(ui) {
             'mandat'    : ($$(ui).isColumnVisible('mandat')) ? $$(ui).getFilter('mandat').getValue() : undefined,
             'prescr'    : ($$(ui).isColumnVisible('prescr')) ? $$(ui).getFilter('prescr').getValue() : undefined,
             };
+    } else if (ui.config.name === "__dt") {
+        c_filter = {
+            'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
+            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').value : undefined,
+            };
     } else if (ui.config.name === "relink") {
         c_filter = {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
@@ -580,14 +607,6 @@ export function dt_formating(d) {
 
 export function init_first(app) {
     let delay = app.config.searchDelay;
-    //setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getStranaAll", "store": "strana_dc"});
-    //setTimeout(get_refs, 2*delay, {"app": app, "type": "async", "method": "getVendorAll", "store": "vendor_dc"});
-    //setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getDvAll", "store": "dv_dc"});
-    //setTimeout(get_refs, 3*delay, {"app": app, "type": "async", "method": "getNdsAll", "store": "nds_dc"});
-    //setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getHranAll", "store": "hran_dc"});
-    //setTimeout(get_refs, 4*delay, {"app": app, "type": "async", "method": "getSezonAll", "store": "sezon_dc"});
-    //setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getGroupAll", "store": "group_dc"});
-    //setTimeout(get_refs, 5*delay, {"app": app, "type": "async", "method": "getTgAll", "store": "allTg_dc"});
     setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
     let url = app.config.r_url + "?getRefs"
     let params = {"user": app.config.user};
@@ -610,8 +629,8 @@ export function init_first(app) {
             $$("group_dc").parse(data.group);
             $$("allTg_dc").clearAll();
             $$("allTg_dc").parse(data.tg);
-        } else {
-            webix.message('error');
+            $$("allIs_dc").clearAll();
+            $$("allIs_dc").parse(data.issue);
             };
         })
     
