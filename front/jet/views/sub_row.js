@@ -312,15 +312,18 @@ export default class SubRow extends JetView{
                                     if (res && res.new && this.$$("new_form").config.spr) {
                                         delPrc(params, this);
                                     } else {
-                                        this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
+                                        //console.log('dt', this.$$("new_form").config.dt);
+                                        let page = +this.$$("new_form").config.pag.getValue();
+                                        this.$$("new_form").config.pag.callEvent("onChange", [page, page+1])
+                                        //this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
                                         barcodes.clearAll();
                                         this.$$("new_form").clear();
                                         this.$$("new_form").reconstruct();
                                         };
                                     this.$$("new_form").config.spr = false;
-                                    };
-                                    this.customData.dt.closeSub(this.customData.item.id);
+                                    //this.customData.dt.closeSub(this.customData.item.id);
                                     this.customData.dt.focusEditor();
+                                    };
                                 }
                             }
                         ]}
@@ -339,6 +342,7 @@ export default class SubRow extends JetView{
     ready(view) {
         this.$$("new_form").config.search_bar = this.customData.search_bar;
         this.$$("new_form").config.dt = this.customData.dt;
+        this.$$("new_form").config.pag = this.customData.pager;
         let item = this.customData.item;
         let new_head = this.customData.header;
         if (item) {

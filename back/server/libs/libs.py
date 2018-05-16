@@ -2349,7 +2349,10 @@ FROM RDB$DATABASE"""
         if self._check(x_hash):
             id_spr = params.get("id_spr")
             issue = params.get("issue")
-            issue = issue.split()
+            issue = issue.split('; ')
+            if len(issue) > 1 and isinstance(issue, list):
+                issue.pop()
+            print(issue)
             if id_spr:
                 opt_i = []
                 for i in issue:
@@ -2360,6 +2363,8 @@ FROM RDB$DATABASE"""
                 result = self.db.execute({"sql": sql, "options": opt})
                 if len(opt_i) > 0:
                     sql = """INSERT INTO spr_issue (id_spr, id_is) VALUES (?, (select id from ISSUE where c_issue = ?))"""
+                    print(sql)
+                    print(opt_i)
                     result = self.db.executemany({"sql": sql, "options": opt_i})
                 ret = {"result": True, "ret_val": "updated"}
             else:
@@ -2474,6 +2479,8 @@ FROM RDB$DATABASE"""
         if self._check(x_hash):
             filt = params.get('c_filter')
             start_p = int( params.get('start', self.start))
+            if start_p <= 0:
+                start_p = 1
             end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             field = field.replace('id_zavod', 'z.c_zavod')
@@ -2617,6 +2624,8 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?""".format(stri, field, direction)
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
+            if start_p <= 0:
+                start_p = 1
             end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
@@ -2953,7 +2962,7 @@ WHERE r.id_spr = ?"""
                         "barcode"       : "",
                         "_prescr"       : 1 if row[17] else 0,
                         "_mandat"       : 1 if row[16] else 0,
-                        "issue"         : row[18],
+                        "issue"         : "",
                         "sezon"         : row[14],
                         "id_sezon"      : row[15],
                         "usloviya"      : row[12],
@@ -2971,6 +2980,17 @@ WHERE r.id_spr = ?"""
                     for row_b in t:
                         b_code.append(row_b[0])
                     r['barcode'] = " ".join(b_code)
+
+                    sql = """select s.C_ISSUE 
+from SPR_ISSUE r 
+JOIN ISSUE s on s.ID = r.ID_IS
+where r.id_spr =?"""
+                    t = self.db.request({"sql": sql, "options": opt})
+                    b_code = []
+                    for row_b in t:
+                        b_code.append(row_b[0])
+                    r['issue'] = "; ".join(b_code) + ('; ' if len(t) > 1 else '')
+                    print(r.get('issue'))
 
                     sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups
 inner join classifier on (groups.cd_group = classifier.cd_group)

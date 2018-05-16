@@ -1,7 +1,9 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.135.1505' #добавлена форма выпуска препарата
+__version__ = '18.136.1625' #устранен баг с формами выпуска
+#__version__ = '18.136.1430' #устранен баг с поиском
+#__version__ = '18.135.1505' #добавлена форма выпуска препарата
 #__version__ = '18.135.1005' #добавлен фильтр по idspr и д.в-ву в линкере
 #__version__ = '18.135.0900' #изменен поиск по производителю в основном экране
 #__version__ = '18.131.1200' #добавленно удаление из SPR
@@ -98,6 +100,7 @@ def application(env):
     addr, pid = env["scgi.initv"][:2]
     msg = f'{addr[0]} {addr[1]} {env["HTTP_METHOD"]} {env["URI"]} {env["HTTP_PARAMS"]} {env["HTTP_KWARGS"]}'
     env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s close" % msg)
+    print(env['REMOTE_ADDR'])
     #print(env['X-API-KEY'])
     sys.APPCONF["log"](msg)
     ret_code = u'200 OK'

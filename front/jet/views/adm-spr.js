@@ -122,6 +122,7 @@ export default class SprView extends JetView{
                 item["dv_name"] = "Д. вещество: " + item.c_dv;
                 var sub = new SubRow(this.app, {
                     //focus: c_focus,
+                    pager: this.$$("__table").getParentView().getChildViews()[2].$scope.$$("__page"),
                     dt: this.$$("__table"),
                     item: item,
                     header: "<span style='color: red; text-transform: uppercase;'>Редактирование записи </span>" + item.id_spr,

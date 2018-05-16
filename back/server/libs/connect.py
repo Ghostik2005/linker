@@ -24,26 +24,37 @@ class fb_local:
                     'api_key': init['api'],
                     'allow_none': True
                     }
+            self.connect_params = {
+                    "host": "127.0.0.1",
+                    "port": 8025,
+                    "database": "spr",
+                    "user": 'SYSDBA',
+                    "password":'masterkey',
+                    "charset" : 'WIN1251'
+                }
             self.production = True
         except:
+            self.connect_params = {
+                    "host": "127.0.0.1",
+                    "database": "spr",
+                    "user": 'SYSDBA',
+                    "password":'masterkey',
+                    "charset" : 'WIN1251'
+                }
             self.production = False
             self.prod_params = {}
+            
         self.log = log
         if callable(self.log):
             self.log("Production" if self.production else "Test")
         else:
             print("Production" if self.production else "Test", flush=True)
-        self.connect_params = {
-                "host": "localhost",
-                "database": "spr",
-                "user": 'SYSDBA',
-                "password":'masterkey',
-                "charset" : 'WIN1251'
-            }
+
             
     def request(self, params=None):
         if self.production:
-            ret = self._request_(params)
+            ret = self._request(params)
+            #ret = self._request_(params)
         else:
             ret = self._request(params)
         if not ret:
@@ -52,7 +63,8 @@ class fb_local:
 
     def execute(self, params=None):
         if self.production:
-            ret = self._execute_(params)
+            #ret = self._execute_(params)
+            ret = self._execute(params)
         else:
             ret = self._execute(params)
         if not ret:
@@ -61,7 +73,8 @@ class fb_local:
 
     def executemany(self, params=None):
         if self.production:
-            ret = self._executemany_(params)
+            #ret = self._executemany_(params)
+            ret = self._executemany(params)
         else:
             ret = self._executemany(params)
         if not ret:
@@ -256,16 +269,18 @@ if "__main__" == __name__:
  ON SPR_ISSUE TO  SYSDBA WITH GRANT OPTION"""
     ]
 
-    for ss in sqls:
-        fb.execute({"sql": ss, "options": opt})
+    #for ss in sqls:
+        #fb.execute({"sql": ss, "options": opt})
 
-    sys.exit(0)
-
-
+    #sys.exit(0)
 
 
+    #sql = "select * from spr_issue where id_is = 14"
+    #sql = "UPDATE issue set c_issue = 'МАЗЬ НАРУЖ' where id = 14"
+    #opt = (95489, "МАЗЬ НАРУЖ")
 
-    #rr = fb.execute({"sql": sql1, "options": opt})
+
+    rr = fb.execute({"sql": sql, "options": opt})
     if rr == -1:
         print("sql connection error")
     elif rr == -2:
