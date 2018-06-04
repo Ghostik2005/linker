@@ -138,7 +138,7 @@ button {
   margin-top: 6px !important;
 }
 .webix_el_radio .webix_label_right {
-  color: white;
+  /*color: white;*/
 }
 .webix_el_combo input {
   color: black;
@@ -185,6 +185,9 @@ div.webix_item_tab {
 }
 .webix_slider_title.webix_slider_move {
   color: white !important;
+}
+.webix_el_radio.webix_label_right.radio_b {
+  color: red;
 }
 @charset "UTF-8";
 /*!

@@ -15,6 +15,7 @@ import hashlib
 import threading
 import traceback
 import subprocess
+import configparser
 from urllib.parse import unquote
 from libs.lockfile import LockWait
 from libs.connect import fb_local
@@ -65,17 +66,27 @@ class API:
              os.makedirs(self.inw_path, mode=0o777)
         self.lock = Lock
         self.exec = sys.executable
+        self.log = log
         try:
             config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker_upl/conf.ini', encoding='UTF-8')
+            config.read('/ms71/saas/linker_upl/conf1.ini', encoding='UTF-8')
             init = config['init']
             self.connect_params = {
                     'uri': init['uri'],
                     'api_key': init['api'],
                     'allow_none': True
                     }
+            self.connect_params = {
+                    "host": "127.0.0.1",
+                    "port": 8025,
+                    "database": "spr",
+                    "user": 'SYSDBA',
+                    "password":'masterkey',
+                    "charset" : 'WIN1251'
+                    }
             self.production = True
-        except:
+        except Exception as Err:
+            self.log(Err, kind="ERROR")
             self.production = False
             self.connect_params = {
                     "host": "localhost",
@@ -84,27 +95,33 @@ class API:
                     "password":'masterkey',
                     "charset" : 'WIN1251'
                     }
-        self.log = log
+        
         if callable(self.log):
             self.log("Production" if self.production else "Test")
         else:
             print("Production" if self.production else "Test", flush=True)
 
     def _connect(self):
-        if self.production:
-            try:
-                con = ms71_cli.ServerProxy(**self.connect_params)
-            except Exception as Err:
-                self.log(traceback.format_exc(), kind="error:connection")
-            else:
-                cur = con.fdb
+        try:
+            con = fdb.connect(**self.connect_params)
+        except Exception as Err:
+            self.log(traceback.format_exc(), kind="error:connection")
         else:
-            try:
-                con = fdb.connect(**self.connect_params)
-            except Exception as Err:
-                self.log(traceback.format_exc(), kind="error:connection")
-            else:
-                cur = con.cursor()
+            cur = con.cursor()
+        #if self.production:
+            #try:
+                #con = ms71_cli.ServerProxy(**self.connect_params)
+            #except Exception as Err:
+                #self.log(traceback.format_exc(), kind="error:connection")
+            #else:
+                #cur = con.fdb
+        #else:
+            #try:
+                #con = fdb.connect(**self.connect_params)
+            #except Exception as Err:
+                #self.log(traceback.format_exc(), kind="error:connection")
+            #else:
+                #cur = con.cursor()
         return con, cur
 
     def _check(self, x_hash):
@@ -113,14 +130,16 @@ class API:
 
     def upload_nolinks(self, params, x_hash):
         #загрузка данных по накладным из json
-        if self._check():
-            raw_data = params.get("data")
-            source = paramas.get("source", 2)
-            callback = params.get("callback", None)
-            data = json.load(raw_data)
+        ret = {"result": False, "ret_val": "access denied"}
+        if self._check(x_hash):
+            source = 2
+            callback = None
+            data = params
             #ключ словаря - идентификатор накладной, значение - список строк товаров для сведения в фомате tab separated, все как в файле:
             #sh_prc, код поставщика, код товара у поставщика, название товара, изгтовитель, код организации, штрихкод
             name, value = data.popitem()
+            print('*'*50)
+            print(value)
             con, cur = self._connect()
             h_name = hashlib.md5()
             h_name.update(str(name).encode())
@@ -128,14 +147,19 @@ class API:
             sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
             cur.execute(sql)
             con.commit()
+            con.close()
             f_name = os.path.join(self.path,f"{h_name}.{source}")
             #f_name = os.path.join(self.path, name)
-            value = '\n'.join(value)
+            #value = '\n'.join(value)
+            #print('*'*50)
+            #print(value)
             with open(f_name, 'wb') as f_obj:
+                pass
                 f_obj.write(value.encode())
-            ret = {"result": True, "ret_val": "accept"}    
-        else:
-            ret = {"result": False, "ret_val": "access denied"}
+            ret = {"result": True, "ret_val": "accepted"}
+            print('*'*50)
+            #ret = {"result": True, "ret_val": "ok"}
+            
         return json.dumps(ret, ensure_ascii=False)
 
     def upload_file(self, filename, data, source=0, callback=None):
@@ -151,9 +175,10 @@ class API:
         h_name.update(str(filename).encode())
         h_name =  h_name.hexdigest()
         sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
+        print(sql)
         cur.execute(sql)
         con.commit()
-        fname = os.path.join(self.path,f"{h_name}.{source}")
+        fname = os.path.join(self.path, f"{h_name}.{source}")
         try: 
             with open(fname, 'wb') as f_obj:
                 f_obj.write(f_data)
@@ -660,7 +685,7 @@ class SCGIServer:
 
     def _init(self, sock):
         addr = sock.getsockname()[:2]
-        sock.listen(100)
+        sock.listen(10)
         sys.APPCONF["addr"] = addr
         fileupstream = self._getfilename("upstream")
         sys.APPCONF["fileupstream"] = fileupstream
@@ -896,36 +921,39 @@ def monitor(api):
     inw_dir = api.inw_path
     connection = api.connect_params
     while True:
-        sql = "select r.uin from PRC_TASKS r"
-        db = fdb.connect(**connection)
-        dbc = db.cursor()
-        dbc.execute(sql)
-        result = dbc.fetchall()
-        for row in result:
-            uin = row[0]
-            sql = f"""SELECT CASE 
-    WHEN not EXISTS(select uin from PRC where uin = '{uin}' and n_fg != 1) THEN 0
-    ELSE 1
-    END
-FROM RDB$DATABASE"""
+        try:
+            sql = "select r.uin from PRC_TASKS r"
+            db = fdb.connect(**connection)
+            dbc = db.cursor()
             dbc.execute(sql)
-            res = dbc.fetchone()
-            print(uin, res)
-            if int(res[0]) == 0:
-                sql = f"""delete from PRC_TASKS where uin = '{uin}' returning callback"""
+            result = dbc.fetchall()
+            for row in result:
+                uin = row[0]
+                sql = f"""SELECT CASE 
+        WHEN not EXISTS(select uin from PRC where uin = '{uin}' and n_fg != 1) THEN 0
+        ELSE 1
+        END
+    FROM RDB$DATABASE"""
                 dbc.execute(sql)
-                callback = dbc.fetchone()[0]
-                db.commit()
+                res = dbc.fetchone()
+                #print(uin, res)
+                if int(res[0]) == 0:
+                    sql = f"""delete from PRC_TASKS where uin = '{uin}' returning callback"""
+                    dbc.execute(sql)
+                    callback = dbc.fetchone()[0]
+                    db.commit()
 
-                print("form the message")
-                print(f"send message to {callback or 'source'}")
-                try:
-                    os.remove(os.path.join(inw_dir, uin))
-                except:
-                    api.log(traceback.format_exc(), kind="error:removing")
-            else:
-                continue
-        db.close()
+                    print("form the message")
+                    print(f"send message to {callback or 'source'}")
+                    try:
+                        os.remove(os.path.join(inw_dir, uin))
+                    except:
+                        api.log(traceback.format_exc(), kind="error:removing")
+                else:
+                    continue
+            db.close()
+        except Exception as Err:
+            api.log(traceback.format_exc(), kind="error:monitor")
         time.sleep(60)
 
 def guardian(api):
@@ -933,51 +961,54 @@ def guardian(api):
     log = api.log
     connection = api.connect_params
     while True:
-        f_mask = os.path.join(work_dir, "*")
-        for path in glob.glob(f_mask):
-            if os.path.isdir(path):
-                continue
-            row = None
-            log(f"path: {path}")
-            with open(path, 'rb') as f_obj:
-                row = f_obj.readline()
-            if row:
-                db = fdb.connect(**connection)
-                dbc = db.cursor()
-                row = row.decode('utf8')
-                id_vnd = int(row.split('\t')[0])
-                sql = f"""SELECT count(*) FROM LNK_CODES r where r.PROCESS = 1 and r.CODE = {id_vnd}"""
-                dbc.execute(sql)
-                h_name = os.path.basename(path)
-                h_name, source = h_name.split('.')
-                if not list(dbc.fetchone())[0] and int(source) != 2:
-                    log('- пропускаем, сведение не разрешено')
-                    #переносим файл в несводимые, делаем запись в базе о том, что сведение не разрешено
-                    sql = f"""delete from PRC_TASKS where uin = '{h_name}'"""
-                    dbc.execute(sql)
-                    db.commit()
-                    shutil.move(path, os.path.join(api.p_path, h_name))
+        try:
+            f_mask = os.path.join(work_dir, "*")
+            for path in glob.glob(f_mask):
+                if os.path.isdir(path):
                     continue
-                else:
-                    log('- начинаем сведение')
-                    count_insert = 0
-                    count_all = 0
-                    count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
-                    log("- удаляем файл:")
-                    try:
-                        shutil.move(path, os.path.join(api.inw_path, h_name))
-                        #os.remove(path)
-                        log("[ OK ]")
-                    except Exception as e:
-                        log("[FAIL]")
-                        log(str(e), kind="error")
-                    if count_insert > 0:
-                        api.prc_sync_lnk(db, dbc, h_name)
-                        sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
+                row = None
+                log(f"path: {path}")
+                with open(path, 'rb') as f_obj:
+                    row = f_obj.readline()
+                if row:
+                    db = fdb.connect(**connection)
+                    dbc = db.cursor()
+                    row = row.decode('utf8')
+                    id_vnd = int(row.split('\t')[0])
+                    sql = f"""SELECT count(*) FROM LNK_CODES r where r.PROCESS = 1 and r.CODE = {id_vnd}"""
+                    dbc.execute(sql)
+                    h_name = os.path.basename(path)
+                    h_name, source = h_name.split('.')
+                    if not list(dbc.fetchone())[0] and int(source) != 2:
+                        log('- пропускаем, сведение не разрешено')
+                        #переносим файл в несводимые, делаем запись в базе о том, что сведение не разрешено
+                        sql = f"""delete from PRC_TASKS where uin = '{h_name}'"""
                         dbc.execute(sql)
-                        count_insert = dbc.fetchone()[0]
-                api.log(f'Добавленно к сведению: {count_insert}')
-                db.close()
+                        db.commit()
+                        shutil.move(path, os.path.join(api.p_path, h_name))
+                        continue
+                    else:
+                        log('- начинаем сведение')
+                        count_insert = 0
+                        count_all = 0
+                        count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
+                        log("- удаляем файл:")
+                        try:
+                            shutil.move(path, os.path.join(api.inw_path, h_name))
+                            #os.remove(path)
+                            log("[ OK ]")
+                        except Exception as e:
+                            log("[FAIL]")
+                            log(str(e), kind="error")
+                        if count_insert > 0:
+                            api.prc_sync_lnk(db, dbc, h_name)
+                            sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
+                            dbc.execute(sql)
+                            count_insert = dbc.fetchone()[0]
+                    api.log(f'Добавленно к сведению: {count_insert}')
+                    db.close()
+        except Exception as Err:
+            api.log(traceback.format_exc(), kind="error:monitor")
         #спим 5 секунд перед тем, как продолжить опрос папки
         time.sleep(5) 
 

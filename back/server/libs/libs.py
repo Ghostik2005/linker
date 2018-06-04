@@ -167,7 +167,9 @@ class API:
     def getTasks(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = """select DISTINCT ui, v.C_VND, 'client', t.SOURCE, cou, t.DT FROM (
+            sql = """select DISTINCT ui, v.C_VND, 'client', t.SOURCE, cou,
+dateadd(-extract(millisecond from dateadd(1800000 millisecond to t.DT)) millisecond to dateadd(1800000 millisecond to t.DT))
+FROM (
     SELECT r.UIN as ui, COUNT(r.UIN) as cou
     FROM PRC_TASKS r
     JOIN PRC p on r.UIN = p.UIN
@@ -389,9 +391,9 @@ WHERE r.SH_PRC = ?
     END
 from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''})
 join prc r on r.SH_PRC = rsh
+{sql_2}
 {sql_1}
 {sql_3}
-{sql_2}
 {order if 'r.' not in order else ''}"""
             sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
     CASE
@@ -399,9 +401,9 @@ join prc r on r.SH_PRC = rsh
         ELSE ru.NAME
     END
 from prc r
+{sql_2}
 {sql_1}
 {sql_3}
-{sql_2}
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_stri} {us_s or ''}
 order by {field} {direction}"""
             sql = sql_ if (stri or us_stri or us_s) else sql
@@ -409,13 +411,10 @@ order by {field} {direction}"""
             opt = (start_p, end_p)
             _return = []
             sql_c = f"""select count(DISTINCT r.SH_PRC) from  PRC r 
+{sql_2 if v_s else ''}
 {sql_1 if us_s else ''}
 {sql_3 if us_s else ''}
-{sql_2 if v_s else ''}
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
-            print(sql)
-            print()
-            print(sql_c)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -1125,6 +1124,22 @@ FROM RDB$DATABASE"""
         return json.dumps(ret, ensure_ascii=False)
 
 
+    def getSupplAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = "SELECT r.ID_VND, r.C_VND FROM VND r ORDER by r.C_VND"
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[0],
+                    "value"       : row[1]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
 
     def getVendorAll(self, params=None, x_hash=None):
@@ -2223,7 +2238,6 @@ ROWS ? to ?
             sql = """select max(r.id) from issue r"""
             opt = ()
             res = self.db.request({"sql": sql, "options": opt})[0][0]
-            print(res)
             if res:
                 t = int(res) + 1
             else:
@@ -2352,7 +2366,6 @@ FROM RDB$DATABASE"""
             issue = issue.split('; ')
             if len(issue) > 1 and isinstance(issue, list):
                 issue.pop()
-            print(issue)
             if id_spr:
                 opt_i = []
                 for i in issue:
@@ -2363,8 +2376,6 @@ FROM RDB$DATABASE"""
                 result = self.db.execute({"sql": sql, "options": opt})
                 if len(opt_i) > 0:
                     sql = """INSERT INTO spr_issue (id_spr, id_is) VALUES (?, (select id from ISSUE where c_issue = ?))"""
-                    print(sql)
-                    print(opt_i)
                     result = self.db.executemany({"sql": sql, "options": opt_i})
                 ret = {"result": True, "ret_val": "updated"}
             else:
@@ -2990,8 +3001,6 @@ where r.id_spr =?"""
                     for row_b in t:
                         b_code.append(row_b[0])
                     r['issue'] = "; ".join(b_code) + ('; ' if len(t) > 1 else '')
-                    print(r.get('issue'))
-
                     sql = """select classifier.nm_group, classifier.cd_group, classifier.idx_group from groups
 inner join classifier on (groups.cd_group = classifier.cd_group)
 where ( classifier.idx_group = 7 and groups.cd_code = ? )"""
@@ -3040,6 +3049,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = ? )"""
                 pars['owner'] = filt.get('owner')
                 dt = filt.get('dt')
                 ssss = []
+                s_1  = []
                 if dt:
                     pars['start_dt'] = dt.get('start')
                     pars['end_dt'] = dt.get('end')
@@ -3056,6 +3066,7 @@ or
                         ssss.append(pref % s)
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    #s_1.append(pref % s)
                     ssss.append(pref % s)
                 if pars['owner']:
                     s = "lower(r.owner) like lower('%" + pars['owner'] + "%')"
@@ -3065,8 +3076,11 @@ or
                     ssss.append(pref % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    s1 = "lower(z.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    s_1.append(pref % s1)
                     ssss.append(pref % s)
                 stri_1 = ' '.join(ssss)
+                s_1 = ' '.join(s_1)
             exclude, search_re = self._form_exclude(search_re)
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else [sti,]
@@ -3080,7 +3094,7 @@ or
                 for i in range(len(exclude)):
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
-            stri = ' '.join(stri)
+            stri = ' '.join(stri) + ' ' + s_1
             stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and","")
             sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
 from spr r
@@ -3090,7 +3104,9 @@ WHERE {0}
 order by r.{1} {2}
 ROWS ? to ? """.format(stri, field, direction)
             sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            sql_c = """select count(*) from spr r WHERE %s """ % stri
+            sql_c = f"""select count(*) from spr r
+{"LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)" if "z.C_ZAVOD" in stri else ""}
+WHERE %s""" % stri
             sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             t1 = time.time() - st_t
             opt = (start_p, end_p)
@@ -3103,7 +3119,6 @@ ROWS ? to ? """.format(stri, field, direction)
                 #count = self.db.request({"sql": sql, "options": opt})[0][0]
             #else:
                 #count = 0
-
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -3166,7 +3181,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
             user = params.get('user')
             start_p = int(params.get('start', self.start))
             end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p == 0 else start_p
+            start_p = 1 if start_p <= 0 else start_p
             field = params.get('field', 'c_tovar')
             if field == 'dt':
                 field = 'ch_date'
@@ -3198,6 +3213,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 pars['spr'] = filt.get('spr')
                 pars['id_tovar'] = filt.get('id_tovar')
                 pars['id_spr'] = filt.get('id_spr')
+                pars['hash'] = filt.get('id')
                 try:
                     pars['id_spr'] = int(pars['id_spr'])
                 except:
@@ -3235,6 +3251,9 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 if pars['c_zavod']:
                     s = "r.C_ZAVOD CONTAINING'%s'" % pars['c_zavod']
                     ssss.append('and %s' % s)
+                if pars['hash']:
+                    s = "r.SH_PRC = '%s'" % pars['hash']
+                    ssss.append('and %s' % s)
                 if pars['spr']:
                     qwe = pars.get('spr')
                     exclude, qwe = self._form_exclude(qwe)
@@ -3263,7 +3282,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                     s = """JOIN SPR s on (s.ID_SPR = rids)\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"""
                     in_st.append(s)
                 if pars['c_vnd']:
-                    s = "JOIN VND v on (v.ID_VND = ridv) and v.C_VND CONTAINING '%s'" % pars['c_vnd']
+                    s = "JOIN VND v on (v.ID_VND = ridv) and v.ID_VND = %s" % pars['c_vnd']
                     in_c.insert(0, s.replace('ridv', 'r.id_vnd'))
                     in_st.insert(0, s)
                 else:
@@ -3316,15 +3335,6 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             sql = sql.replace("WHERE r.C_TOVAR CONTAINING '%%'", '')
             opt = (start_p, end_p)
             _return = []
-            #result = self.db.request({"sql": sql, "options": opt})
-
-            #if result:
-                #sql = sql_c
-                #opt = ()
-                #count = self.db.request({"sql": sql, "options": opt})[0][0]
-            #else:
-                #count = 0
-                
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
