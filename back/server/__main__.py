@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.155.1545' #улучшен отпод по производителю эталонна в связках (поиск по справочнику)
+__version__ = '18.156.1715' #формируем отчеты в xlsx, csv, ods
+#__version__ = '18.155.1545' #улучшен отбор по производителю эталонна в связках (поиск по справочнику)
 #__version__ = '18.155.1030' #добавлен отбор в связках по поставщикам через комбо-фильтр, отбор в связках по хэшу
 #__version__ = '18.152.0925' #оптимизированны некоторые запросы
 #__version__ = '18.150.1125' #оптимизированны некоторые запросы
@@ -131,10 +132,22 @@ def application(env):
         sys.APPCONF["log"](_param, kind='info:params:')
         #arg, _param = args.popitem()
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
+    fileReturn = False
+    if arg == 'saveData':
+        res = content.get('result')
+        if res:
+            ret_v = content.get('ret_val')
+            f_type = ret_v.get('type')
+            ret_value = ret_v.get('data')
+            header = libs.f_head(len(ret_value), f_type)
+            fileReturn = True
+        else:
+            ret_value = json.dumps(ret, ensure_ascii=False)
+    if not fileReturn:
+        ret_value = content.encode()
+        header = libs.head(len(ret_value), False, True)
 
     # три обязательных вызова yield: статус, заголовки, содержание
-    ret_value = content.encode()
-    header = libs.head(len(ret_value), False, True)
     yield ret_code
     yield header
     yield ret_value

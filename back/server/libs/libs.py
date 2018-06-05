@@ -13,11 +13,13 @@ import hashlib
 import threading
 import traceback
 import subprocess
+from io import BytesIO
 from urllib.parse import unquote
 from libs.lockfile import LockWait
 from libs.connect import fb_local
 from multiprocessing.dummy import Pool as ThreadPool
-
+import libs.xlsx as xlsx
+import libs.ods as ods
 """
 
 """
@@ -1046,6 +1048,24 @@ FROM RDB$DATABASE"""
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
+
+    def getIssueAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = "select c_issue, id from ISSUE where flag=1 order by c_issue"
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"        : row[1],
+                    "value"     : row[0]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
 
     def setIssue(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -3596,6 +3616,186 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def saveData(self, params=None, x_hash=None):
+        methods = {"__dt":"getSprSearch", #spr_dt
+                   "_files": "getTasks", #adm-linker-files
+                   "__dt_a": "getPrcsAll", #unlinkedall-bar
+                   "_hran": "getHranAll", #adm-hran
+                   "_vendors": "getVendorsAll", #adm-vendors
+                   "_roles":"getAdmRoles", #adm_roles
+                   "_seasons":"getSeasonAll", #adm-seasons
+                   "_groups":"getGroupAll", #adm-groups
+                   "_codes":"getLinkCodes", #adm-linker-codes
+                   "_dv":"getDvAll", #adm-dv
+                   "_country":"getStranaAll", #adm-country
+                   "_excldes":"getLinkExcludes", #adm-linker-excludes
+                   "_ttl":"getLnkSprs", #links_form_lnk
+                   "_users":"getUsersAll", #adm-users
+                   "__dt_s":"getPrcsSkip", #skiped_bar
+                   "_nds":"getNdsAll", #adm-nds
+                   "__dt_as":"getSprSearchAdm", #adm-spr
+                   "_issues":"getIssueAll", #adm-issues
+                   "__tt":"getSprLnks", #links_form_spr
+                   "__dtdb": "getBarsSpr", #adm-barcodes-b
+                   "__dtd": "getSprBars", #adm-barcodes-s
+        }
+        if self._check(x_hash):
+            user = params.get("user")
+            s_params = params.get('s_params')
+            f_type = params.get('type', 'csv')
+            headers = params.get('headers')
+            c_filt = s_params.get('c_filt')
+            sep = params.get('c_sep')
+            search = params.get('search', "энап")
+            if not sep:
+                sep = params.get('sep')
+            if sep == 'Табуляция':
+                sep = "\t"
+            method = methods.get(params.get('table'))
+            params = {"user":user, "search": search, "start": 1, "count": 100000000, "c_filter": c_filt}
+            #print(method, f_type, sep, params, sep='\n')
+            call = getattr(self, method)
+            data = json.loads(call(params, x_hash)).get('ret_val')
+            if data:
+                output_data = []
+                output = BytesIO()
+                if not isinstance(data, list):
+                    data = data.get('datas')
+                for item in data:
+                    keys = item.keys()
+                    re = {}
+                    for k in keys:
+                        hh = None
+                        for h in headers:
+                             hh = h.get(k)
+                             if hh:
+                                 break
+                        if hh:
+                            re[hh] = item.get(k)
+                    output_data.append(re)
+                if f_type == 'xlsx':
+                    out_data = self._genXlsx(output_data)
+                elif f_type == 'csv':
+                    out_data = self._genCsv(output_data, sep)
+                elif f_type == 'ods':
+                    out_data = self._genOds(output_data)
+
+                if out_data:
+                    ret = {"result": True, "ret_val": {'type': f_type, 'data': out_data}}
+                else:
+                    ret = {"result": False, "ret_val": "no data"}
+            else:
+                ret = {"result": False, "ret_val": "error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return ret
+
+    def _genOds(self, data):
+        ret = None
+        if len(data) > 0:
+            ret = ods.Calc('report')
+            rows = []
+            keys = list(data[0].keys())
+            rows.append(keys)
+            for item in data:
+                c_string = []
+                for k in keys:
+                    c_string.append(str(item.get(k)))
+                rows.append(c_string)
+            j = 0
+            max_widths = {}
+            while rows:
+                row = rows.pop(0)
+                for i in range(len(row)):
+                    data = row[i]
+                    l = len(str(data))
+                    if j == 0:
+                        max_widths[i] = l
+                    if max_widths[i] < l:
+                        max_widths[i] = l
+                    if j == 0:
+                        ret.set_cell_property('bold', True)
+                    else:
+                        ret.set_cell_property('bold', False)
+                    ret.set_cell_property('fontsize', '8')
+                    ret.set_cell_value(i+1, j+1, "string", data)
+                j += 1
+            print(max_widths)
+            for i in max_widths:
+                ret.set_column_property(i+1, 'width', f"{max_widths[i]*2.4}mm")
+            ret_object = BytesIO()
+            ret.save(ret_object)
+            data = ret_object.getvalue()
+            ret_object.close()
+
+        return data
+
+    def _genCsv(self, output_data, sep):
+        out_data = None
+        if len(output_data) > 0:
+            out_data = []
+            keys = output_data[0].keys()
+            out_data.append('\t'.join(keys))
+            for item in output_data:
+                c_string = []
+                for k in keys:
+                    c_string.append(str(item.get(k)))
+                out_data.append('\t'.join(c_string))
+            out_data = '\n'.join(out_data)
+            out_data = out_data.replace('\t', sep)
+            #print(out_data)
+        return out_data.encode()
+        
+    def _genXlsx(self, data):
+        ret_object = BytesIO()
+        ret_data = None
+        properties = {
+            'title':    'report',
+            'category': 'Utility',
+        }
+        x = 6.5
+        workbook = xlsx.Workbook(ret_object, {'in_memory': True})
+        workbook.set_properties(properties)
+        cell_format = {}
+        cell_format['header'] = workbook.add_format({'font_size': '8', 'bold': True, 'align': 'center', 'bottom': 1})
+        cell_format['row'] = workbook.add_format({'font_size': '8', 'align': 'left'})
+        
+        if len(data) > 0:
+            rows = []
+            keys = list(data[0].keys())
+            rows.append(keys)
+            for item in data:
+                c_string = []
+                for k in keys:
+                    c_string.append(str(item.get(k)))
+                rows.append(c_string)
+            worksheet = workbook.add_worksheet('report')
+            worksheet.set_print_scale(100)
+            print(rows)
+            j = 0
+            max_widths = {}
+            while rows:
+                row = rows.pop(0)
+                for i in range(len(row)):
+                    data = row[i]
+                    l = len(str(data))
+                    if j == 0:
+                        max_widths[i] = l
+                    if max_widths[i] < l:
+                        max_widths[i] = l
+                worksheet.write_row(j, 0, row, cell_format['header' if j==0 else 'row'])
+                j += 1
+            for i in max_widths:
+                worksheet.set_column(i, i, max_widths[i]*(x if max_widths[i] > 10 else 9))
+            worksheet.set_paper(9) #размер А4
+            worksheet.set_portrait() #портретная ориентация
+            worksheet.set_margins(left=1, right=0.5, top=0.5, bottom=0.5)
+            workbook.close()
+
+            ret_data = ret_object.getvalue()
+            ret_object.close()
+        return ret_data
+
 class fLock:
     """
     File locking class. Intended for use with the `with` syntax.
@@ -3830,16 +4030,16 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
          }
          
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
          }
 
         if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
@@ -3855,6 +4055,8 @@ class SCGIServer:
         scgi_pass                 linker_ups;
         scgi_buffering            off;
         scgi_cache                off;
+        sendfile                  on;
+        gzip                      on;
     }
 
     location /linker {
@@ -3928,6 +4130,27 @@ class SCGIServer:
             else:
                 filename = os.path.join(sys.APPCONF["nginx"][name], self.appname)
         return filename
+
+def f_head(aContentLength, fType='csv'):
+    aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
+    r = []
+    r.append(("Last-Modified", "%s" % aLastModified))
+    r.append(("Content-Length", "%i" % aContentLength))
+    r.append(("X-Accel-Buffering", "no"))
+    if fType == 'csv':
+        r.append(("Content-Disposition", "attachment; filename=report.csv"))
+        r.append(("Content-Type", "application/octet-stream"))
+    elif fType == 'pdf':
+        r.append(("Content-Disposition", "attachment; filename=report.pdf"))
+        r.append(("Content-Type", "application/pdf"))
+    elif fType == 'xlsx':
+        r.append(("Content-Disposition", "attachment; filename=report.xlsx"))
+        r.append(("Content-Type", "application/octet-stream"))
+    elif fType == 'ods':
+        r.append(("Content-Disposition", "attachment; filename=report.ods"))
+        r.append(("Content-Type", "application/octet-stream"))
+
+    return r
 
 def head(aContentLength, fgDeflate=True, fg_head=True):
     """
