@@ -3681,6 +3681,8 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                     out_data = self._genOds(output_data)
 
                 if out_data:
+                    #with open('report.'+f_type, 'wb') as f_obj:
+                        #f_obj.write(out_data)
                     ret = {"result": True, "ret_val": {'type': f_type, 'data': out_data}}
                 else:
                     ret = {"result": False, "ret_val": "no data"}
@@ -3720,14 +3722,12 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                     ret.set_cell_property('fontsize', '8')
                     ret.set_cell_value(i+1, j+1, "string", data)
                 j += 1
-            print(max_widths)
             for i in max_widths:
                 ret.set_column_property(i+1, 'width', f"{max_widths[i]*2.4}mm")
             ret_object = BytesIO()
             ret.save(ret_object)
             data = ret_object.getvalue()
             ret_object.close()
-
         return data
 
     def _genCsv(self, output_data, sep):
@@ -3771,7 +3771,6 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                 rows.append(c_string)
             worksheet = workbook.add_worksheet('report')
             worksheet.set_print_scale(100)
-            print(rows)
             j = 0
             max_widths = {}
             while rows:
@@ -3942,8 +3941,18 @@ class SCGIServer:
             wfile.write(b"\r\n")
             wfile.flush()
             for data in g:
-                wfile.write(data)
-                wfile.flush()
+                if len(data) > 1048576:
+                    i1, i2 = 0, 1048576
+                    part = data[i1:i2]
+                    while part:
+                        wfile.write(part)
+                        wfile.flush()
+                        i1 += 1048576
+                        i2 += 1048576
+                        part =data[i1:i2]
+                else:
+                    wfile.write(data)
+                    wfile.flush()
         except (BrokenPipeError) as e:
             pass
         except:
@@ -4019,7 +4028,7 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,b_size';
 
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
@@ -4029,17 +4038,17 @@ class SCGIServer:
          if ($request_method = 'POST') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
-            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
+            #add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            #add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
+            #add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
          }
          
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
          }
 
         if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
@@ -4050,13 +4059,25 @@ class SCGIServer:
             deny all;
         }
         include scgi_params;
-        #scgi_param                X-BODY-FILE $request_body_file;
         scgi_param                X-API-KEY $http_x_api_key;
         scgi_pass                 linker_ups;
+        #client_body_buffer_size 32M;
+        #client_max_body_size 300M;
+        #scgi_max_temp_file_size   64M;
+        #scgi_temp_path /ms71/temp/nginx;
+        #proxy_read_timeout        240s;
+        #scgi_buffer_size          16000k;
+        #scgi_buffers              8 32000k;
         scgi_buffering            off;
         scgi_cache                off;
-        sendfile                  on;
+        #send_timeout              240s;
+        #sendfile                  on;
         gzip                      on;
+        gzip_min_length           1024;
+        gzip_proxied              any;
+        gzip_comp_level 5;
+        #tcp_nopush on;
+        #tcp_nodelay on;
     }
 
     location /linker {
@@ -4081,7 +4102,7 @@ class SCGIServer:
         _fileupstream = os.path.join(dn, bs.split('.', 1)[0].split('-', 1)[0])  # общий файл для всех экземпляров приложения
         _fileupstreamlock = bs.split('.', 1)[0].split('-', 1)[0]  # _fileupstream + '.lock'
         data1 = """upstream linker_ups {
-        least_conn;
+#least_conn;
         server %s:%s;  # %s
     }
     """ % (addr[0], addr[1], bs)
@@ -4134,22 +4155,12 @@ class SCGIServer:
 def f_head(aContentLength, fType='csv'):
     aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
     r = []
-    r.append(("Last-Modified", "%s" % aLastModified))
+    #r.append(("Last-Modified", "%s" % aLastModified))
     r.append(("Content-Length", "%i" % aContentLength))
     r.append(("X-Accel-Buffering", "no"))
-    if fType == 'csv':
-        r.append(("Content-Disposition", "attachment; filename=report.csv"))
-        r.append(("Content-Type", "application/octet-stream"))
-    elif fType == 'pdf':
-        r.append(("Content-Disposition", "attachment; filename=report.pdf"))
-        r.append(("Content-Type", "application/pdf"))
-    elif fType == 'xlsx':
-        r.append(("Content-Disposition", "attachment; filename=report.xlsx"))
-        r.append(("Content-Type", "application/octet-stream"))
-    elif fType == 'ods':
-        r.append(("Content-Disposition", "attachment; filename=report.ods"))
-        r.append(("Content-Type", "application/octet-stream"))
-
+    #name = uuid.uuid4().hex
+    r.append(("Content-Type", "application/octet-stream"))
+    r.append(("Content-Disposition", f"attachment; filename=report.{fType}"))
     return r
 
 def head(aContentLength, fgDeflate=True, fg_head=True):
@@ -4191,6 +4202,7 @@ def shutdown(log):
         _find = "# %s" % bs
         src = ""
         fg_noapp = True
+        ####################
         if os.path.exists(_fileupstream):
             with open(_fileupstream, "rb") as f:
                 src = f.read().decode().rstrip().splitlines()

@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.156.1715' #формируем отчеты в xlsx, csv, ods
+__version__ = '18.157.1640' #исправленно формирование больших отчетов - теперь ограничение только физическими возможностями сервера
+#__version__ = '18.156.1715' #формируем отчеты в xlsx, csv, ods
 #__version__ = '18.155.1545' #улучшен отбор по производителю эталонна в связках (поиск по справочнику)
 #__version__ = '18.155.1030' #добавлен отбор в связках по поставщикам через комбо-фильтр, отбор в связках по хэшу
 #__version__ = '18.152.0925' #оптимизированны некоторые запросы
@@ -151,6 +152,7 @@ def application(env):
     yield ret_code
     yield header
     yield ret_value
+
 
 def prepare_server(Lock=None, api = None):
     """prepare the server, loading all bussiness-logic threads"""
