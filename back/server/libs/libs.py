@@ -77,7 +77,7 @@ class API:
         p_hash = params.get('pass')
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
-            sql = """select r."USER", r.PASSWD, r.ID_ROLE FROM USERS r where r."USER" = ?"""
+            sql = """select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where r."USER" = ?"""
             opt = (user,)
             res = self.db.request({"sql": sql, "options": opt})
             if len(res) > 0:
@@ -95,8 +95,53 @@ class API:
                     f_name = os.path.join(self.p_path, a_key)
                     with open(f_name, 'wb') as f_obj:
                         f_obj.write(user.encode())
-                    ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2])}}
+                    ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3])}}
         return json.dumps(ret, ensure_ascii=False)
+        
+    def setExpert(self, params=None, x_hash=None):
+        user = params.get('user')
+        expert = params.get('expert', 5)
+        ret = {"result": False, "ret_val": "access denied"}
+        if self._check(x_hash):
+            sql = """update USERS set EXPERT = ? where "USER" = ?"""
+            opt = (expert, user)
+            res = self.db.execute({"sql": sql, "options": opt})
+            ret = {"result": True, "ret_val": 'ok'}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getVersion(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
+            sql = """UPDATE PRC r
+            SET r.IN_WORK = -1
+            where r.IN_WORK = (select u.ID from USERS u where u."USER" = ?)"""
+            opt = (user,)
+            res = self.db.execute({"sql": sql, "options": opt})
+            sql = """select r.EXPERT FROM USERS r where r."USER" = ?"""
+            expert = str(self.db.request({"sql": sql, "options": opt})[0][0])
+            prod = {'version': self.log.version, 'prod': self.db.production};
+            sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM, r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL FROM SPR_ROLES r"""
+            opt = ()
+            res = self.db.execute({"sql": sql, "options": opt})
+            r = {}
+            for row in res:
+                r[row[0]] = {
+                    'skipped': row[1] == 1,
+                    'spradd': row[2] == 1,
+                    'spredit': row[3] == 1,
+                    'adm': row[4] == 1,
+                    'vendoradd': row[5] == 1,
+                    'useradd': row[6] == 1,
+                    'userdel': row[7] == 1,
+                    'lnkdel': row[8] == 1,
+                    }
+            ret_v= {'info': prod, 'cfg': r, 'expert': expert}
+            ret = {"result": True, "ret_val": ret_v}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
 
     def killAll(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -117,7 +162,6 @@ class API:
                 if fuser in users:
                     try: os.remove(f_name)
                     except: pass
-                    #else: print('Удалили %s' % f_name, flush=True)
             ret = {"result": True, "ret_val": True}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -241,37 +285,6 @@ JOIN VND v on (v.ID_VND = t.ID_VND)"""
                     rrr.update(item)
                 rr.append(rrr)
             ret = {"result": True, "ret_val": rr}
-        else:
-            ret = {"result": False, "ret_val": "access denied"}
-        return json.dumps(ret, ensure_ascii=False)
-
-    def getVersion(self, params=None, x_hash=None):
-        if self._check(x_hash):
-            user = params.get('user')
-            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
-            sql = """UPDATE PRC r
-            SET r.IN_WORK = -1
-            where r.IN_WORK = (select u.ID from USERS u where u."USER" = ?)"""
-            opt = (user,)
-            res = self.db.execute({"sql": sql, "options": opt})
-            prod = {'version': self.log.version, 'prod': self.db.production};
-            sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM, r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL FROM SPR_ROLES r"""
-            opt = ()
-            res = self.db.execute({"sql": sql, "options": opt})
-            r = {}
-            for row in res:
-                r[row[0]] = {
-                    'skipped': row[1] == 1,
-                    'spradd': row[2] == 1,
-                    'spredit': row[3] == 1,
-                    'adm': row[4] == 1,
-                    'vendoradd': row[5] == 1,
-                    'useradd': row[6] == 1,
-                    'userdel': row[7] == 1,
-                    'lnkdel': row[8] == 1,
-                    }
-            ret_v= {'info': prod, 'cfg': r}
-            ret = {"result": True, "ret_val": ret_v}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2390,7 +2403,8 @@ FROM RDB$DATABASE"""
                 opt_i = []
                 for i in issue:
                     t = (id_spr, i)
-                    opt_i.append(t)
+                    if i:
+                        opt_i.append(t)
                 sql = """delete from spr_issue where id_spr = ?"""
                 opt = (id_spr, )
                 result = self.db.execute({"sql": sql, "options": opt})
@@ -2564,9 +2578,18 @@ FROM RDB$DATABASE"""
                 if pars['id_spr']:
                     s = "and r.id_spr like ('" + pars['id_spr'] + "%')"
                     ssss.append(s)
-                if pars['c_dv']:
-                    s = "and lower(d.ACT_INGR) like lower('%" + pars['c_dv'] + "%')"
-                    ssss.append(s)
+                    
+                #if pars['c_dv']:
+                    #s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
+                    #in_c.insert(0, s)
+                    #in_st.insert(0, s)
+                #else:
+                    #s = "LEFT join dv d on (d.ID = r.ID_DV)"
+                    #in_st.append(s)
+                    
+                #if pars['c_dv']:
+                    #s = "and lower(d.ACT_INGR) like lower('%" + pars['c_dv'] + "%')"
+                    #ssss.append(s)
                 stri += ' ' + ' '.join(ssss)
             stri = stri.replace("lower(z.C_ZAVOD) like lower('%%%%') and", '')
             sql_c = """SELECT count(*)
@@ -2575,17 +2598,19 @@ FROM SPR r
 {1}
 WHERE {2}
             """.format("LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)" if "z.C_ZAVOD" in stri else '',
-            "LEFT OUTER join dv d on (r.ID_DV = d.ID)" if "d.ACT_INGR" in stri else '', stri) #new value (try to optimize)
+            "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv']) if pars['c_dv'] else "",
+            #"LEFT OUTER join dv d on (r.ID_DV = d.ID)" if "d.ACT_INGR" in stri else '',
+            stri) #new value (try to optimize)
             sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             #sql = sql_c
             #opt = ()
             #count = self.db.request({"sql": sql, "options": opt})[0][0]
-            sql = """
+            sql = f"""
 SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc
 FROM SPR r
 LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
 LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
-LEFT OUTER join dv d on (r.ID_DV = d.ID)
+{"join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv']) if pars['c_dv'] else "LEFT OUTER join dv d on (r.ID_DV = d.ID)"}
 LEFT OUTER join 
     (select g.CD_CODE cc, g.CD_GROUP cg, c.NM_GROUP gr
     from GROUPS g
@@ -2616,8 +2641,11 @@ LEFT OUTER join
     from GROUPS g5
     inner join CLASSIFIER c5 on (g5.CD_GROUP = c5.CD_GROUP) where c5.IDX_GROUP = 5
     ) on (r.ID_SPR = cc5)
-WHERE {0} ORDER by {1} {2} ROWS ? to ?""".format(stri, field, direction)
+WHERE {stri} ORDER by {field} {direction} ROWS ? to ?"""
             sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            if len(ssss) > 1:
+                sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
+                sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
@@ -2709,21 +2737,21 @@ WHERE {0} ORDER by {1} {2} ROWS ? to ?""".format(stri, field, direction)
                     s = "and r.id_spr like ('" + pars['id_spr'] + "%')"
                     ssss.append(s)
                 if pars['id_zavod']:
-                    s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and lower(z.C_ZAVOD) like lower('%" + pars['id_zavod'] + "%')"
+                    s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
                     in_c.insert(0, s)
                     in_st.insert(0, s)
                 else:
                     s = "LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)"
                     in_st.append(s)
                 if pars['id_strana']:
-                    s = "join spr_strana s on (s.ID_SPR = r.ID_STRANA) and lower(s.C_STRANA) like lower('%" + pars['id_strana'] + "%')"
+                    s = "join spr_strana s on (s.ID_SPR = r.ID_STRANA) and s.ID_SPR = {0}".format(pars['id_strana'])
                     in_c.insert(0, s)
                     in_st.insert(0, s)
                 else:
                     s = "LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)"
                     in_st.append(s)
                 if pars['c_dv']:
-                    s = "join dv d on (d.ID = r.ID_DV) and lower(d.ACT_INGR) like lower('%" + pars['c_dv'] + "%')"
+                    s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
                     in_c.insert(0, s)
                     in_st.insert(0, s)
                 else:
@@ -3085,7 +3113,7 @@ or
                         s = " ((r.CHANGE_DT >= '{0}' AND r.CHANGE_DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))) or (r.DT >= '{0}' AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP))))".format(pars['start_dt'], pars['end_dt'])
                         ssss.append(pref % s)
                 if pars['c_vnd']:
-                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    s = "v.ID_VND = {0}".format(pars['c_vnd'])
                     #s_1.append(pref % s)
                     ssss.append(pref % s)
                 if pars['owner']:
@@ -3131,14 +3159,9 @@ WHERE %s""" % stri
             t1 = time.time() - st_t
             opt = (start_p, end_p)
             _return = []
-            #result = self.db.request({"sql": sql, "options": opt})
             st_t = time.time()
-            #if result:
-                #sql = sql_c
-                #opt = ()
-                #count = self.db.request({"sql": sql, "options": opt})[0][0]
-            #else:
-                #count = 0
+            self.log(sql, clear=True)
+            self.log(sql_c, clear=True)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -3210,7 +3233,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-            sti = "lower(r.C_TOVAR) like lower('%%')"
+            sti = "r.C_TOVAR CONTAINING '%%'"
             filt = params.get('c_filter')
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else [sti,]
@@ -3299,14 +3322,14 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                         in_c.insert(0, sq_c)
                         in_st.insert(0, sq_s)
                 else:
-                    s = """JOIN SPR s on (s.ID_SPR = rids)\njoin SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"""
+                    s = """left JOIN SPR s on (s.ID_SPR = rids)\nleft join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"""
                     in_st.append(s)
                 if pars['c_vnd']:
                     s = "JOIN VND v on (v.ID_VND = ridv) and v.ID_VND = %s" % pars['c_vnd']
                     in_c.insert(0, s.replace('ridv', 'r.id_vnd'))
                     in_st.insert(0, s)
                 else:
-                    s = "JOIN VND v on (v.ID_VND = ridv)"
+                    s = "left JOIN VND v on (v.ID_VND = ridv)"
                     in_st.append(s)
                 in_st.insert(0, """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD
 from (
@@ -3502,8 +3525,9 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             user = params.get('user')
             data = params.get('data')
             for row in data:
-                print(row)
+
                 continue
+
                 if row.get('change') == 1: #удаленная позиция
                     sql = """delete from LNK_CODES where CODE=?"""
                     opt = (row.get('code'),)
@@ -3545,8 +3569,9 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             user = params.get('user')
             data = params.get('data')
             for row in data:
-                print(row)
+
                 continue
+
                 if row.get('change') == 1: #удаленная позиция
                     sql = """delete from LNK_EXCLUDE where NAME=?"""
                     opt = (row.get('name'),)
@@ -3653,7 +3678,6 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                 sep = "\t"
             method = methods.get(params.get('table'))
             params = {"user":user, "search": search, "start": 1, "count": 100000000, "c_filter": c_filt}
-            #print(method, f_type, sep, params, sep='\n')
             call = getattr(self, method)
             data = json.loads(call(params, x_hash)).get('ret_val')
             if data:
@@ -3743,7 +3767,6 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                 out_data.append('\t'.join(c_string))
             out_data = '\n'.join(out_data)
             out_data = out_data.replace('\t', sep)
-            #print(out_data)
         return out_data.encode()
         
     def _genXlsx(self, data):
@@ -3862,24 +3885,29 @@ class logs:
         self.version = version
         self.appname = appname
         self.profile = profile
+        self.output = sys.stdout
 
-    def __call__(self, msg, kind='info', begin='', end='\n'):
+    def __call__(self, msg, kind='info', begin='', end='\n', clear=False):
         try:
             ts = "%Y-%m-%d %H:%M:%S"
             try: ts = time.strftime(ts)
             except: ts = time.strftime(ts)
-            if self.hostname:
-                if self.profile:
-                    s = '{0}{1} {2} {4}.{5}:{3}:{6} {7}{8}'.format(begin, ts, self.hostname, self.version, self.appname, self.profile, kind, msg, end)
+            if not clear:
+                if self.hostname:
+                    if self.profile:
+                        s = '{0}{1} {2} {4}.{5}:{3}:{6} {7}{8}'.format(begin, ts, self.hostname, self.version, self.appname, self.profile, kind, msg, end)
+                    else:
+                        s = '{0}{1} {2} {4}:{3}:{5} {6}{7}'.format(begin, ts, self.hostname, self.version, self.appname, kind, msg, end)
                 else:
-                    s = '{0}{1} {2} {4}:{3}:{5} {6}{7}'.format(begin, ts, self.hostname, self.version, self.appname, kind, msg, end)
+                    if self.profile:
+                        s = '{0}{1} {3}.{4}:{2}:{5} {6}{7}'.format(begin, ts, self.version, self.appname, self.profile, kind, msg, end)
+                    else:
+                        s = '{0}{1} {3}:{2}:{4} {5}{6}'.format(begin, ts, self.version, self.appname, kind, msg, end)
             else:
-                if self.profile:
-                    s = '{0}{1} {3}.{4}:{2}:{5} {6}{7}'.format(begin, ts, self.version, self.appname, self.profile, kind, msg, end)
-                else:
-                    s = '{0}{1} {3}:{2}:{4} {5}{6}'.format(begin, ts, self.version, self.appname, kind, msg, end)
-            sys.stdout.write(s)
-            sys.stdout.flush()
+                s = '{0}{1}'.format(msg, end)
+            #print(s, flush=True, file=open('1212.txt', 'a'))
+            self.output.write(s)
+            self.output.flush()
         except:
             traceback.print_exc()
 
@@ -3896,7 +3924,7 @@ class SCGIServer:
         self.profile = profile
         self.index = index
 
-    def serve_forever(self, addr, handle_request):
+    def serve_forever(self, addr, handle_request, on_exit=None):
         sock = None
         if type(addr) is str:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -3905,7 +3933,7 @@ class SCGIServer:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(addr)
         #sock.listen(10)
-        initial_value = None
+        #initial_value = None
         initial_value = self._init(sock)
         try:
             while True:
@@ -3917,13 +3945,15 @@ class SCGIServer:
         finally:
             try: sock.close()
             except: pass
+            if on_exit:
+                on_exit(self.log)
 
     def _handle_conn(self, conn, addr, handle_request, initial_value):
         env = None
         try:
             conn.settimeout(1)
-            rfile = conn.makefile("rb", -1)
-            wfile = conn.makefile("wb", 0)
+            rfile = conn.makefile("rb", None)#-1)
+            wfile = conn.makefile("wb", None)#0)
             env = self._env_read(rfile)
             env = self._args_parse(env)
             env["scgi.defer"] = None
@@ -3958,7 +3988,7 @@ class SCGIServer:
         except:
             self.log(conn)
             self.log(env)
-            traceback.print_exc()
+            self.log(traceback.format_exc())
         finally:
             if not wfile.closed:
                 try: wfile.flush()
@@ -4038,9 +4068,9 @@ class SCGIServer:
          if ($request_method = 'POST') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
-            #add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            #add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
-            #add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
+            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
+            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
          }
          
          if ($request_method = 'HEAD') {
@@ -4244,8 +4274,7 @@ def parse_args(arg, _param, x_hash, api):
             try:
                 content = call(_param, x_hash)
             except:
-                #print('error calling', _param, x_hash)
-                print(traceback.format_exc(), flush=True)
+                api.log(traceback.format_exc())
                 content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
         else:
             content = json.dumps(u'login please', ensure_ascii=False)
@@ -4316,7 +4345,7 @@ class UDPSocket(socket.socket):
     def read(self, n=8192):
         return self.recv(n)
 
-###########old sqls
+###########applied sqls
 """
 update roles set NAME = 'Суперадмин' where id = 34 returning new.name
 update roles set NAME = 'Сводильщик' where id = 9 returning new.name

@@ -8,7 +8,7 @@ import UnlinkView from "../views/unlink";
 
 export default class LinksBarView extends JetView{
     config(){
-        
+        let app = this.app;
         var getActDt = () => {
             return this.getRoot().getChildViews()[2].getChildViews()[0];
             }
@@ -24,7 +24,7 @@ export default class LinksBarView extends JetView{
         let sprv = {view: "toolbar",
             css: {"border-top": "0px"},
             cols: [
-            {view: "text", label: "", placeholder: "Строка поиска", height: 40, fillspace: true, localId: "_ls", 
+            {view: "text", label: "", placeholder: "Строка поиска", height: 40, fillspace: true, localId: "_ls", //value: "анальгин",
                 on: {
                     onKeyPress: function(code, event) {
                         clearTimeout(this.config._keytimed);
@@ -57,7 +57,9 @@ export default class LinksBarView extends JetView{
                     this.pophistory.show(hist, this.$$("_ls"));
                     },
                 },
-            {view: "checkbox", labelRight: "<span style='color: white'>Поиск по справочнику</span>", labelWidth: 0, value: this.app.config.lch, width: 150, localId: "_spr_ch",
+            {view: "checkbox", labelRight: "<span style='color: white'>Поиск по справочнику</span>", labelWidth: 0,
+                value: this.lch,
+                width: 150, localId: "_spr_ch",
                 on: {
                     onChange: () => {
                         this.$$("_ls").setValue('');
@@ -65,20 +67,16 @@ export default class LinksBarView extends JetView{
                         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options; //headers
                         let header_val;
                         if (value===0) {
-                            this.app.config.lch = 0;
+                            this.lch = 0;
                             header_val = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
                         } else if (value===1) {
-                            this.app.config.lch = 1;
+                            this.lch = 1;
                             header_val = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 16px; font-size: 80%'>Связки:Эталоны</span>"
                             }
-                        //for(var i = 0; i < hh.length; i++) {
-                            //if (hh[i].id.toString().indexOf('links_bar') > -1){
-                                //hh[i].value = header_val;
-                                //}
-                            //};
                         //this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
-                        this.show((this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk');
-                        this.$$("_ls").callEvent("onKeyPress", [13,]);
+                        let q = (this.lch===1) ? 'links_form_spr' : 'links_form_lnk'
+                        this.show(q);
+                        //this.$$("_ls").callEvent("onKeyPress", [13,]);
                         }
                     }
                 },
@@ -126,10 +124,11 @@ export default class LinksBarView extends JetView{
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
         let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         this.show(show_t);
-        this.$$("_ls").callEvent("onKeyPress", [13,]);
+        //this.$$("_ls").callEvent("onKeyPress", [13,]);
         }
 
     init() {
+        this.lch = 0;
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
         this.pophistory = this.ui(History);

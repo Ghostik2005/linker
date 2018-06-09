@@ -84,6 +84,7 @@ export default class LinkExclView extends JetView{
             }
 
         var sprv = {view: "datatable",
+            name: "_excludes",
             localId: "__table",
             select: true,
             resizeColumn:true,

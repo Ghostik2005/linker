@@ -1,24 +1,58 @@
 "use strict";
 
 import {JetView} from "webix-jet";
+import {get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
+import {parse_unlinked_item, get_data_test, request} from "../views/globals";
+import {prcs, delPrc, checkKey, get_spr, getDtParams} from "../views/globals";
+import UnlinkedView from "../views/unlinked";
 import History from "../views/history";
 import NewformView from "../views/new_form";
 import ConfirmView from "../views/yes-no";
-import {filter_1, get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
-import {parse_unlinked_item, get_data_test} from "../views/globals";
-import UnlinkedView from "../views/unlinked";
-import {prcs, delPrc, checkKey, get_spr, getDtParams} from "../views/globals";
 import SprView from "../views/spr_dt";
 import SkippedBarView from "../views/skipped_bar";
 import AllUnlinkedBarView from  "../views/unlinkedall_bar";
 import LinksBarView from "../views/links_form_bar";
 import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
-import loginTestView from "../views/login_test";
+import NewReportView from "../views/new_report";
 
 export default class TopmenuView extends JetView{
     config(){
         let app = this.app;
+        let c_th = this;
+
+        function filter_1(item, value) {
+            value = value.toString().toLowerCase()
+            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+            return item.c_vnd.toString().toLowerCase().search(value) != -1;
+            }
+
+        function getTable(v_list) {
+            let v_id = undefined;
+            v_list.forEach(function(item, i, v_list) {
+                var new_list = [];
+                let val = item;
+                if (item.config.multiview) {
+                    new_list = $$($$(item.config.id).getValue()).getChildViews();
+                } else {
+                    new_list = item.getChildViews();
+                    };
+                if (new_list.length > 0) {
+                    val =  getTable(new_list);
+                    }
+                if (val) {
+                    v_id = val.$scope.$$("__table");
+                    }
+                })
+            return v_id
+            }
+        
+        
+        function getCurrentTable() {
+            let mv = $$(c_th.getRoot().getChildViews()[1].getChildViews()[2].getActiveId());
+            return getTable(mv.getChildViews()).config.id
+            }
+        
         let tab_1 = {view: "layout", id: 'app-nav',
             rows: [
                 {view: 'toolbar',
@@ -77,9 +111,9 @@ export default class TopmenuView extends JetView{
                             },
                         {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, 
                             options: [
-                                {id: 1, value: "поставщикам"},
-                                {id: 2, value: "дате"},
-                                {id: 3, value: "источнику"},
+                                {id: 1, value: "<span style='color: white'>поставщикам</span>"},
+                                {id: 2, value: "<span style='color: white'>дате</span>"},
+                                {id: 3, value: "<span style='color: white'>источнику</span>"},
                                 ],
                             on: {
                                 onChange: function() {
@@ -99,15 +133,6 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                         {},
-                        {view: "button", type: "htmlbutton", tooltip: "test", hidden: true,
-                            label: "<span class='webix_icon fa-train'></span>", width: 40,
-                            on: {
-                                onItemClick: () => {
-                                    this.loginshow.show_w('Вход в систему');
-                                    console.log('test');
-                                    }
-                                },
-                            },
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
                             label: "<span class='webix_icon fa-refresh'></span>", width: 38,
                             click: () => {
@@ -363,56 +388,25 @@ export default class TopmenuView extends JetView{
         var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'header',
             width: (app.config.expert) ? 44 : 140,
             rows: [
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left',
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
                     label: "<span class='webix_icon fa-bars', style='color: #3498db'></span>", width: 40,
                     on:
                         {
                         onItemClick: function() {
-                            if (app.config.expert) {
-                                app.config.expert = false;
-                                this.$scope.$$("sideMenu").define({width: 140});
-                                this.$scope.$$("sideMenu").resize();
-                                this.$scope.$$("_settings").define({width: 136,
-                                    label: "<span class='webix_icon fa-cogs', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'>       Настройки</span>"});
-                                this.$scope.$$("_settings").refresh();
-                                this.$scope.$$("_settings").resize();
-                                this.$scope.$$("_adm").define({width: 136, label: "<span class='webix_icon fa-blind', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'>  Админка</span>"});
-                                this.$scope.$$("_adm").refresh();
-                                this.$scope.$$("_adm").resize();
-                                this.$scope.$$("_skipped").define({width: 136, label: "<span class='webix_icon fa-archive', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'> Пропущенные</span>"});
-                                this.$scope.$$("_skipped").refresh();
-                                this.$scope.$$("_skipped").resize();
-                                this.$scope.$$("_unlinked").define({width: 136, label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'> Несвязанные</span>"});
-                                this.$scope.$$("_unlinked").refresh();
-                                this.$scope.$$("_unlinked").resize();
-                                this.$scope.$$("_links").define({width: 136, label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span><span style='line-height: 20px; color: #3498db'> Связки</span>"});
-                                this.$scope.$$("_links").refresh();
-                                this.$scope.$$("_links").resize();
-                            } else {
-                                app.config.expert = true;
-                                this.$scope.$$("sideMenu").define({width: 44});
-                                this.$scope.$$("sideMenu").resize();
-                                this.$scope.$$("_settings").define({width: 40, label: "<span class='webix_icon fa-cogs', style='color: #3498db'>"});
-                                this.$scope.$$("_settings").refresh();
-                                this.$scope.$$("_settings").resize();
-                                this.$scope.$$("_adm").define({width: 40, label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>"});
-                                this.$scope.$$("_adm").refresh();
-                                this.$scope.$$("_adm").resize();
-                                this.$scope.$$("_skipped").define({width: 40, label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>"});
-                                this.$scope.$$("_skipped").refresh();
-                                this.$scope.$$("_skipped").resize();
-                                this.$scope.$$("_unlinked").define({width: 40, label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>"});
-                                this.$scope.$$("_unlinked").refresh();
-                                this.$scope.$$("_unlinked").resize();
-                                this.$scope.$$("_links").define({width: 40, label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>"});
-                                this.$scope.$$("_links").refresh();
-                                this.$scope.$$("_links").resize();
-                                };
+                            app.config.expert = !app.config.expert;
+                            this.$scope.$$("sideMenu").define({width: (app.config.expert) ? 44 : 140});
+                            this.$scope.$$("sideMenu").resize();
+                            this.$scope.ready();
+                            let url = app.config.r_url + "?setExpert";
+                            let params = {"user":app.config.user, "expert": (app.config.expert) ? "1" : "5"};
+                            request(url, params);
                             },
                         }
                     },
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, localId: "_settings", longPress: false,
-                    label: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>", width: 40, 
+                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
+                    label: "", width: 40,
+                    oldLabel: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db'>Настройки</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -439,7 +433,10 @@ export default class TopmenuView extends JetView{
                         }
                     },
                 {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
-                    label: "<span class='webix_icon fa-blind', style='color: #3498db'></span>", width: 40, localId: "_adm", hidden: !app.config.roles[app.config.role].adm,
+                    label: "", width: 40,
+                    hidden: !app.config.roles[app.config.role].adm,
+                    oldLabel: "<span class='webix_icon fa-blind', style='color: #3498db'></span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db'>Админка</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -473,9 +470,11 @@ export default class TopmenuView extends JetView{
                             }
                         }
                     },
-                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40,localId: "_skipped", b_id: undefined, longPress: false,
-                    label: "<span class='webix_icon fa-archive', style='color: #3498db'></span>", width: 40, 
-                    hidden: !(app.config.roles[app.config.role].skipped), 
+                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, b_id: undefined, longPress: false,
+                    label: "", width: 40,
+                    oldLabel: "<span class='webix_icon fa-archive', style='color: #3498db'></span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
+                    extLabel: "<span style='line-height: 20px; color: #3498db'>Пропущенные</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -509,8 +508,10 @@ export default class TopmenuView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, localId: "_unlinked", b_id: undefined, longPress: false,
-                    label: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>", width: 40,
+                {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, b_id: undefined, longPress: false,
+                    label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px; color: #3498db'>Несвязанные</span>",
+                    oldLabel: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -544,8 +545,10 @@ export default class TopmenuView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, localId: "_links", b_id: undefined, longPress: false,
-                    label: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>", width: 40,
+                {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, b_id: undefined, longPress: false,
+                    label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px; color: #3498db'>Связки</span>",
+                    oldLabel: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -578,6 +581,16 @@ export default class TopmenuView extends JetView{
                             this.config.longPress = false;
                             }
                         },
+                    },
+                {view:"button", type:"htmlbutton", width: 40, hidden: !true, tooltip: "Создание отчета по текущей таблице",
+                    label: "",
+                    extLabel: "<span style='line-height: 20px; color: #3498db'>Отчеты</span>",
+                    oldLabel: "<span class='webix_icon fa-save', style='color: #3498db'></span>",
+                    height: 40,
+                    click: function(){
+                        var cv = getCurrentTable();
+                        this.$scope.popreport.show_w("Создание отчета", $$(cv));
+                        }
                     },
                 {}
                 ]
@@ -595,6 +608,20 @@ export default class TopmenuView extends JetView{
             }
         }
 
+    ready() {
+        let buttons = this.$$("sideMenu").getChildViews();
+        let app = this.app;
+        buttons.forEach( (item, i, buttons) => {
+            //console.log('i', item);
+            if (item.config.view === "button" && item !== this.$$("_rbut")) {
+                item.define({width: (app.config.expert) ? 40 : 136,
+                             label: (app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+                item.refresh();
+                item.resize();
+                };
+            })
+        }
+
     init() {
         (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
         (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
@@ -604,6 +631,6 @@ export default class TopmenuView extends JetView{
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkedView);
         this.pophistory = this.ui(History);
-        this.loginshow = this.ui(loginTestView);
+        this.popreport = this.ui(NewReportView);
         }
     }

@@ -100,9 +100,6 @@ export default class NewformView extends JetView{
                                             this.getList().sync(strana);
                                             },
                                         onChange: function(i, ii, iii) {
-                                            console.log("i", i);
-                                            console.log("ii", ii);
-                                            console.log("iii", iii);
                                             }
                                         },
                                     },

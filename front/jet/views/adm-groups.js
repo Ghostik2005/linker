@@ -8,6 +8,7 @@ export default class GroupsView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
+            name: "_groups",
             localId: "__table",
             navigation: "row",
             select: true,

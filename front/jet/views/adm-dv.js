@@ -8,7 +8,8 @@ export default class DvView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            localId: "__dtd",
+            name: "_dv",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -25,13 +26,13 @@ export default class DvView extends JetView{
                 {id: "id",
                     width: 75, sort: "text",
                     header: [{text: "ID"},
-                        {content:"selectFilter"}
+                        //{content:"selectFilter"}
                         ],
                     },
                 { id: "act_ingr",
                     fillspace: 1, sort: "text", headermenu: false,
                     header: [{text: "Действующее вещество"},
-                        {content:"textFilter"}
+                        //{content:"textFilter"}
                         ]
                     },
                 { id: "oa",
@@ -41,15 +42,15 @@ export default class DvView extends JetView{
                         ]
                     },
                 { id: "id_state", 
-                    width: 150,
+                    width: 150, hidden: true,
                     header: [{text: "Статус"},
-                        {content:"selectFilter"}
+                        //{content:"selectFilter"}
                         ]
                     },
                 { id: "dt", 
                     width: 250,
                     header: [{text: "Дата заведения"},
-                        {content:"selectFilter"}
+                        //{content:"selectFilter"}
                         ]
                     }
                 ],
@@ -92,7 +93,7 @@ export default class DvView extends JetView{
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dtd").filter(function(obj){
+                            this.$scope.$$("__table").filter(function(obj){
                                 return obj.act_ingr.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
@@ -101,14 +102,14 @@ export default class DvView extends JetView{
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить действующее вещество",
                     label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
-                        let params = {'type': 'Dv', 'callback': addDv, 'mode': 'new', 'source': this.$$("__dtd")};
+                        let params = {'type': 'Dv', 'callback': addDv, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление действующего в-ва', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить дейтсвующее вещество",
                     label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
-                        let item_id = this.$$("__dtd").getSelectedItem().id
+                        let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
@@ -135,7 +136,7 @@ export default class DvView extends JetView{
         
     init() {
         this.popnew = this.ui(NewDvView);
-        webix.extend(this.$$("__dtd"), webix.ProgressBar);
-        this.$$("__dtd").sync(dv.data);
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.$$("__table").sync(dv.data);
         }
     }

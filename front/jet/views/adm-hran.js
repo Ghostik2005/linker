@@ -9,7 +9,8 @@ export default class HranView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            localId: "__dth",
+            name: "_hran",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -82,7 +83,7 @@ export default class HranView extends JetView{
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dth").filter(function(obj){
+                            this.$scope.$$("__table").filter(function(obj){
                                 return obj.usloviya.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
@@ -91,14 +92,14 @@ export default class HranView extends JetView{
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить условия хранения",
                     label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
-                        let params = {'type': 'Hran', 'callback': addHran, 'mode': 'new', 'source': this.$$("__dth")};
+                        let params = {'type': 'Hran', 'callback': addHran, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление условия хранения', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', localId: "_del", hidden: true, tooltip: "Удалить условия хранения",
                     label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
-                        let item_id = this.$$("__dth").getSelectedItem().id
+                        let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
@@ -125,7 +126,7 @@ export default class HranView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
-        webix.extend(this.$$("__dth"), webix.ProgressBar);
-        this.$$("__dth").sync(hran.data);
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.$$("__table").sync(hran.data);
         }
     }

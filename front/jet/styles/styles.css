@@ -168,7 +168,7 @@ button {
     }
 
 .webix_el_radio .webix_label_right {
-    color: white;
+    /*color: white;*/
     }
     
 .webix_el_combo input{
@@ -229,3 +229,6 @@ div.webix_item_tab {
     color: white !important;
     }
 
+.webix_el_radio.webix_label_right.radio_b{
+    color: red;
+    }

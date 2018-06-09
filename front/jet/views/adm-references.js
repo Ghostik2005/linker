@@ -93,13 +93,6 @@ export default class LinkerView extends JetView{
                             ]
                         }
                     },
-                {header: "<span style='line-height: 20px;'>Adm</span>", width: 120, hidden: true,//close: true,
-                    body: { view: "layout",
-                        rows: [
-                            {$subview: AdmView},
-                            ]
-                        }
-                    },
                 ]
             };
 

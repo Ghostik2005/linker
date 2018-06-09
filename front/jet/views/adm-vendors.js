@@ -8,7 +8,8 @@ export default class VendorsView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            localId: "__dtv",
+            name: "_vendors",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -84,7 +85,7 @@ export default class VendorsView extends JetView{
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dtv").filter(function(obj){
+                            this.$scope.$$("__table").filter(function(obj){
                                 return obj.c_zavod.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
@@ -93,14 +94,14 @@ export default class VendorsView extends JetView{
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить поставщика",
                     label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
-                        let params = {'type': 'Vendor', 'callback': addVendor, 'mode': 'new', 'source': this.$$("__dtv")};
+                        let params = {'type': 'Vendor', 'callback': addVendor, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление производителя', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить поставщика",
                     label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
-                        let item_id = this.$$("__dtv").getSelectedItem().id
+                        let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
@@ -127,7 +128,7 @@ export default class VendorsView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
-        webix.extend(this.$$("__dtv"), webix.ProgressBar);
-        this.$$("__dtv").sync(vendor.data);
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.$$("__table").sync(vendor.data);
         }
     }

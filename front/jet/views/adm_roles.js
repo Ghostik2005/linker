@@ -8,6 +8,7 @@ export default class RolesView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
+            name: "_roles",
             localId: "__table",
             navigation: "row",
             select: true,
@@ -102,14 +103,15 @@ export default class RolesView extends JetView{
                     this.$$("__table").clearAll();
                     },
                 onShow: () => {
+                    let th = this;
                     let url = this.app.config.r_url + "?getAdmRoles";
                     let params = {"user": this.app.config.user};
                     request(url, params).then(function(data) {
                         data = checkVal(data, 'a');
                         if (data) {
-                            this.$scope.$$("__table").parse(data)
+                            th.$$("__table").parse(data);
                         } else {
-                            this.$scope.$$("__table").clearAll();
+                            th.$$("__table").clearAll();
                             };
                         this.$scope.$$("__table").hideProgress();
                         });

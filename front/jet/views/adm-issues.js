@@ -9,7 +9,8 @@ export default class IssueView extends JetView{
     config(){
         var app = this.app;
         var sprv = {view: "datatable",
-            localId: "__dti",
+            name: "_issues",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -77,7 +78,7 @@ export default class IssueView extends JetView{
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dti").filter(function(obj){
+                            this.$scope.$$("__table").filter(function(obj){
                                 return obj.c_issue.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
@@ -89,7 +90,7 @@ export default class IssueView extends JetView{
                         let url = app.config.r_url + "?getIsId"
                         let params = {"user": app.config.user};
                         let res = request(url, params, !0).response;
-                        params = {'type': 'Issue', 'callback': addIssue, 'mode': 'new', 'source': this.$$("__dti")};
+                        params = {'type': 'Issue', 'callback': addIssue, 'mode': 'new', 'source': this.$$("__table")};
                         res = checkVal(res, 's');
                         if (res) {
                             params['id_is'] = res;
@@ -100,7 +101,7 @@ export default class IssueView extends JetView{
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить форму выпуска",
                     label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
-                        let item_id = this.$$("__dti").getSelectedItem().id
+                        let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
@@ -129,7 +130,7 @@ export default class IssueView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
-        webix.extend(this.$$("__dti"), webix.ProgressBar);
-        this.$$("__dti").sync(allIs.data);
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.$$("__table").sync(allIs.data);
         }
     }

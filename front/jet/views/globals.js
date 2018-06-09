@@ -499,14 +499,19 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
     let vv = $$('app-nav').getChildViews()[3].getChildViews(); //datatable form
-    count = vv[0].config.posPpage //datatable
+    //count = vv[0].config.posPpage //datatable
+    let dtParams = getDtParams(vv[0]);
     get_data_test({
         view: vv[0],
         navBar: vv[1],
         start: 1,
-        count: count,
+        //count: count,
         searchBar: vv[0].config.searchBar,
-        method: vv[0].config.searchMethod
+        method: vv[0].config.searchMethod,
+        field: dtParams[2],
+        direction: dtParams[3],
+        filter: dtParams[0],
+        count: dtParams[1],
         });
     $$("_spr_search").focus();
     }
@@ -529,7 +534,8 @@ export function getDtParams(ui) {
     let c_filter;
     if (ui.config.name === "__ttl") {
         c_filter = {
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'id'        : ($$(ui).isColumnVisible('id')) ? $$(ui).getFilter('id').value : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
@@ -539,14 +545,14 @@ export function getDtParams(ui) {
             };
     } else if (ui.config.name === "__tt") {
         c_filter = {
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
             };
     } else if (ui.config.name === "__dt_a") {
         c_filter = {
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').getText() : undefined,
@@ -555,7 +561,7 @@ export function getDtParams(ui) {
     } else if (ui.config.name === "__dt_s") {
         c_filter = {
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').value : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
@@ -563,10 +569,10 @@ export function getDtParams(ui) {
         c_filter = {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
-            'id_zavod'  : ($$(ui).isColumnVisible('id_zavod')) ? $$(ui).getFilter('id_zavod').value : undefined,
-            'id_strana' : ($$(ui).isColumnVisible('id_strana')) ? $$(ui).getFilter('id_strana').value : undefined,
-            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').value : undefined,
-            'c_group'   : ($$(ui).isColumnVisible('c_group')) ? $$(ui).getFilter('c_group').value : undefined,
+            'id_zavod'  : ($$(ui).isColumnVisible('id_zavod')) ? $$(ui).getFilter('id_zavod').getValue() : undefined,
+            'id_strana' : ($$(ui).isColumnVisible('id_strana')) ? $$(ui).getFilter('id_strana').getValue() : undefined,
+            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').getValue() : undefined,
+            'c_group'   : ($$(ui).isColumnVisible('c_group')) ? $$(ui).getFilter('c_group').getValue() : undefined,
             'c_nds'     : ($$(ui).isColumnVisible('c_nds')) ? $$(ui).getFilter('c_nds').getValue() : undefined,
             'c_hran'    : ($$(ui).isColumnVisible('c_hran')) ? $$(ui).getFilter('c_hran').getValue() : undefined,
             'c_sezon'   : ($$(ui).isColumnVisible('c_sezon')) ? $$(ui).getFilter('c_sezon').getValue() : undefined,
@@ -576,16 +582,16 @@ export function getDtParams(ui) {
     } else if (ui.config.name === "__dt") {
         c_filter = {
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
-            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').value : undefined,
+            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').getValue() : undefined,
             };
     } else if (ui.config.name === "relink") {
         c_filter = {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
-            'id_zavod'  : ($$(ui).isColumnVisible('id_zavod')) ? $$(ui).getFilter('id_zavod').value : undefined,
-            'id_strana' : ($$(ui).isColumnVisible('id_strana')) ? $$(ui).getFilter('id_strana').value : undefined,
-            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').value : undefined,
-            'c_group'   : ($$(ui).isColumnVisible('c_group')) ? $$(ui).getFilter('c_group').value : undefined,
+            'id_zavod'  : ($$(ui).isColumnVisible('id_zavod')) ? $$(ui).getFilter('id_zavod').getValue() : undefined,
+            'id_strana' : ($$(ui).isColumnVisible('id_strana')) ? $$(ui).getFilter('id_strana').getValue() : undefined,
+            'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').getValue() : undefined,
+            'c_group'   : ($$(ui).isColumnVisible('c_group')) ? $$(ui).getFilter('c_group').getValue() : undefined,
             'c_nds'     : ($$(ui).isColumnVisible('c_nds')) ? $$(ui).getFilter('c_nds').getValue() : undefined,
             'c_hran'    : ($$(ui).isColumnVisible('c_hran')) ? $$(ui).getFilter('c_hran').getValue() : undefined,
             'c_sezon'   : ($$(ui).isColumnVisible('c_sezon')) ? $$(ui).getFilter('c_sezon').getValue() : undefined,
@@ -593,7 +599,6 @@ export function getDtParams(ui) {
             'prescr'    : ($$(ui).isColumnVisible('prescr')) ? $$(ui).getFilter('prescr').getValue() : undefined,
             };
         }
-        
     return [c_filter, ui.config.posPpage, ui.config.fi, ui.config.di]
     }
 
@@ -606,6 +611,179 @@ export function dt_formating(d) {
     };
 
 export function init_first(app) {
+
+    webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
+    webix.ui.datafilter.richFilt.refresh = rRefresh;
+    webix.ui.datafilter.richFilt.render = function(master, config){
+        if (!config.richselect){
+            var d = webix.html.create("div", { "class" : "webix_richfilter" });
+            var richconfig = {
+                container:d,
+                view:this.inputtype,
+                options:[]
+                };
+            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
+            webix.extend(richconfig, inputConfig, true);
+            if (config.separator) richconfig.separator = config.separator;
+            if (config.suggest) richconfig.suggest = config.suggest;
+            var richselect = webix.ui(richconfig);
+            richselect.attachEvent("onChange", function(){
+                var vid = master.config.id;
+                var vi = webix.$$(vid);
+                if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                this._filter_timer=window.setTimeout( () => {
+                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
+                    },app.config.searchDelay);
+                });
+            config.richselect = richselect.config.id;
+            };
+        config.css = "webix_div_filter";
+        return " ";
+        }
+
+    webix.ui.datafilter.mycomboFilter = Object.create(webix.ui.datafilter.richSelectFilter);
+    webix.ui.datafilter.mycomboFilter.refresh = function(master, node, value){
+        if (master.$destructed) return;
+        var select = webix.$$(value.myfilt);
+        node.$webix = value.myfilt;
+        node.style.marginLeft = "-10px";
+        value.compare = value.compare || this.compare;
+        value.prepare = value.prepare || this.prepare;
+        master.registerFilter(node, value, this);
+        var data = value.inputConfig.options;
+        var list = select.getPopup().getList();
+        node.firstChild.appendChild(select.$view.parentNode);
+        if (list.parse){
+            list.clearAll();
+            list.parse(data);
+            if ((!this.$noEmptyOption && value.emptyOption !== false) || value.emptyOption){
+                var emptyOption = { id:"", value: value.emptyOption||"", $empty: true };
+                list.add(emptyOption,0);
+                }
+            };
+        if (value.value) this.setValue(node, value.value);
+        select.render();
+        webix.delay(select.resize, select);
+        };
+    webix.ui.datafilter.mycomboFilter.inputtype = "combo";
+    webix.ui.datafilter.mycomboFilter.render = function(master, config){
+        if (!config.myfilt){
+            var d = webix.html.create("div", { "class" : "webix_richfilter" });
+            var richconfig = {
+                container:d,
+                view:this.inputtype,
+                options:[]
+                };
+            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
+            webix.extend(richconfig, inputConfig, true);
+            if (config.separator) richconfig.separator = config.separator;
+            if (config.suggest) richconfig.suggest = config.suggest;
+            var myfilt = webix.ui(richconfig);
+            myfilt.attachEvent("onChange", function(){
+                var vid = master.config.id;
+                var vi = webix.$$(vid);
+                if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                this._filter_timer=window.setTimeout( () => {
+                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
+                    },app.config.searchDelay);
+                });
+            config.myfilt = myfilt.config.id;
+            };
+        config.css = "webix_div_filter";
+        return " ";
+        }
+
+    webix.ui.datafilter.mycomboFilter2 = Object.create(webix.ui.datafilter.richSelectFilter);
+    webix.ui.datafilter.mycomboFilter2.refresh = function(master, node, value){
+        if (master.$destructed) return;
+        var select = webix.$$(value.myfilt);
+        node.$webix = value.myfilt;
+        node.style.marginLeft = "-10px";
+        value.compare = value.compare || this.compare;
+        value.prepare = value.prepare || this.prepare;
+        master.registerFilter(node, value, this);
+        var data = value.inputConfig.options;
+        var list = select.getPopup().getList();
+        node.firstChild.appendChild(select.$view.parentNode);
+        if (list.parse){
+            list.clearAll();
+            list.parse(data);
+            if ((!this.$noEmptyOption && value.emptyOption !== false) || value.emptyOption){
+                var emptyOption = { id:"", value: value.emptyOption||"", $empty: true };
+                list.add(emptyOption,0);
+                }
+            };
+        if (value.value) this.setValue(node, value.value);
+        select.render();
+        webix.delay(select.resize, select);
+        };
+    webix.ui.datafilter.mycomboFilter2.inputtype = "combo";
+    webix.ui.datafilter.mycomboFilter2.render = function(master, config){
+        if (!config.myfilt){
+            var d = webix.html.create("div", { "class" : "webix_richfilter" });
+            var richconfig = {
+                container:d,
+                view:this.inputtype,
+                options:[]
+                };
+            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
+            webix.extend(richconfig, inputConfig, true);
+            if (config.separator) richconfig.separator = config.separator;
+            if (config.suggest) richconfig.suggest = config.suggest;
+            var myfilt = webix.ui(richconfig);
+            myfilt.attachEvent("onChange", function(){
+                var vid = master.config.id;
+                var vi = webix.$$(vid);
+                if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                this._filter_timer=window.setTimeout( () => {
+                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
+                    },app.config.searchDelay);
+                });
+            config.myfilt = myfilt.config.id;
+            };
+        config.css = "webix_div_filter";
+        return " ";
+        }
+
+    webix.ui.datafilter.cFilt = Object.create(webix.ui.datafilter.textFilter);
+    webix.ui.datafilter.cFilt.on_key_down = function(e, node, value){
+            var id = this._comp_id;
+            var vi = webix.$$(id);
+            if ((e.which || e.keyCode) == 9) return;
+            if (!checkKey(e.keyCode)) return;
+            if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            this._filter_timer=window.setTimeout(function(){
+                let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
+                vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
+                },app.config.searchDelay);
+            }
+    webix.ui.datafilter.cFilt.refresh = fRefresh;
+    webix.ui.datafilter.cFilt.render = fRender;
+
+    webix.ui.datafilter.txtFilt = Object.create(webix.ui.datafilter.textFilter);
+    webix.ui.datafilter.txtFilt.on_key_down = function(e, node, value){
+            var id = this._comp_id;
+            var vi = webix.$$(id);
+            if ((e.which || e.keyCode) == 9) return;
+            if (!checkKey(e.keyCode)) return;
+            if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            this._filter_timer=window.setTimeout(function(){
+                let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
+                vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
+                },app.config.searchDelay);
+            }
+    webix.ui.datafilter.txtFilt.refresh = fRefresh;
+    webix.ui.datafilter.txtFilt.render = fRender;
+
+    
     let delay = app.config.searchDelay;
     setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
     let url = app.config.r_url + "?getRefs"
@@ -757,12 +935,6 @@ export function delPrc(inp_data, th) {
         ll.updateItem(cc, iti);
         $$("_suppl").refresh();
         };
-    }
-    
-export function filter_1(item, value) {
-    value = value.toString().toLowerCase()
-    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-    return item.c_vnd.toString().toLowerCase().search(value) != -1;
     }
 
 export function after_call(i, ii, iii) {

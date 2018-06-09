@@ -93,6 +93,7 @@ export default class LinkCodesView extends JetView{
             }
 
         var sprv = {view: "datatable",
+            name: "_codes",
             localId: "__table",
             select: true,
             resizeColumn:true,

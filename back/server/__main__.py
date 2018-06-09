@@ -1,7 +1,10 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.157.1640' #исправленно формирование больших отчетов - теперь ограничение только физическими возможностями сервера
+__version__ = '18.160.1310' #исправленная ошибка при добавлении новой позиции в SPR: при пустой форме выпуска формировался неправильный sql запрос, исправлен поиск по idspr в основном экране
+#__version__ = '18.159.1640' #сделанны отборы в таблицах по выпадающему списку везде, где есть справочные значения, оптимизированн запрос по поиску связок
+#__version__ = '18.158.1640' #добавленно сохранение на сервере состояние кнопок
+#__version__ = '18.157.1640' #исправленно формирование больших отчетов - теперь ограничение только физическими возможностями сервера
 #__version__ = '18.156.1715' #формируем отчеты в xlsx, csv, ods
 #__version__ = '18.155.1545' #улучшен отбор по производителю эталонна в связках (поиск по справочнику)
 #__version__ = '18.155.1030' #добавлен отбор в связках по поставщикам через комбо-фильтр, отбор в связках по хэшу
@@ -86,12 +89,14 @@ def main():
     try:
         server = libs.SCGIServer(sys.APPCONF["log"], hostname=None, version=__version__,
                                  appname=__appname__, profile=__profile__, index=__index__)
-        server.serve_forever(sys.APPCONF["addr"], application)
+        server.serve_forever(sys.APPCONF["addr"], application, on_exit=libs.shutdown)
     except KeyboardInterrupt as e:
-        pass
+        sys.APPCONF["log"]('KEYBOARD EXIT', kind="info")
+        libs.shutdown(sys.APPCONF["log"])
     except SystemExit as e:
         if e:
             rc = e.code
+        libs.shutdown(sys.APPCONF["log"])
     except:
         sys.APPCONF["log"](traceback.format_exc(), kind="error")
     finally:
@@ -104,11 +109,10 @@ def main():
 def application(env):
     """main bussiness script"""
     addr, pid = env["scgi.initv"][:2]
-    msg = f'{addr[0]} {addr[1]} {env["HTTP_METHOD"]} {env["URI"]} {env["HTTP_PARAMS"]} {env["HTTP_KWARGS"]}'
-    env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s close" % msg)
-    print(env['REMOTE_ADDR'])
-    #print(env['X-API-KEY'])
-    sys.APPCONF["log"](msg)
+    msg = f'{addr[0]} {addr[1]} {env["HTTP_METHOD"]} {env["URI"]} {env["HTTP_PARAMS"]} {env["HTTP_KWARGS"] or ""}'
+    env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE" % msg)
+    sys.APPCONF["log"](env['REMOTE_ADDR'], kind='REMOTE')
+    sys.APPCONF["log"]("%s STARTS" % msg)
     ret_code = u'200 OK'
     content = u''
     _rm = env["HTTP_METHOD"].upper()

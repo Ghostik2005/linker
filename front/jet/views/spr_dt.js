@@ -51,7 +51,7 @@ webix.ui({
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr, fRefresh, fRender, checkKey} from "../views/globals";
+import {get_spr, fRefresh, fRender, checkKey, compareTrue, checkVal, request} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SideFormView from "../views/side_form";
 import SubRow from "../views/sub_row";
@@ -66,46 +66,18 @@ export default class SprView extends JetView{
             this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
 
-        webix.ui.datafilter.txtFilt1 = Object.create(webix.ui.datafilter.textFilter);
-        webix.ui.datafilter.txtFilt1.on_key_down = function(e, node, value){
-                var id = this._comp_id;
-                var vi = webix.$$(id);
-                if ((e.which || e.keyCode) == 9) return;
-                if (!checkKey(e.keyCode)) return;
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout(() => {
-                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
-                    },app.config.searchDelay);
-                }
-        webix.ui.datafilter.txtFilt1.refresh = fRefresh;
-        webix.ui.datafilter.txtFilt1.render = fRender;
-
-        function mnn_func(obj) {
-            let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
-                                         : "<div> <span class='red'>нет</span></div>";
-            return ret
-            }
-
-        function mandat_func(obj) {
-            let ret = (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
-                                     : "<div><span></span></div>";
-            return ret
-            }
-
-        function prescr_func(obj) {
-            let ret = (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
-                                     : "<div><span></span></div>";
-            return ret
-            }
-
-        var fform = {
-            template: "возможно здесь будет карточка товара для редактирования", height: 40
+        let url = app.config.r_url + "?getDvAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        var dvList = []
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.act_ingr};
+                dvList.push(tt);
+                });
             };
 
         var sprv = {view: "datatable",
-            subview: fform,
             name: "__dt",
             localId: "__table",
             navigation: "row",
@@ -147,13 +119,18 @@ export default class SprView extends JetView{
                 return sub.getRoot();
                 },
             columns: [
-                {id: "id_mnn", width: 75, template: mnn_func,
+                {id: "id_mnn", width: 75,
+                    template: function (obj) {
+                        let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
+                                                     : "<div> <span class='red'>нет</span></div>";
+                        return ret
+                        },
                     header: [{text: "МНН"},
                         ],
                     },
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
-                        {content:"txtFilt1"}
+                        {content:"cFilt"}
                         ],
                     headermenu:false,
                     },
@@ -173,9 +150,13 @@ export default class SprView extends JetView{
                         ]
                     },
                 { id: "c_dv", hidden: true,
-                    width: 150,
+                    width: 300,
                     header: [{text: "Д. в-во"},
-                        {content:"txtFilt1"}
+                        {content: "mycomboFilter", compare: compareTrue,
+                            inputConfig : {
+                                options: dvList
+                                },
+                            }
                         ]
                     },
                 { id: "c_group", hidden: true,
@@ -198,11 +179,23 @@ export default class SprView extends JetView{
                     header: [{text: "Сезонность"},
                         ]
                     },
-                {id: "mandat", width:100, template: mandat_func, hidden: true, css: "col_center",
+                {id: "mandat", width:100,
+                    template: function (obj) {
+                        let ret = (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
+                                                 : "<div><span></span></div>";
+                        return ret
+                        },
+                    hidden: true, css: "col_center",
                     header: [{text: "Обязательный"},
                         ],
                     },
-                {id: "prescr", width:100, template: prescr_func, hidden: true, css: "col_center",
+                {id: "prescr", width:100,
+                    template: function (obj) {
+                        let ret = (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
+                                                 : "<div><span></span></div>";
+                        return ret
+                        },
+                    hidden: true, css: "col_center",
                     header: [{text: "Рецептурный"},
                         ],
                     },
@@ -225,7 +218,10 @@ export default class SprView extends JetView{
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    filtFunc();
+                    let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
+                    this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
+                    //filtFunc();
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);

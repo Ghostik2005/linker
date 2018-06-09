@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, fRefresh, fRender} from "../views/globals";
-import {rRefresh} from "../views/globals";
+import {checkKey, request, checkVal} from "../views/globals";
 import {parseToLink} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -12,56 +11,16 @@ export default class AllUnlinkedBarView extends JetView{
         let app = this.app;
 
         var vi = this;
-        
-        webix.ui.datafilter.customFilterUnlnk = Object.create(webix.ui.datafilter.textFilter);
-        webix.ui.datafilter.customFilterUnlnk.on_key_down = function(e, node, value){
-                var id = this._comp_id;
-                var vi = webix.$$(id);
-                if ((e.which || e.keyCode) == 9) return;
-                if (!checkKey(e.keyCode)) return;
-                if (this._filter_ti) window.clearTimeout(this._filter_ti);
-                this._filter_ti=window.setTimeout(function(){
-                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                    }, app.config.searchDelay);
-                };
-        webix.ui.datafilter.customFilterUnlnk.refresh = fRefresh;
-        webix.ui.datafilter.customFilterUnlnk.render = fRender;
-
-        webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
-        webix.ui.datafilter.richFilt.refresh = rRefresh;
-
-        webix.ui.datafilter.richFilt.render = function(master, config){
-            if (!config.richselect){
-                var d = webix.html.create("div", { "class" : "webix_richfilter" });
-                var richconfig = {
-                    container:d,
-                    view:this.inputtype,
-                    options:[]
-                    };
-                var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-                webix.extend(richconfig, inputConfig, true);
-                if (config.separator) richconfig.separator = config.separator;
-                if (config.suggest) richconfig.suggest = config.suggest;
-                var richselect = webix.ui(richconfig);
-                richselect.attachEvent("onChange", function(){
-                    var vid = master.config.id;
-                    var vi = webix.$$(vid);
-                    if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                    this._filter_timer=window.setTimeout( () => {
-                        let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                        vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                        vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                        },app.config.searchDelay);
-                    });
-                config.richselect = richselect.config.id;
-                };
-            config.css = "webix_div_filter";
-            return " ";
-            }
 
         var rList = [{id: 0, value: "Пользователь"}, {id: 9, value: "Сводильщик"}, {id: 10, value: "Админ"}, {id: 34, value: "Суперадмин"}, {id: 100, value: "?"}];
+
+        let url = app.config.r_url + "?getSupplAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        var rList1 = []
+        if (res) {
+            rList1 = res;
+            };
 
         var sprv = {view: "datatable",
             name: "__dt_a",
@@ -93,19 +52,23 @@ export default class AllUnlinkedBarView extends JetView{
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
                     header: [{text: "Название"},
-                        {content: "customFilterUnlnk"},
+                        {content: "txtFilt"},
                         ]
                     },
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "customFilterUnlnk"},
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: rList1,
+                                },
+                            }
                         ]
                     },
                 { id: "c_zavod", sort: "server",
                     width: 200,
                     header: [{text: "Производитель"},
-                        {content: "customFilterUnlnk"},
+                        {content: "txtFilt"},
                         ]
                     },
                 { id: "c_user", sort: "server",

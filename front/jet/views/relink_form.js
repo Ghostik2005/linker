@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
-import {compareTrue, fRefresh, fRender, rRefresh} from "../views/globals";
+import {compareTrue} from "../views/globals";
 import {request, checkVal} from "../views/globals";
 import PagerView from "../views/pager_view";
 
@@ -10,54 +10,6 @@ export default class RelinkFormView extends JetView{
     config(){
         let app = this.app;
 
-        webix.ui.datafilter.richFilt_x = Object.create(webix.ui.datafilter.richSelectFilter);
-        webix.ui.datafilter.richFilt_x.refresh = rRefresh;
-        webix.ui.datafilter.richFilt_x.render = function(master, config){
-            if (!config.richselect){
-                var d = webix.html.create("div", { "class" : "webix_richFilt_xer" });
-                var richconfig = {
-                    container:d,
-                    view:this.inputtype,
-                    options:[]
-                    };
-                var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-                webix.extend(richconfig, inputConfig, true);
-                if (config.separator) richconfig.separator = config.separator;
-                if (config.suggest) richconfig.suggest = config.suggest;
-                var richselect = webix.ui(richconfig);
-                richselect.attachEvent("onChange", function(){
-                    var vid = master.config.id;
-                    var vi = webix.$$(vid);
-                    if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                    this._filter_timer=window.setTimeout( () => {
-                        let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                        vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                        vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                        },app.config.searchDelay);
-                    });
-                config.richselect = richselect.config.id;
-                };
-            config.css = "webix_div_filter";
-            return " ";
-            }
-
-        webix.ui.datafilter.txtFilt_x = Object.create(webix.ui.datafilter.textFilter);
-        webix.ui.datafilter.txtFilt_x.on_key_down = function(e, node, value){
-                var id = this._comp_id;
-                var vi = webix.$$(id);
-                if ((e.which || e.keyCode) == 9) return;
-                if (!checkKey(e.keyCode)) return;
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout(() => {
-                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                    },app.config.searchDelay);
-                }
-        webix.ui.datafilter.txtFilt_x.refresh = fRefresh;
-        webix.ui.datafilter.txtFilt_x.render = fRender;
-
-        
         function mandat_func(obj) {
             return (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
             }
@@ -67,7 +19,7 @@ export default class RelinkFormView extends JetView{
             }
 
         let tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
-        var sezonList = [], tgList = [], ndsList = [], hranList = [];
+        var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [] ;
         tList.forEach(function(it, i, tList) {
             let tt = {'id': it.id, 'value': it.sezon};
             sezonList.push(tt);
@@ -82,11 +34,54 @@ export default class RelinkFormView extends JetView{
             let tt = {'id': it.id, 'value': it.nds};
             ndsList.push(tt);
             })
-        tList = $$("allTg_dc").data.getRange($$("allTg_dc").data.getFirstId(), $$("allTg_dc").data.getLastId());
+        tList = $$("group_dc").data.getRange($$("group_dc").data.getFirstId(), $$("group_dc").data.getLastId());
         tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.c_tgroup};
+            let tt = {'id': it.id, 'value': it.group};
             tgList.push(tt);
             })
+
+        tList = $$("dv_dc").data.getRange($$("dv_dc").data.getFirstId(), $$("dv_dc").data.getLastId());
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.act_ingr};
+            dvList.push(tt);
+            });
+
+        tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
+        if (tList.length > 1) {
+            tList.forEach(function(it, i, tList) {
+                let tt = {'id': it.id, 'value': it.c_strana};
+                stranaList.push(tt);
+                });
+        } else {
+            let url = app.config.r_url + "?getStranaAll";
+            let params = {"user": app.config.user};
+            let res = checkVal(request(url, params, !0).response, 's');
+            if (res) {
+                res.forEach(function(it, i, res) {
+                    let tt = {'id': it.id, 'value': it.c_strana};
+                    vList.push(tt);
+                    });
+                };
+            };
+        tList = $$("vendor_dc").data.getRange($$("vendor_dc").data.getFirstId(), $$("vendor_dc").data.getLastId());
+        if (tList.length > 1) {
+            tList.forEach(function(it, i, tList) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                vList.push(tt);
+                });
+        } else {
+            let url = app.config.r_url + "?getVendorAll";
+            let params = {"user": app.config.user};
+            let res = checkVal(request(url, params, !0).response, 's');
+            if (res) {
+                res.forEach(function(it, i, res) {
+                    let tt = {'id': it.id, 'value': it.c_zavod};
+                    vList.push(tt);
+                    });
+                };
+            };
+
+
 
         var sprv = {view: "datatable",
             name: "relink",
@@ -116,7 +111,7 @@ export default class RelinkFormView extends JetView{
             columns: [
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
-                        {content:"txtFilt_x"}
+                        {content:"txtFilt"}
                         ],
                     headermenu:false,
                     },
@@ -128,25 +123,37 @@ export default class RelinkFormView extends JetView{
                 { id: "id_zavod", sort: "server",
                     width: 300,
                     header: [{text: "Производитель"},
-                        {content:"txtFilt_x"}
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: vList
+                                },
+                            }
                         ]
                     },
                 { id: "id_strana", sort: "server",
                     width: 200,
                     header: [{text: "Страна"},
-                        {content:"txtFilt_x"}
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: stranaList
+                                },
+                            }
                         ]
                     },
                 { id: "c_dv", hidden: true, sort: "server",
-                    width: 150,
+                    width: 300,
                     header: [{text: "Д. в-во"},
-                        {content:"txtFilt_x"}
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: dvList
+                                },
+                            }
                         ]
                     },
                 { id: "c_group", hidden: true,
-                    width: 150,
+                    width: 300,
                     header: [{text: "Группа"},
-                        {content: "richFilt_x", compare: compareTrue,
+                        {content: "mycomboFilter2", compare: compareTrue,
                             inputConfig : {
                                 options: tgList
                                 },
@@ -156,7 +163,7 @@ export default class RelinkFormView extends JetView{
                 { id: "c_nds", hidden: true,
                     width: 150,
                     header: [{text: "НДС"},
-                        {content: "richFilt_x", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 options: ndsList
                                 },
@@ -166,7 +173,7 @@ export default class RelinkFormView extends JetView{
                 { id: "c_hran", hidden: true,
                     width: 150,
                     header: [{text: "Условия хранения"},
-                        {content: "richFilt_x", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 options: hranList
                                 },
@@ -176,7 +183,7 @@ export default class RelinkFormView extends JetView{
                 { id: "c_sezon", hidden: true,
                     width: 180,
                     header: [{text: "Сезонность"},
-                        {content: "richFilt_x", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 options: sezonList
                                 },
@@ -185,14 +192,14 @@ export default class RelinkFormView extends JetView{
                     },
                 {id: "mandat", width:100, template: mandat_func, hidden: true, css: 'center_p',
                     header: [{text: "Обязательный"},
-                        {content: "richFilt_x", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {options: [{id: 1, value: "Да"}, {id: 2, value: "Нет"}]},
                             }
                         ],
                     },
                 {id: "prescr", width:100, hidden: true, css: 'center_p', template: prescr_func,
                     header: [{text: "Рецептурный"},
-                        {content: "richFilt_x", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {options: [{id: 1, value: "Да"}, {id: 2, value: "Нет"}]},
                             }
                         ],

@@ -9,7 +9,8 @@ export default class UsersView extends JetView{
     config(){
         let app = this.app;
         var sprv = {view: "datatable",
-            localId: "__dtu",
+            name: "_users",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -91,7 +92,7 @@ export default class UsersView extends JetView{
                             if (checkKey(code)) {
                                 this.config._keytimed = setTimeout( () => {
                                     let value = this.getValue().toString().toLowerCase();
-                                    this.$scope.$$("__dtu").filter(function(obj){
+                                    this.$scope.$$("__table").filter(function(obj){
                                         return obj.c_user.toString().toLowerCase().indexOf(value) != -1;
                                         })
                                     }, this.$scope.app.config.searchDelay);
@@ -137,7 +138,7 @@ export default class UsersView extends JetView{
     init() {
         this.poproles = this.ui(RolesView);
         this.popnewuser = this.ui(NewUserView);
-        let th = this.$$("__dtu");
+        let th = this.$$("__table");
         th.clearAll();
         th.parse(users);
         }

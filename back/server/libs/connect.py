@@ -175,6 +175,11 @@ class fb_local:
             finally:
                 cur.close()
                 con.close()
+        finally:
+            try:
+                cur.close()
+                con.close()
+            except: pass
         return ret
 
     def _execute(self, params = None):

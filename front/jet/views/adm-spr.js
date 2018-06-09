@@ -5,7 +5,7 @@ import NewformView from "../views/new_form";
 import History from "../views/history";
 import {get_spr} from "../views/globals";
 import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
-import {compareTrue, fRefresh, fRender, rRefresh} from "../views/globals";
+import {compareTrue, request, checkVal} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SubRow from "../views/sub_row";
 import RelinkFormView from "../views/relink_form";
@@ -14,88 +14,54 @@ export default class SprView extends JetView{
     config(){
         let app = this.app;
         var vi = this;
-
-        webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
-        webix.ui.datafilter.richFilt.refresh = rRefresh;
-        webix.ui.datafilter.richFilt.render = function(master, config){
-            if (!config.richselect){
-                var d = webix.html.create("div", { "class" : "webix_richfilter" });
-                var richconfig = {
-                    container:d,
-                    view:this.inputtype,
-                    options:[]
-                    };
-                var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-                webix.extend(richconfig, inputConfig, true);
-                if (config.separator) richconfig.separator = config.separator;
-                if (config.suggest) richconfig.suggest = config.suggest;
-                var richselect = webix.ui(richconfig);
-                richselect.attachEvent("onChange", function(){
-                    var vid = master.config.id;
-                    var vi = webix.$$(vid);
-                    if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                    this._filter_timer=window.setTimeout( () => {
-                        let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                        vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                        vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                        },app.config.searchDelay);
-                    });
-                config.richselect = richselect.config.id;
-                };
-            config.css = "webix_div_filter";
-            return " ";
-            }
-
-        webix.ui.datafilter.txtFilt = Object.create(webix.ui.datafilter.textFilter);
-        webix.ui.datafilter.txtFilt.on_key_down = function(e, node, value){
-                var id = this._comp_id;
-                var vi = webix.$$(id);
-                if ((e.which || e.keyCode) == 9) return;
-                if (!checkKey(e.keyCode)) return;
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout(() => {
-                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                    },app.config.searchDelay);
-                }
-        webix.ui.datafilter.txtFilt.refresh = fRefresh;
-        webix.ui.datafilter.txtFilt.render = fRender;
-
-
-        function mnn_func(obj) {
-            return (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>" : "<div> <span class='red'>нет</span></div>";
-            }
-
-        function mandat_func(obj) {
-            return (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
-            }
-
-        function prescr_func(obj) {
-            return (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
-            }
-
         let tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
-        var sezonList = [], tgList = [], ndsList = [], hranList = [];
+        var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [];
         tList.forEach(function(it, i, tList) {
             let tt = {'id': it.id, 'value': it.sezon};
             sezonList.push(tt);
-            })
+            });
         tList = $$("hran_dc").data.getRange($$("hran_dc").data.getFirstId(), $$("hran_dc").data.getLastId());
         tList.forEach(function(it, i, tList) {
             let tt = {'id': it.id, 'value': it.usloviya};
             hranList.push(tt);
-            })
+            });
         tList = $$("nds_dc").data.getRange($$("nds_dc").data.getFirstId(), $$("nds_dc").data.getLastId());
         tList.forEach(function(it, i, tList) {
             let tt = {'id': it.id, 'value': it.nds};
             ndsList.push(tt);
-            })
-        tList = $$("allTg_dc").data.getRange($$("allTg_dc").data.getFirstId(), $$("allTg_dc").data.getLastId());
+            });
+        tList = $$("group_dc").data.getRange($$("group_dc").data.getFirstId(), $$("group_dc").data.getLastId());
         tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.c_tgroup};
+            let tt = {'id': it.id, 'value': it.group};
             tgList.push(tt);
-            })
+            });
+        tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.c_strana};
+            stranaList.push(tt);
+            });
+        tList = $$("dv_dc").data.getRange($$("dv_dc").data.getFirstId(), $$("dv_dc").data.getLastId());
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.act_ingr};
+            dvList.push(tt);
+            });
+        tList = $$("vendor_dc").data.getRange($$("vendor_dc").data.getFirstId(), $$("vendor_dc").data.getLastId());
+        if (tList.length > 1) {
+            tList.forEach(function(it, i, tList) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                vList.push(tt);
+                });
+        } else {
+            let url = app.config.r_url + "?getVendorAll";
+            let params = {"user": app.config.user};
+            let res = checkVal(request(url, params, !0).response, 's');
+            if (res) {
+                res.forEach(function(it, i, res) {
+                    let tt = {'id': it.id, 'value': it.c_zavod};
+                    vList.push(tt);
+                    });
+                };
+            };
 
         var sprv = {view: "datatable",
             name: "__dt_as",
@@ -141,7 +107,10 @@ export default class SprView extends JetView{
             old_stri: "",
             css: 'dt_css',
             columns: [
-                {id: "id_mnn", width: 75, template: mnn_func,
+                {id: "id_mnn", width: 75,
+                    template: function (obj) {
+                        return (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>" : "<div> <span class='red'>нет</span></div>";
+                        },
                     header: [{text: "МНН"},
                         ],
                     },
@@ -159,25 +128,37 @@ export default class SprView extends JetView{
                 { id: "id_zavod", sort: "server",
                     width: 300,
                     header: [{text: "Производитель"},
-                        {content:"txtFilt"}
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: vList
+                                },
+                            }
                         ]
                     },
                 { id: "id_strana", sort: "server",
                     width: 200,
                     header: [{text: "Страна"},
-                        {content:"txtFilt"}
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: stranaList
+                                },
+                            }
                         ]
                     },
                 { id: "c_dv", hidden: true, sort: "server",
-                    width: 150,
+                    width: 300,
                     header: [{text: "Д. в-во"},
-                        {content:"txtFilt"}
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: dvList
+                                },
+                            }
                         ]
                     },
                 { id: "c_group", hidden: true,
-                    width: 150,
+                    width: 300,
                     header: [{text: "Группа"},
-                        {content: "richFilt", compare: compareTrue,
+                        {content: "mycomboFilter2", compare: compareTrue,
                             inputConfig : {
                                 options: tgList
                                 },
@@ -214,14 +195,21 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                {id: "mandat", width:100, template: mandat_func, hidden: true, css: 'center_p',
+                {id: "mandat", width:100,
+                    template: function (obj) {
+                        return (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
+                        },
+                    hidden: true, css: 'center_p',
                     header: [{text: "Обязательный"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {options: [{id: 1, value: "Да"}, {id: 2, value: "Нет"}]},
                             }
                         ],
                     },
-                {id: "prescr", width:100, hidden: true, css: 'center_p', template: prescr_func,
+                {id: "prescr", width:100, hidden: true, css: 'center_p',
+                    template: function (obj) {
+                        return (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
+                        },
                     header: [{text: "Рецептурный"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {options: [{id: 1, value: "Да"}, {id: 2, value: "Нет"}]},

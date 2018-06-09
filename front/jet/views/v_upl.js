@@ -21,7 +21,7 @@ export default class uplMenuView extends JetView{
                         localId: "__upl_1",
                         type:"iconButton",
                         icon:"plus-circle",
-                        multiple:false,
+                        multiple: true,
                         autosend: false,
                         align: "left",
                         label:"Добавить файл",
@@ -30,7 +30,7 @@ export default class uplMenuView extends JetView{
                         urlData:{
                             },
                         link: undefined,//"mylist",
-                        upload: "http://saas.local/linker_upl",
+                        upload: (location.hostname === 'localhost') ? "http://saas.local/linker_upl" : "../linker_upl", 
                         datatype:"json",
                         on: {
                             onUploadComplete: (obj) => {

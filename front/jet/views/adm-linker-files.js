@@ -12,20 +12,6 @@ export default class LinkFilesView extends JetView{
         var top = {height: 40, view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", tooltip: "Поиск",
-                    on: {
-                        onKeyPress: function(code, event) {
-                            return /////////////////////////////////
-                            clearTimeout(this.config._keytimed);
-                            if (checkKey(code)) {
-                                this.config._keytimed = setTimeout( () => {
-                                    let value = this.getValue().toString().toLowerCase();
-                                    this.$scope.$$("__dtu").filter(function(obj){
-                                        return obj.c_user.toString().toLowerCase().indexOf(value) != -1;
-                                        })
-                                    }, this.$scope.app.config.searchDelay);
-                                };
-                            }
-                        },
                     },
                 {view:"button", type: 'htmlbutton',  
                     label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 130,
@@ -53,6 +39,7 @@ export default class LinkFilesView extends JetView{
             }
 
         var sprv = {view: "datatable",
+            name: "_files",
             localId: "__table",
             select: true,
             resizeColumn:true,

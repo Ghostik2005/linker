@@ -47,11 +47,11 @@ export default class UnlinkView extends JetView{
                                 }
                             },
                         {},
-                        (app.config.roles[app.config.role].lnkdel) ? {view: "button", type: "base", label: "Устарела", width: 120, height: 44, hidden: app.config.roles[app.config.role].lnkdel,
+                        {view: "button", type: "base", label: "Устарела", width: 120, height: 44, hidden: !app.config.roles[app.config.role].lnkdel,
                             click: () => {
                                 unlnk(this, "delete");
                                 }
-                            } : {width: 1}
+                            }
                         ]}
                     ],
                 }

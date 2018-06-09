@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr} from "../views/globals";
+import {get_spr, request, checkVal, compareTrue} from "../views/globals";
 import {checkKey, fRender, fRefresh} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import {dt_formating_sec, dt_formating} from "../views/globals";
@@ -12,28 +12,17 @@ export default class LinksViewSpr extends JetView{
     config(){
         let app = this.app;
         let vi = this;
-            
-        webix.ui.datafilter.customFilterLnkSpr = Object.create(webix.ui.datafilter.textFilter);
-        webix.ui.datafilter.customFilterLnkSpr.on_key_down = function(e, node, value){
-                var id = this._comp_id;
-                var vi = webix.$$(id);
-                if ((e.which || e.keyCode) == 9) return;
-                if (!checkKey(e.keyCode)) return;
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout(function(){
-                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
-                    }, app.config.searchDelay);
-                }
-        webix.ui.datafilter.customFilterLnkSpr.refresh = fRefresh;
-        webix.ui.datafilter.customFilterLnkSpr.render = fRender;
-
+        let url = app.config.r_url + "?getSupplAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        var rList = []
+        if (res) {
+            rList = res;
+            };
         var delLnk = () => {
-            let cid = this.$$("__table").getSelectedItem().id;
-            this.$$("__table").remove(cid);
+            let cid = vi.$$("__table").getSelectedItem().id;
+            vi.$$("__table").remove(cid);
             }
-
         let tt = {view: "treetable",
             name: "__tt",
             localId: "__table",
@@ -62,18 +51,22 @@ export default class LinksViewSpr extends JetView{
                     },
                 {id: "c_zavod", width: 200, 
                     header: [{text: "Производитель"},
-                    {content: "customFilterLnkSpr"},
-                    ]
+                        {content: "cFilt"},
+                        ]
                     },
-                {id: "c_vnd", width: 160, sort: 'server',
+                {id: "c_vnd", width: 300, sort: 'server',
                     header: [{text: "Поставщик"},
-                    {content: "customFilterLnkSpr"},
-                    ]
+                        {content: "mycomboFilter", compare: compareTrue,
+                            inputConfig : {
+                                options: rList,
+                                },
+                            }
+                        ]
                     },
                 {id: "id_tovar", width: 100, hidden: true, sort: 'server',
                     header: [{text: "Код"},
-                    {content: "customFilterLnkSpr"},
-                    ]
+                        {content: "cFilt"},
+                        ]
                     },
                 {id: "dt", width: 200,
                     format: dt_formating_sec,
@@ -83,8 +76,8 @@ export default class LinksViewSpr extends JetView{
                     },
                 {id: "owner", width: 100,
                     header: [{text: "Создал"}, 
-                    {content: "customFilterLnkSpr"},
-                    ]
+                        {content: "cFilt"},
+                        ]
                     }
                 ],
             on: {
@@ -164,6 +157,7 @@ export default class LinksViewSpr extends JetView{
         this._search = this.getRoot().getParentView().$scope.$$("_ls");
         this.$$("__table").config.searchBar = this._search.config.id;
         this._break.hide();
+        
         }
     }
 

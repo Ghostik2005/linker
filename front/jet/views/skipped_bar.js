@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, fRender, fRefresh} from "../views/globals";
+import {checkKey, fRender, fRefresh, checkVal, request} from "../views/globals";
 import ConfirmView from "../views/yes-no";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -18,21 +18,13 @@ export default class SkippedBarView extends JetView{
             this.$$("__table").remove(item_id)
             }
 
-        webix.ui.datafilter.customFilterSkip = Object.create(webix.ui.datafilter.textFilter);
-        webix.ui.datafilter.customFilterSkip.on_key_down = function(e, node, value){
-                var id = this._comp_id;
-                var vi = webix.$$(id);
-                if ((e.which || e.keyCode) == 9) return;
-                if (!checkKey(e.keyCode)) return;
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout(function(){
-                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                    }, app.config.searchDelay);
-                }
-        webix.ui.datafilter.customFilterSkip.refresh = fRefresh;
-        webix.ui.datafilter.customFilterSkip.render = fRender;
+        let url = app.config.r_url + "?getSupplAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        var rList = []
+        if (res) {
+            rList = res;
+            };
 
         var sprv = {view: "datatable",
             name: "__dt_s",
@@ -64,19 +56,23 @@ export default class SkippedBarView extends JetView{
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
                     header: [{text: "Название"},
-                        {content: "customFilterSkip"},
+                        {content: "txtFilt"},
                         ]
                     },
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "customFilterSkip"},
+                        {content: "mycomboFilter2", compare: compareTrue,
+                            inputConfig : {
+                                options: rList,
+                                },
+                            }
                         ]
                     },
                 { id: "c_zavod", sort: "server",
                     width: 200,
                     header: [{text: "Производитель"},
-                        {content: "customFilterSkip"},
+                        {content: "txtFilt"},
                         ]
                     },
                 {id: "dt", width: 200, sort: 'server',

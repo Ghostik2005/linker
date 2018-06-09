@@ -8,7 +8,8 @@ export default class NdsView extends JetView{
     config(){
 
         var sprv = {view: "datatable",
-            localId: "__dts",
+            name: "_nds",
+            localId: "__table",
             navigation: "row",
             select: true,
             resizeColumn:true,
@@ -81,7 +82,7 @@ export default class NdsView extends JetView{
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
-                            this.$scope.$$("__dts").filter(function(obj){
+                            this.$scope.$$("__table").filter(function(obj){
                                 return obj.nds.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
@@ -90,14 +91,14 @@ export default class NdsView extends JetView{
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить НДС",
                     label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     click: () => {
-                        let params = {'type': 'Nds', 'callback': addNds, 'mode': 'new', 'source': this.$$("__dts")};
+                        let params = {'type': 'Nds', 'callback': addNds, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление НДС', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить НДС",
                     label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     click: () => {
-                        let item_id = this.$$("__dts").getSelectedItem().id
+                        let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
                         params['user'] = this.app.config.user;
                         params['id'] = item_id;
@@ -124,7 +125,7 @@ export default class NdsView extends JetView{
         
     init() {
         this.popnew = this.ui(NewPropView);
-        webix.extend(this.$$("__dts"), webix.ProgressBar);
-        this.$$("__dts").sync(nds.data);
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.$$("__table").sync(nds.data);
         }
     }
