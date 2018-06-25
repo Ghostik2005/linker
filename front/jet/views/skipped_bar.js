@@ -87,6 +87,10 @@ export default class SkippedBarView extends JetView{
                             },
                         ]
                     },
+                {id: "source", width: 100, hidden: true,
+                    header: [{text: "Источник"},
+                        ]
+                    },
                 ],
             on: {
                 "data->onParse":function(i, data){
@@ -126,40 +130,42 @@ export default class SkippedBarView extends JetView{
                 }
             }
 
-        var top_menu = {
-            view: 'toolbar',
-            css: {"border-top": "0px"},
-            height: 40,
-            cols: [
-                {},
-                {view: "button", type: "htmlbutton", tooltip: "Обновить",
-                    label: "<span class='webix_icon fa-refresh'></span>", width: 40,
-                    click: () => {
-                        this.$$("__table").callEvent("onBeforeSort");
-                        }
-                    },
-                {view:"button",  tooltip: "Сбросить фильтры",
-                    type:"imageButton", image: './addons/img/unfilter.svg', width: 40,
-                    click: () => {
-                        var cv = this.$$("__table");
-                        var columns = cv.config.columns;
-                        columns.forEach(function(item){
-                            if (cv.isColumnVisible(item.id)) {
-                                if (item.header[1]) {
-                                    if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                        cv.getFilter(item.id).setValue('');
-                                    } else {
-                                        let qq = cv.getFilter(item.id);
-                                        if (!qq.readOnly) qq.value = '';
-                                        };
+        var top_menu = {rows: [
+            {view: 'toolbar',
+                css: {"border-top": "0px"},
+                height: 40,
+                cols: [
+                    {},
+                    {view: "button", type: "htmlbutton", tooltip: "Обновить",
+                        label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                        click: () => {
+                            this.$$("__table").callEvent("onBeforeSort");
+                            }
+                        },
+                    {view:"button",  tooltip: "Сбросить фильтры",
+                        type:"imageButton", image: './addons/img/unfilter.svg', width: 40,
+                        click: () => {
+                            var cv = this.$$("__table");
+                            var columns = cv.config.columns;
+                            columns.forEach(function(item){
+                                if (cv.isColumnVisible(item.id)) {
+                                    if (item.header[1]) {
+                                        if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                                            cv.getFilter(item.id).setValue('');
+                                        } else {
+                                            let qq = cv.getFilter(item.id);
+                                            if (!qq.readOnly) qq.value = '';
+                                            };
+                                        }
                                     }
-                                }
-                            });
-                        this.$$("__table").callEvent("onBeforeSort");
-                        }
-                    },
-                ]
-            }
+                                });
+                            this.$$("__table").callEvent("onBeforeSort");
+                            }
+                        },
+                    ]
+                },
+            {height: 3},
+            ]}
 
         var _view = {
             view: "layout", type: "clean",

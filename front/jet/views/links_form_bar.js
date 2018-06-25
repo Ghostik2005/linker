@@ -66,14 +66,20 @@ export default class LinksBarView extends JetView{
                         let value = this.$$("_spr_ch").getValue();
                         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options; //headers
                         let header_val;
+                        let h_id = this.getRoot().getParentView().getParentView().getChildViews()[1].getValue();
                         if (value===0) {
                             this.lch = 0;
                             header_val = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>";
                         } else if (value===1) {
                             this.lch = 1;
                             header_val = "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 16px; font-size: 80%'>Связки:Эталоны</span>"
-                            }
-                        //this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
+                            };
+                        hh.forEach((item, i, hh) => {
+                            if (+item.id === +h_id) {
+                                item.value = header_val;
+                                this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
+                                }
+                            });
                         let q = (this.lch===1) ? 'links_form_spr' : 'links_form_lnk'
                         this.show(q);
                         //this.$$("_ls").callEvent("onKeyPress", [13,]);
@@ -111,10 +117,10 @@ export default class LinksBarView extends JetView{
 
         var _view = {
             view: "layout", type: "clean",
-            css: {'border-left': "1px solid #dddddd !important"},
+            //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
-                {height: 1},
+                {height: 3},
                 {$subview: true},
                 ]}
         return _view

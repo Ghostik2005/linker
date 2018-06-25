@@ -44,6 +44,7 @@ export default class loginView extends JetView{
                         click: function(){
                             if (validate_user(this)) {
                                 this.$scope.show("/start/body");
+                                //this.$scope.show("/start/top-menu");
                                 webix.message('авторизованно');
                             } else {
                                 webix.message({'text': 'не авторизованно', "type" : "debug"});
@@ -82,6 +83,7 @@ export default class loginView extends JetView{
             this.app.config.role = r;
             this.app.config.x_api = x;
             this.show("/start/body");
+            //this.show("/start/top-menu");
         } else {
             deleteCookie('linker_user');
             deleteCookie('linker_auth_key');

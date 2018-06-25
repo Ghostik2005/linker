@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.160.1310' #исправленная ошибка при добавлении новой позиции в SPR: при пустой форме выпуска формировался неправильный sql запрос, исправлен поиск по idspr в основном экране
+__version__ = '18.176.1425' #в несвязанных и пропущенных добавленно поле источник для вывода
+#__version__ = '18.160.1310' #исправленная ошибка при добавлении новой позиции в SPR: при пустой форме выпуска формировался неправильный sql запрос, исправлен поиск по idspr в основном экране
 #__version__ = '18.159.1640' #сделанны отборы в таблицах по выпадающему списку везде, где есть справочные значения, оптимизированн запрос по поиску связок
 #__version__ = '18.158.1640' #добавленно сохранение на сервере состояние кнопок
 #__version__ = '18.157.1640' #исправленно формирование больших отчетов - теперь ограничение только физическими возможностями сервера
@@ -108,6 +109,7 @@ def main():
 
 def application(env):
     """main bussiness script"""
+    tt = time.time()
     addr, pid = env["scgi.initv"][:2]
     msg = f'{addr[0]} {addr[1]} {env["HTTP_METHOD"]} {env["URI"]} {env["HTTP_PARAMS"]} {env["HTTP_KWARGS"] or ""}'
     env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE" % msg)
@@ -151,7 +153,8 @@ def application(env):
     if not fileReturn:
         ret_value = content.encode()
         header = libs.head(len(ret_value), False, True)
-
+    tt = time.time() - tt
+    env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE in %s secs" % (msg, tt))
     # три обязательных вызова yield: статус, заголовки, содержание
     yield ret_code
     yield header

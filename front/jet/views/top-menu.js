@@ -322,8 +322,9 @@ export default class TopmenuView extends JetView{
             }
 
         var tabbar = {
+            //css: {"border-width": "0px !important"},
             view: "tabbar",
-            //moreTemplate:"Show more",
+            //borderless: true,
             popupWidth:170,
             tabMinWidth:170,
             tabMoreWidth:70,
@@ -385,7 +386,7 @@ export default class TopmenuView extends JetView{
             tab_view.getChildViews()[1].addOption(tabConfig, true);
             }
 
-        var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'header',
+        var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'header', borderless: true,
             width: (app.config.expert) ? 44 : 140,
             rows: [
                 {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
@@ -404,9 +405,12 @@ export default class TopmenuView extends JetView{
                         }
                     },
                 {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
                     label: "", width: 40,
                     oldLabel: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>",
-                    extLabel: "<span style='line-height: 20px; color: #3498db'>Настройки</span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Настройки</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -433,10 +437,13 @@ export default class TopmenuView extends JetView{
                         }
                     },
                 {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].adm,
                     oldLabel: "<span class='webix_icon fa-blind', style='color: #3498db'></span>",
-                    extLabel: "<span style='line-height: 20px; color: #3498db'>Админка</span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Админка</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -470,11 +477,14 @@ export default class TopmenuView extends JetView{
                             }
                         }
                     },
-                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, b_id: undefined, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
                     label: "", width: 40,
                     oldLabel: "<span class='webix_icon fa-archive', style='color: #3498db'></span>",
                     hidden: !(app.config.roles[app.config.role].skipped),
-                    extLabel: "<span style='line-height: 20px; color: #3498db'>Пропущенные</span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 2px'>Пропущенные</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -509,8 +519,11 @@ export default class TopmenuView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
                     label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px; color: #3498db'>Несвязанные</span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Несвязанные</span>",
                     oldLabel: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>",
                     on: {
                         onAfterRender: function() {
@@ -546,8 +559,11 @@ export default class TopmenuView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
                     label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px; color: #3498db'>Связки</span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Связки</span>",
                     oldLabel: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>",
                     on: {
                         onAfterRender: function() {
@@ -583,8 +599,11 @@ export default class TopmenuView extends JetView{
                         },
                     },
                 {view:"button", type:"htmlbutton", width: 40, hidden: !true, tooltip: "Создание отчета по текущей таблице",
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
                     label: "",
-                    extLabel: "<span style='line-height: 20px; color: #3498db'>Отчеты</span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Отчеты</span>",
                     oldLabel: "<span class='webix_icon fa-save', style='color: #3498db'></span>",
                     height: 40,
                     click: function(){
@@ -599,7 +618,7 @@ export default class TopmenuView extends JetView{
         return {
             cols: [
                 side_bar,
-                {rows: [
+                {borderless: !true, rows: [
                     {height: 1},
                     tabbar,
                     tabmain
@@ -609,16 +628,12 @@ export default class TopmenuView extends JetView{
         }
 
     ready() {
-        let buttons = this.$$("sideMenu").getChildViews();
-        let app = this.app;
+        let buttons = this.app.config.getButt(this.$$("sideMenu").getTopParentView());
         buttons.forEach( (item, i, buttons) => {
-            //console.log('i', item);
-            if (item.config.view === "button" && item !== this.$$("_rbut")) {
-                item.define({width: (app.config.expert) ? 40 : 136,
-                             label: (app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+                item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                             label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
                 item.refresh();
                 item.resize();
-                };
             })
         }
 

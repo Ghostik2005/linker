@@ -127,8 +127,9 @@ export default class UsersView extends JetView{
 
         return {
             view: "layout",
-            css: {'border-left': "1px solid #dddddd !important"},
+            //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
+                {height: 4},
                 top,
                 sprv,
                 ]

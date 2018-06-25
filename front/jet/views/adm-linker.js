@@ -40,9 +40,9 @@ export default class LinkerView extends JetView{
 
         return {
             view: "layout",
-            css: {'border-left': "1px solid #dddddd !important"},
+            //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
-                {height: 3},
+                {height: 4},
                 tabv,
                 ]
             }

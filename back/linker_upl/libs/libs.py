@@ -25,28 +25,6 @@ try:
 except ImportError:
     import fdb
 
-def Err(logger):
-    """
-    A decorator that wraps the passed in function and logs
-    exceptions should one occur
-
-    @param logger: The logging object
-    """
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as err:
-                err = "There was an exception in "
-                err += func.__name__
-                logger(err)
-                # re-raise
-                raise
-        return wrapper
-    return decorator
-
-
-
 class API:
     """
     API class for http post access
@@ -69,7 +47,7 @@ class API:
         self.log = log
         try:
             config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker_upl/conf1.ini', encoding='UTF-8')
+            config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
             init = config['init']
             self.connect_params = {
                     'uri': init['uri'],
@@ -132,14 +110,15 @@ class API:
         #загрузка данных по накладным из json
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
-            source = 2
+            #source = 2
             callback = None
             data = params
             #ключ словаря - идентификатор накладной, значение - список строк товаров для сведения в фомате tab separated, все как в файле:
             #sh_prc, код поставщика, код товара у поставщика, название товара, изгтовитель, код организации, штрихкод
             name, value = data.popitem()
-            print('*'*50)
-            print(value)
+            source = 2 if len(name) > 16 else 1
+            self.log('*'*50)
+            self.log(value)
             con, cur = self._connect()
             h_name = hashlib.md5()
             h_name.update(str(name).encode())
@@ -149,15 +128,11 @@ class API:
             con.commit()
             con.close()
             f_name = os.path.join(self.path,f"{h_name}.{source}")
-            #f_name = os.path.join(self.path, name)
-            #value = '\n'.join(value)
-            #print('*'*50)
-            #print(value)
             with open(f_name, 'wb') as f_obj:
                 pass
                 f_obj.write(value.encode())
             ret = {"result": True, "ret_val": "accepted"}
-            print('*'*50)
+            self.log('*'*50)
             #ret = {"result": True, "ret_val": "ok"}
             
         return json.dumps(ret, ensure_ascii=False)
@@ -175,7 +150,7 @@ class API:
         h_name.update(str(filename).encode())
         h_name =  h_name.hexdigest()
         sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
-        print(sql)
+        self.log(sql)
         cur.execute(sql)
         con.commit()
         fname = os.path.join(self.path, f"{h_name}.{source}")
@@ -360,7 +335,7 @@ class API:
     SELECT r.id_vnd, r.id_tovar, r.n_cena, r.sh_prc, r.c_tovar, r.c_zavod, r.id_org, -1, r.source, r.uin
     FROM A_TEMP_PRC r where r.SH_PRC = ?""", (row[0],))
                     dbc.execute("""DELETE FROM A_TEMP_PRC WHERE SH_PRC = ?""", (row[0],))
-                self.log('some actions')
+                #self.log('some actions')
                 dbc.execute("""INSERT INTO lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select r.SH_PRC, s.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, CURRENT_TIMESTAMP, 'barcode'
     FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE""")
@@ -462,16 +437,16 @@ class API:
         dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
-        self.log('assign to stasya')
+        #self.log('assign to stasya')
         dbc.execute(f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 {con_ins}
     and (id_vnd in (46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,20271,10001,29271,34071,37471,33771,30371,34157,20471,20557,20577,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178))""")
-        self.log('assign to stasya 2')
+        #self.log('assign to stasya 2')
         if callable(db.commit):
             db.commit()
         dbc.execute(f"""update prc set id_org=40035 where id_org=12 {con_ins} and (id_vnd=19994 or id_vnd=19985)""")
         if callable(db.commit):
             db.commit()
-        self.log('assign to 40035')
+        #self.log('assign to 40035')
         #dbc.execute(f"""update prc set id_org=40035 where id_vnd=19985 and id_org=12 {con_ins}""")
         #if callable(db.commit):
             #db.commit()

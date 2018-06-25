@@ -11,7 +11,7 @@ export default class StartView extends JetView{
             id: "main_ui",
             rows: [
                 { $subview: HeaderView },
-                { $subview: true},
+                { $subview: true, borderless: true},
                 { $subview: FooterView },
                 ],
             };

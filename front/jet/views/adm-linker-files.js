@@ -10,11 +10,12 @@ export default class LinkFilesView extends JetView{
         let app = this.app;
         
         var top = {height: 40, view: "toolbar",
+            borderless: true,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", tooltip: "Поиск",
                     },
                 {view:"button", type: 'htmlbutton',  
-                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 130,
+                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 75,
                     click: () => {
                         this.pop_upl.show_window("Загрузка файла");
                         }
@@ -89,6 +90,7 @@ export default class LinkFilesView extends JetView{
 
         return {
             view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 top,
                 sprv,

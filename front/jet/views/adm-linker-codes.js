@@ -10,6 +10,7 @@ export default class LinkCodesView extends JetView{
         let app = this.app;
         
         var top = {height: 40, view: "toolbar",
+            borderless: true,
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка фильтра", 
                     on: {
@@ -166,6 +167,7 @@ export default class LinkCodesView extends JetView{
 
         return {
             view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 top,
                 sprv,

@@ -403,7 +403,8 @@ WHERE r.SH_PRC = ?
     CASE
         WHEN ru.NAME is NULL THEN '?'
         ELSE ru.NAME
-    END
+    END,
+    r.SOURCE
 from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''})
 join prc r on r.SH_PRC = rsh
 {sql_2}
@@ -414,7 +415,8 @@ join prc r on r.SH_PRC = rsh
     CASE
         WHEN ru.NAME is NULL THEN '?'
         ELSE ru.NAME
-    END
+    END,
+    r.SOURCE
 from prc r
 {sql_2}
 {sql_1}
@@ -430,6 +432,8 @@ order by {field} {direction}"""
 {sql_1 if us_s else ''}
 {sql_3 if us_s else ''}
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
+            print(sql)
+            print(sql_c)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -438,6 +442,12 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
             result = results[0]
             count = results[1][0][0]
             for row in result:
+                if str(row[13]) == '1':
+                    sou = "PLExpert"
+                elif str(row[13]) == '2':
+                    sou = "Склад"
+                else:
+                    sou = ""
                 r = {
                     "sh_prc"  : row[0],
                     "id_vnd"  : row[1],
@@ -451,7 +461,8 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                     #"c_user"  : row[9],
                     "c_user"  : row[12],
                     "c_vnd"   : row[10],
-                    "dt"      : str(row[11])
+                    "dt"      : str(row[11]),
+                    "source"  : sou
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}
@@ -538,7 +549,8 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
             CASE 
             WHEN r.CHANGE_DT is null THEN r.DT
             ELSE r.CHANGE_DT
-            END as ch_date
+            END as ch_date,
+            r.SOURCE
             from prc r
             inner join USERS u on (u."GROUP" = r.ID_ORG)
             INNER JOIN VND v on (r.ID_VND = v.ID_VND)
@@ -560,6 +572,12 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
 
             #result = self.db.request({"sql": sql, "options": opt})
             for row in result:
+                if str(row[11]) == '1':
+                    sou = "PLExpert"
+                elif str(row[11]) == '2':
+                    sou = "Склад"
+                else:
+                    sou = ""
                 r = {
                     "sh_prc"  : row[0],
                     "id_vnd"  : row[1],
@@ -571,7 +589,8 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                     "id_org"  : row[7],
                     "c_index" : row[8],
                     "c_vnd"   : row[9],
-                    "dt"      : str(row[10])
+                    "dt"      : str(row[10]),
+                    "source"  : sou
                     
                 }
                 _return.append(r)

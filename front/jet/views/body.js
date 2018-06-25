@@ -6,6 +6,7 @@ import TopmenuView from "../views/top-menu";
 export default class BodyView extends JetView{
     config(){
         return {view: "layout",
+            borderless: true,
             css: 'margin-zero',
             rows:[
                 {$subview: TopmenuView, name: "top_menu"},

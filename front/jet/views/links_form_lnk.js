@@ -148,6 +148,7 @@ export default class LinksViewLnk extends JetView{
             } 
 
         return {view: "layout",
+            css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 tt,
                 {$subview: PagerView},

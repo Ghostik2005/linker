@@ -189,6 +189,20 @@ div.webix_item_tab {
 .webix_el_radio.webix_label_right.radio_b {
   color: red;
 }
+.webix_error1 {
+  font-size: 12px;
+  color: blue;
+  padding: 0px;
+  border-radius: 3px;
+  background-color: #85d685;
+  border: 1px solid #008000;
+  box-shadow: 0px 0px 10px #000;
+}
+.webix_error1 div {
+  background-color: #85d685;
+  border: 1px solid #008000;
+  color: #000;
+}
 @charset "UTF-8";
 /*!
  * animate.css -http://daneden.me/animate
