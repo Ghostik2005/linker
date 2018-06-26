@@ -159,7 +159,7 @@ export default class TopmenuView extends JetView{
                                 },
                             {width: 10},
                             {view: "button", type: "htmlbutton", 
-                                label: "<span class='butt'>Обновить сессию</span>", width: 200, //height: 32,
+                                label: "<span style='color: #3498db'>Обновить сессию</span>", width: 200, //height: 32,
                                 click: () => {
                                     if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
                                         let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
@@ -389,7 +389,7 @@ export default class TopmenuView extends JetView{
         var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'header', borderless: true,
             width: (app.config.expert) ? 44 : 140,
             rows: [
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
+                {view:"button", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
                     label: "<span class='webix_icon fa-bars', style='color: #3498db'></span>", width: 40,
                     on:
                         {
@@ -404,7 +404,7 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
@@ -436,7 +436,7 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,

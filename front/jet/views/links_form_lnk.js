@@ -102,9 +102,18 @@ export default class LinksViewLnk extends JetView{
                     },
                 {id: "owner", width: 100, sort: 'server',
                     header: [{text: "Создал"}, 
-                    {content: "cFilt"},
-                    ]
-                    }
+                        {content: "cFilt"},
+                        ]
+                    },
+                {id: "source", width: 150, hidden: true,
+                    header: [{text: "Источник"},
+                        {content: "richFilt1", compare: compareTrue,
+                            inputConfig : {
+                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}]
+                                },
+                            }
+                        ]
+                    },
                 ],
             on: {
                 "data->onParse":function(i, data){

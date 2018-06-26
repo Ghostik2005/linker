@@ -228,7 +228,7 @@ JOIN VND v on (v.ID_VND = t.ID_VND)"""
             _return = []
             for row in result:
                 if row[3] == 0:
-                    sou = 'Линкер'
+                    sou = 'Без источника'
                 elif row[3] == 1:
                     sou = 'PLExpert'
                 elif row[3] == 2:
@@ -335,6 +335,7 @@ WHERE r.SH_PRC = ?
                 pars['c_zavod'] = filt.get('c_zavod')
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
+                pars['source'] = filt.get('source')
                 ssss = []
                 us_s = ''
                 v_s = ''
@@ -356,6 +357,12 @@ WHERE r.SH_PRC = ?
                     ssss.append('and %s' % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    ssss.append('and %s' % s)
+                if pars['source']:
+                    if 0 == int(pars['source']):
+                        s = "r.SOURCE is null or r.SOURCE = 0"
+                    else:
+                        s = "r.SOURCE = " + pars['source']
                     ssss.append('and %s' % s)
                 dt = filt.get('dt')
                 if dt:
@@ -432,8 +439,6 @@ order by {field} {direction}"""
 {sql_1 if us_s else ''}
 {sql_3 if us_s else ''}
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
-            print(sql)
-            print(sql_c)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -447,7 +452,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                 elif str(row[13]) == '2':
                     sou = "Склад"
                 else:
-                    sou = ""
+                    sou = "Без источника"
                 r = {
                     "sh_prc"  : row[0],
                     "id_vnd"  : row[1],
@@ -481,6 +486,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                 pars['c_zavod'] = filt.get('c_zavod')
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
+                pars['source'] = filt.get('source')
                 ssss = []
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
@@ -508,6 +514,12 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append(pref % s)
+                if pars['source']:
+                    if 0 == int(pars['source']):
+                        s = "r.SOURCE is null or r.SOURCE = 0"
+                    else:
+                        s = "r.SOURCE = " + pars['source']
+                    ssss.append('and %s' % s)
                 dt = filt.get('dt')
                 if dt:
                     pars['start_dt'] = dt.get('start')
@@ -577,7 +589,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                 elif str(row[11]) == '2':
                     sou = "Склад"
                 else:
-                    sou = ""
+                    sou = "Без источника"
                 r = {
                     "sh_prc"  : row[0],
                     "id_vnd"  : row[1],
@@ -3276,6 +3288,7 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 pars['id_tovar'] = filt.get('id_tovar')
                 pars['id_spr'] = filt.get('id_spr')
                 pars['hash'] = filt.get('id')
+                pars['source'] = filt.get('source')
                 try:
                     pars['id_spr'] = int(pars['id_spr'])
                 except:
@@ -3316,6 +3329,12 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 if pars['hash']:
                     s = "r.SH_PRC = '%s'" % pars['hash']
                     ssss.append('and %s' % s)
+                if pars['source']:
+                    if 0 == int(pars['source']):
+                        s = "r.SOURCE is null or r.SOURCE = 0"
+                    else:
+                        s = "r.SOURCE = " + pars['source']
+                    ssss.append('and %s' % s)
                 if pars['spr']:
                     qwe = pars.get('spr')
                     exclude, qwe = self._form_exclude(qwe)
@@ -3350,13 +3369,14 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
                 else:
                     s = "left JOIN VND v on (v.ID_VND = ridv)"
                     in_st.append(s)
-                in_st.insert(0, """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD
+                in_st.insert(0, """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD, rsou
 from (
     SELECT r.SH_PRC rsh, r.ID_TOVAR ridt, r.C_TOVAR rct, r.C_ZAVOD rcv, r.DT rdt, r.OWNER ro, r.CHANGE_DT rchd, r.ID_SPR rids, r.ID_VND ridv,
         CASE 
         WHEN r.CHANGE_DT is null THEN r.DT
         ELSE r.CHANGE_DT
-        END as ch_date
+        END as ch_date,
+        r.SOURCE rsou
         FROM (SELECT r.SH_PRC lsh,         
         CASE 
         WHEN r.CHANGE_DT is null THEN r.DT
@@ -3370,13 +3390,14 @@ from (
                 sql_c = '\n'.join(in_c)
                 stri += ' ' + ' '.join(ssss)
             else:
-                sql = """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD
+                sql = """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD, rsou
 from (
     SELECT r.SH_PRC rsh, r.ID_TOVAR ridt, r.C_TOVAR rct, r.C_ZAVOD rcv, r.DT rdt, r.OWNER ro, r.CHANGE_DT rchd, r.ID_SPR rids, r.ID_VND ridv,
         CASE 
         WHEN r.CHANGE_DT is null THEN r.DT
         ELSE r.CHANGE_DT
-        END as ch_date
+        END as ch_date,
+        r.SOURCE rsou
         FROM (SELECT r.SH_PRC lsh,         
         CASE 
         WHEN r.CHANGE_DT is null THEN r.DT
@@ -3406,6 +3427,12 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             count = results[1][0][0]
             
             for row in result:
+                if str(row[12]) == '1':
+                    sou = "PLExpert"
+                elif str(row[12]) == '2':
+                    sou = "Склад"
+                else:
+                    sou = "Без источника"
                 r = {
                     "id"          : row[0],
                     "c_vnd"       : row[1],
@@ -3416,7 +3443,8 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                     "owner"       : row[6],
                     "id_spr"      : row[8],
                     "spr"         : row[9],
-                    "e_zavod"     : row[11]
+                    "e_zavod"     : row[11],
+                    "source"      : sou
                     }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "params": params}}
@@ -3430,13 +3458,13 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             id_spr = params.get('id_spr')
             user = params.get('user')
             if sh_prc and id_spr:
-                sql = """delete from PRC r WHERE r.sh_prc = ? returning r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT"""
+                sql = """delete from PRC r WHERE r.sh_prc = ? returning r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.SOURCE"""
                 opt = (sh_prc,)
                 result = self.db.execute({"sql": sql, "options": opt})[0]
 
-                sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
-                         values (?, ?, ?, ?, ?, ?, CAST('NOW' AS TIMESTAMP), ?) """
-                opt = (result[0], id_spr, result[1], result[2], result[3], result[4], user)
+                sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, SOURCE)
+                         values (?, ?, ?, ?, ?, ?, CAST('NOW' AS TIMESTAMP), ?, ?) """
+                opt = (result[0], id_spr, result[1], result[2], result[3], result[4], user, result[6])
                 res = self.db.execute({"sql": sql, "options": opt})
                 ret = {"result": True, "ret_val": result[0]}
             else:
@@ -3451,14 +3479,14 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             action = params.get('action')
             user = params.get('user')
             if sh_prc and action in ('return', 'delete'):
-                sql = """delete from lnk r WHERE sh_prc = ? returning r.SH_PRC, r.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER"""
+                sql = """delete from lnk r WHERE sh_prc = ? returning r.SH_PRC, r.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.SOURCE"""
                 opt = (sh_prc,)
                 result = self.db.execute({"sql": sql, "options": opt})[0]
                 if action == 'return':
                     sql = """insert into PRC
-                    (SH_PRC, ID_VND, ID_TOVAR, N_FG, N_CENA, C_TOVAR, C_ZAVOD, ID_ORG, C_INDEX, DT, IN_WORK)
-                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST('NOW' AS TIMESTAMP), ?)"""
-                    opt = (result[0], result[2], result[3], 0, 0, result[4], result[5], 0, 0, -1)
+                    (SH_PRC, ID_VND, ID_TOVAR, N_FG, N_CENA, C_TOVAR, C_ZAVOD, ID_ORG, C_INDEX, DT, IN_WORK, SOURCE)
+                    values (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST('NOW' AS TIMESTAMP), ?, ?)"""
+                    opt = (result[0], result[2], result[3], 0, 0, result[4], result[5], 0, 0, -1, result[8])
                 else:
                     sql = """insert into R_LNK
                     (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, DT_R, USER_R)
@@ -4625,5 +4653,8 @@ CREATE UNIQUE INDEX IS_IDX2 ON SPR_ISSUE (ID_IS,ID_SPR);
 GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
  ON SPR_ISSUE TO  SYSDBA WITH GRANT OPTION;
 commit;
+
+ALTER TABLE LNK ADD 
+SOURCE Smallint
 
 """

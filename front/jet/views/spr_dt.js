@@ -121,8 +121,7 @@ export default class SprView extends JetView{
             columns: [
                 {id: "id_mnn", width: 75,
                     template: function (obj) {
-                        let ret = (+obj.id_dv !== 0) ? "<div> <span class='green'>есть</span></div>"
-                                                     : "<div> <span class='red'>нет</span></div>";
+                        let ret = (+obj.id_dv !== 0) ? "<div> <span style='color: green'>есть</span></div>" : "<div> <span style='color: red'>нет</span></div>";
                         return ret
                         },
                     header: [{text: "МНН"},
@@ -185,7 +184,7 @@ export default class SprView extends JetView{
                                                  : "<div><span></span></div>";
                         return ret
                         },
-                    hidden: true, css: "col_center",
+                    hidden: true, css: "center_p",
                     header: [{text: "Обязательный"},
                         ],
                     },
@@ -195,7 +194,7 @@ export default class SprView extends JetView{
                                                  : "<div><span></span></div>";
                         return ret
                         },
-                    hidden: true, css: "col_center",
+                    hidden: true, css: "center_p",
                     header: [{text: "Рецептурный"},
                         ],
                     },

@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.160.1200",
+        version:        "18.177.1325",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -60,7 +60,24 @@ webix.ready( () => {
         searchDelay:    1000,
         popDelay:       800,
         roles:          {},
-        expert:         true
+        expert:         true,
+        getButt:        (view, buttonsList) => {
+                            let bList = [];
+                            let views = view.getChildViews()
+                            views.forEach( (element, i, views) => {
+                                if (element.getChildViews().length > 0) {
+                                    bList = element.$scope.app.config.getButt(element, bList);
+                                } else {
+                                    if (element.config.view === "button" && element.config.resizable) {
+                                        bList.push(element);
+                                        };
+                                    };
+                                })
+                            if (buttonsList) {
+                                bList = bList.concat(buttonsList);
+                                };
+                            return bList;
+                            }
     });
     
     webix.attachEvent("onBeforeAjax", 

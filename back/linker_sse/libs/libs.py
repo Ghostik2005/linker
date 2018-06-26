@@ -96,7 +96,7 @@ ROWS 1 to 1"""
                             params = ['update', 'Есть новые позиции для сведения. Обновите данные.', c]
                             sys._SSE[v] = [_q, dt]
                         else:
-                            params = ['message', f'U:{user}, dt: {dt}, c: {c}', c]
+                            params = ['info', f'U:{user}, dt: {dt}, c: {c}', c]
                         _q.put(params)
                 try:
                     con.close()

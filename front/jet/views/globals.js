@@ -542,6 +542,7 @@ export function getDtParams(ui) {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             'spr'       : ($$(ui).isColumnVisible('spr')) ? $$(ui).getFilter('spr').value : undefined,
             'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
+            'source'    : ($$(ui).isColumnVisible('source')) ? $$(ui).getFilter('source').getValue() : undefined,
             };
     } else if (ui.config.name === "__tt") {
         c_filter = {
@@ -556,6 +557,7 @@ export function getDtParams(ui) {
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').getText() : undefined,
+            'source'    : ($$(ui).isColumnVisible('source')) ? $$(ui).getFilter('source').getValue() : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt_s") {
@@ -564,6 +566,7 @@ export function getDtParams(ui) {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
+            'source'    : ($$(ui).isColumnVisible('source')) ? $$(ui).getFilter('source').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt_as") {
         c_filter = {
@@ -611,6 +614,38 @@ export function dt_formating(d) {
     };
 
 export function init_first(app) {
+
+    webix.ui.datafilter.richFilt1 = Object.create(webix.ui.datafilter.richSelectFilter);
+    webix.ui.datafilter.richFilt1.refresh = rRefresh;
+    webix.ui.datafilter.richFilt1.render = function(master, config){
+        if (!config.richselect){
+            var d = webix.html.create("div", { "class" : "webix_richfilter" });
+            var richconfig = {
+                container:d,
+                view:this.inputtype,
+                options:[]
+                };
+            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
+            webix.extend(richconfig, inputConfig, true);
+            if (config.separator) richconfig.separator = config.separator;
+            if (config.suggest) richconfig.suggest = config.suggest;
+            var richselect = webix.ui(richconfig);
+            richselect.attachEvent("onChange", function(){
+                var vid = master.config.id;
+                var vi = webix.$$(vid);
+                if (this._filter_timer) window.clearTimeout(this._filter_timer);
+                this._filter_timer=window.setTimeout( () => {
+                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
+                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
+                    },app.config.searchDelay);
+                });
+            config.richselect = richselect.config.id;
+            };
+        config.css = "webix_div_filter";
+        return " ";
+        }
+
 
     webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
     webix.ui.datafilter.richFilt.refresh = rRefresh;

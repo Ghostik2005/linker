@@ -17,17 +17,14 @@ export default class HeaderView extends JetView{
         let iid = uuid.v4() + "::" + app.config.user;
         let sse_url = (location.hostname === 'localhost') ? "http://saas.local/events/SSE?" : "../events/SSE?";
         sse_url += iid
-        webix.message({'type': 'error1', 'text': "e.data", 'expire': -1});
+        //webix.message({'type': 'event', 'text': "e.data", 'expire': -1});
         eventS = new EventSource(sse_url);
         eventS.onmessage = function(e) {
-            //th.$$('_sse').setValue(e.data);
-            //th.$$('_sse').refresh();
+            webix.message({'type': 'info', 'text': e.data,});
             };
 
         eventS.addEventListener('update', function(e) {
-            webix.message({'type': 'debug', 'text': e.data, 'expire': -1});
-            //th.$$('_sse').setValue(e.data);
-            //th.$$('_sse').refresh();
+            webix.message({'type': 'event', 'text': e.data, 'expire': -1});
             });
 
         eventS.addEventListener('close', function(e) {
@@ -38,20 +35,22 @@ export default class HeaderView extends JetView{
             //return "Уверены?"
             //}
 
+        /*
         //перед закрытием очищает куки и посылает на сервер logout
-        //window.addEventListener('beforeunload', function (event_s) {
-            //var rel = getCookie('reload');
-            //var user =  getCookie('user');
-            //var date = new Date;
-            //date.setDate(date.getDate() - 1);
-            //var d1 = '' + ';expire=' + date.toUTCString();
-            //document.cookie = 'reload=' + d1;
-            //if (rel != '1') {
-                //document.cookie = 'key=' + d1;
-                //document.cookie = 'user=' + d1;
-                //webix.ajax().headers({'Content-type': 'application/json'}).post(auth_url, {'logout': user});
-                //};
-        //}, false);
+        window.addEventListener('beforeunload', function (e) {
+            var rel = getCookie('reload');
+            var user =  getCookie('user');
+            var date = new Date;
+            date.setDate(date.getDate() - 1);
+            var d1 = '' + ';expire=' + date.toUTCString();
+            document.cookie = 'reload=' + d1;
+            if (rel != '1') {
+                document.cookie = 'key=' + d1;
+                document.cookie = 'user=' + d1;
+                webix.ajax().headers({'Content-type': 'application/json'}).post(auth_url, {'logout': user});
+                };
+        }, false);
+        */
 
         return {view: 'toolbar',
             css: 'header',
@@ -92,7 +91,7 @@ export default class HeaderView extends JetView{
                         //}
                     //},
                 {},
-                {view:"button", css: "butt", type: 'htmlbutton', tooltip: "Выход",
+                {view:"button", type: 'htmlbutton', tooltip: "Выход",
                     label: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span>", width: 40,
                     on: {
                         onItemClick: () => {

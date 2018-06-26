@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker_sse'
-__version__ = '2018.176.1330' #start project
+__version__ = '2018.177.1220' #переделаны типы сообщений клиентам
+#__version__ = '2018.176.1330' #start project
 
 
 __profile__ = ""

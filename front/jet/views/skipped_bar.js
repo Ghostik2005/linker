@@ -87,8 +87,13 @@ export default class SkippedBarView extends JetView{
                             },
                         ]
                     },
-                {id: "source", width: 100, hidden: true,
+                {id: "source", width: 150, hidden: true,
                     header: [{text: "Источник"},
+                        {content: "richFilt", compare: compareTrue,
+                            inputConfig : {
+                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}]
+                                },
+                            }
                         ]
                     },
                 ],
