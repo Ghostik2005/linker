@@ -89,14 +89,25 @@ export default class CountryView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить страну",
-                    label: "<span class='webix_icon fa-plus'></span>", width: 40,
+                    //label: "<span class='webix_icon fa-plus'></span>", width: 40,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 180,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить страну</span>",
+                    oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Strana', 'callback': addStrana, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление страны', params);
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить страну",
-                    label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
+                    //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
+                    resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить страну</span>",
+                    oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     click: () => {
                         let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
@@ -121,6 +132,16 @@ export default class CountryView extends JetView{
                 sprv,
                 ]
             }
+        }
+
+    ready() {
+        let r_but = [this.$$("_add"), this.$$("_del")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
         }
         
     init() {

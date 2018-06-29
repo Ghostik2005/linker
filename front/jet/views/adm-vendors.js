@@ -91,15 +91,26 @@ export default class VendorsView extends JetView{
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Добавить поставщика",
-                    label: "<span class='webix_icon fa-plus'></span>", width: 40,
+                {view:"button", type: 'htmlbutton', tooltip: "Добавить производителя",
+                    //label: "<span class='webix_icon fa-plus'></span>", width: 40,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 200,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить производителя</span>",
+                    oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Vendor', 'callback': addVendor, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление производителя', params);
                         }
                     },
-                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить поставщика",
-                    label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить производителя",
+                    //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
+                    resizable: true, sWidth: 200, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить производителя</span>",
+                    oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     click: () => {
                         let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
@@ -124,6 +135,16 @@ export default class VendorsView extends JetView{
                 sprv,
                 ]
             }
+        }
+
+    ready() {
+        let r_but = [this.$$("_add"), this.$$("_del")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
         }
         
     init() {

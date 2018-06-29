@@ -29,7 +29,7 @@ export default class LinksViewLnk extends JetView{
             name: "__ttl",
             localId: "__table",
             startPos: 1,
-            posPpage: 20,
+            posPpage: app.config.posPpage,
             totalPos: 1250,
             select: true,
             borderless: true,

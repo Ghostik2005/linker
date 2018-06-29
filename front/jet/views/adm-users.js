@@ -101,13 +101,24 @@ export default class UsersView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd, 
-                    label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    //label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 140,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить</span>",
+                    oldLabel: "<span class='webix_icon fa-user-plus'></span>",
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');
                         }
                     },
                 {view:"button", type: 'htmlbutton', localId: "_del", hidden: true,
-                    label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    //label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
+                    resizable: true, sWidth: 200, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить</span>",
+                    oldLabel: "<span style='color: red', class='webix_icon fa-user-times'></span>",
                     click: () => {
                         webix.message({
                             text: "Удаление пользователя. Позже.",
@@ -117,8 +128,15 @@ export default class UsersView extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].userdel,
                     localId: "_aroles",
-                    label: "<span class='webix_icon fa-user-secret'></span><span style='line-height: 20px;'> Роли</span>", width: 140,
-                                    click: () => {
+                    //label: "<span class='webix_icon fa-user-secret'></span><span style='line-height: 20px;'> Роли</span>", width: 140,
+                    resizable: true,
+                    sWidth: 140,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить</span>",
+                    oldLabel: "<span class='webix_icon fa-user-secret'></span>",
+                    click: () => {
                         this.poproles.show("Админка ролей")
                         }
                     },
@@ -136,6 +154,17 @@ export default class UsersView extends JetView{
             }
         }
         
+    ready() {
+        let r_but = [this.$$("_add"), this.$$("_del"), this.$$("_aroles")]
+        console.log('rr', r_but);
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
+        }
+
     init() {
         this.poproles = this.ui(RolesView);
         this.popnewuser = this.ui(NewUserView);

@@ -36,7 +36,7 @@ export default class AllUnlinkedBarView extends JetView{
                 autowidth: true, 
                 },
             startPos: 1,
-            posPpage: 20,
+            posPpage: app.config.posPpage,
             totalPos: 0,
             fi: 'c_tovar',
             di: 'asc',
@@ -47,6 +47,11 @@ export default class AllUnlinkedBarView extends JetView{
                 {id: "id_tovar", width: 80, //sort: "server",
                     hidden: true,
                     header: [{text: "ID товара"},
+                        ],
+                    },
+                {id: "sh_prc", width: 150, 
+                    hidden: true,
+                    header: [{text: "sh_prc"},
                         ],
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
@@ -102,6 +107,11 @@ export default class AllUnlinkedBarView extends JetView{
                             }
                         ]
                     },
+                {id: "id_org", width: 100, hidden: true,
+                    header: [{text: "id_org"},
+                        {content: "txtFilt"},
+                        ]
+                    },
                 ],
             on: {
                 "data->onParse":function(i, data){
@@ -152,14 +162,30 @@ export default class AllUnlinkedBarView extends JetView{
                 height: 40,
                 cols: [
                     {view: "label", template: "Для ускорения ограничивайте поиск названием"},
-                    {view: "button", type: "htmlbutton", tooltip: "Обновить",
-                        label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                    {view: "button", type: "htmlbutton", tooltip: "Обновить", 
+                        //label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                        localId: "_renew",
+                        resizable: true,
+                        sWidth: 136,
+                        eWidth: 40,
+                        label: "",
+                        width: 40,
+                        extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                        oldLabel: "<span class='webix_icon fa-refresh'></span>",
                         click: () => {
                             this.$$("__table").callEvent("onBeforeSort");
                             }
                         },
                     {view:"button",  tooltip: "Сбросить фильтры",type:"imageButton", image: './addons/img/unfilter.svg',
                         width: 40,
+                        localId: "_unfilt",
+                        resizable: true,
+                        sWidth: 180,
+                        eWidth: 40,
+                        label: "",
+                        width: 40,
+                        extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                        oldLabel: "",
                         click: () => {
                             var cv = this.$$("__table");
                             var columns = cv.config.columns;
@@ -194,6 +220,13 @@ export default class AllUnlinkedBarView extends JetView{
         }
 
     ready() {
+        let r_but = [this.$$("_renew"), this.$$("_unfilt")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
         let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
         this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
         this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();

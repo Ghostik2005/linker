@@ -45,10 +45,12 @@ class API:
         self.lock = Lock
         self.exec = sys.executable
         self.log = log
+        self.nauth = {}
         try:
             config = configparser.ConfigParser()
             config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
             init = config['init']
+            self.nauth = config['nauth']
             self.connect_params = {
                     'uri': init['uri'],
                     'api_key': init['api'],
@@ -116,7 +118,8 @@ class API:
             #ключ словаря - идентификатор накладной, значение - список строк товаров для сведения в фомате tab separated, все как в файле:
             #sh_prc, код поставщика, код товара у поставщика, название товара, изгтовитель, код организации, штрихкод
             name, value = data.popitem()
-            source = 2 if len(name) > 16 else 1
+            source = 2 if len(name) > 25 else 1
+            self.log('source: %s' % source)
             self.log('*'*50)
             self.log(value)
             con, cur = self._connect()
@@ -254,6 +257,10 @@ class API:
                     tovar = tovar.replace(u' /ЖНВЛС/', '')
                 except:
                     fgCont = True
+                try:
+                    zavod = zavod[zavod.find('>')+1:]
+                except:
+                    pass
                 if fgCont: 
                     continue
                 if _re.search(tovar):
@@ -450,6 +457,44 @@ class API:
         #dbc.execute(f"""update prc set id_org=40035 where id_vnd=19985 and id_org=12 {con_ins}""")
         #if callable(db.commit):
             #db.commit()
+
+    def getNameByCode(self, id_vnd):
+
+        vnd_name = None
+        try:
+            con, cur = self._connect()
+        except Exception as Err:
+            self.log(Err, kind="SQLError")
+        else:
+            try:
+                sql = """select count(*) from vnd where id_vnd = ?"""
+                opt = (id_vnd,)
+                cur.execute(sql, opt)
+                res = int(cur.fetchone[0])
+                if res == 0:
+                    #если записи нет, то вычитываем название и апдейтим таблицы
+                    code = str(id_vnd)
+                    res1 = requests.post(self.nauth['url'], auth=(self.nauth['login'], self.nauth['pwd']),  json={"method": "namepost", "params": [code]})
+                    res1 = res1.json().get('result')[0]
+                    vnd_name = res1.get(code)
+                    sql = """insert into VND (ID_VND, C_VND, MERGE3) values (?, ?, 0)"""
+                    opt = (code, vnd_name)
+                    cur.execute(sql, opt)
+                    sql = """insert into USER_VND (ID_USER, ID_VND) values (12, ?)"""
+                    opt = (code,)
+                    cur.execute(sql, opt)
+                    con.commit()
+            except Exception as Err:
+                self.log(Err, kind="GetNameError")
+        finally:
+            try:
+                con.close()
+            except Exception as Err:
+                self.log(Err, kind="SQLError")
+                
+            
+        return vnd_name
+
 
 class fLock:
     """
@@ -950,11 +995,14 @@ def guardian(api):
                     dbc = db.cursor()
                     row = row.decode('utf8')
                     id_vnd = int(row.split('\t')[0])
+                    if id_vnd:
+                        #если есть id_vnd, то проверяем его наличие в базе, если его нет - добавляем
+                        vnd_name = api.getNameByCode(id_vnd)
                     sql = f"""SELECT count(*) FROM LNK_CODES r where r.PROCESS = 1 and r.CODE = {id_vnd}"""
                     dbc.execute(sql)
                     h_name = os.path.basename(path)
                     h_name, source = h_name.split('.')
-                    if not list(dbc.fetchone())[0] and int(source) != 2:
+                    if not list(dbc.fetchone())[0]:# and int(source) != 2:
                         log('- пропускаем, сведение не разрешено')
                         #переносим файл в несводимые, делаем запись в базе о том, что сведение не разрешено
                         sql = f"""delete from PRC_TASKS where uin = '{h_name}'"""

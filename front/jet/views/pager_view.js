@@ -102,6 +102,7 @@ export default class PagerView extends JetView{
                         this.$$("__page").refresh();
                         }
                     },
+                //{view: "label", label: "Число записей на странице: " + app.config.posPpage, width: 240},
                 {},
                 {view: "label", label: "Всего записей: 0", width: 180},
                 ]

@@ -15,6 +15,7 @@ import LinksBarView from "../views/links_form_bar";
 import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
 import NewReportView from "../views/new_report";
+import PropView from "../views/prop_window";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -134,7 +135,14 @@ export default class TopmenuView extends JetView{
                             },
                         {},
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
-                            label: "<span class='webix_icon fa-refresh'></span>", width: 38,
+                            //label: "<span class='webix_icon fa-refresh'></span>", width: 38,
+                            resizable: true,
+                            sWidth: 136,
+                            eWidth: 38,
+                            label: "",
+                            width: 38,
+                            extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                            oldLabel: "<span class='webix_icon fa-refresh'></span>",
                             click: () => {
                                 (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
                                 (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
@@ -289,24 +297,30 @@ export default class TopmenuView extends JetView{
                             },
                         {view:"button", type: 'htmlbutton', hidden: !true, localId: "sideButton", tooltip: "Информация о товаре",
                             label: "<span class='webix_icon fa-caret-left'></span>",
-                            width: 38, formOpen: false,
+                            resizable: !true,
+                            sWidth: 136,
+                            eWidth: 38,
+                            width: 38,
+                            extLabel: "<span style='line-height: 20px;padding-left: 5px'>О товаре</span>",
+                            oldLabel: "<span class='webix_icon fa-caret-left'></span>",
+                            formOpen: false,
                             on: {
                                 onItemClick: function () {
                                     let uu = this.$scope.getParentView().getRoot().getChildViews()[0].getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3];
                                     let ui = uu.getChildViews()[0];
                                     if (!this.config.formOpen) {
-                                            this.define({label: "<span class='webix_icon fa-caret-right'></span>", formOpen: true});
-                                            this.$scope.sideForm.show_f();
-                                            let item = (ui) ? ui.getSelectedItem() : undefined;
-                                            if (item) {
-                                                item = item.id_spr;
-                                                item = get_spr(ui.$scope, item);
-                                                item["s_name"] = "Страна: " + item.c_strana;
-                                                item["t_name"] = "Название товара: " + item.c_tovar;
-                                                item["v_name"] = "Производитель: " + item.c_zavod;
-                                                item["dv_name"] = "Д. вещество: " + item.c_dv;
-                                                this.$scope.sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
-                                                }
+                                        this.define({label: "<span class='webix_icon fa-caret-right'></span>", formOpen: true});
+                                        this.$scope.sideForm.show_f();
+                                        let item = (ui) ? ui.getSelectedItem() : undefined;
+                                        if (item) {
+                                            item = item.id_spr;
+                                            item = get_spr(ui.$scope, item);
+                                            item["s_name"] = "Страна: " + item.c_strana;
+                                            item["t_name"] = "Название товара: " + item.c_tovar;
+                                            item["v_name"] = "Производитель: " + item.c_zavod;
+                                            item["dv_name"] = "Д. вещество: " + item.c_dv;
+                                            this.$scope.sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
+                                            }
                                     } else {
                                         this.define({label: "<span class='webix_icon fa-caret-left'></span>", formOpen: false});
                                         this.$scope.sideForm.hide_f();
@@ -428,11 +442,12 @@ export default class TopmenuView extends JetView{
                             setTimeout(() => {
                                     webix.html.removeCss(this.$view, "bounceIn animated");
                                   },900)
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                            webix.message({type: "debug", text: "Будут персональные настройки пользователя"});
-                            if (this.config.longPress) webix.message({type: "error", text: "LongPress"});
-                            else webix.message({type: "info", text: "ShortPress"});
-                            this.config.longTouch = false
+                            //var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            //webix.message({type: "debug", text: "Будут персональные настройки пользователя"});
+                            //if (this.config.longPress) webix.message({type: "error", text: "LongPress"});
+                            //else webix.message({type: "info", text: "ShortPress"});
+                            this.config.longTouch = false;
+                            this.$scope.popprop.show_w("Персональные настройки: " + app.config.user);
                             },
                         }
                     },
@@ -647,5 +662,6 @@ export default class TopmenuView extends JetView{
         this.popunlink = this.ui(UnlinkedView);
         this.pophistory = this.ui(History);
         this.popreport = this.ui(NewReportView);
+        this.popprop = this.ui(PropView);
         }
     }

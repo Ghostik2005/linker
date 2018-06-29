@@ -47,7 +47,7 @@ export default class BarcodesBView extends JetView{
             name: "__dtdb",
             localId: "__table",
             startPos: 1,
-            posPpage: 20,
+            posPpage: app.config.posPpage,
             totalPos: 1250,
             select: true,
             resizeColumn:true,

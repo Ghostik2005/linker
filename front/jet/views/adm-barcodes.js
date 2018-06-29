@@ -39,7 +39,15 @@ export default class BarcodesView extends JetView{
                         },
                     },
                 {view: "button", type: 'htmlbutton', width: 35,
-                    label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                    //label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                    localId: "_history",
+                    resizable: true,
+                    sWidth: 126,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                    oldLabel: "<span class='webix_icon fa-history'></span>",
                     click: () => {
                         let v = this.getRoot().getChildViews()[1].getChildViews()[0];
                         let hist = webix.storage.session.get(v.config.name);
@@ -103,6 +111,17 @@ export default class BarcodesView extends JetView{
                 ]
             }
         }
+
+    ready() {
+        let r_but = [this.$$("_history"), ]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
+        }
+
     init() {
         this.pophistory = this.ui(History);
         this.show('adm-barcodes-s')

@@ -27,7 +27,7 @@ export default class LinksViewSpr extends JetView{
             name: "__tt",
             localId: "__table",
             startPos: 1,
-            posPpage: 20,
+            posPpage: app.config.posPpage,
             totalPos: 1250,
             select: true,
             borderless: true,

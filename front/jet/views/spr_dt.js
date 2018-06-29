@@ -92,7 +92,7 @@ export default class SprView extends JetView{
                 autowidth: true, 
                 },
             startPos: 1,
-            posPpage: 20,
+            posPpage: app.config.posPpage,
             totalPos: 0,
             fi: 'c_tovar',
             di: 'asc',
@@ -121,9 +121,12 @@ export default class SprView extends JetView{
             columns: [
                 {id: "id_mnn", width: 75,
                     template: function (obj) {
-                        let ret = (+obj.id_dv !== 0) ? "<div> <span style='color: green'>есть</span></div>" : "<div> <span style='color: red'>нет</span></div>";
-                        return ret
+                        //let ret = (+obj.id_dv !== 0) ? "<div> <span style='color: green'>есть</span></div>" : "<div> <span style='color: red'>нет</span></div>";
+                        //return ret
+                        return (+obj.id_dv !== 0) ? "<span class='webix_icon fa-check-circle', style='color: green'></span>" :
+                                                    "<span class='webix_icon fa-times-circle', style='color: red'></span>";
                         },
+                    css: "center_p",
                     header: [{text: "МНН"},
                         ],
                     },

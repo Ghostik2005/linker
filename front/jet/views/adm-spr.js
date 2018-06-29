@@ -98,7 +98,7 @@ export default class SprView extends JetView{
                 return sub.getRoot();
                 },
             startPos: 1,
-            posPpage: 20,
+            posPpage: app.config.posPpage,
             totalPos: 1250,
             fi: 'c_tovar',
             di: 'asc',
@@ -294,8 +294,16 @@ export default class SprView extends JetView{
                             }
                         },
                     },
-                {view: "button", type: 'htmlbutton', width: 38,
-                    label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                {view: "button", type: 'htmlbutton',
+                    //width: 38, label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                    localId: "_history",
+                    resizable: true,
+                    sWidth: 126,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                    oldLabel: "<span class='webix_icon fa-history'></span>",
                     click: () => {
                         let hist = webix.storage.session.get(this.$$("__table").config.name);
                         this.pophistory.show(hist, this.$$("_sb"));
@@ -304,7 +312,15 @@ export default class SprView extends JetView{
                 {view:"button", 
                     tooltip: "Сбросить фильтры",
                     type:"imageButton", image: './addons/img/unfilter.svg',
-                    width: 38,
+                    //width: 38,
+                    localId: "_unfilt",
+                    resizable: true,
+                    sWidth: 180,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                    oldLabel: "",
                     click: () => {
                         let cv = this.$$("__table");
                         let columns = cv.config.columns;
@@ -323,14 +339,25 @@ export default class SprView extends JetView{
                         }
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить эталон",
-                    label: "<span class='webix_icon fa-plus'></span>", width: 38,
+                    //label: "<span class='webix_icon fa-plus'></span>", width: 38,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 180,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить эталон</span>",
+                    oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.popnew.show("Новый эталон", this.$$("_sb"));
 
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить эталон",
-                    label: "<span style='color: red', class='webix_icon fa-times'>", width: 38,
+                    //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 38,
+                    resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить эталон</span>",
+                    oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     click: () => {
                         let item = this.$$("__table").getSelectedItem();
                         this.poprelink.show("Удаление эталона. Выберите товар, к которому будут привязаны связки и штрихкоды удаляемого", item, this)
@@ -354,7 +381,14 @@ export default class SprView extends JetView{
         }
 
     ready() {
-        this.$$("__table").config.searchBar = this.$$("_sb")
+        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_add"), this.$$("_del")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
+        this.$$("__table").config.searchBar = this.$$("_sb");
         this.$$("_sb").callEvent("onKeyPress", [13,]);
         }
     

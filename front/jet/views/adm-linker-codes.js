@@ -28,13 +28,28 @@ export default class LinkCodesView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd, 
-                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'>  код</span>", width: 80,
+                    //label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'>  код</span>", width: 80,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 80,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>код</span>",
+                    oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.newcode.show("Добавление нового кода", this.$$("__table"));
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "del",
-                    label: "<span class='webix_icon fa-minus'></span><span style='line-height: 20px;'> код</span>", width: 80,
+                    //label: "<span class='webix_icon fa-minus'></span><span style='line-height: 20px;'> код</span>", width: 80,
+                    resizable: true,
+                    sWidth: 80,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>код</span>",
+                    oldLabel: "<span class='webix_icon fa-minus'></span>",
                     click: () => {
                         let id = this.$$("__table").getSelectedId();
                         this.$$("__table").getSelectedItem().change = 1;
@@ -49,7 +64,14 @@ export default class LinkCodesView extends JetView{
                         }
                     },
                 {view:"button", type: 'htmlbutton', localId: "apply", hidden: true,
-                    label: "<span class='webix_icon fa-check'></span><span style='line-height: 20px;'> Применить</span>", width: 130,
+                    //label: "<span class='webix_icon fa-check'></span><span style='line-height: 20px;'> Применить</span>", width: 130,
+                    resizable: true,
+                    sWidth: 130,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Применить</span>",
+                    oldLabel: "<span class='webix_icon fa-check'></span>",
                     click: () => {
                         let data = [];
                         this.$$("__table").eachRow( 
@@ -58,8 +80,12 @@ export default class LinkCodesView extends JetView{
                                 if (item.change > 0) data.push(item);
                             }, true);
                         this.$$("del").hide();
-                        this.$$("apply").hide();
-                        this.$$("cancel").hide();
+                        setTimeout( () => {
+                            this.$$("apply").hide();
+                            }, 200)
+                        setTimeout( () => {
+                            this.$$("cancel").hide();
+                            }, 200)
                         this.$$("__table").getHeaderContent("ch1").uncheck();
                         let user = app.config.user;
                         let url = app.config.r_url + "?setLinkCodes";
@@ -73,14 +99,25 @@ export default class LinkCodesView extends JetView{
                         }
                     },
                 {view:"button", type: 'htmlbutton', localId: "cancel", hidden: true,
-                    label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 130,
+                    //label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 130,
+                    resizable: true,
+                    sWidth: 130,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отменить</span>",
+                    oldLabel: "<span class='webix_icon fa-times'></span>",
                     click: () => {
                         let user = app.config.user;
                         let url = app.config.r_url + "?getLinkCodes";
                         let params = {"user": user};
                         this.$$("del").hide();
-                        this.$$("apply").hide();
-                        this.$$("cancel").hide();
+                        setTimeout( () => {
+                            this.$$("apply").hide();
+                            }, 100);
+                        setTimeout( () => {
+                            this.$$("cancel").hide();
+                            }, 100);
                         this.$$("__table").getHeaderContent("ch1").uncheck();
                         request(url, params).then( (data) => {
                             data = checkVal(data, 'a');
@@ -180,6 +217,13 @@ export default class LinkCodesView extends JetView{
         }
         
     ready() {
+        let r_but = [this.$$("_add"), this.$$("del"), this.$$("apply"), this.$$("cancel")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
         let user = this.app.config.user;
         let url = this.app.config.r_url + "?getLinkCodes";
         let params = {"user": user};

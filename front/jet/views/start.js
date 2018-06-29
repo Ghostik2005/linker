@@ -25,6 +25,19 @@ export default class StartView extends JetView{
         res = checkVal(res, 's');
         app.config.roles = res.cfg;
         app.config.expert = (+res.expert === 5) ? false : true;
+        let pars = res.params;
+        if (pars) {
+            //console.log('pp present', pars);
+            pars = JSON.parse(pars);
+            app.config.posPpage = ("posPpage" in pars) ? pars.posPpage: app.config.posPpage;
+            app.config.notify = ("notify" in pars) ? pars.notify: app.config.notify;
+            app.config.nDelay = ("nDelay" in pars) ? pars.nDelay: app.config.nDelay;
+            app.config.save = ("save" in pars) ? pars.save: app.config.save;
+            app.config.dtParams = ("dtParams" in pars) ? pars.dtParams: app.config.dtParams;
+            
+        } else {
+            //console.log('pp no', pars)
+            };
         init_first(app);
         }
     }

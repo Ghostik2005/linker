@@ -109,6 +109,22 @@ class API:
             ret = {"result": True, "ret_val": 'ok'}
         return json.dumps(ret, ensure_ascii=False)
 
+    def saveParams(self, params=None, x_hash=None):
+        ret = {"result": False, "ret_val": "access denied"}
+        if self._check(x_hash):
+            pars = params.get('pars')
+            user = params.get('user')
+            pars = json.dumps(pars, ensure_ascii=False)
+            if user:
+                sql = """update USERS r set r.PARAMS = ? where r."USER" = ?"""
+                opt = (pars.encode(), user)
+                res = self.db.execute({"sql": sql, "options": opt})
+                print(pars)
+                ret = {"result": True, "ret_val": 'saved'}
+            else:
+                ret = {"result": False, "ret_val": 'No user'}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getVersion(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
@@ -118,8 +134,13 @@ class API:
             where r.IN_WORK = (select u.ID from USERS u where u."USER" = ?)"""
             opt = (user,)
             res = self.db.execute({"sql": sql, "options": opt})
-            sql = """select r.EXPERT FROM USERS r where r."USER" = ?"""
-            expert = str(self.db.request({"sql": sql, "options": opt})[0][0])
+            sql = """select r.EXPERT, r.PARAMS FROM USERS r where r."USER" = ?"""
+            expert, pars = self.db.request({"sql": sql, "options": opt})[0]
+            expert = str(expert)
+            try:
+                pars = str(pars.decode())
+            except:
+                pass
             prod = {'version': self.log.version, 'prod': self.db.production};
             sql = """SELECT r.ID_ROLE, r.SKIPPED, r.SPRADD, r.SPREDIT, r.ADM, r.VENDORADD, r.USERADD, r.USERDEL, r.LNKDEL FROM SPR_ROLES r"""
             opt = ()
@@ -136,7 +157,7 @@ class API:
                     'userdel': row[7] == 1,
                     'lnkdel': row[8] == 1,
                     }
-            ret_v= {'info': prod, 'cfg': r, 'expert': expert}
+            ret_v= {'info': prod, 'cfg': r, 'expert': expert, 'params': pars}
             ret = {"result": True, "ret_val": ret_v}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -336,6 +357,7 @@ WHERE r.SH_PRC = ?
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
                 pars['source'] = filt.get('source')
+                pars['id_org'] = filt.get('id_org')
                 ssss = []
                 us_s = ''
                 v_s = ''
@@ -345,22 +367,25 @@ WHERE r.SH_PRC = ?
                     v_s = 'and %s' % s
                 if pars['c_user']:
                     if pars['c_user'] == '?':
-                        s = "ru.NAME is null"
+                        s = "ru.name is null"
                     else:
                         #s = "u.\"USER\" containing '" + pars['c_user'] + "'"
                         #s = "rr.NAME containing '" + pars['c_user'] + "'"
-                        s = "ru.NAME = '" + pars['c_user'] + "'"
+                        s = "ru.name = '" + pars['c_user'] + "'"
                     #ssss.append('and %s' % s)
                     us_s = 'and %s' % s
                 if pars['c_tovar']:
                     s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    ssss.append('and %s' % s)
+                if pars['id_org']:
+                    s = "r.id_org like ('%" + pars['id_org'] + "')"
                     ssss.append('and %s' % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append('and %s' % s)
                 if pars['source']:
                     if 0 == int(pars['source']):
-                        s = "r.SOURCE is null or r.SOURCE = 0"
+                        s = "(r.SOURCE is null or r.SOURCE = 0)"
                     else:
                         s = "r.SOURCE = " + pars['source']
                     ssss.append('and %s' % s)
@@ -380,8 +405,8 @@ WHERE r.SH_PRC = ?
                         ssss.append('and %s' % s)
                 stri = ' '.join(ssss)
             start_p = int(params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p == 0 else start_p
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
@@ -403,14 +428,17 @@ WHERE r.SH_PRC = ?
                 field = "ch_date"
             field = ''.join([table, field])
             order = 'order by {0} {1}'.format(field, direction)
-            sql_1 = """left join USERS u on (u."GROUP" = r.ID_ORG)"""# if not us_s else """join USERS u on (u."GROUP" = r.ID_ORG) %s""" % us_s
+            #sql_1 = """left join USERS u on (u."GROUP" = r.ID_ORG)"""# if not us_s else """join USERS u on (u."GROUP" = r.ID_ORG) %s""" % us_s
+            sql_1 = """left join (select DISTINCT  u."GROUP" ug, u.ID_ROLE uid from USERS u) on ug = r.ID_ORG"""
             sql_2 = """left JOIN VND v on (r.ID_VND = v.ID_VND)""" if not v_s else """JOIN VND v on (r.ID_VND = v.ID_VND) %s""" % v_s
-            sql_3 = """left join ROLES ru on u.ID_ROLE = ru.ID""" #if not us_s else """join ROLES ru on u.ID_ROLE = ru.ID %s""" % us_s
-            sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
+            #sql_3 = """left join ROLES ru on u.ID_ROLE = ru.ID""" #if not us_s else """join ROLES ru on u.ID_ROLE = ru.ID %s""" % us_s
+            sql_3 = """left join ROLES ru on uid = ru.ID"""
+            #sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
+            sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
     CASE
         WHEN ru.NAME is NULL THEN '?'
         ELSE ru.NAME
-    END,
+    END ruu,
     r.SOURCE
 from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''})
 join prc r on r.SH_PRC = rsh
@@ -418,11 +446,12 @@ join prc r on r.SH_PRC = rsh
 {sql_1}
 {sql_3}
 {order if 'r.' not in order else ''}"""
-            sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
+            #sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
+            sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
     CASE
         WHEN ru.NAME is NULL THEN '?'
         ELSE ru.NAME
-    END,
+    END ruu,
     r.SOURCE
 from prc r
 {sql_2}
@@ -431,14 +460,21 @@ from prc r
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_stri} {us_s or ''}
 order by {field} {direction}"""
             sql = sql_ if (stri or us_stri or us_s) else sql
+            sql_tt = sql
+            #print('*'*15)
+            #print(sql)
+            #print('*'*15)
+            sql_c = f"""select count(*) from ({sql_tt})"""
             sql = sql + """ ROWS ? to ?"""
             opt = (start_p, end_p)
             _return = []
-            sql_c = f"""select count(DISTINCT r.SH_PRC) from  PRC r 
+            sql_c = f"""select count(r.SH_PRC) from  PRC r 
 {sql_2 if v_s else ''}
 {sql_1 if us_s else ''}
 {sql_3 if us_s else ''}
 WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
+            #print(sql_c)
+            #print('*'*15)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -487,6 +523,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                 pars['c_tovar'] = filt.get('c_tovar')
                 pars['c_user'] = filt.get('c_user')
                 pars['source'] = filt.get('source')
+                pars['id_org'] = filt.get('id_org')
                 ssss = []
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
@@ -514,9 +551,12 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append(pref % s)
+                if pars['id_org']:
+                    s = "r.id_org like ('%" + pars['id_org'] + "')"
+                    ssss.append('and %s' % s)
                 if pars['source']:
                     if 0 == int(pars['source']):
-                        s = "r.SOURCE is null or r.SOURCE = 0"
+                        s = "(r.SOURCE is null or r.SOURCE = 0)"
                     else:
                         s = "r.SOURCE = " + pars['source']
                     ssss.append('and %s' % s)
@@ -536,8 +576,8 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                         ssss.append('and %s' % s)
                 stri = ' '.join(ssss)
             start_p = int(params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p == 0 else start_p
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
@@ -2114,8 +2154,8 @@ FROM RDB$DATABASE"""
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p == 0 else start_p
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             field = field.replace('c_tovar', 'barcode')
             direction = params.get('direction', 'asc')
@@ -2180,8 +2220,8 @@ FROM RDB$DATABASE"""
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p == 0 else start_p
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             field = field.replace('barcode', 'c_tovar')
             direction = params.get('direction', 'asc')
@@ -2555,15 +2595,13 @@ FROM RDB$DATABASE"""
         if self._check(x_hash):
             filt = params.get('c_filter')
             start_p = int( params.get('start', self.start))
-            if start_p <= 0:
-                start_p = 1
-            end_p = int(params.get('count', self.count)) + start_p - 1
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p -1
             field = params.get('field', 'c_tovar')
             field = field.replace('id_zavod', 'z.c_zavod')
             field = field.replace('c_tovar', 'r.c_tovar')
             field = field.replace('id_spr', 'r.id_spr')
             direction = params.get('direction', 'asc')
-            start_p = 1 if start_p == 0 else start_p
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = "lower(r.C_TOVAR) like lower('%%')"
@@ -2714,12 +2752,10 @@ WHERE {stri} ORDER by {field} {direction} ROWS ? to ?"""
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
-            if start_p <= 0:
-                start_p = 1
+            start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
-            start_p = 1 if start_p == 0 else start_p
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             filt = params.get('c_filter')
@@ -3103,8 +3139,8 @@ where ( classifier.idx_group = 7 and groups.cd_code = ? )"""
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p == 0 else start_p
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             direction = params.get('direction', 'asc')
             s_field = None
@@ -3254,8 +3290,8 @@ WHERE r.ID_SPR = ? {0} {1}""".format(stri_1, orderby)
         if self._check(x_hash):
             user = params.get('user')
             start_p = int(params.get('start', self.start))
-            end_p = int(params.get('count', self.count)) + start_p
-            start_p = 1 if start_p <= 0 else start_p
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
             if field == 'dt':
                 field = 'ch_date'
@@ -3529,11 +3565,11 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
             user = params.get('user')
             sql = """SELECT r."GROUP" FROM USERS r where r."USER" = ?"""
             opt = (user,)
-            user_id = self.db.request({"sql": sql, "options": opt})[0][0]
-            iid = 1 if user_id == 0 else user_id
-            sss = '' if user_id == 0 else 'r.id_org = 0,'
+            gr_id = self.db.request({"sql": sql, "options": opt})[0][0]
+            iid = 1 if gr_id == 0 or gr_id == 999999 else user_id
+            sss = '' if gr_id == 0 else ', r.id_org = 0'
             if sh_prc:
-                sql = """update PRC r set r.N_FG = ?, %s r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG""" % sss
+                sql = """update PRC r set r.N_FG = ? %s, r.IN_WORK = -1 where r.SH_PRC = ? returning r.SH_PRC, r.N_FG""" % sss
                 opt = (iid, sh_prc)
                 _return = []
                 result = self.db.execute({"sql": sql, "options": opt})

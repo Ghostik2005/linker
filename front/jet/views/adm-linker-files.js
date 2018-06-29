@@ -15,13 +15,29 @@ export default class LinkFilesView extends JetView{
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", tooltip: "Поиск",
                     },
                 {view:"button", type: 'htmlbutton',  
-                    label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 75,
+                    //label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 75,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 75,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>файл</span>",
+                    oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.pop_upl.show_window("Загрузка файла");
                         }
                     },
                 {view: "button", type: "htmlbutton",
-                    label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                    //label: "<span class='webix_icon fa-refresh'></span>", width: 40,
+                    localId: "_renew",
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                    oldLabel: "<span class='webix_icon fa-refresh'></span>",
                     click: () => {
                         let user = this.app.config.user;
                         let url = this.app.config.r_url + "?getTasks";
@@ -103,6 +119,13 @@ export default class LinkFilesView extends JetView{
         }
         
     ready(view) {
+        let r_but = [this.$$("_renew"), this.$$("_add")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
         let user = this.app.config.user;
         let url = this.app.config.r_url + "?getTasks";
         let params = {"user": user};

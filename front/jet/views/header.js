@@ -17,20 +17,23 @@ export default class HeaderView extends JetView{
         let iid = uuid.v4() + "::" + app.config.user;
         let sse_url = (location.hostname === 'localhost') ? "http://saas.local/events/SSE?" : "../events/SSE?";
         sse_url += iid
-        //webix.message({'type': 'event', 'text': "e.data", 'expire': -1});
-        eventS = new EventSource(sse_url);
-        eventS.onmessage = function(e) {
-            webix.message({'type': 'info', 'text': e.data,});
+
+        if (app.config.notify) {
+            eventS = new EventSource(sse_url);
+            eventS.onmessage = function(e) {
+                webix.message({'type': 'info', 'text': e.data, 'expire': app.config.nDelay});
+                };
+
+            eventS.addEventListener('update', function(e) {
+                webix.message({'type': 'event', 'text': e.data, 'expire': app.config.nDelay});
+                });
+
+            eventS.addEventListener('close', function(e) {
+                eventS.close();
+                });
+        } else {
             };
-
-        eventS.addEventListener('update', function(e) {
-            webix.message({'type': 'event', 'text': e.data, 'expire': -1});
-            });
-
-        eventS.addEventListener('close', function(e) {
-            eventS.close();
-            });
-        
+            
         //window.onbeforeunload = function (event_s) {
             //return "Уверены?"
             //}
@@ -92,7 +95,14 @@ export default class HeaderView extends JetView{
                     //},
                 {},
                 {view:"button", type: 'htmlbutton', tooltip: "Выход",
-                    label: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span>", width: 40,
+                    //label: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span>", width: 40,
+                    resizable: true,
+                    sWidth: 106,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Выйти</span>",
+                    oldLabel: "<span class='webix_icon fa-sign-out', style='color: #3498db'></span>",
                     on: {
                         onItemClick: () => {
                             deleteCookie('linker_user');

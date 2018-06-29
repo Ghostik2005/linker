@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.177.1325",
+        version:        "18.180.1730",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -77,7 +77,12 @@ webix.ready( () => {
                                 bList = bList.concat(buttonsList);
                                 };
                             return bList;
-                            }
+                            },
+        posPpage:       20,
+        notify:         true,
+        nDelay:         -1,
+        save:           false,
+        dtParams:       undefined,
     });
     
     webix.attachEvent("onBeforeAjax", 

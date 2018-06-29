@@ -85,7 +85,15 @@ export default class IssueView extends JetView{
                         },
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Добавить форму выпуска",
-                    label: "<span class='webix_icon fa-plus'></span>", width: 40,
+                    //label: "<span class='webix_icon fa-plus'></span>", width: 40,
+                    localId: "_add",
+                    resizable: true,
+                    sWidth: 180,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить форму</span>",
+                    oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let url = app.config.r_url + "?getIsId"
                         let params = {"user": app.config.user};
@@ -99,7 +107,10 @@ export default class IssueView extends JetView{
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить форму выпуска",
-                    label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
+                    //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
+                    resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить форму</span>",
+                    oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     click: () => {
                         let item_id = this.$$("__table").getSelectedItem().id
                         let params = {};
@@ -127,6 +138,17 @@ export default class IssueView extends JetView{
                 ]
             }
         }
+
+    ready() {
+        let r_but = [this.$$("_add"), this.$$("_del")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
+        }
+
         
     init() {
         this.popnew = this.ui(NewPropView);

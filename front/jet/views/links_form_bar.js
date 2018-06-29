@@ -50,14 +50,22 @@ export default class LinksBarView extends JetView{
                         }
                     },
                 },
-            {view: "button", type: 'htmlbutton', width: 40,
-                label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+            {view: "button", type: 'htmlbutton', 
+                //width: 40, label: "<span class='webix_icon fa-history'></span><span style='line-height: 20px;'></span>",
+                localId: "_history",
+                resizable: true,
+                sWidth: 126,
+                eWidth: 40,
+                label: "",
+                width: 40,
+                extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                oldLabel: "<span class='webix_icon fa-history'></span>",
                 click: () => {
                     let hist = webix.storage.session.get(getActDt().config.name);
                     this.pophistory.show(hist, this.$$("_ls"));
                     },
                 },
-            {view: "checkbox", labelRight: "<span style='color: white'>Поиск по справочнику</span>", labelWidth: 0,
+            {view: "checkbox", labelRight: "<span style='color: white'>Поиск по эталонам</span>", labelWidth: 0,
                 value: this.lch,
                 width: 150, localId: "_spr_ch",
                 on: {
@@ -88,6 +96,14 @@ export default class LinksBarView extends JetView{
                 },
             {view:"button", width: 40,
                 tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                localId: "_unfilt",
+                resizable: true,
+                sWidth: 180,
+                eWidth: 40,
+                label: "",
+                width: 40,
+                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                oldLabel: "",
                 click: () => {
                     this.$$("_br").hide();
                     var cv = getActDt();
@@ -108,7 +124,14 @@ export default class LinksBarView extends JetView{
                     }
                 },
             {view:"button", type: 'htmlbutton', hidden: !true, localId: "_br", 
-                label: "<span style='color: red', class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать</span>", width: 140,
+                //label: "<span style='color: red', class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>  Разорвать</span>", width: 140,
+                resizable: true,
+                sWidth: 140,
+                eWidth: 40,
+                label: "",
+                width: 40,
+                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Разорвать</span>",
+                oldLabel: "<span style='color: red', class='webix_icon fa-unlink'></span>",
                 click: () => {
                     getActDt().callEvent("onItemDblClick");
                     }
@@ -127,6 +150,13 @@ export default class LinksBarView extends JetView{
         }
 
     ready() {
+        let r_but = [this.$$("_history"), this.$$("_br"), this.$$("_unfilt")]
+        r_but.forEach( (item, i, r_but) => {
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+            })
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
         let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         this.show(show_t);
