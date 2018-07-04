@@ -200,6 +200,7 @@ class API:
             count_insert = 0
             count_all = 0
             for id_vnd, v in ret:
+                id_vnd = int(id_vnd)
                 f_mask = os.path.join(self.path, "price%s*.nolink" % id_vnd)
                 for path in glob.glob(f_mask):
                     self.log(f"path: {path}")

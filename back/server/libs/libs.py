@@ -4366,7 +4366,9 @@ def parse_args(arg, _param, x_hash, api):
 def handle_commandline(profile, index):
     args = []
     kwargs = {}
-    sys.stdin.close()
+    ##########################################
+    sys.stdin.close() # проверить без ЭТОГО!!!!!!!!!!
+    ##########################################
     _argv = sys.argv[1:]
     for x in _argv:
         i = x.find('=')
