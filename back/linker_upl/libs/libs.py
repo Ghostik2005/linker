@@ -127,9 +127,13 @@ class API:
             h_name.update(str(name).encode())
             h_name =  h_name.hexdigest()
             sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
-            cur.execute(sql)
-            con.commit()
-            con.close()
+            try:
+                cur.execute(sql)
+                con.commit()
+            except:
+                self.log("Can't insert task", kind="SQLError")
+            finally:
+                con.close()
             f_name = os.path.join(self.path,f"{h_name}.{source}")
             with open(f_name, 'wb') as f_obj:
                 pass
@@ -471,22 +475,23 @@ class API:
                 sql = """select count(*) from vnd where id_vnd = ?"""
                 opt = (id_vnd,)
                 cur.execute(sql, opt)
-                res = int(cur.fetchone[0])
+                res = int(cur.fetchone()[0])
                 if res == 0:
                     #если записи нет, то вычитываем название и апдейтим таблицы
-                    code = str(id_vnd)
-                    res1 = requests.post(self.nauth['url'], auth=(self.nauth['login'], self.nauth['pwd']),  json={"method": "namepost", "params": [code]})
+                    code = [id_vnd,]
+                    res1 = requests.post(self.nauth['url'], auth=(self.nauth['login'], self.nauth['pwd']),  json={"method": "namepost", "params": [code,]})
                     res1 = res1.json().get('result')[0]
-                    vnd_name = res1.get(code)
+                    vnd_name = res1.get(str(id_vnd))
                     sql = """insert into VND (ID_VND, C_VND, MERGE3) values (?, ?, 0)"""
-                    opt = (code, vnd_name)
+                    opt = (id_vnd, vnd_name)
                     cur.execute(sql, opt)
                     sql = """insert into USER_VND (ID_USER, ID_VND) values (12, ?)"""
-                    opt = (code,)
+                    opt = (id_vnd,)
                     cur.execute(sql, opt)
                     con.commit()
             except Exception as Err:
                 self.log(Err, kind="GetNameError")
+                self.log(traceback.format_exc(), kind="GetNameError")
         finally:
             try:
                 con.close()
@@ -897,15 +902,17 @@ def parse_args(arg, _param, x_hash, api):
     try:
         call = getattr(api, arg)
     except:
-        content = json.dumps(u'\'%s\' not implimented method' % arg, ensure_ascii=False)
+        content = json.dumps({"result": False, "ret_val": u'\'%s\' not implimented method'} % arg, ensure_ascii=False)
     else:
         if x_hash:
             try:
                 content = call(_param, x_hash)
             except:
-                content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
+                res = {"result": False, "ret_val": "error in method '%s'" % arg}
+                #content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
+                content = json.dumps(res, ensure_ascii=False)
         else:
-            content = json.dumps(u'login please', ensure_ascii=False)
+            content = json.dumps({"result": False, "ret_val": "login please"}, ensure_ascii=False)
     return content
 
 def handle_commandline(profile, index):

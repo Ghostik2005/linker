@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker_uploader'
-__version__ = '18.180.1815' #убираем из насвания производителя все, что до знака > вместе с эти знаком
+__version__ = '18.192.1553' #изменен api сервиса получения имени
+#__version__ = '18.180.1815' #убираем из насвания производителя все, что до знака > вместе с эти знаком
 #__version__ = '18.179.1120' #добавленно добавление имени поставщика в базу
 #__version__ = '18.176.1400' # добавлено разделение на склад и плэксперт
 #__version__ = '18.152.0921' # более стабильная версия
@@ -132,7 +133,7 @@ def prepare_server(Lock=None, api = None):
     sys.APPCONF["log"](f'\t\t\textrnal  ip-> {sys.extip}')
 
     threads.append(threading.Thread(target=libs.guardian, args=(api,), daemon=True))
-    threads.append(threading.Thread(target=libs.monitor, args=(api,), daemon=True))
+    #threads.append(threading.Thread(target=libs.monitor, args=(api,), daemon=True))
 
     for th in threads:
         th.start()
