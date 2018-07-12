@@ -14,6 +14,7 @@ import socket
 import hashlib
 import threading
 import traceback
+import requests
 import subprocess
 import configparser
 from urllib.parse import unquote
