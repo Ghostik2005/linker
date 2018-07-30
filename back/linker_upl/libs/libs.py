@@ -448,9 +448,11 @@ class API:
             db.commit()
         self.log('Закончил сведение по кодам')
         dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
+        #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to stasya')
+        #dbc.execute(f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 {con_ins}
         dbc.execute(f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 {con_ins}
     and (id_vnd in (46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,20271,10001,29271,34071,37471,33771,30371,34157,20471,20557,20577,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178))""")
         #self.log('assign to stasya 2')
@@ -478,12 +480,12 @@ class API:
                 cur.execute(sql, opt)
                 res = int(cur.fetchone()[0])
                 if res == 0:
-                    #если записи нет, то вычитываем название и апдейтим таблицы
+                    #если записи нет, то вычитываем название и апдейтим базу
                     code = [id_vnd,]
                     res1 = requests.post(self.nauth['url'], auth=(self.nauth['login'], self.nauth['pwd']),  json={"method": "namepost", "params": [code,]})
                     res1 = res1.json().get('result')[0]
                     vnd_name = res1.get(str(id_vnd))
-                    sql = """insert into VND (ID_VND, C_VND, MERGE3) values (?, ?, 0)"""
+                    sql = """insert into VND (ID_VND, C_VND) values (?, ?)"""
                     opt = (id_vnd, vnd_name)
                     cur.execute(sql, opt)
                     sql = """insert into USER_VND (ID_USER, ID_VND) values (12, ?)"""
@@ -498,8 +500,6 @@ class API:
                 con.close()
             except Exception as Err:
                 self.log(Err, kind="SQLError")
-                
-            
         return vnd_name
 
 

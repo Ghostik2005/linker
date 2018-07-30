@@ -1235,6 +1235,8 @@ FROM RDB$DATABASE"""
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
+                if row[0] is None or row[1] is None:
+                    continue
                 r = {
                     "id"        : row[0],
                     "value"       : row[1]
