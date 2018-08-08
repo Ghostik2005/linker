@@ -1046,11 +1046,13 @@ def guardian(api):
                             sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
                             dbc.execute(sql)
                             count_insert = dbc.fetchone()[0]
-                        else:
-                            api.log('---***---принудительный запуск')
-                            api.prc_sync_lnk(db, dbc)
                     api.log(f'Добавленно к сведению: {count_insert}')
                     db.close()
+            db = fdb.connect(**connection)
+            dbc = db.cursor()
+            api.log('---***---принудительный запуск')
+            api.prc_sync_lnk(db, dbc)
+            db.close()
         except Exception as Err:
             api.log(traceback.format_exc(), kind="error:monitor")
         #спим 5 секунд перед тем, как продолжить опрос папки
