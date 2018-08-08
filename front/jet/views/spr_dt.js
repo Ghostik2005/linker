@@ -193,7 +193,7 @@ export default class SprView extends JetView{
                     },
                 {id: "prescr", width:100,
                     template: function (obj) {
-                        let ret = (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
+                        let ret = (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
                                                  : "<div><span></span></div>";
                         return ret
                         },

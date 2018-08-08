@@ -409,6 +409,12 @@ class API:
             db.commit()
 
     def prc_sync_lnk(self, db, dbc, uin=None):
+
+        self.log('удаляем сущетсвующие линки')
+        dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
+        if callable(db.commit):
+            db.commit()
+        self.log('---удалили сущетсвующие линки')
         if uin:
             con_ins = f"and uin = '{uin}'"
         else:
@@ -430,6 +436,7 @@ class API:
         dbc.execute(sql)
         if callable(db.commit):
             db.commit()
+        self.log("---Удалили по признаку")
         self.log('Сводим по кодам')
         sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
@@ -446,15 +453,16 @@ class API:
         dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
         if callable(db.commit):
             db.commit()
-        self.log('Закончил сведение по кодам')
+        self.log('---Свели по кодам')
+        self.log('Назначаем пользователям на сведение')
         dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to stasya')
         #dbc.execute(f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 {con_ins}
-        dbc.execute(f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 {con_ins}
-    and (id_vnd in (46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,20271,10001,29271,34071,37471,33771,30371,34157,20471,20557,20577,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178))""")
+        dbc.execute(f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+and (id_vnd in (34168,46676,20269,30144,51066,28178,51072,19987,40267,40277,20129,20378,20229,48761,40677,44877,19990,46769,47369,45177,46869,20276,44735,20576,28176,45835,20176,20153,19992,19996,20657,44677,20177,41177,45277,20271,10001,29271,34071,37471,33771,30371,34157,20471,20557,20577,20171,40552,21271,29977,22240,20171,20277,20677,20871,20377,22077,24477,28162,28177,28132,23478,20977,30178))""")
         #self.log('assign to stasya 2')
         if callable(db.commit):
             db.commit()
@@ -465,6 +473,7 @@ class API:
         #dbc.execute(f"""update prc set id_org=40035 where id_vnd=19985 and id_org=12 {con_ins}""")
         #if callable(db.commit):
             #db.commit()
+        self.log('---Назначили пользователям на сведение')
 
     def getNameByCode(self, id_vnd):
 
@@ -1037,6 +1046,9 @@ def guardian(api):
                             sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
                             dbc.execute(sql)
                             count_insert = dbc.fetchone()[0]
+                        else:
+                            api.log('---***---принудительный запуск')
+                            api.prc_sync_lnk(db, dbc)
                     api.log(f'Добавленно к сведению: {count_insert}')
                     db.close()
         except Exception as Err:

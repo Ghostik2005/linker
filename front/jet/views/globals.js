@@ -464,6 +464,7 @@ export function parse_unlinked_item(th, c_item) {
     c_item = c_item || $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
+    //let name = "<a target='_blank' rel='noreferrer noopener' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>"; //исправить на это!!!!!!!!!
     let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
     let count = "<span style='color: #666666; text-decoration: underline;'>Осталось свести в текущей сессии:</span><span style='color: red; font-weight: bold;'>  "+ $$("prcs_dc").count() + "</span>";
     n_item['_name'] = name;
