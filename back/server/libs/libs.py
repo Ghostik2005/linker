@@ -3245,7 +3245,8 @@ WHERE %s""" % stri
                     "id"          : row[0],
                     "$row"        : "c_tovar",
                     "open"        : False,
-                    "c_tovar"     :  st1 if len(row[2]) < 1 else ' | '.join([st1, row[2]]),
+                    #"c_tovar"     :  st1 if len(row[2]) < 1 else ' | '.join([st1, row[2]]),
+                    "c_tovar"     :  st1 if row[2] is None else ' | '.join([st1, row[2]]),
                     #"c_zavod_s"   : row[2],
                     "data"        : []
                 }

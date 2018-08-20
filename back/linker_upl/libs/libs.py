@@ -109,6 +109,11 @@ class API:
         #проверка валидности ключа
         return True
 
+    def _get_checksum(self, data):
+        hash_md5 = hashlib.md5()
+        hash_md5.update(data)
+        return hash_md5.hexdigest()
+
     def upload_nolinks(self, params, x_hash):
         #загрузка данных по накладным из json
         ret = {"result": False, "ret_val": "access denied"}
@@ -120,29 +125,45 @@ class API:
             #sh_prc, код поставщика, код товара у поставщика, название товара, изгтовитель, код организации, штрихкод
             name, value = data.popitem()
             source = 2 if len(name) > 25 else 1
-            self.log('source: %s' % source)
-            self.log('*'*50)
-            self.log(value)
+            """
+            ниже заглушка, чтобы не принимать файлы из PLExpert
+
+            if source == 1:
+                ret = {"result": False, "ret_val": "temporary access denied"}
+                return json.dumps(ret, ensure_ascii=False)
+            """
+            self.log('UPLOAD| source: %s' % source)
+            self.log('UPLOAD| ' + '*'*50)
+            if len(value.encode()) < 500:
+                self.log('UPLOAD| %s' % value)
+            else:
+                self.log('UPLOAD| %s' % 'слишком много значений для вывода')
             con, cur = self._connect()
-            h_name = hashlib.md5()
-            h_name.update(str(name).encode())
-            h_name =  h_name.hexdigest()
-            sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
+            h_name = _get_checksum(str(name).encode())
+            c_sum = _get_checksum(value.encode())
+            if source == 1:
+                sql = f"""select c_sum from PRC_TASKS where uin='{h_name}' and source = 1"""
+                cur.execute(sql)
+                ret = cur.fetchone()
+                if ret:
+                    old_sum = ret[0]
+                    if c_sum == old_sum:
+                        ret = {"result": True, "ret_val": "accepted"}
+                        return json.dumps(ret, ensure_ascii=False)
+            #sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
+            sql = f"""UPDATE OR insert into PRC_TASKS (uin, source, callback, dt, c_sum) values ('{h_name}', {int(source)}, '{callback or ''}', current_timestamp, {c_sum})"""
             try:
                 cur.execute(sql)
                 con.commit()
             except:
-                self.log("Can't insert task", kind="SQLError")
+                self.log("UPLOAD| Can't insert task", kind="SQLError")
             finally:
                 con.close()
             f_name = os.path.join(self.path,f"{h_name}.{source}")
             with open(f_name, 'wb') as f_obj:
-                pass
                 f_obj.write(value.encode())
             ret = {"result": True, "ret_val": "accepted"}
-            self.log('*'*50)
-            #ret = {"result": True, "ret_val": "ok"}
-            
+            self.log("UPLOAD| " + '*'*50)
         return json.dumps(ret, ensure_ascii=False)
 
     def upload_file(self, filename, data, source=0, callback=None):
@@ -1005,7 +1026,7 @@ def guardian(api):
                 if os.path.isdir(path):
                     continue
                 row = None
-                log(f"path: {path}")
+                log(f"GUARDIAD| path: {path}")
                 with open(path, 'rb') as f_obj:
                     row = f_obj.readline()
                 if row:
@@ -1021,7 +1042,7 @@ def guardian(api):
                     h_name = os.path.basename(path)
                     h_name, source = h_name.split('.')
                     if not list(dbc.fetchone())[0]:# and int(source) != 2:
-                        log('- пропускаем, сведение не разрешено')
+                        log('GUARDIAD| - пропускаем, сведение не разрешено')
                         #переносим файл в несводимые, делаем запись в базе о том, что сведение не разрешено
                         sql = f"""delete from PRC_TASKS where uin = '{h_name}'"""
                         dbc.execute(sql)
@@ -1029,32 +1050,32 @@ def guardian(api):
                         shutil.move(path, os.path.join(api.p_path, h_name))
                         continue
                     else:
-                        log('- начинаем сведение')
+                        log('GUARDIAD| - начинаем сведение')
                         count_insert = 0
                         count_all = 0
                         count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
-                        log("- удаляем файл:")
+                        log("GUARDIAD| - удаляем файл:")
                         try:
                             shutil.move(path, os.path.join(api.inw_path, h_name))
                             #os.remove(path)
-                            log("[ OK ]")
+                            log("GUARDIAD| [ OK ]")
                         except Exception as e:
-                            log("[FAIL]")
-                            log(str(e), kind="error")
+                            log("GUARDIAD| [FAIL]")
+                            log("GUARDIAD| %s" % str(e), kind="error")
                         if count_insert > 0:
                             api.prc_sync_lnk(db, dbc, h_name)
                             sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
                             dbc.execute(sql)
                             count_insert = dbc.fetchone()[0]
-                    api.log(f'Добавленно к сведению: {count_insert}')
+                    api.log(f'GUARDIAD| Добавленно к сведению: {count_insert}')
                     db.close()
             db = fdb.connect(**connection)
             dbc = db.cursor()
-            api.log('---***---принудительный запуск')
+            api.log('GUARDIAD| ---***---принудительный запуск')
             api.prc_sync_lnk(db, dbc)
             db.close()
         except Exception as Err:
-            api.log(traceback.format_exc(), kind="error:monitor")
+            api.log("GUARDIAD| %s" % traceback.format_exc(), kind="error:monitor")
         #спим 5 секунд перед тем, как продолжить опрос папки
         time.sleep(5) 
 
