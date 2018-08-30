@@ -11,6 +11,142 @@ try:
 except ImportError:
     import fdb
 
+import psycopg2
+
+
+class pg_local(object):
+
+    def __init__(self, log):
+        self.log = log
+        self.production = False
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+        if callable(self.log):
+            self.log("Production" if self.production else "Test")
+        else:
+            print("Production" if self.production else "Test", flush=True)
+
+    def _log(self, message, kind='info'):
+        if callable(self.log):
+            self.log(message, kind=kind)
+        else:
+            print(message, flush=True)
+
+    def execute(self, params=None):
+        """
+        делаем инсерты, апдейты и делиты - одна команда на транзакцию
+        sql - строка sql  с символами ? вместо параметров
+        options - список или кортеж опций для подстановки в sql строку
+        """
+        ret = -1 #connection error
+        try:
+            con = psycopg2.connect(**self.connect_params)
+        except Exception as Err:
+            self._log(traceback.format_exc(), kind="error:connection")
+        else:
+            cur = con.cursor()
+            sql = params.get('sql')
+            options = params.get('options')
+            try:
+                if not options:
+                    cur.execute(sql)
+                else:
+                    cur.execute(sql, options)
+                try:
+                    ret = cur.fetchall()
+                except Exception as Err:
+                    ret = -3 #empty return
+                    self._log(Err, kind="error:sql return")
+                finally:
+                    con.commit()
+            except Exception as Err:
+                ret = -2 # transaction error
+                self._log(traceback.format_exc(), kind="error:sql")
+                self._log(Err, kind="error:sql")
+                self._log(sql, kind="error:text")
+            finally:
+                cur.close()
+                con.close()
+        if not ret:
+            ret = []
+        return ret
+
+    def executemany(self, params=None):
+        """
+        делаем инсерты, апдейты и делиты -  много команд на транзакцию
+        sql - строка sql  с символами ? вместо параметров
+        options - список списков или кортежей опций для подстановки в sql строку
+        """
+        ret = -1
+        try:
+            con = fdb.connect(**self.connect_params)
+        except Exception as Err:
+            self._log(traceback.format_exc(), kind="error:connection")
+        else:
+            cur = con.cursor()
+            sql = params.get('sql')
+            options = params.get('options')
+            try:
+                cur.executemany(sql, options)
+                try:
+                    ret = cur.fetchall()
+                except Exception as Err:
+                    ret = -3 #empty return
+                    self._log(Err, kind="error:sql return")
+                finally:
+                    con.commit()
+            except Exception as Err:
+                ret = -2 # transaction error
+                self._log(Err, kind="error:sql")
+            finally:
+                cur.close()
+                con.close()
+        if not ret:
+            ret = []
+        return ret
+
+
+    def request(self, params=None):
+        """
+        делаем селекты
+        sql - строка sql  с символами ? вместо параметров
+        options - список или кортеж опций для подстановки в sql строку
+        """
+        ret = -1
+        try:
+            con = psycopg2.connect(**self.connect_params)
+        except Exception as Err:
+            self._log(traceback.format_exc(), kind="error:connection")
+        else:
+            cur = con.cursor()
+            sql = params.get('sql')
+            options = params.get('options')
+            try:
+                if not options:
+                    cur.execute(sql)
+                else:
+                    cur.execute(sql, options)
+                try:
+                    ret = cur.fetchall()
+                except Exception as Err:
+                    ret = -3 #empty return
+                    self._log(Err, kind="error:sql return")
+            except Exception as Err:
+                ret = -2
+                self._log(traceback.format_exc(), kind="error:sql")
+                self._log(Err, kind="error:sql")
+                self._log(sql, kind="error:text")
+            finally:
+                cur.close()
+                con.close()
+        finally:
+            try:
+                cur.close()
+                con.close()
+            except: pass
+        if not ret:
+            ret = []
+        return ret
+
 
 class fb_local:
 

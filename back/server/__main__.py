@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.227.1040' #исправлена обработка ответа запроса в связках по эталонам
+__version__ = '18.242.1750' #добавленна поддержка PG, нужно просто переключить
+#__version__ = '18.227.1040' #исправлена обработка ответа запроса в связках по эталонам
 #__version__ = '18.211.1220' #не передает поставщика если он null
 #__version__ = '18.180.1750' #можно сохранять некоторые параметры
 #__version__ = '18.180.0925' #исправлен запрос на поиск в несведенных (была ошибка при выборе источника)
@@ -97,14 +98,14 @@ def main():
     try:
         server = libs.SCGIServer(sys.APPCONF["log"], hostname=None, version=__version__,
                                  appname=__appname__, profile=__profile__, index=__index__)
-        server.serve_forever(sys.APPCONF["addr"], application, on_exit=libs.shutdown)
+        server.serve_forever(sys.APPCONF["addr"], application)
     except KeyboardInterrupt as e:
         sys.APPCONF["log"]('KEYBOARD EXIT', kind="info")
-        libs.shutdown(sys.APPCONF["log"])
+        #libs.shutdown(sys.APPCONF["log"])
     except SystemExit as e:
         if e:
             rc = e.code
-        libs.shutdown(sys.APPCONF["log"])
+        #libs.shutdown(sys.APPCONF["log"])
     except:
         sys.APPCONF["log"](traceback.format_exc(), kind="error")
     finally:

@@ -1,7 +1,9 @@
 #coding: utf-8
 
 __appname__ = 'linker_uploader'
-__version__ = '18.232.1700' #считаем контрольную сумму md5 загружаемых данных из PLExpert, если она совпадает с существующимим заданиями от этого поставщика - пропускаем
+__version__ = '18.242.1750' #добавленная поддержка PG, можно будет просто  переключить на нее.
+#__version__ = '18.232.1000' #исправлены некоторые ошибки
+#__version__ = '18.233.1700' #считаем контрольную сумму md5 загружаемых данных из PLExpert, если она совпадает с существующимим заданиями от этого поставщика - пропускаем
 #__version__ = '18.232.1345' #заглушка чтобы не обрабатывать PLEXpert
 #__version__ = '18.220.1350' #добавленна обработка после каждого файла
 #__version__ = '18.211.1300' #исправленна функция запроса названия поставщика
@@ -97,7 +99,7 @@ def application(env):
                 pass
             if data and fname:
                 sys.APPCONF["log"](fname, kind='info:saving:')
-                content = sys.APPCONF['api'].upload_file(fname, data, source, callback)
+                content = sys.APPCONF['api'].upload_file(fname, data, source, callback, x_hash=env['X-API-KEY'])
     else:
         if 'POST' == _rm:
             arg = env.get('HTTP_PARAMS')[0]
