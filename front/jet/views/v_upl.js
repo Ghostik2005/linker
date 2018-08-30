@@ -68,7 +68,8 @@ export default class uplMenuView extends JetView{
     
     show_window(new_head){
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
+        this.getRoot().show();
+        this.$$("__upl_1").fileDialog();
         }
 
     hide_window() {

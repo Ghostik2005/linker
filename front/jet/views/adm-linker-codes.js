@@ -77,16 +77,17 @@ export default class LinkCodesView extends JetView{
                         this.$$("__table").eachRow( 
                             (id) => {
                                 let item = this.$$("__table").getItem(id) 
-                                if (item.change > 0) data.push(item);
+                                if (item.change > 0) {
+                                    data.push(item);
+                                    console.log('item', item);
+                                    console.log('pr', item.process);
+                                    }
                             }, true);
                         this.$$("del").hide();
                         setTimeout( () => {
                             this.$$("apply").hide();
-                            }, 200)
-                        setTimeout( () => {
                             this.$$("cancel").hide();
-                            }, 200)
-                        this.$$("__table").getHeaderContent("ch1").uncheck();
+                            }, 100);
                         let user = app.config.user;
                         let url = app.config.r_url + "?setLinkCodes";
                         let params = {"user": user, 'data': data};
@@ -96,10 +97,10 @@ export default class LinkCodesView extends JetView{
                                 this.$$("__table").parse(data);
                                 }
                             });
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         }
                     },
                 {view:"button", type: 'htmlbutton', localId: "cancel", hidden: true,
-                    //label: "<span class='webix_icon fa-times'></span><span style='line-height: 20px;'> Отменить</span>", width: 130,
                     resizable: true,
                     sWidth: 130,
                     eWidth: 40,
@@ -114,17 +115,15 @@ export default class LinkCodesView extends JetView{
                         this.$$("del").hide();
                         setTimeout( () => {
                             this.$$("apply").hide();
-                            }, 100);
-                        setTimeout( () => {
                             this.$$("cancel").hide();
                             }, 100);
-                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         request(url, params).then( (data) => {
                             data = checkVal(data, 'a');
                             if (data) {
                                 this.$$("__table").parse(data);
                                 }
                             });
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         }
                     },
                 ]

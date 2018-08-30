@@ -81,7 +81,7 @@ export default class NewformView extends JetView{
                 elements: [
                     {rows: [
                         {view: "label", label:"Название товара:", name: 't_name'},
-                        {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text"},
+                        {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text", localId: "inputTxt"},
                         {height: 10, width: 700},
                         {cols: [
                             {rows: [
@@ -324,6 +324,7 @@ export default class NewformView extends JetView{
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()
+        this.$$("inputTxt").focus();
         }
     hide(){
         this.getRoot().hide()
