@@ -45,7 +45,7 @@ class API:
         self.exec = sys.executable
         self.log = log
         #################################
-        self._pg = not True
+        self._pg = True
         if self._pg:
             self.db = pg_local(self.log)
         else:
@@ -3679,16 +3679,36 @@ values (?, ?, ?, ?, ?) matching (CODE)"""
             user = params.get('user')
             data = params.get('data')
             for row in data:
-                ######################### - включить и переписать запрос update or insert
-                continue
                 if row.get('change') == 1: #удаленная позиция
                     sql = f"""delete from LNK_EXCLUDES where NAME={'?' if not self._pg else '%s'}"""
                     opt = (row.get('name'),)
                 elif row.get('change') == 2: #новая позиция или измененная позиция
-                    sql = f"""update or insert into LNK_EXCLUDES (PROCESS, NAME, OPTIONS, OWNER)
-values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'})
+                    opt_start = row.get('options_st')
+                    opt_in = row.get('options_in')
+                    if opt_start == True:
+                        opt_start = 1
+                    elif opt_start == False:
+                        opt_start = 0
+                    if opt_in == True:
+                        opt_in = 1
+                    elif opt_in == False:
+                        opt_in = 0
+                    process = row.get('process')
+                    if process == True:
+                        process = 1
+                    elif process == False:
+                        process = 0
+                    opt_txt = str(opt_start) + str(opt_in)
+                    opt = (process, row.get('name'), opt_txt , user)
+                    if self._pg:
+                        sql = """insert into LNK_EXCLUDES (PROCESS, NAME, OPTIONS, OWNER)
+values (%s, %s, %s, %s) ON CONFLICT (NAME) DO UPDATE
+SET (PROCESS, NAME, OPTIONS, OWNER) = (%s, %s, %s, %s);"""
+                        opt = opt + opt
+                    else:
+                        sql = f"""update or insert into LNK_EXCLUDES (PROCESS, NAME, OPTIONS, OWNER)
+values (?, ?, ?, ?)
 matching (NAME)"""
-                    opt = (row.get('process'), row.get('name'), str(row.get('options_st')) + str(row.get('options_in')), row.get('inn'), user)
                 self.db.execute({"sql": sql, "options": opt})
             ret = json.loads(self.getLinkExcludes(params, x_hash))
         else:
@@ -3698,7 +3718,7 @@ matching (NAME)"""
     def getLinkExcludes(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = """SELECT r.PROCESS, r.NAME, r.OPTIONS, r.OWNER FROM LNK_EXCLUDES r"""
+            sql = """SELECT r.PROCESS, r.NAME, r.OPTIONS, r.OWNER FROM LNK_EXCLUDES r order by r.NAME"""
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
