@@ -16,6 +16,7 @@ import AdmBarView from "../views/adm-bar";
 import SideFormView from "../views/side_form";
 import NewReportView from "../views/new_report";
 import PropView from "../views/prop_window";
+import BrakBarView from "../views/brak_bar";
 
 export default class TopmenuView extends JetView{
     config(){
@@ -384,6 +385,7 @@ export default class TopmenuView extends JetView{
                          (view === AllUnlinkedBarView) ? "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>" :
                          (view === LinksBarView) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>" :
                          (view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
+                         (view === BrakBarView) ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Разбраковка</span>" :
                          ""
             let uid = webix.uid();
             var tabConfig = {
@@ -418,6 +420,49 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
+                {view:"button", type: 'htmlbutton', tooltip: "Пишем выловленные баги сюда", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "", width: 40,
+                    //hidden: !app.config.roles[app.config.role].adm,
+                    hidden: false,
+                    oldLabel: "<span class='webix_icon fa-bug', style='color: #3498db'></span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Жуки</span>",
+                    on: {
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true;
+                                    add_bar(this, AdmBarView);
+                                    clearInterval(this.interval);
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
+                                }
+                            },
+                        onItemClick: function () {
+                            return
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                } else {
+                                    add_bar(this, AdmBarView);
+                                    };
+                                };
+                            this.config.longPress = false;
+                            }
+                        }
+                    },
                 {view:"button", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
                     resizable: true,
                     sWidth: 136,
@@ -449,6 +494,48 @@ export default class TopmenuView extends JetView{
                             this.config.longTouch = false;
                             this.$scope.popprop.show_w("Персональные настройки: " + app.config.user);
                             },
+                        }
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "", width: 40,
+                    //hidden: !app.config.roles[app.config.role].adm,
+                    hidden: false,
+                    oldLabel: "<span class='webix_icon fa-ban', style='color: #3498db'></span>",
+                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Забраковка</span>",
+                    on: {
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true;
+                                    add_bar(this, BrakBarView);
+                                    clearInterval(this.interval);
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
+                                }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                } else {
+                                    add_bar(this, BrakBarView);
+                                    };
+                                };
+                            this.config.longPress = false;
+                            }
                         }
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,

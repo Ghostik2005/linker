@@ -73,11 +73,8 @@ export default class LinkExclView extends JetView{
                         this.$$("del").hide();
                         setTimeout( () => {
                             this.$$("apply").hide();
-                            }, 200);
-                        setTimeout( () => {
                             this.$$("cancel").hide();
-                            }, 200);
-                        this.$$("__table").getHeaderContent("ch1").uncheck();
+                            }, 100);
                         let user = app.config.user;
                         let url = app.config.r_url + "?setLinkExcludes";
                         let params = {"user": user, 'data': data};
@@ -87,6 +84,7 @@ export default class LinkExclView extends JetView{
                                 this.$$("__table").parse(data);
                                 }
                             });
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "cancel",
@@ -105,17 +103,15 @@ export default class LinkExclView extends JetView{
                         this.$$("del").hide();
                         setTimeout( () => {
                             this.$$("apply").hide();
-                            }, 100);
-                        setTimeout( () => {
                             this.$$("cancel").hide();
                             }, 100);
-                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         request(url, params).then( (data) => {
                             data = checkVal(data, 'a');
                             if (data) {
                                 this.$$("__table").parse(data);
                                 }
                             });
+                        this.$$("__table").getHeaderContent("ch1").uncheck();
                         }
                     },
                 ]

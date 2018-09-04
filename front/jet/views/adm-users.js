@@ -156,7 +156,6 @@ export default class UsersView extends JetView{
         
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del"), this.$$("_aroles")]
-        console.log('rr', r_but);
         r_but.forEach( (item, i, r_but) => {
             item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
                          label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
