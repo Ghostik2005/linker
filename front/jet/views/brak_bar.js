@@ -176,13 +176,62 @@ export default class BrakBarView extends JetView{
             searchBar: undefined,
             searchMethod: "getLnkSprs",
             subview: (obj, target) => {
-                let item = this.$$("__table").getItem(obj.id);
-                let rowItemsCount = 2;
-                let subRowHeight = rowItemsCount * 30;
+                let tableSubviewItem = this.$$("__table").getItem(obj.id);
+                let rowItemsCount = 4;
+                let subRowHeight = rowItemsCount * 32;
                 let sub = {view: "list",
+                    localId: "__list",
+                    $scope: this,
+                    $new: false,
+                    oldSelectedItem: undefined,
+                    css: 'sublist',
+                    item: {
+                        height: 32,
+                        },
                     borderless: true,
+                    navigation: true,
+                    select: true,
+                    scroll: false,
                     height: subRowHeight,
-                    data: ['1111111111', '222222']
+                    on: {
+                        onBeforeUnSelect: function (item) {
+                            this.$scope.$$("_delletter").hide();
+                            },
+                        onBeforeSelect: function (item) {
+                            if (this.$new === true) {
+                                webix.message("Сначала сохраните изменения")
+                                return false
+                                }
+                            },
+                        onAfterSelect: function (item) {
+                            this.$scope.$$("_delletter").show();
+                            let selectedListItem = this.getSelectedItem();
+                            this.oldSelectedItem = selectedListItem.id;
+                            let selectedDataItem = this.$scope.$$("__table").getSelectedItem();
+                            if (selectedListItem.id === 999999) {
+                                //создаем новое письмо
+                                webix.message("New letter");
+                                this.getSelectedItem().value = "Новое письмо";
+                                this.refresh();
+                                this.$new = true
+                                selectedListItem = this.getSelectedItem();
+                                };
+                            let parseItem = {};
+                            parseItem.n_doc = selectedListItem.value;
+                            parseItem.name = selectedDataItem.c_name;
+                            parseItem.t_name = '';
+                            parseItem.series = selectedDataItem.series;
+                            parseItem.vendor = selectedDataItem.c_zavod;
+                            parseItem.region = '';
+                            parseItem.number = '';
+                            parseItem.ch_dt = selectedDataItem.dt;
+                            parseItem.gv = '';
+                            parseItem.desc = '';
+                            this.$scope.$$("_dHead").parse(parseItem);
+
+                            },
+                        },
+                    data: [{id: 1, value: "Письмо 1"}, {id:2, value:"Письмо 2"}, {id:3, value: "Письмо какое-то"}, {id: 999999, value: "...добавить письмо"}],
                     };
                 return webix.ui(sub, target);
                 },
@@ -233,20 +282,13 @@ export default class BrakBarView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onSubViewClose: function(id) {
+                    this.$scope.$$("_dHead").clear();
+                    this.$scope.$$("_delletter").hide();
                     delete this.getItem(id)["$subContent"]
                     delete this.getItem(id)["$subHeight"]
                     delete this.getItem(id)["$subOpen"]
                     },
-                onItemClick: function (i, ii, iii) {
-                    console.log('i', i);
-                    console.log('ii', ii);
-                    console.log('iii', iii);
-                    //let form = this.getFormView();
-                    //let master = form.getMasterView();
-                    //console.log('master;', master);
-                    //master.closeSub();
-                    let row_id = this.getSelectedId();
-                    this.openSub(row_id, this);
+                onItemClick: function (item) {
                     },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
@@ -255,7 +297,7 @@ export default class BrakBarView extends JetView{
                     vi.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
                     vi.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
                     },
-                onItemDblClick: (item, ii, iii) => {
+                onItemDblClick: (item) => {
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -264,8 +306,13 @@ export default class BrakBarView extends JetView{
                     },
                 onBeforeSelect: function (item) {
                     },
+                onBeforeUnSelect: function (item) {
+                    this.$scope.$$("_addletter").hide();
+                    this.closeSub(item.id);
+                    },
                 onAfterSelect: function (item) {
-                    //this.$scope._break.show();
+                    this.$scope.$$("_addletter").show();
+                    this.openSub(item.id, this);
                     }
                 },
             data: [
@@ -275,6 +322,25 @@ export default class BrakBarView extends JetView{
                 ],
             }
 
+        var dHead = {view: "form",
+            localId: "_dHead",
+            bodredless: true,
+            margin: 0,
+            padding: 0,
+            elements: [
+                {view: "text", value: "", label: "Нормативный документ", labelWidth: 155, name: "n_doc"},
+                {view: "text", value: "", label: "Наименование", labelWidth: 155, name: "name"},
+                {view: "text", value: "", label: "Торговое наименование", labelWidth: 155, name: "t_name"},
+                {view: "text", value: "", label: "Серия", labelWidth: 155, name: "series"},
+                {view: "text", value: "", label: "Производитель", labelWidth: 155, name: "vendor"},
+                {view: "text", value: "", label: "Регион", labelWidth: 155, name: "region"},
+                {view: "text", value: "", label: "№ записи", labelWidth: 155, name: "number"},
+                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt"},
+                {view: "text", value: "", label: "ЖВ", labelWidth: 155, name: "gv"},
+                {view: "text", value: "", label: "Описание", labelWidth: 155, name: "desc"},
+                
+                ],
+            }
 
         var _view = {
             view: "layout", type: "clean",
@@ -284,12 +350,16 @@ export default class BrakBarView extends JetView{
                 {view: "layout",
                     cols: [
                         {css: {'border-left': "1px solid #dddddd !important"},
-                        rows: [
-                            tt,
-                            {$subview: PagerView},
-                            ],
+                            rows: [
+                                tt,
+                                {$subview: PagerView},
+                                ],
                             },
-                        {
+                        {css: {'border-left': "1px solid #dddddd !important"},
+                            rows: [
+                                dHead,
+                                {template: "document"},
+                                ],
                             },
                         ]
                     },

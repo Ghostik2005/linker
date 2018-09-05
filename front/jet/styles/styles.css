@@ -206,4 +206,11 @@ div.webix_item_tab {
   color: #000;
   }
 
+.sublist .webix_list_item {
+    line-height: 32px;
+    }
 
+.sublist .webix_selected {
+    background-color: #15c15d;
+    line-height: 32px;
+    }
