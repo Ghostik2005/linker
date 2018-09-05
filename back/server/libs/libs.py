@@ -46,6 +46,8 @@ class API:
         self.log = log
         #################################
         self._pg = True
+        #self._pg = False
+        
         if self._pg:
             self.db = pg_local(self.log)
         else:
@@ -3585,9 +3587,9 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' i
         if self._check(x_hash):
             sh_prc = params.get('sh_prc')
             user = params.get('user')
-            sql = f"""SELECT r."GROUP" FROM USERS r where r."USER" = {'?' if not self._pg else '%s'}"""
+            sql = f"""SELECT r."GROUP", r.ID FROM USERS r where r."USER" = {'?' if not self._pg else '%s'}"""
             opt = (user,)
-            gr_id = self.db.request({"sql": sql, "options": opt})[0][0]
+            gr_id, user_id = self.db.request({"sql": sql, "options": opt})[0]
             iid = 1 if gr_id == 0 or gr_id == 999999 else user_id
             sss = '' if gr_id == 0 else ', id_org = 0'
             if sh_prc:
