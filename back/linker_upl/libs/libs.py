@@ -50,7 +50,8 @@ class API:
         self.nauth = {}
         self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
         #########################3
-        self._pg = True
+        #self._pg = True
+        self._pg = False
         try:
             config = configparser.ConfigParser()
             config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
@@ -100,8 +101,8 @@ class API:
             self.log(traceback.format_exc(), kind="error:connection")
         else:
             cur = con.cursor()
-        print(con)
-        print(cur)
+        #print(con)
+        #print(cur)
         return con, cur
 
     def _check(self, x_hash):
@@ -344,6 +345,8 @@ ON CONFLICT (UIN) DO UPDATE
                     _id_vnd = id_vnd
                 # Добавление забракованных серий
                 if sh_brak and series:
+                    if len(series) > 32:
+                        series = series[:32]
                     self.log(f'UPLOAD2DB - забраковка: {sh_brak}, {series}')
                     oopt = (sh_brak, series, dt_brak)
                     if self._pg:
@@ -1136,6 +1139,24 @@ def guardian(api):
             else:
                 db = fdb.connect(**api.connect_params)
             dbc = db.cursor()
+            sql_d = """DROP TABLE A_TEMP_PRC"""
+            sql_cre = """CREATE TABLE IF NOT EXISTS A_TEMP_PRC
+(
+  SH_PRC TSTR32 NOT NULL,
+  ID_VND TINT32,
+  ID_TOVAR TSTR32,
+  N_CENA TINT32,
+  C_TOVAR TSTR255,
+  C_ZAVOD TSTR255,
+  ID_ORG TINT32 DEFAULT 0 NOT NULL,
+  SOURCE SMALLINT,
+  BARCODE VARCHAR(255),
+  UIN VARCHAR(255),
+  CONSTRAINT T_PK_PRC PRIMARY KEY (SH_PRC)
+);
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON A_TEMP_PRC TO  SYSDBA WITH GRANT OPTION;"""
+ 
             api.log('GUARDIAN| ---***---принудительный запуск')
             api.prc_sync_lnk(db, dbc)
             db.close()
