@@ -196,6 +196,7 @@ export default class BrakBarView extends JetView{
                     on: {
                         onBeforeUnSelect: function (item) {
                             this.$scope.$$("_delletter").hide();
+                            this.$scope.$$("_prop").disable();
                             },
                         onBeforeSelect: function (item) {
                             if (this.$new === true) {
@@ -205,6 +206,7 @@ export default class BrakBarView extends JetView{
                             },
                         onAfterSelect: function (item) {
                             this.$scope.$$("_delletter").show();
+                            this.$scope.$$("_prop").enable();
                             let selectedListItem = this.getSelectedItem();
                             this.oldSelectedItem = selectedListItem.id;
                             let selectedDataItem = this.$scope.$$("__table").getSelectedItem();
@@ -342,6 +344,49 @@ export default class BrakBarView extends JetView{
                 ],
             }
 
+
+        //var inl = this.getNode();
+        console.log('th', this);
+        //console.log('inl', inl);
+
+
+        var tiny = {view: "tinymce-editor",
+            //disable: true,
+            borderless: true,
+            localId: '_editor',
+            config: {
+                theme:"modern",
+                statusbar: false,
+                image_advtab: true,
+                branding: false,
+                language: 'ru',
+                menubar: false,
+                toolbar: !false,
+                //nowrap : true,
+                toolbar1: 'fontselect fontsizeselect | undo redo | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | codesample',
+                plugins: ['print preview fullpage searchreplace autolink directionality',
+                    'visualblocks visualchars fullscreen image link media template codesample table charmap',
+                    'hr pagebreak nonbreaking anchor insertdatetime advlist lists textcolor wordcount',
+                    'imagetools contextmenu colorpicker textpattern'
+                    ],
+                content_css: [
+                    //'//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
+                    '//www.tinymce.com/css/codepen.min.css'
+                    ]
+                }
+            };
+
+        var buttons = {view: 'toolbar',
+            height: 35,
+            css: {"margin-top": "-2px !important"},
+            borderless: true,
+            cols: [
+                {},
+                {view: 'button', value: "Сохранить", width: 120},
+                {view: 'button', value: "Отменить", width: 120},
+                ]
+            };
+
         var _view = {
             view: "layout", type: "clean",
             rows: [
@@ -355,10 +400,12 @@ export default class BrakBarView extends JetView{
                                 {$subview: PagerView},
                                 ],
                             },
-                        {css: {'border-left': "1px solid #dddddd !important"},
+                        {type: 'clean',
+                            localId: "_prop",
                             rows: [
                                 dHead,
-                                {template: "document"},
+                                tiny,
+                                buttons,
                                 ],
                             },
                         ]
@@ -390,8 +437,11 @@ export default class BrakBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
-        this._search = this.getRoot().getParentView().$scope.$$("_ls")
+        this._search = this.$$("_ls");
         this.$$("__table").config.searchBar = this._search.config.id;
+        //console.log("rr", this.$$("_prop"))
+        //this.$$("_prop").disable()
+        
         }
 
     init() {
