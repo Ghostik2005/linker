@@ -1,4 +1,4 @@
-// Type definitions for Webix UI 5.3
+// Type definitions for Webix UI 5.4
 // Project: http://webix.com
 // Definitions by: Maksim Kozhukh <http://github.com/mkozhukh>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -148,8 +148,13 @@ interface markup{
 	namespace: any;
 }
 interface promise{
-	all(promise:Promise<any>, morepromises?:Promise<any>):void;
+	new (executor: (resolve: (value? : any) => void, reject: (reason? :any) => void) => void) : Promise<any>;
+	all(promises:Promise<any>[]):Promise<any>;
+	race(promises:Promise<any>[]):Promise<any>;
 	defer():Promise<any>;
+	resolve(value:any):Promise<any>;
+	reject(value:any):Promise<any>;
+
 }
 interface rules{
 	isChecked():boolean;
@@ -219,12 +224,12 @@ function single(source:WebixCallback):WebixCallback;
 function stringify(obj:any):string;
 function template(template:string):WebixCallback;
 function toArray(array:any[]):any[];
-function toCSV(id:any, options:any):void;
-function toExcel(id:any, options:any):void;
+function toCSV(id:any, options?:any):any;
+function toExcel(id:any, options?:any):any;
 function toFunctor(name:string):WebixCallback;
 function toNode(id:string):HTMLElement;
-function toPDF(id:string, name:string):void;
-function toPNG(id:string, name:string):void;
+function toPDF(id:any, options?:any):any;
+function toPNG(id:any, options?:any):any;
 function type(config:any):void;
 function ui(config:any, parent?:any, replacement?:any):webix.ui.baseview;
 function uid():number;
@@ -340,7 +345,7 @@ interface DataCollection{
 	destructor():void;
 	detachEvent(id:string):void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBindData(key:string|number, update:boolean):void;
 	getCursor():number;
@@ -419,7 +424,7 @@ interface DataLoader{
 	clearAll(soft?:boolean):void;
 	count():number;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getFirstId():string|number;
 	getIdByIndex(index:number):string|number;
@@ -524,7 +529,7 @@ interface DataStore{
 	detachEvent(id:string):void;
 	each(method:WebixCallback, master?:any, all?:boolean):void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getFirstId():string|number;
 	getIdByIndex(index:number):string|number;
@@ -659,6 +664,7 @@ interface EventSystem{
 }
 var EventSystem:EventSystem;
 interface FlexLayout{
+	render():void;
 	$getSize: any[];
 }
 var FlexLayout:FlexLayout;
@@ -859,7 +865,7 @@ interface TreeCollection{
 	destructor():void;
 	detachEvent(id:string):void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBindData(key:string|number, update:boolean):void;
 	getBranchIndex(id:string|number, parent?:string|number):number;
@@ -1156,7 +1162,7 @@ class baselayout implements webix.ui.baseview{
 	restore(state:any, factory?:WebixCallback):void;
 	serialize(serializer?:WebixCallback):any;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -1269,7 +1275,7 @@ class proto implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -1489,7 +1495,7 @@ class abslayout implements webix.ui.baseview{
 	resize():void;
 	resizeChildren():void;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -1565,7 +1571,7 @@ class accordion implements webix.ui.baseview{
 	restore(state:any, factory?:WebixCallback):void;
 	serialize(serializer?:WebixCallback):any;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -1717,7 +1723,7 @@ interface bulletConfig{
 	bands?: any[];
 	barWidth?: number;
 	borderless?: boolean;
-	color?: string;
+	color?: string|WebixCallback;
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
@@ -1737,24 +1743,20 @@ interface bulletConfig{
 	minHeight?: number;
 	minRange?: number;
 	minWidth?: number;
-	on?: EventHash;
-	placeholder?: string;
+	placeholder?: any;
 	scale?: any;
 	smoothFlow?: boolean;
 	stroke?: number;
+	tickSize?: number;
 	value?: number;
 	width?: number;
 }
 type bulletEventName ='onAfterScroll'|'onBindRequest'|'onBlur'|'onDestruct'|'onEnter'|'onFocus'|'onKeyPress'|'onLongTouch'|'onSwipeX'|'onSwipeY'|'onTimedKeyPress'|'onTouchEnd'|'onTouchMove'|'onTouchStart'|'onViewResize';
 class bullet implements webix.ui.baseview{
 	adjust():void;
-	attachEvent(type:bulletEventName, functor:WebixCallback, id?:string):string|number;
 	bind(target:any, rule?:WebixCallback, format?:string):void;
-	blockEvent():void;
-	callEvent(name:string, params:any[]):boolean;
 	define(property:string, value:any):void;
 	destructor():void;
-	detachEvent(id:string):void;
 	disable():void;
 	enable():void;
 	getChildViews():any[];
@@ -1762,18 +1764,16 @@ class bullet implements webix.ui.baseview{
 	getNode():any;
 	getParentView():any;
 	getTopParentView():webix.ui.baseview;
-	getValue():number;
-	hasEvent(name:string):boolean;
+	getValue(bullet_value:number):void;
 	hide():void;
 	isEnabled():boolean;
 	isVisible():boolean;
-	mapEvent(map:any):void;
 	queryView(config:any, mode?:string):any;
+	refresh():void;
 	resize():void;
 	setValue(new_value:number):void;
 	show(force?:boolean, animation?:boolean):void;
 	unbind():void;
-	unblockEvent():void;
 
 	$getSize():any[];
 	$height: number;
@@ -2133,7 +2133,7 @@ class chart implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -2150,7 +2150,7 @@ class chart implements webix.ui.baseview{
 	group(config:any, mode:boolean):void;
 	hasEvent(name:string):boolean;
 	hide():void;
-	hideSeries(series:string):void;
+	hideSeries(index:number):void;
 	isEnabled():boolean;
 	isVisible():boolean;
 	load(url:string, type?:string, callback?:WebixCallback):Promise<any>;
@@ -2166,7 +2166,7 @@ class chart implements webix.ui.baseview{
 	resize():void;
 	serialize():any[];
 	show(force?:boolean, animation?:boolean):void;
-	showSeries(series:string):void;
+	showSeries(index:number):void;
 	sort(by:string, dir?:string, as?:string):void;
 	sync(source:any, filter:WebixCallback, silent:boolean):void;
 	unbind():void;
@@ -2207,7 +2207,7 @@ interface checkboxConfig{
 	css?: string;
 	customCheckbox?: boolean;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -2280,6 +2280,7 @@ class checkbox implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -2566,6 +2567,7 @@ class colorpicker implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -2600,7 +2602,7 @@ interface comboConfig{
 	css?: string;
 	disabled?: boolean;
 	editable?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -2680,6 +2682,7 @@ class combo implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -2818,7 +2821,7 @@ interface contextmenuConfig{
 	modal?: boolean;
 	mouseEventDelay?: number;
 	move?: boolean;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -2879,7 +2882,7 @@ class contextmenu implements webix.ui.baseview{
 	enable():void;
 	enableItem(id:string|number):void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBody():any;
 	getChildViews():any[];
@@ -2990,7 +2993,7 @@ interface counterConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -3066,6 +3069,7 @@ class counter implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -3089,6 +3093,7 @@ class counter implements webix.ui.baseview{
 interface dashboardConfig{
 	view?: string;
 	animate?: any;
+	autoplace?: boolean;
 	borderless?: boolean;
 	cellHeight?: number;
 	cellWidth?: number;
@@ -3152,7 +3157,7 @@ class dashboard implements webix.ui.baseview{
 	restore(state:any, factory?:WebixCallback):void;
 	serialize(serializer?:WebixCallback):any[];
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -3224,7 +3229,7 @@ class datalayout implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -3258,7 +3263,7 @@ class datalayout implements webix.ui.baseview{
 	resizeChildren():void;
 	setValue(values:any[]):void;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	sort(by:string, dir?:string, as?:string):void;
 	sync(source:any, filter:WebixCallback, silent:boolean):void;
 	unbind():void;
@@ -3454,7 +3459,7 @@ interface datatableConfig{
 	spans?: any[];
 	subRowHeight?: string;
 	subrow?: string;
-	subview?: webix.ui.baseview;
+	subview?: webix.ui.baseview|WebixCallback;
 	templateCopy?: WebixCallback;
 	tooltip?: boolean;
 	topSplit?: number;
@@ -3502,7 +3507,7 @@ class datatable implements webix.ui.baseview{
 	editStop():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	filterByAll():void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	focusEditor(id:any):void;
@@ -3664,7 +3669,7 @@ interface dataviewConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -3709,7 +3714,7 @@ class dataview implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -3959,6 +3964,7 @@ class daterangepicker implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$cssName: string;
 	$getSize():any[];
@@ -4093,7 +4099,7 @@ interface datepickerConfig{
 	css?: string;
 	disabled?: boolean;
 	editable?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -4177,6 +4183,7 @@ class datepicker implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -4357,7 +4364,7 @@ interface excelviewerConfig{
 	spans?: any[];
 	subRowHeight?: string;
 	subrow?: string;
-	subview?: webix.ui.baseview;
+	subview?: webix.ui.baseview|WebixCallback;
 	templateCopy?: WebixCallback;
 	toolbar?: string;
 	tooltip?: string|boolean;
@@ -4404,7 +4411,7 @@ class excelviewer implements webix.ui.baseview{
 	editStop():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	filterByAll():void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	focusEditor(id:any):void;
@@ -4654,7 +4661,7 @@ class filemanager implements webix.ui.baseview{
 	editFile(id:string):void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getActive():string;
 	getActiveView():any;
@@ -4823,7 +4830,7 @@ class form implements webix.ui.baseview{
 	setDirty(mark?:boolean):void;
 	setValues(values:any, update?:boolean):void;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 	validate(mode?:any):boolean;
@@ -4948,6 +4955,7 @@ class gage implements webix.ui.baseview{
 	isVisible():boolean;
 	mapEvent(map:any):void;
 	queryView(config:any, mode?:string):any;
+	refresh():void;
 	resize():void;
 	setValue(new_value:number):void;
 	show(force?:boolean, animation?:boolean):void;
@@ -5010,7 +5018,7 @@ class geochart implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -5108,7 +5116,7 @@ class googleMap implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -5160,6 +5168,7 @@ class googleMap implements webix.ui.baseview{
 interface gridlayoutConfig{
 	view?: string;
 	animate?: any;
+	autoplace?: boolean;
 	borderless?: boolean;
 	cellHeight?: number;
 	cellWidth?: number;
@@ -5223,7 +5232,7 @@ class gridlayout implements webix.ui.baseview{
 	restore(state:any, factory?:WebixCallback):void;
 	serialize(serializer?:WebixCallback):any[];
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -5361,7 +5370,7 @@ interface grouplistConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -5410,7 +5419,7 @@ class grouplist implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -5562,7 +5571,7 @@ class headerlayout implements webix.ui.baseview{
 	restore(state:any, factory?:WebixCallback):void;
 	serialize(serializer?:WebixCallback):any;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -5928,7 +5937,7 @@ class kanban implements webix.ui.baseview{
 	eachList(func:WebixCallback):void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -5965,7 +5974,7 @@ class kanban implements webix.ui.baseview{
 	serialize():any[];
 	setIndex(id:string|number, index:number):void;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	sort(by:string, dir?:string, as?:string):void;
 	sync(source:any, filter:WebixCallback, silent:boolean):void;
 	unbind():void;
@@ -6127,7 +6136,7 @@ class layout implements webix.ui.baseview{
 	restore(state:any, factory:WebixCallback, configOnly:boolean):void;
 	serialize(serializer?:WebixCallback):any;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -6171,7 +6180,7 @@ interface listConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -6217,7 +6226,7 @@ class list implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -6331,7 +6340,7 @@ interface menuConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -6382,7 +6391,7 @@ class menu implements webix.ui.baseview{
 	enable():void;
 	enableItem(id:string|number):void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -6488,7 +6497,7 @@ interface multicomboConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -6572,6 +6581,7 @@ class multicombo implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$cssName: string;
 	$getSize():any[];
@@ -6605,7 +6615,7 @@ interface multiselectConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -6686,6 +6696,7 @@ class multiselect implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$cssName: string;
 	$getSize():any[];
@@ -6822,7 +6833,7 @@ interface multitextConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -6903,6 +6914,7 @@ class multitext implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$cssName: string;
 	$getSize():any[];
@@ -6983,7 +6995,7 @@ class multiview implements webix.ui.baseview{
 	resizeChildren():void;
 	setValue(id:string|number):void;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -7022,7 +7034,7 @@ interface organogramConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
 	onContext?: { [key: string]: any; };
@@ -7063,7 +7075,7 @@ class organogram implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBranchIndex(id:string|number, parent?:string|number):number;
 	getChildViews():any[];
@@ -7159,6 +7171,7 @@ interface pagerConfig{
 	height?: number;
 	hidden?: boolean;
 	id?: string|number;
+	level?: number;
 	limit?: number;
 	maxHeight?: number;
 	maxWidth?: number;
@@ -7382,7 +7395,7 @@ interface pivotConfig{
 	filterMinWidth?: number;
 	filterPlaceholder?: boolean|string;
 	filterWidth?: number;
-	footer?: string;
+	footer?: string|boolean;
 	format?: WebixCallback;
 	gravity?: number;
 	headerTemplate?: WebixCallback;
@@ -7410,7 +7423,7 @@ interface pivotConfig{
 	separateLabel?: boolean;
 	stableRowId?: boolean;
 	structure?: any;
-	totalColumn?: string;
+	totalColumn?: string|boolean;
 	type?: string;
 	url?: string;
 	webWorker?: string;
@@ -7420,8 +7433,8 @@ interface pivotConfig{
 type pivotEventName ='onAfterAdd'|'onAfterDelete'|'onAfterLoad'|'onAfterSort'|'onApply'|'onBeforeAdd'|'onBeforeApply'|'onBeforeCancel'|'onBeforeDelete'|'onBeforeLoad'|'onBeforeRender'|'onBeforeSort'|'onBindRequest'|'onCancel'|'onDataRequest'|'onDataUpdate'|'onDestruct'|'onFilterChange'|'onFilterCreate'|'onHeaderInit'|'onItemClick'|'onLoadError'|'onPopup'|'onViewInit'|'onWebWorkerEnd'|'onWebWorkerStart';
 class pivot implements webix.ui.baseview{
 	add(obj:any, index?:number):string|number;
-	addOperation(name:string, functor:WebixCallback, options:any):void;
-	addTotalOperation(name:string, operation:WebixCallback):void;
+	addOperation(name:string, operation:WebixCallback, options:any):void;
+	addTotalOperation(name:string, operation:WebixCallback, options:any):void;
 	adjust():void;
 	attachEvent(type:pivotEventName, functor:WebixCallback, id?:string):string|number;
 	bind(target:any, rule?:WebixCallback, format?:string):void;
@@ -7436,7 +7449,7 @@ class pivot implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getConfigWindow():any;
@@ -7634,7 +7647,7 @@ class portlet implements webix.ui.baseview{
 	restore(state:any, factory:WebixCallback):void;
 	serialize(serializer?:WebixCallback):any;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 
@@ -7694,6 +7707,7 @@ class property implements webix.ui.baseview{
 	bind(target:any, rule?:WebixCallback, format?:string):void;
 	blockEvent():void;
 	callEvent(name:string, params:any[]):boolean;
+	clear():void;
 	customize(obj:any):void;
 	define(property:string, value:any):void;
 	destructor():void;
@@ -7848,7 +7862,7 @@ interface radioConfig{
 	css?: string;
 	customRadio?: boolean;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -7922,6 +7936,7 @@ class radio implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -8030,7 +8045,7 @@ class rangechart implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -8049,7 +8064,7 @@ class rangechart implements webix.ui.baseview{
 	group(config:any, mode:boolean):void;
 	hasEvent(name:string):boolean;
 	hide():void;
-	hideSeries(series:string):void;
+	hideSeries(index:number):void;
 	isEnabled():boolean;
 	isVisible():boolean;
 	load(url:string, type?:string, callback?:WebixCallback):Promise<any>;
@@ -8066,7 +8081,7 @@ class rangechart implements webix.ui.baseview{
 	serialize():any[];
 	setFrameRange(range:any):void;
 	show(force?:boolean, animation?:boolean):void;
-	showSeries(series:string):void;
+	showSeries(index:number):void;
 	sort(by:string, dir?:string, as?:string):void;
 	sync(source:any, filter:WebixCallback, silent:boolean):void;
 	unbind():void;
@@ -8105,7 +8120,7 @@ interface rangesliderConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -8184,6 +8199,7 @@ class rangeslider implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$cssName: string;
 	$getSize():any[];
@@ -8273,7 +8289,7 @@ interface richselectConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -8352,6 +8368,7 @@ class richselect implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -8520,7 +8537,7 @@ interface searchConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -8596,6 +8613,7 @@ class search implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -8628,7 +8646,7 @@ interface segmentedConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -8706,6 +8724,7 @@ class segmented implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -8739,7 +8758,7 @@ interface selectConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -8812,6 +8831,7 @@ class select implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -8861,7 +8881,8 @@ interface sidebarConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multipleOpen?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -8914,7 +8935,7 @@ class sidebar implements webix.ui.baseview{
 	enable():void;
 	exists(id:string|number):boolean;
 	expand():void;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBranchIndex(id:string|number, parent?:string|number):number;
 	getChecked():any[];
@@ -9108,7 +9129,7 @@ interface sliderConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -9188,6 +9209,7 @@ class slider implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -9368,7 +9390,7 @@ class spreadsheet implements webix.ui.baseview{
 	resetUndo():void;
 	resize():void;
 	saveCell(row:number, column:number):void;
-	serialize():any;
+	serialize(options?:any):any;
 	setCellEditor(rowId:number, columnId:number, editorObject:any):void;
 	setCellFilter(rowId:number, columnId:number, options:string|any[]):void;
 	setCellValue(row:number, column:any, value:string):void;
@@ -9379,7 +9401,7 @@ class spreadsheet implements webix.ui.baseview{
 	setStyle(row:number, column:number, style:any):void;
 	show(force?:boolean, animation?:boolean):void;
 	showSheet(name:string):void;
-	sortRange(range:string, dir:string):void;
+	sortRange(range?:string, dir?:string):void;
 	splitCell(row:number, column:number):void;
 	ui(view:any):webix.ui.baseview;
 	unbind():void;
@@ -9433,7 +9455,7 @@ interface submenuConfig{
 	modal?: boolean;
 	mouseEventDelay?: number;
 	move?: boolean;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -9493,7 +9515,7 @@ class submenu implements webix.ui.baseview{
 	enable():void;
 	enableItem(id:string|number):void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBody():any;
 	getChildViews():any[];
@@ -9702,7 +9724,7 @@ interface switchButtonConfig{
 	css?: string;
 	customCheckbox?: boolean;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -9782,6 +9804,7 @@ class switchButton implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -9816,7 +9839,7 @@ interface tabbarConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -9908,6 +9931,7 @@ class tabbar implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -10088,7 +10112,7 @@ interface textConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -10164,6 +10188,7 @@ class text implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -10197,7 +10222,7 @@ interface textareaConfig{
 	container?: string|HTMLElement;
 	css?: string;
 	disabled?: boolean;
-	format?: string;
+	format?: any;
 	gravity?: number;
 	height?: number;
 	hidden?: boolean;
@@ -10271,6 +10296,7 @@ class textarea implements webix.ui.baseview{
 	unblockEvent():void;
 	validate():boolean;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -10362,6 +10388,7 @@ class toggle implements webix.ui.baseview{
 	unbind():void;
 	unblockEvent():void;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$getSize():any[];
 	$getValue():string;
@@ -10465,7 +10492,7 @@ class toolbar implements webix.ui.baseview{
 	setDirty(mark?:boolean):void;
 	setValues(values:any, update?:boolean):void;
 	show(force?:boolean, animation?:boolean):void;
-	showBatch(name:string):void;
+	showBatch(name:string, mode?:boolean):void;
 	unbind():void;
 	unblockEvent():void;
 	validate(mode?:any):boolean;
@@ -10612,7 +10639,7 @@ class tree implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBranchIndex(id:string|number, parent?:string|number):number;
 	getChecked():any[];
@@ -10738,7 +10765,7 @@ interface treemapConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -10786,7 +10813,7 @@ class treemap implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getBranchIndex(id:string|number, parent?:string|number):number;
 	getChildViews():any[];
@@ -10954,7 +10981,7 @@ interface treetableConfig{
 	spans?: any[];
 	subRowHeight?: string;
 	subrow?: string;
-	subview?: webix.ui.baseview;
+	subview?: webix.ui.baseview|WebixCallback;
 	templateCopy?: WebixCallback;
 	threeState?: boolean;
 	tooltip?: boolean;
@@ -11004,7 +11031,7 @@ class treetable implements webix.ui.baseview{
 	editStop():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	filterByAll():void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	focusEditor(id:any):void;
@@ -11172,7 +11199,7 @@ interface unitlistConfig{
 	minHeight?: number;
 	minWidth?: number;
 	mouseEventDelay?: number;
-	multiselect?: boolean;
+	multiselect?: string|boolean;
 	navigation?: boolean;
 	on?: EventHash;
 	onClick?: { [key: string]: any; };
@@ -11219,7 +11246,7 @@ class unitlist implements webix.ui.baseview{
 	disable():void;
 	enable():void;
 	exists(id:string|number):boolean;
-	filter(text:string|WebixTemplate|WebixCallback, value:string, preserve?:boolean):void;
+	filter(text:string|WebixTemplate|WebixCallback, value?:string, preserve?:boolean):void;
 	find(criterion:WebixCallback, first?:boolean):any;
 	getChildViews():any[];
 	getFirstId():string|number;
@@ -11389,6 +11416,7 @@ class uploader implements webix.ui.baseview{
 	unbind():void;
 	unblockEvent():void;
 
+	$allowsClear: boolean;
 	$compareValue: WebixCallback;
 	$cssName: string;
 	$getSize():any[];
