@@ -10,6 +10,7 @@ export default class PagerView extends JetView{
 
         var pager = {view: "toolbar",
             height: 36,
+            css: "custom_tool_bar",
             parent: undefined,
             cols: [
                 {view: "button", type: 'htmlbutton',

@@ -2629,6 +2629,33 @@ FROM RDB$DATABASE"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getBrakSearch(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            start_p = 1 if start_p < 1 else start_p
+            series = '60213'
+            name = ''
+
+            sql = """select t1.sh_prc, t1.id_spr, t1.c_tovar, t1.c_zavod, t2.series, t2.RAZBRAK from lnk t1
+                inner join brak t2 on ( t1.sh_prc = t2.sh_prc and lower(t2.series) like lower('%s') )
+                where t1.id_vnd = 10000 and lower(t1.c_tovar) like lower('%s')""" % ( "%" + series + "%", "%" + name + "%" )
+            sql_c = f"""select count(*) from ({sql})"""
+            
+            p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+
+            _return = results[0]
+            count = results[1][0][0]
+            t1 = time.time() - st_t
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1), 'params': params}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getSprSearch(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):

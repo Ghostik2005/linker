@@ -7,19 +7,12 @@ import {fRender, fRefresh, checkVal} from "../views/globals";
 import {rRefresh, request} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
+import BrakSideInfoView from "../views/brak_side_info";
 
 export default class BrakBarView extends JetView{
     config(){
         let app = this.app;
         let vi = this;
-        let url = app.config.r_url + "?getSupplAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        var rList = []
-        if (res) {
-            rList = res;
-            };
-
 
         var getActDt = () => {
             return this.getRoot().getChildViews()[2].getChildViews()[0];
@@ -196,7 +189,7 @@ export default class BrakBarView extends JetView{
                     on: {
                         onBeforeUnSelect: function (item) {
                             this.$scope.$$("_delletter").hide();
-                            this.$scope.$$("_prop").disable();
+                            //this.$scope.$$("_prop").disable();
                             },
                         onBeforeSelect: function (item) {
                             if (this.$new === true) {
@@ -330,7 +323,7 @@ export default class BrakBarView extends JetView{
             margin: 0,
             padding: 0,
             elements: [
-                {view: "text", value: "", label: "Нормативный документ", labelWidth: 155, name: "n_doc"},
+                {view: "text", value: "", label: "Нормативный документ", labelWidth: 155, name: "n_doc", localId: "tte"},
                 {view: "text", value: "", label: "Наименование", labelWidth: 155, name: "name"},
                 {view: "text", value: "", label: "Торговое наименование", labelWidth: 155, name: "t_name"},
                 {view: "text", value: "", label: "Серия", labelWidth: 155, name: "series"},
@@ -346,7 +339,7 @@ export default class BrakBarView extends JetView{
 
 
         //var inl = this.getNode();
-        console.log('th', this);
+        //console.log('th', this);
         //console.log('inl', inl);
 
 
@@ -400,14 +393,15 @@ export default class BrakBarView extends JetView{
                                 {$subview: PagerView},
                                 ],
                             },
-                        {type: 'clean',
-                            localId: "_prop",
-                            rows: [
-                                dHead,
-                                tiny,
-                                buttons,
-                                ],
-                            },
+                        {$subview: BrakSideInfoView},
+                        //{type: 'clean',
+                            //localId: "_prop",
+                            //rows: [
+                                //dHead,
+                                //tiny,
+                                //buttons,
+                                //],
+                            //},
                         ]
                     },
                 //{$subview: true},
@@ -417,6 +411,9 @@ export default class BrakBarView extends JetView{
         }
 
     ready() {
+        
+        //this.$$("_dHead").$scope = this.$$("_prop");
+
         let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_addletter"), this.$$("_delletter")];
         r_but.forEach( (item, i, r_but) => {
             item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
@@ -439,9 +436,11 @@ export default class BrakBarView extends JetView{
             })
         this._search = this.$$("_ls");
         this.$$("__table").config.searchBar = this._search.config.id;
-        //console.log("rr", this.$$("_prop"))
-        //this.$$("_prop").disable()
-        
+
+        this.sideView = this.getRoot().getChildViews()[2].getChildViews()[1]
+        //this.sideView.disable()
+        console.log('_sideV', this.sideView);
+
         }
 
     init() {

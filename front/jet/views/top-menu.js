@@ -18,11 +18,13 @@ import NewReportView from "../views/new_report";
 import PropView from "../views/prop_window";
 import BrakBarView from "../views/brak_bar";
 
+import FooterView from "../views/footer";
+
 export default class TopmenuView extends JetView{
     config(){
         let app = this.app;
         let c_th = this;
-
+        
         function filter_1(item, value) {
             value = value.toString().toLowerCase()
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
@@ -171,7 +173,7 @@ export default class TopmenuView extends JetView{
                                 label: "<span style='color: #3498db'>Обновить сессию</span>", width: 200, //height: 32,
                                 click: () => {
                                     if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
-                                        let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd
+                                        let id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd;
                                         get_prcs(this, id_vnd);
                                         };
                                     }
@@ -402,7 +404,7 @@ export default class TopmenuView extends JetView{
             tab_view.getChildViews()[1].addOption(tabConfig, true);
             }
 
-        var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'header', borderless: true,
+        var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'side_tool_bar', borderless: true,
             width: (app.config.expert) ? 44 : 140,
             rows: [
                 {view:"button", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
@@ -723,7 +725,8 @@ export default class TopmenuView extends JetView{
                 {borderless: !true, rows: [
                     {height: 1},
                     tabbar,
-                    tabmain
+                    tabmain,
+                    { $subview: FooterView },
                     ]
                 }]
             }

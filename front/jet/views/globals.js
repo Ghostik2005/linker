@@ -975,11 +975,16 @@ export function delPrc(inp_data, th) {
         };
     }
 
-export function after_call(i, ii, iii) {
-    deleteCookie('linker_user');
-    deleteCookie('linker_auth_key');
-    deleteCookie('linker_role');
-    location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
+export function after_call(text, data, XmlHttpRequest) {
+    console.log('req', XmlHttpRequest);
+    if (XmlHttpRequest.status == 403) {
+        deleteCookie('linker_user');
+        deleteCookie('linker_auth_key');
+        deleteCookie('linker_role');
+        alert('Требуется войти в систему');
+        location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
+        };
+
     }
 
 export function request (url, params, mode) {

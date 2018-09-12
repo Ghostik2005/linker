@@ -1,7 +1,7 @@
 "use strict";
 import {JetView} from "webix-jet";
 import HeaderView from "../views/header";
-import FooterView from "../views/footer";
+//import FooterView from "../views/footer";
 import {init_first, request, checkVal} from "../views/globals";
 
 export default class StartView extends JetView{
@@ -12,7 +12,7 @@ export default class StartView extends JetView{
             rows: [
                 { $subview: HeaderView },
                 { $subview: true, borderless: true},
-                { $subview: FooterView },
+                //{ $subview: FooterView },
                 ],
             };
         return ui;

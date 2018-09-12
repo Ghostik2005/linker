@@ -95,6 +95,19 @@ webix.ready( () => {
 
     console.log('search', location.search);
 
+    //webix.attachEvent("onLoadError", function(text, xml, ajax, owner){
+        //console.log("text", text);
+        //console.log("xml", xml);
+        //console.log("ajax", ajax);
+        //console.log("owner", ownerajax);
+        
+        ////text - response text
+        ////xml - response xml object
+        ////ajax - xmlHttpRequest object
+        ////owner - component which triggered error
+        //})
+
+
     window.onerror = function (message, source, lineNr, col, err) {
         webix.message({"text": "Возникла ошибка - мы работаем над ее исправлением. Текст в консоли", "type": "error", width: "800px", delay: "5"}); //
         window.console.log("message:", message);
@@ -108,4 +121,7 @@ webix.ready( () => {
         //window.console.error(error);
         //})
 
+
     });
+
+
