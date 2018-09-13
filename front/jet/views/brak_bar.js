@@ -67,7 +67,7 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
                 oldLabel: "<span class='webix_icon fa-history'></span>",
                 click: () => {
-                    let hist = webix.storage.session.get(this.$$("__table".config.name));
+                    let hist = webix.storage.session.get(this.$$("__table").config.name);
                     this.pophistory.show(hist, this.$$("_ls"));
                     },
                 },
@@ -199,7 +199,7 @@ export default class BrakBarView extends JetView{
                             },
                         onAfterSelect: function (item) {
                             this.$scope.$$("_delletter").show();
-                            this.$scope.$$("_prop").enable();
+                            //this.$scope.$$("_prop").enable();
                             let selectedListItem = this.getSelectedItem();
                             this.oldSelectedItem = selectedListItem.id;
                             let selectedDataItem = this.$scope.$$("__table").getSelectedItem();
@@ -222,7 +222,7 @@ export default class BrakBarView extends JetView{
                             parseItem.ch_dt = selectedDataItem.dt;
                             parseItem.gv = '';
                             parseItem.desc = '';
-                            this.$scope.$$("_dHead").parse(parseItem);
+                            //this.$scope.$$("_dHead").parse(parseItem);
 
                             },
                         },
@@ -277,7 +277,7 @@ export default class BrakBarView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onSubViewClose: function(id) {
-                    this.$scope.$$("_dHead").clear();
+                    //this.$scope.$$("_dHead").clear();
                     this.$scope.$$("_delletter").hide();
                     delete this.getItem(id)["$subContent"]
                     delete this.getItem(id)["$subHeight"]

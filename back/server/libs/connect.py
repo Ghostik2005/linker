@@ -170,6 +170,7 @@ class fb_local:
                 }
             self.production = True
         except:
+            traceback.print_exc()
             self.connect_params = {
                     "host": "127.0.0.1",
                     "database": "spr",

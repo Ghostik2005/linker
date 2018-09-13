@@ -184,9 +184,6 @@ export function updIssue(item, source) {
     source.refresh();
     }
 
-
-
-
 export function addStrana(item) {
     strana.add(item);
     }
@@ -852,6 +849,30 @@ export function init_first(app) {
     
     }
 
+export function clear_names_bar(th, on_error_text) {
+    let vv = th.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
+    vv[0].clearAll() //clear datatable
+    //th.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
+    let n_item = {'_name': "", '_count': "", '_vendor': on_error_text || "", 'p_name': ""};
+    if (th.$$("_local_add")) th.$$("_local_add").hide();
+    th.$$("_local_left").hide();
+    th.$$("_local_skip").hide();
+    th.$$("_local_right").hide();
+    th.$$('_local_link').hide();
+    //this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[1].parse(n_item); //_names_bar
+    th.$$("_local_names_bar").parse(n_item);
+    th.$$("_local_spr_search").setValue(''); //search bar
+    let pager = vv[1]; //pager
+    pager.getChildViews()[6].define('label', "Всего записей: 0");
+    pager.getChildViews()[6].refresh();
+    pager.$scope.$$("__page").config.manual = false;
+    pager.$scope.$$("__page").setValue('1');
+    pager.$scope.$$("__page").refresh();
+    pager.getChildViews()[2].getChildViews()[2].define('label', '1'); //total_page
+    pager.getChildViews()[2].getChildViews()[2].refresh();
+
+    }
+
 export function get_prcs(th, id_vnd) {
     let user = th.app.config.user;
     let url = th.app.config.r_url + "?getPrcs"
@@ -861,7 +882,11 @@ export function get_prcs(th, id_vnd) {
         if (data) {
             //data = data.data;
             $$("prcs_dc").clearAll();
-            $$("prcs_dc").parse(data);
+            if (data.length > 0) {
+                $$("prcs_dc").parse(data);
+            } else {
+                clear_names_bar(th, "Товары у кого-то на сведении");
+                }
         } else {
             webix.message('error');
             };
@@ -877,7 +902,11 @@ export function get_prcs_source(th, source) {
         if (data) {
             //data = data.data;
             $$("prcs_dc").clearAll();
-            $$("prcs_dc").parse(data);
+            if (data.length > 0) {
+                $$("prcs_dc").parse(data);
+            } else {
+                clear_names_bar(th, "Товары у кого-то на сведении");
+                }
         } else {
             webix.message('error');
             };
@@ -893,7 +922,11 @@ export function get_prcs_date(th,da) {
         if (data) {
             //data = data.data;
             $$("prcs_dc").clearAll();
-            $$("prcs_dc").parse(data);
+            if (data.length > 0) {
+                $$("prcs_dc").parse(data);
+            } else {
+                clear_names_bar(th, "Товары у кого-то на сведении");
+                }
         } else {
             webix.message('error');
             };

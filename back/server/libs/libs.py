@@ -33,7 +33,7 @@ class API:
     x_hash - API key
     """
 
-    def __init__(self, Lock, log, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k'):
+    def __init__(self, Lock, log, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k', pg=False):
         self.methods = []
         self.path = w_path
         self.p_path = p_path
@@ -45,16 +45,28 @@ class API:
         self.exec = sys.executable
         self.log = log
         #################################
-        self._pg = True
-        #self._pg = False
-        
+        if pg:
+            self._pg = True
+            self.log("POSTGRES STARTED")
+        else:
+            self._pg = False
+            self.log("FB STARTED")
         if self._pg:
             self.db = pg_local(self.log)
         else:
             self.db = fb_local(self.log)
-        res = self.db.execute({"sql": "update PRC SET IN_WORK = -1 where IN_WORK != -1", "options": ()})
+        #res = self.db.execute({"sql": "update PRC SET IN_WORK = -1 where IN_WORK != -1", "options": ()})
         self.start = 1
         self.count = 20
+
+    def setExit(self, params=None, x_hash=None):
+        user = params.get('user')
+        ret = {"result": False, "ret_val": "access denied"}
+        if self._check(x_hash):
+            sql = f"""update PRC SET IN_WORK = -1 where IN_WORK = (select id from users where "USER" = '{user}')"""
+            self.db.execute({"sql": sql, "options": ()})
+            ret = {"result": True, "ret_val": "OK"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def _make_sql(self, params):
         sql = params.get('sql')
@@ -176,7 +188,7 @@ class API:
                     'lnkdel': row[8] == 1,
                     }
             ret_v= {'info': prod, 'cfg': r, 'expert': expert, 'params': pars}
-            print(ret_v)
+            #print(ret_v)
             ret = {"result": True, "ret_val": ret_v}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -637,9 +649,9 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
             sql_c = """select count(*) from prc r {2} {3} WHERE r.n_fg = 1 and r.IN_WORK = -1 {0} {1}
 """.format(stri, us_stri, 'inner join USERS u on (u."GROUP" = r.ID_ORG)' if 'u."USER"' in stri else '', 'INNER JOIN VND v on (r.ID_VND = v.ID_VND)' if 'v.C_VND' in stri else '')
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            print("+"*10)
-            print(sql)
-            print("+"*10)
+            #print("+"*10)
+            #print(sql)
+            #print("+"*10)
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
             pool.close()
@@ -4464,7 +4476,11 @@ def handle_commandline(profile, index):
         profile = kwargs.pop("profile")
     if "index" in kwargs:
         index = kwargs.pop("index")
-    return args, kwargs, profile, index
+    if "pg" in kwargs:
+        pg = True
+    else:
+        pg = False
+    return args, kwargs, profile, index, pg
 
 class UDPSocket(socket.socket):
 

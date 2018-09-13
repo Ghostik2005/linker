@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.242.1750' #добавленна поддержка PG, нужно просто переключить
+__version__ = '18.256.1615' #добавленно setexit
+#__version__ = '18.242.1750' #добавленна поддержка PG, нужно просто переключить
 #__version__ = '18.227.1040' #исправлена обработка ответа запроса в связках по эталонам
 #__version__ = '18.211.1220' #не передает поставщика если он null
 #__version__ = '18.180.1750' #можно сохранять некоторые параметры
@@ -84,10 +85,10 @@ def main():
             "upstream": "/ms71/conf/upstream",
         },
     }
-    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__ = libs.handle_commandline(__profile__, __index__)
+    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
-    sys.APPCONF["api"] = libs.API(Lock=sys.APPCONF['Lock'], log = sys.APPCONF["log"], w_path = w_path, p_path=p_path)
+    sys.APPCONF["api"] = libs.API(Lock=sys.APPCONF['Lock'], log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg)
 
     #import atexit
     #atexit.register(libs.shutdown, sys.APPCONF["log"])

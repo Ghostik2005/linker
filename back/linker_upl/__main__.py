@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker_uploader'
-__version__ = '18.242.1750' #добавленная поддержка PG, можно будет просто  переключить на нее.
+__version__ = '18.256.1445' #порезали вывод в лог
+#__version__ = '18.242.1750' #добавленная поддержка PG, можно будет просто  переключить на нее.
 #__version__ = '18.232.1000' #исправлены некоторые ошибки
 #__version__ = '18.233.1700' #считаем контрольную сумму md5 загружаемых данных из PLExpert, если она совпадает с существующимим заданиями от этого поставщика - пропускаем
 #__version__ = '18.232.1345' #заглушка чтобы не обрабатывать PLEXpert
@@ -116,7 +117,10 @@ def application(env):
             else:
                 _param.update(_p_http)
             sys.APPCONF["log"](arg, kind='info:method:')
-            sys.APPCONF["log"](_param, kind='info:params:')
+            if len(str(_param)) < 1000:
+                sys.APPCONF["log"](_param, kind='info:params:')
+            else:
+                sys.APPCONF["log"](str(_param)[:1000], kind='info:params:')
             content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
     # три обязательных вызова yield: статус, заголовки, содержание
     ret_value = content.encode()

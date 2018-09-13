@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
 import {parse_unlinked_item, get_data_test, request} from "../views/globals";
-import {prcs, delPrc, checkKey, get_spr, getDtParams} from "../views/globals";
+import {prcs, delPrc, checkKey, get_spr, getDtParams, clear_names_bar} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import History from "../views/history";
 import NewformView from "../views/new_form";
@@ -79,7 +79,8 @@ export default class TopmenuView extends JetView{
                                     } else {
                                         let vnd_list = $$("_suppl").getList();
                                         if (vnd_list.count() > 0) {
-                                            let v = $$("_link_by").getValue();
+                                            //console.log('this', this);
+                                            let v = this.$$("_local_link_by").getValue();
                                             let id_vnd = vnd_list.getItem($$("_suppl").getValue()).id_vnd;
                                             if (+v===1) {
                                                 get_prcs(this, id_vnd);
@@ -89,31 +90,36 @@ export default class TopmenuView extends JetView{
                                                 get_prcs_source(this, id_vnd);
                                                 };
                                         } else {
-                                            let vv = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
-                                            vv[0].clearAll() //clear datatable
+                                            clear_names_bar(this);
+
                                             this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
-                                            let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
-                                            if ($$("_add")) $$("_add").hide();
-                                            $$("_left").hide();
-                                            $$("_skip").hide();
-                                            $$("_right").hide();
-                                            $$('_link').hide();
-                                            this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[1].parse(n_item); //_names_bar
-                                            $$("_spr_search").setValue(''); //search bar
-                                            let pager = vv[1]; //pager
-                                            pager.getChildViews()[6].define('label', "Всего записей: 0");
-                                            pager.getChildViews()[6].refresh();
-                                            pager.$scope.$$("__page").config.manual = false;
-                                            pager.$scope.$$("__page").setValue('1');
-                                            pager.$scope.$$("__page").refresh();
-                                            pager.getChildViews()[2].getChildViews()[2].define('label', '1'); //total_page
-                                            pager.getChildViews()[2].getChildViews()[2].refresh();
+
+                                            
+                                            //let vv = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
+                                            //vv[0].clearAll() //clear datatable
+                                            //this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
+                                            //let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
+                                            //if ($$("_add")) $$("_add").hide();
+                                            //$$("_left").hide();
+                                            //$$("_skip").hide();
+                                            //$$("_right").hide();
+                                            //$$('_link').hide();
+                                            //this.$$("_local_names_bar").parse(n_item);
+                                            //$$("_spr_search").setValue(''); //search bar
+                                            //let pager = vv[1]; //pager
+                                            //pager.getChildViews()[6].define('label', "Всего записей: 0");
+                                            //pager.getChildViews()[6].refresh();
+                                            //pager.$scope.$$("__page").config.manual = false;
+                                            //pager.$scope.$$("__page").setValue('1');
+                                            //pager.$scope.$$("__page").refresh();
+                                            //pager.getChildViews()[2].getChildViews()[2].define('label', '1'); //total_page
+                                            //pager.getChildViews()[2].getChildViews()[2].refresh();
                                             };
                                         };
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, 
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, localId: "_local_link_by",
                             options: [
                                 {id: 1, value: "<span style='color: white'>поставщикам</span>"},
                                 {id: 2, value: "<span style='color: white'>дате</span>"},
@@ -153,7 +159,7 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                     ]},
-                {view: 'toolbar', id: "_names_bar", css: "header", 
+                {view: 'toolbar', id: "_names_bar", css: "header", localId: "_local_names_bar",
                     rows: [
                         {height: 32, cols: [
                             {view: "label", label: "", name: "_name", fillspace: 1},
@@ -182,7 +188,7 @@ export default class TopmenuView extends JetView{
                     ]},
                 {view: 'toolbar', height: 40,
                     cols: [
-                        {view: "text", label: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined,
+                        {view: "text", label: "", labelWidth: 1, placeholder: "Строка поиска", id: "_spr_search", _keytimed: undefined, localId: "_local_spr_search",
                             on: {
                                 onKeyPress: function(code, event) {
                                     clearTimeout(this.config._keytimed);
@@ -218,20 +224,21 @@ export default class TopmenuView extends JetView{
                                 this.pophistory.show(hist, $$("_spr_search"));
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, hidden: true,
+                        {view:"button", type: 'htmlbutton', id: "_add",  width: 140, hidden: true, localId: "_local_add",
                             label: "Добавить (Ins)", 
                             hotkey: "insert", 
                             on: {
                                 onItemClick: () => {
                                     let item = {}
-                                    let name = $$("_names_bar").getValues().p_name;
+                                    //let name = $$("_names_bar").getValues().p_name;
+                                    let name = this.$$("_local_names_bar").getValues().p_name;
                                     item['t_name'] = "Название товара:   " + name;
                                     item['c_tovar'] = name.toUpperCase();
                                     this.popnew.show("Добавление в справочник", $$("_spr_search"), item);
                                     }
                                 },
                             },
-                        {view:"button", type: 'htmlbutton', id: "_link",
+                        {view:"button", type: 'htmlbutton', id: "_link", localId: "_local_link",
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
                             hotkey: "home+ctrl", 
                             click: () => {
@@ -250,7 +257,7 @@ export default class TopmenuView extends JetView{
 
                                 }
                             },
-                        {view:"button", type: 'htmlbutton', id: "_left", hidden: true,
+                        {view:"button", type: 'htmlbutton', id: "_left", hidden: true, localId: "_local_left",
                             label: "<span class='webix_icon fa-angle-left'></span><span style='line-height: 20px;'>Ctrl+</span><span class='webix_icon fa-arrow-down'></span>", width: 90,
                             hotkey: "down+ctrl",
                             click: () => {
@@ -267,7 +274,7 @@ export default class TopmenuView extends JetView{
                                 parse_unlinked_item(this);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton', id: "_skip", hidden: true,
+                        {view:"button", type: 'htmlbutton', id: "_skip", hidden: true, localId: "_local_skip",
                             label: "Пропустить (Ctrl+M)", width: 160,
                             hotkey: "m+ctrl",
                             click: () => {
@@ -281,7 +288,7 @@ export default class TopmenuView extends JetView{
                                 this.popconfirm.show('Пропустить?', params);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton', id: "_right", hidden: true,
+                        {view:"button", type: 'htmlbutton', id: "_right", hidden: true, localId: "_local_right",
                             label: "<span style='line-height: 20px;'>Ctrl+</span><span class='webix_icon fa-arrow-up'></span><span class='webix_icon fa-angle-right'></span>", width: 90,
                             hotkey: "up+ctrl",
                             click: () => {
@@ -408,7 +415,7 @@ export default class TopmenuView extends JetView{
             width: (app.config.expert) ? 44 : 140,
             rows: [
                 {view:"button", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
-                    label: "<span class='webix_icon fa-bars', style='color: #3498db'></span>", width: 40,
+                    label: "<span class='side_icon webix_icon fa-bars'></span>", width: 40,
                     on:
                         {
                         onItemClick: function() {
@@ -422,56 +429,13 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Пишем выловленные баги сюда", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
-                    resizable: true,
-                    sWidth: 136,
-                    eWidth: 40,
-                    label: "", width: 40,
-                    //hidden: !app.config.roles[app.config.role].adm,
-                    hidden: false,
-                    oldLabel: "<span class='webix_icon fa-bug', style='color: #3498db'></span>",
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Жуки</span>",
-                    on: {
-                        onAfterRender: function() {
-                            let node = this.getNode();
-                            node.onmousedown =  () => {
-                                this.interval = setInterval( () => {
-                                    this.config.longPress = true;
-                                    add_bar(this, AdmBarView);
-                                    clearInterval(this.interval);
-                                }, app.config.popDelay);
-                                node.onmouseup = () => {
-                                    clearInterval(this.interval);
-                                    }
-                                }
-                            },
-                        onItemClick: function () {
-                            return
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                            let ui = $$(this.config.b_id);
-                            if (this.config.longPress) {
-                            } else {
-                                if (ui) {
-                                    webix.html.addCss(this.$view, "bounceIn animated");
-                                    setTimeout(() => {
-                                        webix.html.removeCss(this.$view, "bounceIn animated");
-                                      },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                } else {
-                                    add_bar(this, AdmBarView);
-                                    };
-                                };
-                            this.config.longPress = false;
-                            }
-                        }
-                    },
                 {view:"button", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
-                    oldLabel: "<span class='webix_icon fa-cogs', style='color: #3498db'></span>",
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Настройки</span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-cogs'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Настройки</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -498,22 +462,22 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Пишем выловленные баги сюда", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
                     //hidden: !app.config.roles[app.config.role].adm,
                     hidden: false,
-                    oldLabel: "<span class='webix_icon fa-ban', style='color: #3498db'></span>",
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Забраковка</span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-bug'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Жуки</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
                             node.onmousedown =  () => {
                                 this.interval = setInterval( () => {
                                     this.config.longPress = true;
-                                    add_bar(this, BrakBarView);
+                                    add_bar(this, AdmBarView);
                                     clearInterval(this.interval);
                                 }, app.config.popDelay);
                                 node.onmouseup = () => {
@@ -522,6 +486,8 @@ export default class TopmenuView extends JetView{
                                 }
                             },
                         onItemClick: function () {
+                            webix.message("Пока недоступно");
+                            return
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
                             if (this.config.longPress) {
@@ -533,7 +499,7 @@ export default class TopmenuView extends JetView{
                                       },900)
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
-                                    add_bar(this, BrakBarView);
+                                    add_bar(this, AdmBarView);
                                     };
                                 };
                             this.config.longPress = false;
@@ -546,8 +512,8 @@ export default class TopmenuView extends JetView{
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].adm,
-                    oldLabel: "<span class='webix_icon fa-blind', style='color: #3498db'></span>",
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Админка</span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-blind'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Админка</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -581,14 +547,55 @@ export default class TopmenuView extends JetView{
                             }
                         }
                     },
+                {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "", width: 40,
+                    hidden: !(app.config.roles[app.config.role].skipped),
+                    oldLabel: "<span class='side_icon webix_icon fa-ban'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Забраковка</span>",
+                    on: {
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true;
+                                    add_bar(this, BrakBarView);
+                                    clearInterval(this.interval);
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
+                                }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                } else {
+                                    add_bar(this, BrakBarView);
+                                    };
+                                };
+                            this.config.longPress = false;
+                            }
+                        }
+                    },
                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
-                    oldLabel: "<span class='webix_icon fa-archive', style='color: #3498db'></span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-archive'></span>",
                     hidden: !(app.config.roles[app.config.role].skipped),
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 2px'>Пропущенные</span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 2px'>Пропущенные</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -627,8 +634,8 @@ export default class TopmenuView extends JetView{
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Несвязанные</span>",
-                    oldLabel: "<span class='webix_icon fa-unlink', style='color: #3498db'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Несвязанные</span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-unlink'></span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -667,8 +674,8 @@ export default class TopmenuView extends JetView{
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Связки</span>",
-                    oldLabel: "<span class='webix_icon fa-stumbleupon', style='color: #3498db'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Связки</span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-stumbleupon'></span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -707,8 +714,9 @@ export default class TopmenuView extends JetView{
                     sWidth: 136,
                     eWidth: 40,
                     label: "",
-                    extLabel: "<span style='line-height: 20px; color: #3498db; padding-left: 5px'>Отчеты</span>",
-                    oldLabel: "<span class='webix_icon fa-save', style='color: #3498db'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Отчеты</span>",
+                    //oldLabel: "<span class='webix_icon fa-save', style='color: #3498db'></span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-save'></span>",
                     height: 40,
                     click: function(){
                         var cv = getCurrentTable();
