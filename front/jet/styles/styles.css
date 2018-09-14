@@ -19,6 +19,9 @@
     color: #404040 !important;
     }
 
+.table_row_light {
+    color: grey;
+    }
 
 .header {
     background-color: transparent !important;

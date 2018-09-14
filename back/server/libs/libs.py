@@ -467,12 +467,15 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
         WHEN ru.NAME is NULL THEN '?'
         ELSE ru.NAME
     END ruu,
-    r.SOURCE
-from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK = -1 {order if 'r.' in order else ''}) as sss1
+    r.SOURCE,
+    r.in_work,
+    uu."USER"
+from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {order if 'r.' in order else ''}) as sss1
 join prc r on r.SH_PRC = rsh
 {sql_2}
 {sql_1}
 {sql_3}
+left join users uu on uu.id = r.in_work
 {order if 'r.' not in order else ''}"""
             #sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
             sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
@@ -480,12 +483,15 @@ join prc r on r.SH_PRC = rsh
         WHEN ru.NAME is NULL THEN '?'
         ELSE ru.NAME
     END ruu,
-    r.SOURCE
+    r.SOURCE,
+    r.in_work,
+    uu."USER"
 from prc r
 {sql_2}
 {sql_1}
 {sql_3}
-WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_stri} {us_s or ''}
+left join users uu on uu.id = r.in_work
+WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_stri} {us_s or ''}
 order by {field} {direction}"""
             sql = sql_ if (stri or us_stri or us_s) else sql
             sql_tt = sql
@@ -503,9 +509,10 @@ order by {field} {direction}"""
 {sql_2 if v_s else ''}
 {sql_1 if us_s else ''}
 {sql_3 if us_s else ''}
-WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
-            #print(sql_c)
-            #print('*'*15)
+left join users uu on uu.id = r.in_work
+WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
+            print(sql)
+            print('*'*15)
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -534,7 +541,9 @@ WHERE r.n_fg <> 1 and r.IN_WORK = -1 {stri} {us_s or ''}"""
                     "c_user"  : row[12],
                     "c_vnd"   : row[10],
                     "dt"      : str(row[11]),
-                    "source"  : sou
+                    "source"  : sou,
+                    "in_work" : str(row[14]),
+                    "in_work_name": str(row[15])
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}

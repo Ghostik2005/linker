@@ -18,6 +18,9 @@
   /*color: var(--bars-main-color) !important;*/
   color: #404040 !important;
 }
+.table_row_light {
+  color: grey;
+}
 .header {
   background-color: transparent !important;
   border-bottom: 1px solid #ffffff;

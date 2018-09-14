@@ -107,6 +107,11 @@ export default class AllUnlinkedBarView extends JetView{
                             }
                         ]
                     },
+                {id: "in_work", width: 5, hidden: true, headermenu: false},
+                {id: "in_work_name", width: 100, hidden: true,
+                    header: [{text: "работает"},
+                        ]
+                    },
                 {id: "id_org", width: 100, hidden: true,
                     header: [{text: "id_org"},
                         {content: "txtFilt"},
@@ -117,8 +122,16 @@ export default class AllUnlinkedBarView extends JetView{
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
-                onBeforeRender: function() {
+                onBeforeRender: function(table) {
                     webix.extend(this, webix.ProgressBar);
+                    let data = table.order;
+                    data.forEach(function(item, i, data) {
+                        let obj = table.getItem(item);
+                        if (obj.in_work !== '-1') {
+                            obj.$css = "table_row_light";
+                            };
+                        });
+                    
                     },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
@@ -127,8 +140,10 @@ export default class AllUnlinkedBarView extends JetView{
                     vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
                     vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
                     },
-                onItemDblClick: () => {
+                onItemDblClick: (clickItem) => {
                     let item = this.$$("__table").getSelectedItem();
+                    if (!item) return;
+                    if (item.id !== clickItem.row) return;
                     if (+$$("_link_by").getValue() === 1) {
                         if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
                             $$("_suppl").config.state = true;
@@ -151,7 +166,9 @@ export default class AllUnlinkedBarView extends JetView{
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-                onBeforeSelect: () => {
+                onBeforeSelect: function(selected) {
+                    let item = this.getItem(selected.id)
+                    if (item.in_work !== '-1') return false;
                     }
                 }
             }
@@ -163,7 +180,6 @@ export default class AllUnlinkedBarView extends JetView{
                 cols: [
                     {view: "label", template: "Для ускорения ограничивайте поиск названием"},
                     {view: "button", type: "htmlbutton", tooltip: "Обновить", 
-                        //label: "<span class='webix_icon fa-refresh'></span>", width: 40,
                         localId: "_renew",
                         resizable: true,
                         sWidth: 136,
