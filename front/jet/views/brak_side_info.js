@@ -59,8 +59,8 @@ export default class BrakSideInfoView extends JetView{
             borderless: true,
             cols: [
                 {},
-                {view: 'button', value: "Сохранить", width: 120},
-                {view: 'button', value: "Отменить", width: 120},
+                {view: 'button', value: "Сохранить", width: 120, hidden: true},
+                {view: 'button', value: "Отменить", width: 120, hidden: true},
                 ]
             };
 
@@ -77,18 +77,34 @@ export default class BrakSideInfoView extends JetView{
         }
 
     ready() {
-
-        //this.$$("_dHead").disable();
-        //console.log('p');
-        //console.log('prop', this.$$("_prop"));
-        //console.log('prop_form', this.$$("_prop").getFormView());
-        //console.log('head', this.$$("_dHead"));
-        //console.log('l');
-        
         }
 
     init() {
+        }
+
+    load_data(data) {
+        //загружаем данные
+        this.clear_info();
+        this.$$("_dHead").parse(data);
 
         }
+        
+    clear_info() {
+        //очищаем инфу
+        this.$$("_dHead").clear();
+
+        }
+
+    disable_info() {
+        //блокируем ввод инфы
+        //webix.message("disabling");
+        }
+
+    enable_info() {
+        //разблокируем ввод инфы
+        //webix.message("enabling");
+        }
+    
+        
     }
 

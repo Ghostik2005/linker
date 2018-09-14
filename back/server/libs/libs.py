@@ -2641,26 +2641,83 @@ FROM RDB$DATABASE"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getBrakMail(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            series = params.get('series','')
+            sh_prc = params.get('sh_prc', '')
+            sql = f"""select sh_prc, title, title_torg, seriya, fabricator, region, n_rec, dt_edit, gv, title_doc, opis, link_file, id, dt from brak_mail where sh_prc = '{sh_prc}' and seriya = '{series}'"""
+            res = self.db.request({"sql": sql, "options": ()})
+            _return = []
+            for row in res:
+                r = {
+                    "sh_prc": row[0],
+                    "name": row[1], #"title"
+                    "t_name": row[2], #"title_torg"
+                    "series": row[3], #"seriya"
+                    "vendor": row[4], #"fabricator"
+                    "region": row[5], #"region"
+                    "number": row[6], #n_rec"
+                    "ch_dt": str(row[7]), #"dt_edit"
+                    "gv": row[8], #"gv"
+                    "n_doc": row[9], #"title_doc"
+                    "desc": row[10], #"opis"
+                    "f_name": row[11], #"link_file"
+                    "id": row[12], #"id"
+                    "cre_date": str(row[13]), #"dt"
+                    }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getBrakSearch(self, params=None, x_hash=None):
         st_t = time.time()
+        names = {"c_name": "t1.c_tovar",
+                 "sh_prc": "t1.sh_prc",
+                 "c_zavod": "t1.c_zavod",
+                 "series": "t2.series",
+                 "dt": "t2.DT",
+                 "razbr": "t2.RAZBRAK"}
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
-            series = '60213'
-            name = ''
+            end_p = int(params.get('count', self.count)) + start_p -1
+            series = params.get('series','')
+            name = params.get('search', '')
+            field = params.get('field')
+            field = names.get(field, "t1.c_tovar")
+            direction = params.get('direction', 'asc')
+            sql = """select t1.sh_prc, t1.id_spr, t1.c_tovar, t1.c_zavod, t2.series, t2.RAZBRAK, t2.DT from brak t2
+join lnk t1 on ( t1.sh_prc = t2.sh_prc and t1.ID_VND = 10000)
+WHERE lower(t1.C_TOVAR) like lower('%s') and lower(t2.series) like lower('%s') """ % ( "%" + name + "%", "%" + series + "%" )
 
-            sql = """select t1.sh_prc, t1.id_spr, t1.c_tovar, t1.c_zavod, t2.series, t2.RAZBRAK from lnk t1
-                inner join brak t2 on ( t1.sh_prc = t2.sh_prc and lower(t2.series) like lower('%s') )
-                where t1.id_vnd = 10000 and lower(t1.c_tovar) like lower('%s')""" % ( "%" + series + "%", "%" + name + "%" )
-            sql_c = f"""select count(*) from ({sql})"""
+            sql_c = f"""select count(*) from ({sql}) as sc"""
             
+            order = f""" ORDER by {field} {direction}"""
+            sql = sql + order
+            if self._pg:
+                rrr = f""" limit {end_p - start_p + 1} offset {start_p-1}"""
+            else:
+                rrr = f""" ROWS {start_p} to {end_p}"""
+            sql = sql + rrr
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
-
-            _return = results[0]
+            _return = []
+            for row in results[0]:
+                r = {
+                    "sh_prc":  row[0],
+                    "c_name": row[2],
+                    "c_zavod": row[3],
+                    "series": row[4],
+                    "razbr": row[5],
+                    "dt": row[6]
+                }
+                _return.append(r)
             count = results[1][0][0]
             t1 = time.time() - st_t
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1), 'params': params}}

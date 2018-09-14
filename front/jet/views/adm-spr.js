@@ -390,6 +390,7 @@ export default class SprView extends JetView{
             })
         this.$$("__table").config.searchBar = this.$$("_sb");
         this.$$("_sb").callEvent("onKeyPress", [13,]);
+        this.$$("_sb").focus();
         }
     
     init() {

@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.256.1600",
+        version:        "18.257.1700",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -94,18 +94,6 @@ webix.ready( () => {
     app.render();
 
     console.log('search', location.search);
-
-    //webix.attachEvent("onLoadError", function(text, xml, ajax, owner){
-        //console.log("text", text);
-        //console.log("xml", xml);
-        //console.log("ajax", ajax);
-        //console.log("owner", ownerajax);
-        
-        ////text - response text
-        ////xml - response xml object
-        ////ajax - xmlHttpRequest object
-        ////owner - component which triggered error
-        //})
 
 
     window.onerror = function (message, source, lineNr, col, err) {

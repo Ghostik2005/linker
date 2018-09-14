@@ -42,7 +42,7 @@ export default class AllUnlinkedBarView extends JetView{
             di: 'asc',
             searchBar: undefined,
             searchMethod: "getPrcsAll",
-            old_stri: " ",
+            old_stri: "",
             columns: [
                 {id: "id_tovar", width: 80, //sort: "server",
                     hidden: true,
@@ -251,6 +251,8 @@ export default class AllUnlinkedBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             });
+
+        this.$$("__table").getFilter("c_tovar").focus();
         }
 
     }

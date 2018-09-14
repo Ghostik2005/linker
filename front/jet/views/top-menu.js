@@ -79,7 +79,6 @@ export default class TopmenuView extends JetView{
                                     } else {
                                         let vnd_list = $$("_suppl").getList();
                                         if (vnd_list.count() > 0) {
-                                            //console.log('this', this);
                                             let v = this.$$("_local_link_by").getValue();
                                             let id_vnd = vnd_list.getItem($$("_suppl").getValue()).id_vnd;
                                             if (+v===1) {
@@ -91,29 +90,7 @@ export default class TopmenuView extends JetView{
                                                 };
                                         } else {
                                             clear_names_bar(this);
-
                                             this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
-
-                                            
-                                            //let vv = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
-                                            //vv[0].clearAll() //clear datatable
-                                            //this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
-                                            //let n_item = {'_name': "", '_count': "", '_vendor': "", 'p_name': ""};
-                                            //if ($$("_add")) $$("_add").hide();
-                                            //$$("_left").hide();
-                                            //$$("_skip").hide();
-                                            //$$("_right").hide();
-                                            //$$('_link').hide();
-                                            //this.$$("_local_names_bar").parse(n_item);
-                                            //$$("_spr_search").setValue(''); //search bar
-                                            //let pager = vv[1]; //pager
-                                            //pager.getChildViews()[6].define('label', "Всего записей: 0");
-                                            //pager.getChildViews()[6].refresh();
-                                            //pager.$scope.$$("__page").config.manual = false;
-                                            //pager.$scope.$$("__page").setValue('1');
-                                            //pager.$scope.$$("__page").refresh();
-                                            //pager.getChildViews()[2].getChildViews()[2].define('label', '1'); //total_page
-                                            //pager.getChildViews()[2].getChildViews()[2].refresh();
                                             };
                                         };
                                     }
@@ -144,7 +121,6 @@ export default class TopmenuView extends JetView{
                             },
                         {},
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
-                            //label: "<span class='webix_icon fa-refresh'></span>", width: 38,
                             resizable: true,
                             sWidth: 136,
                             eWidth: 38,
@@ -202,7 +178,6 @@ export default class TopmenuView extends JetView{
                                                     view: ui,
                                                     navBar: uu.getChildViews()[1],
                                                     start: 1,
-                                                    //count: ui.config.posPpage,
                                                     searchBar: ui.config.searchBar,
                                                     method: ui.config.searchMethod,
                                                     field: params[2],
@@ -254,7 +229,6 @@ export default class TopmenuView extends JetView{
                                 params["type"] = "async";
                                 params["callback"] = delPrc; //удаляем из базы, обновляем списки
                                 this.popconfirm.show('Связать?', params);
-
                                 }
                             },
                         {view:"button", type: 'htmlbutton', id: "_left", hidden: true, localId: "_local_left",
@@ -453,10 +427,6 @@ export default class TopmenuView extends JetView{
                             setTimeout(() => {
                                     webix.html.removeCss(this.$view, "bounceIn animated");
                                   },900)
-                            //var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                            //webix.message({type: "debug", text: "Будут персональные настройки пользователя"});
-                            //if (this.config.longPress) webix.message({type: "error", text: "LongPress"});
-                            //else webix.message({type: "info", text: "ShortPress"});
                             this.config.longTouch = false;
                             this.$scope.popprop.show_w("Персональные настройки: " + app.config.user);
                             },
@@ -466,9 +436,9 @@ export default class TopmenuView extends JetView{
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
-                    label: "", width: 40,
-                    //hidden: !app.config.roles[app.config.role].adm,
-                    hidden: false,
+                    label: "",
+                    width: 40,
+                    hidden: !false,
                     oldLabel: "<span class='side_icon webix_icon fa-bug'></span>",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Жуки</span>",
                     on: {

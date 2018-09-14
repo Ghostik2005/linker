@@ -232,6 +232,7 @@ export default class SkippedBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
+        this.$$("__table").getFilter("c_tovar").focus();
         }
 
     init() {

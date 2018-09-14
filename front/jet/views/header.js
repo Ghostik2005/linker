@@ -81,6 +81,5 @@ export default class HeaderView extends JetView{
             ]}
         }
     ready() {
-        this.$$("_sse").callEvent('onItemClick')
         }
     }
