@@ -48,7 +48,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.257.1700",
+        version:        "18.260.1700",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -93,7 +93,7 @@ webix.ready( () => {
 
     app.render();
 
-    console.log('search', location.search);
+    //console.log('search', location.search);
 
 
     window.onerror = function (message, source, lineNr, col, err) {

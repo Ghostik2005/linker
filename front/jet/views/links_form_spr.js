@@ -5,7 +5,7 @@ import NewformView from "../views/new_form";
 import {get_spr, request, checkVal, compareTrue} from "../views/globals";
 import {checkKey, fRender, fRefresh} from "../views/globals";
 import UnlinkView from "../views/unlink";
-import {dt_formating_sec, dt_formating} from "../views/globals";
+import {dt_formating_sec, dt_formating, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
 
 export default class LinksViewSpr extends JetView{
@@ -58,7 +58,10 @@ export default class LinksViewSpr extends JetView{
                     header: [{text: "Поставщик"},
                         {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: rList,
+                                options: {
+                                    filter: mcf_filter,
+                                    data: rList,
+                                    },
                                 },
                             }
                         ]

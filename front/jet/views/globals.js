@@ -613,8 +613,17 @@ export function dt_formating(d) {
     return webix.Date.dateToStr("%d-%m-%Y")(d)
     };
 
+export function mcf_filter (obj, value){
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return obj.value.toString().toLowerCase().search(value) != -1;
+    //return obj.value.toString().toLowerCase().indexOf(value) != -1;
+    //console.log('obj', obj);
+    //console.log('value', value);
+    //return true;
+    };
+    
 export function init_first(app) {
-
     webix.ui.datafilter.richFilt1 = Object.create(webix.ui.datafilter.richSelectFilter);
     webix.ui.datafilter.richFilt1.refresh = rRefresh;
     webix.ui.datafilter.richFilt1.render = function(master, config){
@@ -687,7 +696,7 @@ export function init_first(app) {
         value.compare = value.compare || this.compare;
         value.prepare = value.prepare || this.prepare;
         master.registerFilter(node, value, this);
-        var data = value.inputConfig.options;
+        var data = value.inputConfig.options.data;
         var list = select.getPopup().getList();
         node.firstChild.appendChild(select.$view.parentNode);
         if (list.parse){
@@ -721,63 +730,10 @@ export function init_first(app) {
                 var vi = webix.$$(vid);
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout( () => {
-                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
-                    },app.config.searchDelay);
-                });
-            config.myfilt = myfilt.config.id;
-            };
-        config.css = "webix_div_filter";
-        return " ";
-        }
-
-    webix.ui.datafilter.mycomboFilter2 = Object.create(webix.ui.datafilter.richSelectFilter);
-    webix.ui.datafilter.mycomboFilter2.refresh = function(master, node, value){
-        if (master.$destructed) return;
-        var select = webix.$$(value.myfilt);
-        node.$webix = value.myfilt;
-        node.style.marginLeft = "-10px";
-        value.compare = value.compare || this.compare;
-        value.prepare = value.prepare || this.prepare;
-        master.registerFilter(node, value, this);
-        var data = value.inputConfig.options;
-        var list = select.getPopup().getList();
-        node.firstChild.appendChild(select.$view.parentNode);
-        if (list.parse){
-            list.clearAll();
-            list.parse(data);
-            if ((!this.$noEmptyOption && value.emptyOption !== false) || value.emptyOption){
-                var emptyOption = { id:"", value: value.emptyOption||"", $empty: true };
-                list.add(emptyOption,0);
-                }
-            };
-        if (value.value) this.setValue(node, value.value);
-        select.render();
-        webix.delay(select.resize, select);
-        };
-    webix.ui.datafilter.mycomboFilter2.inputtype = "combo";
-    webix.ui.datafilter.mycomboFilter2.render = function(master, config){
-        if (!config.myfilt){
-            var d = webix.html.create("div", { "class" : "webix_richfilter" });
-            var richconfig = {
-                container:d,
-                view:this.inputtype,
-                options:[]
-                };
-            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-            webix.extend(richconfig, inputConfig, true);
-            if (config.separator) richconfig.separator = config.separator;
-            if (config.suggest) richconfig.suggest = config.suggest;
-            var myfilt = webix.ui(richconfig);
-            myfilt.attachEvent("onChange", function(){
-                var vid = master.config.id;
-                var vi = webix.$$(vid);
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout( () => {
-                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
+                    let pv = vi.getParentView().getChildViews()[1].$scope.$$("__page") || vi.getParentView().getChildViews()[2].$scope.$$("__page");
+                    let old_v = pv.getValue();
+                    pv.setValue((+old_v ===0) ? '1' : "0");
+                    pv.refresh();
                     },app.config.searchDelay);
                 });
             config.myfilt = myfilt.config.id;
@@ -1009,7 +965,7 @@ export function delPrc(inp_data, th) {
     }
 
 export function after_call(text, data, XmlHttpRequest) {
-    console.log('req', XmlHttpRequest);
+    //console.log('req', XmlHttpRequest);
     if (XmlHttpRequest.status == 403) {
         deleteCookie('linker_user');
         deleteCookie('linker_auth_key');

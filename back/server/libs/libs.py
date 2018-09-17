@@ -399,7 +399,7 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
                     v_s = 'and %s' % s
                 if pars['c_user']:
-                    if pars['c_user'] == '?':
+                    if pars['c_user'] == 'Не назначен':
                         s = "ru.name is null"
                     else:
                         s = "ru.name = '" + pars['c_user'] + "'"
@@ -464,7 +464,7 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
             #sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
     CASE
-        WHEN ru.NAME is NULL THEN '?'
+        WHEN ru.NAME is NULL THEN 'не назначен'
         ELSE ru.NAME
     END ruu,
     r.SOURCE,
@@ -480,7 +480,7 @@ left join users uu on uu.id = r.in_work
             #sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, u."USER", v.C_VND, r.dt ch_date,
             sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
     CASE
-        WHEN ru.NAME is NULL THEN '?'
+        WHEN ru.NAME is NULL THEN 'не назначен'
         ELSE ru.NAME
     END ruu,
     r.SOURCE,
@@ -527,6 +527,10 @@ WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
                     sou = "Склад"
                 else:
                     sou = "Без источника"
+                if row[15] is None:
+                    w_name = ""
+                else:
+                    w_name = str(row[15])
                 r = {
                     "sh_prc"  : row[0],
                     "id_vnd"  : row[1],
@@ -543,7 +547,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
                     "dt"      : str(row[11]),
                     "source"  : sou,
                     "in_work" : str(row[14]),
-                    "in_work_name": str(row[15])
+                    "in_work_name": w_name
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}

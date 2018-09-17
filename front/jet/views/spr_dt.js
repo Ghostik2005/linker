@@ -156,7 +156,9 @@ export default class SprView extends JetView{
                     header: [{text: "Д. в-во"},
                         {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: dvList
+                                options: {
+                                    data: dvList
+                                    },
                                 },
                             }
                         ]

@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {checkKey, request, checkVal} from "../views/globals";
 import {parseToLink} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
 
 export default class AllUnlinkedBarView extends JetView{
@@ -12,7 +12,7 @@ export default class AllUnlinkedBarView extends JetView{
 
         var vi = this;
 
-        var rList = [{id: 0, value: "Пользователь"}, {id: 9, value: "Сводильщик"}, {id: 10, value: "Админ"}, {id: 34, value: "Суперадмин"}, {id: 100, value: "?"}];
+        var rList = [{id: 0, value: "Пользователь"}, {id: 9, value: "Сводильщик"}, {id: 10, value: "Админ"}, {id: 34, value: "Суперадмин"}, {id: 100, value: "Не назначен"}];
 
         let url = app.config.r_url + "?getSupplAll";
         let params = {"user": app.config.user};
@@ -63,9 +63,13 @@ export default class AllUnlinkedBarView extends JetView{
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "mycomboFilter2", compare: compareTrue,
+                        {content: "mycomboFilter",
+                            compare: compareTrue,
                             inputConfig : {
-                                options: rList1,
+                                options: {
+                                    filter: mcf_filter,
+                                    data: rList1,
+                                    },
                                 },
                             }
                         ]
@@ -109,7 +113,7 @@ export default class AllUnlinkedBarView extends JetView{
                     },
                 {id: "in_work", width: 5, hidden: true, headermenu: false},
                 {id: "in_work_name", width: 100, hidden: true,
-                    header: [{text: "работает"},
+                    header: [{text: "В работе"},
                         ]
                     },
                 {id: "id_org", width: 100, hidden: true,

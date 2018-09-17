@@ -131,9 +131,11 @@ export default class SprView extends JetView{
                 { id: "id_zavod", sort: "server",
                     width: 300,
                     header: [{text: "Производитель"},
-                        {content: "mycomboFilter2", compare: compareTrue,
+                        {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: vList
+                                options: {
+                                    data: vList
+                                    },
                                 },
                             }
                         ]
@@ -141,9 +143,11 @@ export default class SprView extends JetView{
                 { id: "id_strana", sort: "server",
                     width: 200,
                     header: [{text: "Страна"},
-                        {content: "mycomboFilter2", compare: compareTrue,
+                        {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: stranaList
+                                options: {
+                                    data: stranaList
+                                    },
                                 },
                             }
                         ]
@@ -151,19 +155,23 @@ export default class SprView extends JetView{
                 { id: "c_dv", hidden: true, sort: "server",
                     width: 300,
                     header: [{text: "Д. в-во"},
-                        {content: "mycomboFilter2", compare: compareTrue,
+                        {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: dvList
-                                },
+                                options: {
+                                    data: dvList
+                                    },
+                                },  
                             }
                         ]
                     },
                 { id: "c_group", hidden: true,
                     width: 300,
                     header: [{text: "Группа"},
-                        {content: "mycomboFilter2", compare: compareTrue,
+                        {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: tgList
+                                options: {
+                                    data: tgList,
+                                    },
                                 },
                             }
                         ]

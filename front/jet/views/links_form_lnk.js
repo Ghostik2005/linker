@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {checkKey, fRender, fRefresh} from "../views/globals";
 import {rRefresh, request, checkVal} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
 
@@ -83,7 +83,10 @@ export default class LinksViewLnk extends JetView{
                     header: [{text: "Поставщик"},
                         {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: rList,
+                                options: {
+                                    filter: mcf_filter,
+                                    data: rList,
+                                    },
                                 },
                             }
                         ]

@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {checkKey, fRender, fRefresh, checkVal, request} from "../views/globals";
 import ConfirmView from "../views/yes-no";
-import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
 
 
@@ -67,9 +67,12 @@ export default class SkippedBarView extends JetView{
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "mycomboFilter2", compare: compareTrue,
+                        {content: "mycomboFilter", compare: compareTrue,
                             inputConfig : {
-                                options: rList,
+                                options: {
+                                    filter: mcf_filter,
+                                    data: rList,
+                                    },
                                 },
                             }
                         ]
