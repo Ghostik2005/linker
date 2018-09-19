@@ -167,6 +167,7 @@ export default class BrakBarView extends JetView{
                                 this.$new = true
                                 selectedListItem = this.getSelectedItem();
                                 };
+                            selectedListItem.letter = "<p>йцуйа каыуа</p>\n<p>авфауц</p>";
                             this.$scope.sideView.$scope.load_data(selectedListItem);
 
                             },
@@ -222,6 +223,8 @@ export default class BrakBarView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onSubViewClose: function(id) {
+                    this.$scope.sideView.$scope.hide_b();
+                    this.$scope.sideView.$scope.hide_b();
                     delete this.getItem(id)["$subContent"]
                     delete this.getItem(id)["$subHeight"]
                     delete this.getItem(id)["$subOpen"]

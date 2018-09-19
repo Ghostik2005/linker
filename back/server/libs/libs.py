@@ -2654,6 +2654,30 @@ FROM RDB$DATABASE"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def setBrakMail(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            print("set mail")
+            print(params)
+            pass
+            _return = 'OK'
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delBrakMail(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            print("del mail")
+            print(params)
+            pass
+            _return = 'OK'
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
@@ -4427,6 +4451,25 @@ def f_head(aContentLength, fType='csv'):
     #name = uuid.uuid4().hex
     r.append(("Content-Type", "application/octet-stream"))
     r.append(("Content-Disposition", f"attachment; filename=report.{fType}"))
+    return r
+
+def authHead(content, aContentLength):
+    """
+    make a headers for auth
+    """
+
+    c = json.loads(content)
+    aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
+    r = []
+    r.append(("Last-Modified", "%s" % aLastModified))
+    r.append(("Content-Length", "%i" % aContentLength))
+    r.append(("X-Accel-Buffering", "no"))
+    r.append(("Content-Type", "application/json"))
+    print(c)
+    if c.get('result'):
+        #r.append(("Set-Cookie", f"linker_auth_key={c.get('ret_val').get('key')};path=/"))
+        #добавляем специальные заголовки
+        pass
     return r
 
 def head(aContentLength, fgDeflate=True, fg_head=True):

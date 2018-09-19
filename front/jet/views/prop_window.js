@@ -39,7 +39,7 @@ export default class PropView extends JetView{
                     {view: "checkbox", label: 'Вид кнопок "Эксперт"', value: 1, labelWidth: 270, width: 370, readonly: !true, localId: "expert",
                         name: "expert"},
                     {height: 10},
-                    {view: "checkbox", label: "Запоминать окна и значения поиска", value: 0, labelWidth: 270, width: 370, readonly: true, localId: "save",
+                    {view: "checkbox", label: "Запоминать окна и параметры поиска", value: 0, labelWidth: 270, width: 370, readonly: true, localId: "save",
                         name: "save"},
                     {height: 15},
                     {view: "label", label: "<span style = 'color: red'>После сохранения настроек страница будет обновленна</span>"},
@@ -89,11 +89,10 @@ export default class PropView extends JetView{
     show_w(new_head){
         let app = this.app;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        console.log('ppp', app.config.posPpage);
         this.$$("_ppage").setValue(app.config.posPpage);
         this.$$("notify").setValue(app.config.notify);
         this.$$("nTime").setValue(app.config.nDelay/1000);
-        this.$$("expert").setValue(app.config.expert);
+        this.$$("expert").setValue((app.config.expert===true) ? 1 : 0);
         this.$$("save").setValue(app.config.save);
         
         this.getRoot().show()

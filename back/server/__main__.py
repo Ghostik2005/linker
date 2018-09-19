@@ -163,10 +163,13 @@ def application(env):
             ret_value = json.dumps(ret, ensure_ascii=False)
     if not fileReturn:
         ret_value = content.encode()
-        header = libs.head(len(ret_value), False, True)
+        if arg == 'login':
+            header = libs.authHead(content, len(ret_value))
+        else:
+            header = libs.head(len(ret_value), False, True)
     tt = time.time() - tt
     env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE in %s secs" % (msg, tt))
-    # три обязательных вызова yield: статус, заголовки, содержание
+    # передаем: статус, заголовки, содержание
     yield ret_code
     yield header
     yield ret_value

@@ -30,6 +30,7 @@ export default class loginView extends JetView{
             }
 
         var auth = {view: "form",
+            css: {"border": "None"},
             localId: "auth_box",
             label:"Аутентификация",
             elements:[

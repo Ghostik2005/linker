@@ -58,6 +58,7 @@ export default class TopmenuView extends JetView{
             }
         
         let tab_1 = {view: "layout", id: 'app-nav',
+            type: 'clean',
             rows: [
                 {view: 'toolbar',
                     css: {"border-top": "0px !important"},
@@ -340,6 +341,7 @@ export default class TopmenuView extends JetView{
 
         var tabmain = {
             view: "multiview",
+            css: {"margin-right": "0px !important"},
             vis: false,
             animate: false,
             on: {
@@ -367,7 +369,8 @@ export default class TopmenuView extends JetView{
             let header = (view === SkippedBarView) ? "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>" :
                          (view === AllUnlinkedBarView) ? "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>" :
                          (view === LinksBarView) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>" :
-                         (view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
+                         //(view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
+                         (view === AdmBarView) ? "<span class='webix_icon fa-magic'></span><span style='line-height: 20px;'>Админка</span>" :
                          (view === BrakBarView) ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Разбраковка</span>" :
                          ""
             let uid = webix.uid();
@@ -482,7 +485,8 @@ export default class TopmenuView extends JetView{
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].adm,
-                    oldLabel: "<span class='side_icon webix_icon fa-blind'></span>",
+                    //oldLabel: "<span class='side_icon webix_icon fa-blind'></span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-magic'></span>",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Админка</span>",
                     on: {
                         onAfterRender: function() {
@@ -563,6 +567,7 @@ export default class TopmenuView extends JetView{
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
+                    //oldLabel: "<span class='side_icon webix_icon fa-archive'></span>",
                     oldLabel: "<span class='side_icon webix_icon fa-archive'></span>",
                     hidden: !(app.config.roles[app.config.role].skipped),
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 2px'>Пропущенные</span>",
@@ -686,7 +691,8 @@ export default class TopmenuView extends JetView{
                     label: "",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Отчеты</span>",
                     //oldLabel: "<span class='webix_icon fa-save', style='color: #3498db'></span>",
-                    oldLabel: "<span class='side_icon webix_icon fa-save'></span>",
+                    //oldLabel: "<span class='side_icon webix_icon fa-save'></span>",
+                    oldLabel: "<span class='side_icon webix_icon fa-file'></span>",
                     height: 40,
                     click: function(){
                         var cv = getCurrentTable();

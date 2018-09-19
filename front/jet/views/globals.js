@@ -624,6 +624,43 @@ export function mcf_filter (obj, value){
     };
     
 export function init_first(app) {
+
+    webix.i18n.setLocale('ru-RU');
+
+    webix.protoUI({
+        name:"activeList"
+        },webix.ui.list, webix.ActiveContent);
+        
+    webix.protoUI({
+        name: "cWindow",
+        defaults: {
+            resize: true,
+            modal: false,
+            move: true,
+            position: "center"
+            },
+        $init: function(config){
+            webix.extend(config, {
+                head: {
+                    view: "toolbar",
+                    cols: [
+                        {view: "label", label: "Название окна"},
+                        {view: "button",
+                            type: "icon",
+                            icon: "times",
+                            css: "times",
+                            height: 26,
+                            width:26,
+                            click: function () {
+                                this.getTopParentView().hide();
+                                }
+                            }
+                        ]
+                    }
+                })
+            }
+        }, webix.ui.window);
+    
     webix.ui.datafilter.richFilt1 = Object.create(webix.ui.datafilter.richSelectFilter);
     webix.ui.datafilter.richFilt1.refresh = rRefresh;
     webix.ui.datafilter.richFilt1.render = function(master, config){

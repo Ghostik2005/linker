@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 
 
 export default class BrakSideInfoView extends JetView{
@@ -11,20 +11,76 @@ export default class BrakSideInfoView extends JetView{
 
         var dHead = {view: "form",
             localId: "_dHead",
+            oldData: undefined,
             bodredless: true,
             margin: 0,
             padding: 0,
             elements: [
-                {view: "text", value: "", label: "Нормативный документ", labelWidth: 155, name: "n_doc", localId: "tte"},
-                {view: "text", value: "", label: "Наименование", labelWidth: 155, name: "name"},
-                {view: "text", value: "", label: "Торговое наименование", labelWidth: 155, name: "t_name"},
-                {view: "text", value: "", label: "Серия", labelWidth: 155, name: "series"},
-                {view: "text", value: "", label: "Производитель", labelWidth: 155, name: "vendor"},
-                {view: "text", value: "", label: "Регион", labelWidth: 155, name: "region"},
-                {view: "text", value: "", label: "№ записи", labelWidth: 155, name: "number"},
-                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt"},
-                {view: "text", value: "", label: "ЖВ", labelWidth: 155, name: "gv"},
-                {view: "text", value: "", label: "Описание", labelWidth: 155, name: "desc"},
+                {view: "text", value: "", label: "Нормативный документ", labelWidth: 155, name: "n_doc", localId: "tte",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Наименование", labelWidth: 155, name: "name",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Торговое наименование", labelWidth: 155, name: "t_name",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Серия", labelWidth: 155, name: "series",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Производитель", labelWidth: 155, name: "vendor",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Регион", labelWidth: 155, name: "region",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "№ записи", labelWidth: 155, name: "number",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt", disable: true},
+                {view: "text", value: "", label: "ЖВ", labelWidth: 155, name: "gv",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Описание", labelWidth: 155, name: "desc",
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
+                {view: "text", value: "", label: "Описание", labelWidth: 155, name: "f_name", hidden: true},
                 ],
             }
 
@@ -41,16 +97,16 @@ export default class BrakSideInfoView extends JetView{
                 toolbar: !false,
                 //nowrap : true,
                 toolbar1: 'fontselect fontsizeselect | undo redo | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | codesample',
-                plugins: ['print preview fullpage searchreplace autolink directionality',
-                    'visualblocks visualchars fullscreen image link media template codesample table charmap',
-                    'hr pagebreak nonbreaking anchor insertdatetime advlist lists textcolor wordcount',
-                    'imagetools contextmenu colorpicker textpattern'
+                plugins: ['searchreplace autolink directionality',
+                    'visualblocks visualchars image link media template codesample table charmap',
+                    'hr pagebreak nonbreaking anchor insertdatetime advlist lists textcolor',
+                    'contextmenu colorpicker textpattern'
                     ],
                 content_css: [
                     //'//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
-                    '//www.tinymce.com/css/codepen.min.css'
+                    //'//www.tinymce.com/css/codepen.min.css'
                     ]
-                }
+                },
             };
 
         var buttons = {view: 'toolbar',
@@ -59,8 +115,34 @@ export default class BrakSideInfoView extends JetView{
             borderless: true,
             cols: [
                 {},
-                {view: 'button', value: "Сохранить", width: 120, hidden: true},
-                {view: 'button', value: "Отменить", width: 120, hidden: true},
+                {view: 'button', value: "Сохранить", width: 120, localId: "_save", hidden: true,
+                    on: {
+                        onItemClick: function() {
+                            let item = this.$scope.$$("_dHead").getValues();
+                            item['letter'] = this.$scope.$$("_editor").getValue();
+                            let url = app.config.r_url + "?setBrakMail";
+                            let params = {"user": app.config.user, "item": item};
+                            request(url, params).then((data) => {
+                                data = checkVal(data, 'a');
+                                if (data) {
+                                    //на самом деле будем записывать данные, которые пришли с сервера.
+                                    let od = this.$scope.$$("_dHead").oldData;
+                                    this.$scope.$$("_dHead").oldData = item;
+                                } else {
+                                    webix.message('error');
+                                    };
+                                })
+                            },
+                        },
+                    },
+                {view: 'button', value: "Отменить", width: 120, localId: "_cancel", hidden: true,
+                    on: {
+                        onItemClick: function() {
+                            this.$scope.load_data(this.$scope.$$("_dHead").oldData);
+                            this.$scope.hide_b();
+                            },
+                        },
+                    },
                 ]
             };
 
@@ -77,6 +159,11 @@ export default class BrakSideInfoView extends JetView{
         }
 
     ready() {
+        this.$$("_editor").getNode().oninput = function() {
+            this.$scope.show_b()
+            }
+        console.log('w', this.$$("_editor").getNode())
+        console.log('ed', this.$$("_editor").getEditor())
         }
 
     init() {
@@ -85,16 +172,37 @@ export default class BrakSideInfoView extends JetView{
     load_data(data) {
         //загружаем данные
         this.clear_info();
+        console.log('ed', this.$$("_editor"));
         this.$$("_dHead").parse(data);
-
+        this.$$("_editor").setValue(data.letter);
+        this.$$("_dHead").oldData = this.$$("_dHead").getValues();
+        this.$$("_dHead").oldData.letter = this.$$("_editor").getValue();
+        //this.show_b();
+        let ffr = document.getElementsByTagName("iframe")
+        ffr[0].onkeydown = function() {
+            this.$scope.show_b()
+            };
+        console.log('dd', ffr);
+        this.$$("_editor").focus();
         }
         
     clear_info() {
         //очищаем инфу
         this.$$("_dHead").clear();
+        this.$$("_editor").setValue('');
 
         }
 
+    show_b() {
+        this.$$("_save").show();
+        this.$$("_cancel").show();
+        }
+
+    hide_b() {
+        this.$$("_save").hide();
+        this.$$("_cancel").hide();
+        }
+        
     disable_info() {
         //блокируем ввод инфы
         //webix.message("disabling");
