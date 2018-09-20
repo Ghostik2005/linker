@@ -234,12 +234,9 @@ div.webix_item_tab {
   background-color: #15c15d;
   line-height: 32px;
 }
-/*.webix_view > .webix_disabled {
-    left: 50%;
-    }*/
-/*.mce-tinymce .mce-container .mce-panel {
-    min-height: 100% !important;
-    }*/
+.webix_view > .webix_disabled {
+  position: inherit;
+}
 .webix_la_icon,
 .la {
   display: inline-block;

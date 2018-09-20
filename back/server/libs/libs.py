@@ -392,6 +392,7 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
                 pars['c_user'] = filt.get('c_user')
                 pars['source'] = filt.get('source')
                 pars['id_org'] = filt.get('id_org')
+                pars['sh_prc'] = filt.get('sh_prc')
                 ssss = []
                 us_s = ''
                 v_s = ''
@@ -406,6 +407,9 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
                     us_s = 'and %s' % s
                 if pars['c_tovar']:
                     s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    ssss.append('and %s' % s)
+                if pars['sh_prc']:
+                    s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
                     ssss.append('and %s' % s)
                 if pars['id_org']:
                     s = "r.id_org like ('%" + pars['id_org'] + "')"
@@ -568,6 +572,7 @@ WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
                 pars['c_user'] = filt.get('c_user')
                 pars['source'] = filt.get('source')
                 pars['id_org'] = filt.get('id_org')
+                pars['sh_prc'] = filt.get('sh_prc')
                 ssss = []
                 if pars['c_vnd']:
                     s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
@@ -594,6 +599,9 @@ WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
                     ssss.append(pref % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
+                    ssss.append(pref % s)
+                if pars['sh_prc']:
+                    s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
                     ssss.append(pref % s)
                 if pars['id_org']:
                     s = "r.id_org like ('%" + pars['id_org'] + "')"
@@ -2654,6 +2662,25 @@ FROM RDB$DATABASE"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def setRazbr(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            user = params.get('user')
+            sh_prc = params.get('sh_prc')
+            series = params.get('series')
+            razbr = params.get('razbr')
+            if user and sh_prc and series:
+                sql = f"""update brak set  razbrak = {razbr} where sh_prc = '{sh_prc}' and series = '{series}';"""
+                print("set Razbr")
+                print(sql)
+                _return = 'OK'
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "value error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def setBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
@@ -2702,6 +2729,7 @@ FROM RDB$DATABASE"""
                     "f_name": row[11], #"link_file"
                     "id": row[12], #"id"
                     "cre_date": str(row[13]), #"dt"
+                    "letter": """<p>йцуйа каыуа</p>\n<p>авфауц</p>"""
                     }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}

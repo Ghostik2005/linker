@@ -98,6 +98,23 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>Удалить письмо</span>",
                 oldLabel: "<span class='webix_icon fa-trash'></span>",
                 click: () => {
+                    let tableSelectedId = this.$$("__table").getSelectedId();
+                    let subView = this.$$("__table").getSubView(tableSelectedId);
+                    if (subView) {
+                        let listItemId = subView.getSelectedId();
+                        if (listItemId) {
+                            let url = app.config.r_url + "?delBrakMail";
+                            let params = {"user": app.config.user, 'id': listItemId}
+                            let res = request(url, params, !0).response;
+                            res = checkVal(res, 's');
+                            if (res) {
+                                subView.remove(listItemId);
+                                this.$$("__table").closeSub(tableSelectedId);
+                                this.$$("__table").openSub(tableSelectedId, this.$$("__table"));
+                                //renew info
+                                };
+                            };
+                        };
                     },
                 },
             ]}
@@ -149,27 +166,30 @@ export default class BrakBarView extends JetView{
                             this.$scope.$$("_delletter").hide();
                             },
                         onBeforeSelect: function (item) {
-                            if (this.$new === true) {
+                            if (this.config.$new === true) {
                                 webix.message("Сначала сохраните изменения")
                                 return false
                                 }
                             },
                         onAfterSelect: function (item) {
                             this.$scope.sideView.$scope.enable_info();
-                            this.$scope.$$("_delletter").show();
                             let selectedListItem = this.getSelectedItem();
                             this.oldSelectedItem = selectedListItem.id;
                             if (selectedListItem.id === 99999999) {
                                 //создаем новое письмо
-                                webix.message("New letter");
-                                this.getSelectedItem().n_doc = "Новое письмо";
+                                selectedListItem.n_doc = "Новое письмо";
+                                selectedListItem.name = tableSubviewItem.c_name;
+                                selectedListItem.t_name = tableSubviewItem.c_name;
+                                selectedListItem.series = tableSubviewItem.series;
+                                selectedListItem.vendor = tableSubviewItem.c_zavod;
                                 this.refresh();
-                                this.$new = true
-                                selectedListItem = this.getSelectedItem();
+                                this.config.$new = true;
+                                //this.$scope.sideView.$scope.show_b();
+                            } else {
+                                this.$scope.$$("_delletter").show();
                                 };
-                            selectedListItem.letter = "<p>йцуйа каыуа</p>\n<p>авфауц</p>";
-                            this.$scope.sideView.$scope.load_data(selectedListItem);
-
+                            this.$scope.sideView.$scope.load_data(selectedListItem, this, this.$scope.$$("__table"));
+                            this.$scope.sideView.$scope.enable_info();
                             },
                         },
                     data: parsingData,
@@ -198,9 +218,10 @@ export default class BrakBarView extends JetView{
                     header: [{text: "Производитель"},
                     ]
                     },
-                {id: "razbr", width: 150, hidden: !true, //sort: 'server',
+                {id: "razbr", width: 100, hidden: !true, //sort: 'server',
                     header: [{text: "Разбраковка"},
-                    ]
+                        ],
+                    template: "<span class='center_p'>{common.checkbox()}</span>",
                     },
                 {id: "dt", width: 200, sort: 'server', hidden: !true, sort: 'server',
                     format: dt_formating_sec,
@@ -219,15 +240,20 @@ export default class BrakBarView extends JetView{
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
+                onCheck: function (id, col, value) {
+                    let item = this.getItem(id);
+                    let url = app.config.r_url + "?setRazbr";
+                    let params = {"user": app.config.user, "sh_prc": item.sh_prc, "series": item.series, "razbr": value};
+                    let res = request(url, params, !0).response;
+                    },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     },
                 onSubViewClose: function(id) {
                     this.$scope.sideView.$scope.hide_b();
-                    this.$scope.sideView.$scope.hide_b();
-                    delete this.getItem(id)["$subContent"]
-                    delete this.getItem(id)["$subHeight"]
-                    delete this.getItem(id)["$subOpen"]
+                    delete this.getItem(id)["$subContent"];
+                    delete this.getItem(id)["$subHeight"];
+                    delete this.getItem(id)["$subOpen"];
                     },
                 onItemClick: function (item) {
                     },

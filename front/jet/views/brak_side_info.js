@@ -19,11 +19,16 @@ export default class BrakSideInfoView extends JetView{
                 {view: "text", value: "", label: "Нормативный документ", labelWidth: 155, name: "n_doc", localId: "tte",
                     on:{
                         onKeyPress: function() {
-                            this.$scope.show_b()
+                            this.$scope.show_b();
+                            },
+                        onTimedKeyPress: function() {
+                            let value = this.getValue();
+                            this.$scope.$$("_dHead").config._parent.getSelectedItem().n_doc = value;
+                            this.$scope.$$("_dHead").config._parent.refresh(this.$scope.$$("_dHead").config._parent.getSelectedId());
                             },
                         },
                     },
-                {view: "text", value: "", label: "Наименование", labelWidth: 155, name: "name",
+                {view: "text", value: "", label: "Наименование", labelWidth: 155, name: "name",p_disable: true,
                     on:{
                         onKeyPress: function() {
                             this.$scope.show_b()
@@ -37,14 +42,14 @@ export default class BrakSideInfoView extends JetView{
                             },
                         },
                     },
-                {view: "text", value: "", label: "Серия", labelWidth: 155, name: "series",
+                {view: "text", value: "", label: "Серия", labelWidth: 155, name: "series", p_disable: true,
                     on:{
                         onKeyPress: function() {
                             this.$scope.show_b()
                             },
                         },
                     },
-                {view: "text", value: "", label: "Производитель", labelWidth: 155, name: "vendor",
+                {view: "text", value: "", label: "Производитель", labelWidth: 155, name: "vendor", p_disable: true,
                     on:{
                         onKeyPress: function() {
                             this.$scope.show_b()
@@ -65,7 +70,7 @@ export default class BrakSideInfoView extends JetView{
                             },
                         },
                     },
-                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt", disable: true},
+                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt", disabled: true, p_disable: true},
                 {view: "text", value: "", label: "ЖВ", labelWidth: 155, name: "gv",
                     on:{
                         onKeyPress: function() {
@@ -80,7 +85,7 @@ export default class BrakSideInfoView extends JetView{
                             },
                         },
                     },
-                {view: "text", value: "", label: "Описание", labelWidth: 155, name: "f_name", hidden: true},
+                {view: "text", value: "", label: "О", labelWidth: 155, name: "f_name", hidden: true},
                 ],
             }
 
@@ -122,24 +127,27 @@ export default class BrakSideInfoView extends JetView{
                             item['letter'] = this.$scope.$$("_editor").getValue();
                             let url = app.config.r_url + "?setBrakMail";
                             let params = {"user": app.config.user, "item": item};
-                            request(url, params).then((data) => {
-                                data = checkVal(data, 'a');
-                                if (data) {
-                                    //на самом деле будем записывать данные, которые пришли с сервера.
-                                    let od = this.$scope.$$("_dHead").oldData;
-                                    this.$scope.$$("_dHead").oldData = item;
-                                } else {
-                                    webix.message('error');
-                                    };
-                                })
+                            request(url, params);
+                            this.$scope.reopen();
                             },
                         },
                     },
                 {view: 'button', value: "Отменить", width: 120, localId: "_cancel", hidden: true,
                     on: {
                         onItemClick: function() {
-                            this.$scope.load_data(this.$scope.$$("_dHead").oldData);
-                            this.$scope.hide_b();
+                            if (this.$scope.$$("_dHead").config._parent.config.$new) {
+                                this.$scope.reopen()
+                            } else {
+                                if (this.$scope.$$("_dHead").config.oldData) {
+                                    this.$scope.load_data(this.$scope.$$("_dHead").config.oldData, this.$scope.$$("_dHead").config._parent, this.$scope.$$("_dHead").config._topParent);
+                                    this.$scope.hide_b()
+                                    let value = this.$scope.$$("_dHead").getValues().n_doc;
+                                    this.$scope.$$("_dHead").config._parent.getSelectedItem().n_doc = value;
+                                    this.$scope.$$("_dHead").config._parent.refresh(this.$scope.$$("_dHead").config._parent.getSelectedId());
+                                } else {
+                                    this.$scope.clear_info()
+                                    };
+                                };
                             },
                         },
                     },
@@ -159,30 +167,35 @@ export default class BrakSideInfoView extends JetView{
         }
 
     ready() {
-        this.$$("_editor").getNode().oninput = function() {
-            this.$scope.show_b()
-            }
-        console.log('w', this.$$("_editor").getNode())
-        console.log('ed', this.$$("_editor").getEditor())
+        this.disable_info();
         }
 
     init() {
         }
 
-    load_data(data) {
+    reopen() {
+        let tableSelectedId = this.$$("_dHead").config._topParent.getSelectedItem().id;
+        this.clear_info();
+        this.$$("_dHead").config._topParent.closeSub(tableSelectedId);
+        this.$$("_dHead").config._topParent.openSub(tableSelectedId, this.$$("_dHead").config._topParent);
+        this.disable_info();
+        }
+
+    load_data(data, parent, topParent) {
         //загружаем данные
         this.clear_info();
-        console.log('ed', this.$$("_editor"));
         this.$$("_dHead").parse(data);
-        this.$$("_editor").setValue(data.letter);
-        this.$$("_dHead").oldData = this.$$("_dHead").getValues();
-        this.$$("_dHead").oldData.letter = this.$$("_editor").getValue();
-        //this.show_b();
+        this.$$("_editor").setValue(data.letter || '');
+        this.$$("_dHead").config._parent = parent;
+        this.$$("_dHead").config._topParent = topParent;
+        this.$$("_dHead").config.oldData = this.$$("_dHead").getValues();
+        this.$$("_dHead").config.oldData.letter = this.$$("_editor").getValue();
+        if (parent.config.$new) this.show_b();
+        //this.hide_b();
         let ffr = document.getElementsByTagName("iframe")
-        ffr[0].onkeydown = function() {
-            this.$scope.show_b()
+        ffr[0].contentDocument.body.onkeydown = () => {
+            this.show_b();
             };
-        console.log('dd', ffr);
         this.$$("_editor").focus();
         }
         
@@ -190,7 +203,7 @@ export default class BrakSideInfoView extends JetView{
         //очищаем инфу
         this.$$("_dHead").clear();
         this.$$("_editor").setValue('');
-
+        this.hide_b();
         }
 
     show_b() {
@@ -205,12 +218,18 @@ export default class BrakSideInfoView extends JetView{
         
     disable_info() {
         //блокируем ввод инфы
-        //webix.message("disabling");
+        let childs = this.$$("_dHead").getChildViews();
+        childs.forEach( function (child, i, childs) {
+            child.disable();
+            });
         }
 
     enable_info() {
         //разблокируем ввод инфы
-        //webix.message("enabling");
+        let childs = this.$$("_dHead").getChildViews();
+        childs.forEach( function (child, i, childs) {
+            if (!child.config.p_disable) child.enable();
+            });
         }
     
         
