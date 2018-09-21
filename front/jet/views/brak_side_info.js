@@ -102,10 +102,9 @@ export default class BrakSideInfoView extends JetView{
                 toolbar: !false,
                 //nowrap : true,
                 toolbar1: 'fontselect fontsizeselect | undo redo | bold italic strikethrough forecolor backcolor | alignleft aligncenter alignright alignjustify | codesample',
-                plugins: ['searchreplace autolink directionality',
-                    'visualblocks visualchars image link media template codesample table charmap',
-                    'hr pagebreak nonbreaking anchor insertdatetime advlist lists textcolor',
-                    'contextmenu colorpicker textpattern'
+                plugins: ['searchreplace visualblocks visualchars codesample',
+                    'pagebreak nonbreaking anchor insertdatetime advlist lists textcolor',
+                    'colorpicker textpattern'
                     ],
                 content_css: [
                     //'//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
@@ -157,7 +156,10 @@ export default class BrakSideInfoView extends JetView{
         var _view ={type: 'clean',
             localId: "_prop",
             rows: [
-                dHead,
+                {localId: "_acord",
+                    header: "Свойства документа",
+                    body: dHead
+                    },
                 tiny,
                 buttons,
                 ],
@@ -183,6 +185,8 @@ export default class BrakSideInfoView extends JetView{
 
     load_data(data, parent, topParent) {
         //загружаем данные
+        this.$$("_acord").define({collapsed: false});
+        this.$$("_acord").resize();
         this.clear_info();
         this.$$("_dHead").parse(data);
         this.$$("_editor").setValue(data.letter || '');

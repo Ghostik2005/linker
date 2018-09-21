@@ -63,7 +63,7 @@ export default class BrakBarView extends JetView{
                 tooltip: "Загрузить брак",
                 localId: "_fileload",
                 resizable: true,
-                sWidth: 126,
+                sWidth: 180,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -77,7 +77,7 @@ export default class BrakBarView extends JetView{
                 hidden: true,
                 localId: "_addletter",
                 resizable: true,
-                sWidth: 126,
+                sWidth: 180,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -91,7 +91,7 @@ export default class BrakBarView extends JetView{
                 tooltip: "Удалить письмо",
                 localId: "_delletter",
                 resizable: true,
-                sWidth: 126,
+                sWidth: 180,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -108,6 +108,8 @@ export default class BrakBarView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
+                                this.sideView.$scope.clear_info();
+                                this.sideView.$scope.disable_info();
                                 subView.remove(listItemId);
                                 this.$$("__table").closeSub(tableSelectedId);
                                 this.$$("__table").openSub(tableSelectedId, this.$$("__table"));
@@ -221,7 +223,8 @@ export default class BrakBarView extends JetView{
                 {id: "razbr", width: 100, hidden: !true, //sort: 'server',
                     header: [{text: "Разбраковка"},
                         ],
-                    template: "<span class='center_p'>{common.checkbox()}</span>",
+                    css: "center_p",
+                    template: "{common.checkbox()}",
                     },
                 {id: "dt", width: 200, sort: 'server', hidden: !true, sort: 'server',
                     format: dt_formating_sec,
