@@ -8,6 +8,7 @@ import {rRefresh, request} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 import BrakSideInfoView from "../views/brak_side_info";
+import uplBrakMenuView from "../views/brak_upl";
 
 export default class BrakBarView extends JetView{
     config(){
@@ -39,12 +40,38 @@ export default class BrakBarView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
+                tooltip: "История поиска",
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
                 oldLabel: "<span class='webix_icon fa-history'></span>",
                 click: () => {
                     let hist = webix.storage.session.get(this.$$("__table").config.name);
                     this.pophistory.show(hist, this.$$("_ls"));
                     },
+                },
+            {view: "button", type: "htmlbutton",
+                localId: "_renew",
+                resizable: true,
+                sWidth: 136,
+                eWidth: 40,
+                label: "",
+                width: 40,
+                tooltip: "Обновить таблицу",
+                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                oldLabel: "<span class='webix_icon fa-refresh'></span>",
+                click: () => {
+                    return
+                    let user = this.app.config.user;
+                    let url = this.app.config.r_url + "?getTasks";
+                    let params = {"user": user};
+                    request(url, params).then( (data) => {
+                        data = checkVal(data, 'a');
+                        if (data.length > 0) {
+                            this.$$("__table").parse(data);
+                        } else {
+                            this.$$("__table").clearAll();
+                            }
+                        })
+                    }
                 },
             {view:"button", width: 40,
                 tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
@@ -70,6 +97,7 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>Загрузить брак</span>",
                 oldLabel: "<span class='webix_icon fa-upload'></span>",
                 click: () => {
+                    this.pop_upl.show_window("Загрузка файла");
                     },
                 },
             {view: "button", type: 'htmlbutton',
@@ -184,6 +212,7 @@ export default class BrakBarView extends JetView{
                                 selectedListItem.t_name = tableSubviewItem.c_name;
                                 selectedListItem.series = tableSubviewItem.series;
                                 selectedListItem.vendor = tableSubviewItem.c_zavod;
+                                selectedListItem.sh_prc = tableSubviewItem.sh_prc;
                                 this.refresh();
                                 this.config.$new = true;
                                 //this.$scope.sideView.$scope.show_b();
@@ -318,7 +347,7 @@ export default class BrakBarView extends JetView{
 
     ready() {
 
-        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_addletter"), this.$$("_delletter")];
+        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_addletter"), this.$$("_delletter"), this.$$("_renew")];
         r_but.forEach( (item, i, r_but) => {
             item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
                          label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
@@ -347,6 +376,7 @@ export default class BrakBarView extends JetView{
 
     init() {
         this.pophistory = this.ui(History);
+        this.pop_upl = this.ui(uplBrakMenuView);
         }
     }
 

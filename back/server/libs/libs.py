@@ -2670,9 +2670,8 @@ FROM RDB$DATABASE"""
             series = params.get('series')
             razbr = params.get('razbr')
             if user and sh_prc and series:
-                sql = f"""update brak set  razbrak = {razbr} where sh_prc = '{sh_prc}' and series = '{series}';"""
-                print("set Razbr")
-                print(sql)
+                sql = f"""update brak set razbrak = {razbr} where sh_prc = '{sh_prc}' and series = '{series}';"""
+                self.db.execute({"sql": sql, "options": ()})
                 _return = 'OK'
                 ret = {"result": True, "ret_val": _return}
             else:
@@ -2684,9 +2683,32 @@ FROM RDB$DATABASE"""
     def setBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
-            print("set mail")
-            print(params)
-            pass
+            user = params.get("user")
+            item  = params.get("item")
+            letter_id = item.get("id")
+            sh_prc = item.get("sh_prc")
+            title = item.get("name") #"title"
+            title_torg = item.get("t_name") #"title_torg"
+            series = item.get("series") #"seriya"
+            fabricator = item.get("vendor") #"fabricator"
+            region = item.get("region", "") #"region"
+            n_rec = item.get("number", "") #n_rec"
+            gv = item.get("gv", "") #"gv"
+            title_doc = item.get("n_doc") #"title_doc"
+            opis = item.get("desc", "") #"opis"
+            f_name = item.get("f_name") or str(uuid.uuid1()) #"link_file"
+            ins = '?' if not self._pg else '%s'
+            opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name)
+            if letter_id == 99999999:
+                sql = f"""insert into BRAK_MAIL (title, title_torg, seriya, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, link_file, dt, dt_edit ) 
+values ({ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins},  current_timestamp, current_timestamp) returning id;"""
+            else:
+                sql = f"""update BRAK_MAIL set title = {ins}, title_torg = {ins}, seriya = {ins}, fabricator = {ins}, region = {ins}, 
+n_rec = {ins}, dt_edit = current_timestamp, gv = {ins}, title_doc = {ins}, opis = {ins}, sh_prc = {ins}, link_file = {ins} 
+where id = {ins} returning id;"""
+                opt = opt + (letter_id,)
+            res = self.db.execute({"sql": sql, "options": opt})
+            print(res)
             _return = 'OK'
             ret = {"result": True, "ret_val": _return}
         else:
@@ -2696,6 +2718,12 @@ FROM RDB$DATABASE"""
     def delBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            user = params.get("user")
+            letter_id = params.get("id")
+            ins = '?' if not self._pg else '%s'
+            sql = f"""update BRAK_MAIL set deleted = 1 where id = {ins};"""
+            opt = (letter_id,)
+            res = self.db.execute({"sql": sql, "options": opt})
             print("del mail")
             print(params)
             pass
@@ -2710,7 +2738,9 @@ FROM RDB$DATABASE"""
         if self._check(x_hash):
             series = params.get('series','')
             sh_prc = params.get('sh_prc', '')
-            sql = f"""select sh_prc, title, title_torg, seriya, fabricator, region, n_rec, dt_edit, gv, title_doc, opis, link_file, id, dt from brak_mail where sh_prc = '{sh_prc}' and seriya = '{series}'"""
+            sql = f"""select sh_prc, title, title_torg, seriya, fabricator, region, n_rec, dt_edit, gv, title_doc, opis, link_file, id, dt from brak_mail
+where sh_prc = '{sh_prc}' and seriya = '{series}' and deleted != 1
+order by id asc;"""
             res = self.db.request({"sql": sql, "options": ()})
             _return = []
             for row in res:
@@ -3934,6 +3964,29 @@ matching (NAME)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def uploadBrak(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get("user")
+            f_name = params.get("filename")
+            data = params.get("data")
+            f_data = data.split(b'\r\n')
+            f_data = f_data[4:-6]
+            #f_data = b'\r\n'.join([i.strip() for i in f_data])
+            f_data = b'\r\n'.join([i for i in f_data])
+            try:
+                f_data = f_data.decode()
+            except:
+                pass
+            if f_name:
+                with open(os.path.join("/ms71/temp", f_name), "w") as f_obj:
+                    f_obj.write(f_data)
+            #print("-"*20)
+            #print(f_data)
+            ret = {"result": True, "ret_val": f_name}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def saveData(self, params=None, x_hash=None):
         methods = {"__dt":"getSprSearch", #spr_dt
                    "_files": "getTasks", #adm-linker-files
@@ -4144,7 +4197,7 @@ def getip(log):
     iip = ''
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as se:
-            se.connect(("77.88.8.8", 80))
+            se.connect(("10.255.255.255", 1))
             iip = se.getsockname()[0]
     except Exception as e:
         log(f"err:{str(e)}")

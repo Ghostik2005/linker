@@ -126,8 +126,15 @@ export default class BrakSideInfoView extends JetView{
                             item['letter'] = this.$scope.$$("_editor").getValue();
                             let url = app.config.r_url + "?setBrakMail";
                             let params = {"user": app.config.user, "item": item};
-                            request(url, params);
-                            this.$scope.reopen();
+                            let res = request(url, params, !0).response;
+                            res = checkVal(res, 's');
+                            if (res) {
+                                webix.message({type: "success", text: "Сохранено", expire: 2500});
+                                this.$scope.reopen();
+                            } else {
+                                webix.message({type: "error", text: "Ошибка сохранения", expire: 2500});
+                                this.$scope.$$("_cancel").callEvent('onItemClick');
+                                };
                             },
                         },
                     },

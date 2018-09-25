@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.263.1705' #поиск по sh_prc в пропущенных и несвязанных
+__version__ = '18.268.1725' #улучшен Брак
+#__version__ = '18.263.1705' #поиск по sh_prc в пропущенных и несвязанных
 #__version__ = '18.260.1415' #показываются все несвязанные, в т.ч. и в те, которые в работе, выбор производетя сделан по RegExp
 #__version__ = '18.257.1615' #добавлена выборка брака, пока без текста писем
 #__version__ = '18.256.1615' #добавленно setexit
@@ -131,6 +132,7 @@ def application(env):
     content = u''
     _rm = env["HTTP_METHOD"].upper()
     args=None
+    fname = env['HTTP_KWARGS'].get('filename')
     if 'POST' == _rm:
         arg = env.get('HTTP_PARAMS')[0]
         _p_http = env.get('HTTP_KWARGS')
@@ -142,13 +144,21 @@ def application(env):
         try:
             _param = json.loads(_param)
         except Exception as Err:
+            data = _param 
             _param = _p_http
+            if fname:
+                _param.update({"data": data})
             #sys.APPCONF["log"](_param, kind='error')
             #content = u'not applicable format. use JSON-formated string'
         else:
             _param.update(_p_http)
         sys.APPCONF["log"](arg, kind='info:method:')
-        sys.APPCONF["log"](_param, kind='info:params:')
+        if not fname:
+            sys.APPCONF["log"](_param, kind='info:params:')
+        else:
+            t = _param.copy()
+            t.pop('data')
+            sys.APPCONF["log"](t, kind='info:params:')
         #arg, _param = args.popitem()
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
     fileReturn = False

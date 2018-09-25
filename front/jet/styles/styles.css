@@ -273,6 +273,23 @@ div.webix_item_tab {
   color: #000;
   }
 
+.webix_success {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 600;
+  padding: 0px;
+  border-radius: 3px;
+  background-color: #15c15d;
+  border: 1px solid #15c15d;
+  box-shadow: 0px 0px 10px #175782;
+}
+
+.webix_success div {
+  background-color: #15c15d;
+  border: 1px solid #3498db;
+  color: #fff;
+  }
+
 .sublist .webix_list_item {
     line-height: 32px;
     }

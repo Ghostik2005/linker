@@ -51,6 +51,7 @@ class pg_local(object):
                     cur.execute(sql)
                 else:
                     cur.execute(sql, options)
+                    print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
                 except Exception as Err:
@@ -187,33 +188,20 @@ class fb_local:
         else:
             print("Production" if self.production else "Test", flush=True)
 
-            
     def request(self, params=None):
-        if self.production:
-            ret = self._request(params)
-            #ret = self._request_(params)
-        else:
-            ret = self._request(params)
+        ret = self._request(params)
         if not ret:
             ret = []
         return ret
 
     def execute(self, params=None):
-        if self.production:
-            #ret = self._execute_(params)
-            ret = self._execute(params)
-        else:
-            ret = self._execute(params)
+        ret = self._execute(params)
         if not ret:
             ret = []
         return ret
 
     def executemany(self, params=None):
-        if self.production:
-            #ret = self._executemany_(params)
-            ret = self._executemany(params)
-        else:
-            ret = self._executemany(params)
+        ret = self._executemany(params)
         if not ret:
             ret = []
         return ret
@@ -223,64 +211,6 @@ class fb_local:
             self.log(message, kind=kind)
         else:
             print(message, flush=True)
-
-    def _request_(self, params = None):
-        ret = -1
-        try:
-            con = ms71_cli.ServerProxy(**self.prod_params)
-        except Exception as Err:
-            self._log(traceback.format_exc(), kind="error:connection")
-        else:
-            sql = params.get('sql')
-            options = params.get('options')
-            try:
-                ret = con.fdb.execute('spr', sql, options)
-            except Exception as Err:
-                ret = -3 #empty return
-                self._log(Err, kind="error:sql return")
-        return ret
-
-    def _execute_(self, params = None):
-        """
-        делаем инсерты, апдейты и делиты - одна команда на транзакцию
-        sql - строка sql  с символами ? вместо параметров
-        options - список или кортеж опций для подстановки в sql строку
-        """
-        ret = -1 #connection error
-        try:
-            con = ms71_cli.ServerProxy(**self.prod_params)
-        except Exception as Err:
-            self._log(traceback.format_exc(), kind="error:connection")
-        else:
-            sql = params.get('sql')
-            options = params.get('options')
-            try:
-                ret = con.fdb.execute('spr', sql, options)
-            except Exception as Err:
-                ret = -3 #empty return
-                self._log(Err, kind="error:sql return")
-        return ret
-
-    def _executemany_(self, params = None):
-        """
-        делаем инсерты, апдейты и делиты -  много команд на транзакцию
-        sql - строка sql  с символами ? вместо параметров
-        options - список списков или кортежей опций для подстановки в sql строку
-        """
-        ret = -1
-        try:
-            con = ms71_cli.ServerProxy(**self.prod_params)
-        except Exception as Err:
-            self._log(traceback.format_exc(), kind="error:connection")
-        else:
-            sql = params.get('sql')
-            options = params.get('options')
-            try:
-                ret = con.fdb.executemany('spr', sql, options)
-            except Exception as Err:
-                ret = -3 #empty return
-                self._log(Err, kind="error:sql return")
-        return ret
 
     def _request(self, params = None):
         """
