@@ -1,7 +1,9 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.268.1725' #улучшен Брак
+__version__ = '18.270.1600' #исправлены все фильтры с датами в приложении, обновлена блокировка файлов, API вынесено в отдельный файл
+#__version__ = '18.270.1312' #пофиксен неправильный отбор по дате в пропущенных
+#__version__ = '18.268.1725' #улучшен Брак
 #__version__ = '18.263.1705' #поиск по sh_prc в пропущенных и несвязанных
 #__version__ = '18.260.1415' #показываются все несвязанные, в т.ч. и в те, которые в работе, выбор производетя сделан по RegExp
 #__version__ = '18.257.1615' #добавлена выборка брака, пока без текста писем
@@ -72,6 +74,7 @@ import threading
 import traceback
 
 import libs.libs as libs
+import libs.api as app_api
 
 def main():
     w_path = '/ms71/data/linker'
@@ -80,7 +83,6 @@ def main():
     sys.intip = None
     global __profile__, __index__
     sys.APPCONF = {
-        "Lock": libs.fLock,
         "params": [],
         "kwargs": {},
         "addr": ("127.0.0.1", 0),
@@ -92,13 +94,13 @@ def main():
     sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
-    sys.APPCONF["api"] = libs.API(Lock=sys.APPCONF['Lock'], log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg)
+    sys.APPCONF["api"] = app_api.API(log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg)
 
     #import atexit
     #atexit.register(libs.shutdown, sys.APPCONF["log"])
     #threading.Thread(target=s_send, args=(), daemon=True).start()
 
-    threads, processes = prepare_server(Lock=sys.APPCONF['Lock'], api = sys.APPCONF["api"])
+    threads, processes = prepare_server(api = sys.APPCONF["api"])
     rc = 0
     try:
         server = libs.SCGIServer(sys.APPCONF["log"], hostname=None, version=__version__,
@@ -186,13 +188,13 @@ def application(env):
     yield ret_value
 
 
-def prepare_server(Lock=None, api = None):
+def prepare_server(api = None):
     """prepare the server, loading all bussiness-logic threads"""
 
     if not os.path.exists(api.path):
-        os.makedirs(api.path)
+        os.makedirs(api.path, mode=0o777)
     if not os.path.exists(api.p_path):
-        os.makedirs(api.p_path)
+        os.makedirs(api.p_path, mode=0o777)
     while not sys.extip:
         sys.extip, sys.intip = libs.getip(sys.APPCONF["log"])
     threads = []

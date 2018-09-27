@@ -265,7 +265,8 @@ export default class AllUnlinkedBarView extends JetView{
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let thh = th.getRoot().getChildViews()[2].$scope;
+                let thh = th.getRoot().getChildViews()[2];
+                thh = thh.$scope;
                 let old_v = thh.$$("__page").getValue();
                 thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
                 thh.$$("__page").refresh();

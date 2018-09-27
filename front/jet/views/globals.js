@@ -589,6 +589,10 @@ export function getDtParams(ui) {
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
             'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').getValue() : undefined,
             };
+    } else if (ui.config.name === "__brak") {
+        c_filter = {
+            'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
+            };
     } else if (ui.config.name === "relink") {
         c_filter = {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,

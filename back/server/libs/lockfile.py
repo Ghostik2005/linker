@@ -1,29 +1,27 @@
-#!/usr/bin/env python
 # coding: utf-8
 
-import sys, os, time, random
+import os
+import sys
+import stat
+import time
+import random
+import tempfile
 import threading
 import traceback
 
-#import logging
 try:
     import warnings
 except ImportError:
     warnings = None
-
 try:
     import msvcrt
 except ImportError:
     msvcrt = None
-
 try:
     import fcntl
 except ImportError:
     fcntl = None
 
-
-# Data
-# ------------------------------------------------
 __all__ = [
     "BaseFileLock",
     "WindowsFileLock",
@@ -33,8 +31,6 @@ __all__ = [
 ]
 
 __version__ = "2.0.8"
-
-#logger = logging.getLogger(__name__)
 
 # Classes
 # ------------------------------------------------
@@ -175,33 +171,20 @@ class BaseFileLock(object):
         try:
             start_time = time.time()
             while True:
-                #lock_id = id(self)
-                #lock_filename = self._lock_file
-
                 with self._thread_lock:
                     if not self.is_locked:
-                        #logger.debug('Attempting to acquire lock %s on %s', lock_id, lock_filename)
                         self._acquire()
-
                 if self.is_locked:
-                    #logger.info('Lock %s acquired on %s', lock_id, lock_filename)
                     break
                 elif timeout >= 0 and time.time() - start_time > timeout:
-                    #logger.debug('Timeout on aquiring lock %s on %s', lock_id, lock_filename)
-                    #raise Timeout(self._lock_file)
                     temp = "The file lock '%s' could not be acquired." % self._lock_file
                     raise RuntimeError(temp)
                 else:
-                    #logger.debug(
-                    #    'Lock %s not acquired on %s, waiting %s seconds ...',
-                    #    lock_id, lock_filename, poll_intervall
-                    #)
                     time.sleep(poll_intervall)
         except:
             # Something did go wrong, so decrement the counter.
             with self._thread_lock:
                 self._lock_counter = max(0, self._lock_counter - 1)
-
             raise
 
         # This class wraps the lock to make sure __enter__ is not called
@@ -246,11 +229,8 @@ class BaseFileLock(object):
                     lock_id = id(self)
                     lock_filename = self._lock_file
 
-                    #logger.debug('Attempting to release lock %s on %s', lock_id, lock_filename)
                     self._release()
                     self._lock_counter = 0
-                    #logger.info('Lock %s released on %s', lock_id, lock_filename)
-
         return None
 
     def __enter__(self):
@@ -258,7 +238,6 @@ class BaseFileLock(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        #print("__exit__:", exc_type, exc_value, traceback, flush=True)
         self.release()
         return None
 
@@ -377,43 +356,23 @@ elif fcntl:
     FileLock = UnixFileLock
 else:
     FileLock = SoftFileLock
-
     if warnings is not None:
         warnings.warn("only soft file lock is available")
 
 
-#def _Lock(lock_path=None, timeout=-1):
-#    if not lock_path:
-#        lock_path = os.path.splitext(os.path.basename(__file__))[0] + '.lock'
-#    _lock = FileLock(lock_path, timeout)
-#    return _lock
-
-"""
-def Lock(name=None, timeout=-1):
-    global _ms71_lockdir
+def wLock(name=None):
+    global _path_lockdir
     if name:
-         lock_path = os.path.join(_ms71_lockdir, name + '.lock')
+         lock_path = os.path.join(_path_lockdir, name + '.lock')
     else:
-         lock_path = os.path.join(_ms71_lockdir, '.lock')
-    _lock = FileLock(lock_path)
-    lck = _lock.acquire(timeout=timeout)
-    return lck
-"""
-
-def LockWait(name=None):
-    global _ms71_lockdir
-    if name:
-         lock_path = os.path.join(_ms71_lockdir, name + '.lock')
-    else:
-         lock_path = os.path.join(_ms71_lockdir, '.lock')
+         lock_path = os.path.join(_path_lockdir, '.lock')
     _lock = FileLock(lock_path)
     _pi = round(0.05 + random.randint(1,10) / 100.0, 2)
     lck = _lock.acquire(timeout=-1, poll_intervall=_pi)
     return lck
 
-import tempfile, stat
-def _ms71_init_dir():
-    global _ms71_lockdir
+def _path_init_dir():
+    global _path_lockdir
     lockdir = os.path.join(tempfile.gettempdir(), 'ms71', 'lock')
     os.makedirs(lockdir, mode=0o777, exist_ok=True)
     os.chmod(os.path.dirname(lockdir), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | \
@@ -424,16 +383,17 @@ def _ms71_init_dir():
         stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP | \
         stat.S_IROTH | stat.S_IWOTH | stat.S_IXOTH
     )
-    _ms71_lockdir = lockdir
-_ms71_lockdir = None
-_ms71_init_dir()
+    _path_lockdir = lockdir
+
+
+_path_lockdir = None
+_path_init_dir()
 
 
 def test():
     pid = os.getpid()
     print(pid, "wait", flush=True)
-    #print(1111, _lock, flush=True)
-    with LockWait('test'):
+    with wLock('test'):
         for i in range(10):
             print(pid, "locker", i, flush=True)
             time.sleep(1 + random.random())

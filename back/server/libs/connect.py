@@ -49,9 +49,12 @@ class pg_local(object):
             try:
                 if not options:
                     cur.execute(sql)
+                    if not self.production:
+                        print(cur.query.decode())
                 else:
                     cur.execute(sql, options)
-                    print(cur.query.decode())
+                    if not self.production:
+                        print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
                 except Exception as Err:
@@ -124,8 +127,12 @@ class pg_local(object):
             try:
                 if not options:
                     cur.execute(sql)
+                    if not self.production:
+                        print(cur.query.decode())
                 else:
                     cur.execute(sql, options)
+                    if not self.production:
+                        print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
                 except Exception as Err:

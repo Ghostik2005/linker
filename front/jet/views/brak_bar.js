@@ -59,18 +59,7 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
                 oldLabel: "<span class='webix_icon fa-refresh'></span>",
                 click: () => {
-                    return
-                    let user = this.app.config.user;
-                    let url = this.app.config.r_url + "?getTasks";
-                    let params = {"user": user};
-                    request(url, params).then( (data) => {
-                        data = checkVal(data, 'a');
-                        if (data.length > 0) {
-                            this.$$("__table").parse(data);
-                        } else {
-                            this.$$("__table").clearAll();
-                            }
-                        })
+                    this.$$("__table").callEvent("onBeforeSort");
                     }
                 },
             {view:"button", width: 40,
@@ -84,6 +73,22 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
                 oldLabel: "",
                 click: () => {
+                    this.$$("_ls").setValue("");
+                    var cv = this.$$("__table");
+                    var columns = cv.config.columns;
+                    columns.forEach(function(item){
+                        if (cv.isColumnVisible(item.id)) {
+                            if (item.header[1]) {
+                                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                                    cv.getFilter(item.id).setValue('');
+                                } else {
+                                    let qq = cv.getFilter(item.id);
+                                    if (!qq.readOnly) qq.value = '';
+                                    };
+                                }
+                            }
+                        });
+                    this.$$("__table").callEvent("onBeforeSort");
                     }
                 },
             {view: "button", type: 'htmlbutton',
@@ -98,20 +103,6 @@ export default class BrakBarView extends JetView{
                 oldLabel: "<span class='webix_icon fa-upload'></span>",
                 click: () => {
                     this.pop_upl.show_window("Загрузка файла");
-                    },
-                },
-            {view: "button", type: 'htmlbutton',
-                tooltip: "Добавить письмо",
-                hidden: true,
-                localId: "_addletter",
-                resizable: true,
-                sWidth: 180,
-                eWidth: 40,
-                label: "",
-                width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить письмо</span>",
-                oldLabel: "<span class='webix_icon fa-sticky-note '></span>",
-                click: () => {
                     },
                 },
             {view: "button", type: 'htmlbutton',
@@ -258,7 +249,7 @@ export default class BrakBarView extends JetView{
                 {id: "dt", width: 200, sort: 'server', hidden: !true, sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
-                    header: [{text: "Дата изменения"},
+                    header: [{text: "Дата добавления"},
                     {content: "dateRangeFilter", compare: compareTrue,
                         inputConfig:{format:dt_formating, width: 180,},
                         suggest:{
@@ -307,7 +298,6 @@ export default class BrakBarView extends JetView{
                 onBeforeSelect: function (item) {
                     },
                 onBeforeUnSelect: function (item) {
-                    //this.$scope.$$("_addletter").hide();
                     this.$scope.$$("_delletter").hide();
                     this.$scope.sideView.$scope.clear_info();
                     this.$scope.sideView.$scope.disable_info();
@@ -316,7 +306,6 @@ export default class BrakBarView extends JetView{
                         };
                     },
                 onAfterSelect: function (item) {
-                    //this.$scope.$$("_addletter").show();
                     this.openSub(item.id, this);
                     },
                 onAfterLoad: function() {
@@ -347,7 +336,7 @@ export default class BrakBarView extends JetView{
 
     ready() {
 
-        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_addletter"), this.$$("_delletter"), this.$$("_renew")];
+        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_delletter"), this.$$("_renew")];
         r_but.forEach( (item, i, r_but) => {
             item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
                          label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
@@ -359,7 +348,8 @@ export default class BrakBarView extends JetView{
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(() => {
-                let thh = th.getRoot().getChildViews()[1].$scope;
+                let thh = th.getRoot().getChildViews()[2].getChildViews()[0];
+                thh = thh.getChildViews()[1].$scope;
                 let old_v = thh.$$("__page").getValue();
                 thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
                 thh.$$("__page").setValue('0');
