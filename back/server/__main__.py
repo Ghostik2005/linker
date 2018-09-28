@@ -196,6 +196,8 @@ def prepare_server(api = None):
     if not os.path.exists(api.p_path):
         os.makedirs(api.p_path, mode=0o777)
     while not sys.extip:
+        ######################
+        break
         sys.extip, sys.intip = libs.getip(sys.APPCONF["log"])
     threads = []
     processes = []
