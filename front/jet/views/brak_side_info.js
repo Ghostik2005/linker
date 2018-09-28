@@ -203,7 +203,8 @@ export default class BrakSideInfoView extends JetView{
         this.$$("_dHead").config.oldData.letter = this.$$("_editor").getValue();
         if (parent.config.$new) this.show_b();
         //this.hide_b();
-        let ffr = document.getElementsByTagName("iframe")
+        let ffr = document.getElementsByTagName("iframe");
+        //console.log('item', ffr[0].contentDocument.body);
         ffr[0].contentDocument.body.onkeydown = () => {
             this.show_b();
             };

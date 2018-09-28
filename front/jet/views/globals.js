@@ -623,10 +623,6 @@ export function mcf_filter (obj, value){
     value = value.toString().toLowerCase()
     value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
     return obj.value.toString().toLowerCase().search(value) != -1;
-    //return obj.value.toString().toLowerCase().indexOf(value) != -1;
-    //console.log('obj', obj);
-    //console.log('value', value);
-    //return true;
     };
     
 export function init_first(app) {
@@ -1010,9 +1006,12 @@ export function delPrc(inp_data, th) {
 export function after_call(text, data, XmlHttpRequest) {
     //console.log('req', XmlHttpRequest);
     if (XmlHttpRequest.status == 403) {
+        deleteCookie("linker-app");
+        //Удалить то что ниже в понедельник 1 октября после обновления
         deleteCookie('linker_user');
         deleteCookie('linker_auth_key');
         deleteCookie('linker_role');
+        /////////////////
         alert('Требуется войти в систему');
         location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
         };

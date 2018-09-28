@@ -41,7 +41,6 @@ class API:
             self.db = pg_local(self.log)
         else:
             self.db = fb_local(self.log)
-        #res = self.db.execute({"sql": "update PRC SET IN_WORK = -1 where IN_WORK != -1", "options": ()})
         self.start = 1
         self.count = 20
 
@@ -49,8 +48,7 @@ class API:
         user = params.get('user')
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
-            sql = f"""update PRC SET IN_WORK = -1 where IN_WORK = (select id from users where "USER" = '{user}')"""
-            self.db.execute({"sql": sql, "options": ()})
+            self._setUnwork(user)
             ret = {"result": True, "ret_val": "OK"}
         return json.dumps(ret, ensure_ascii=False)
 
@@ -59,7 +57,7 @@ class API:
         p_hash = params.get('pass')
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
-            sql = f"""select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where r."USER" = {'?' if not self._pg else '%s'}"""
+            sql = f"""select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where lower(r."USER") = lower({'?' if not self._pg else '%s'})"""
             opt = (user,)
             res = self.db.request({"sql": sql, "options": opt})
             if len(res) > 0:
@@ -77,7 +75,7 @@ class API:
                     f_name = os.path.join(self.p_path, a_key)
                     with open(f_name, 'wb') as f_obj:
                         f_obj.write(user.encode())
-                    ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3])}}
+                    ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
         return json.dumps(ret, ensure_ascii=False)
         
     def setExpert(self, params=None, x_hash=None):
@@ -114,12 +112,9 @@ class API:
     def getVersion(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
-            sql = f"""UPDATE PRC
-            SET IN_WORK = -1
-            where IN_WORK = (select u.ID from USERS u where u."USER" = {'?' if not self._pg else '%s'})"""
             opt = (user,)
-            res = self.db.execute({"sql": sql, "options": opt})
+            #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
+            self._setUnwork(user)
             sql = f"""select r.EXPERT, r.PARAMS FROM USERS r where r."USER" = {'?' if not self._pg else '%s'}"""
             expert, pars = self.db.request({"sql": sql, "options": opt})[0]
             try:
@@ -659,10 +654,8 @@ order by {field} {direction}"""
     def getSupplUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = f"""UPDATE PRC SET IN_WORK = -1 
-where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'})"""
             opt = (user,)
-            result = self.db.execute({"sql": sql, "options": opt})
+            self._setUnwork(user)
             sql = f"""select r1, v.C_VND, r2 from (
     select p.ID_VND as r1, count(p.ID_VND) as r2 from PRC p 
     inner join USERS u on (u."GROUP" = p.ID_ORG)
@@ -688,10 +681,7 @@ order by v.C_VND ASC"""
     def getSourceUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = f"""UPDATE PRC SET IN_WORK = -1 
-where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'})"""
-            opt = (user,)
-            result = self.db.execute({"sql": sql, "options": opt})
+            self._setUnwork(user)
             sql = f"""select
 CASE 
     WHEN r1=0 THEN 10000
@@ -725,10 +715,7 @@ order by r1 DESC"""
     def getDatesUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = f"""UPDATE PRC SET IN_WORK = -1 
-where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'}) """
-            opt = (user,)
-            result = self.db.execute({"sql": sql, "options": opt})
+            self._setUnwork(user)
             sql = f"""select CAST(p.DT as DATE) as r3, count(CAST(p.DT as DATE))
 from PRC p 
 inner join USERS u on (u."GROUP" = p.ID_ORG)
@@ -753,10 +740,7 @@ GROUP BY r3"""
         if self._check(x_hash):
             id_vnd = params.get('id_vnd')
             user = params.get('user')
-            sql = f"""UPDATE PRC SET IN_WORK = -1 
-where IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'})"""
-            opt = (user,)
-            result = self.db.execute({"sql": sql, "options": opt})
+            self._setUnwork(user)
             t1 = time.time() - st_t
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
 from prc r
@@ -804,10 +788,7 @@ where SH_PRC in ({ppp})"""
             user = params.get('user')
             if 10000 == int(source):
                 source = 0
-            sql = f"""UPDATE PRC SET IN_WORK = -1 
-where IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'})"""
-            opt = (user,)
-            result = self.db.execute({"sql": sql, "options": opt})
+            self._setUnwork(user)
             t1 = time.time() - st_t
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT
 from prc r
@@ -854,10 +835,7 @@ where SH_PRC in ({pprs})"""
         if self._check(x_hash):
             da = params.get('date')
             user = params.get('user')
-            sql = f"""UPDATE PRC SET IN_WORK = -1 
-where IN_WORK in (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'})"""
-            opt = (user,)
-            result = self.db.execute({"sql": sql, "options": opt})
+            self._setUnwork(user)
             t1 = time.time() - st_t
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, r.DT
 from prc r
@@ -4109,6 +4087,13 @@ matching (NAME)"""
         else:
             rrr = f""" ROWS {start_p} to {end_p}"""
         return rrr
+
+    def _setUnwork(self, user):
+        sql = f"""UPDATE PRC SET IN_WORK = -1 
+where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg else '%s'})"""
+        opt = (user,)
+        self.db.execute({"sql": sql, "options": opt})
+        return 1
 
 ###########applied sqls
 """

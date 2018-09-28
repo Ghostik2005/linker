@@ -18,11 +18,13 @@ export default class loginView extends JetView{
             res = checkVal(res, 's');
             if (res) {
                 ret = true;
-                app.config.user = item.user;
+                app.config.user = res.user;
                 app.config.role = res.role;
                 app.config.x_api = res.key;
                 var opt = {'path': '/'};
-                setCookie('linker_user', item.user, opt);
+                setCookie('linker-app', [res.user, res.key, res.role].join('::'), opt)
+                //Удалить то что ниже в понедельник 1 октября после обновления
+                setCookie('linker_user', res.user, opt);
                 setCookie('linker_auth_key', res.key, opt);
                 setCookie('linker_role', res.role, opt);
                 };
@@ -46,9 +48,11 @@ export default class loginView extends JetView{
                             if (validate_user(this)) {
                                 this.$scope.show("/start/body");
                                 //this.$scope.show("/start/top-menu");
-                                webix.message('авторизованно');
+                                //webix.message('авторизованно');
                             } else {
                                 webix.message({'text': 'не авторизованно', "type" : "debug"});
+                                deleteCookie('linker-app');
+                                //Удалить то что ниже в понедельник 1 октября после обновления
                                 deleteCookie('linker_user');
                                 deleteCookie('linker_auth_key');
                                 deleteCookie('linker_role');
@@ -73,9 +77,9 @@ export default class loginView extends JetView{
         return af
         }
     init() {
-        //webix.ajax().headers({'Content-type': 'application/json'}).post('http://freegeoip.net/json/').then(function(data){
-            //console.log('ip', data.json().ip)
-            //});
+        //let cook = getCookie('linker-app');
+        //let [uq, xq, rq] = cook.split('::');
+        //Удалить то что ниже в понедельник 1 октября после обновления и заменить буковки на такие же с q
         let u = getCookie('linker_user');
         let x = getCookie('linker_auth_key');
         let r = getCookie('linker_role');
@@ -86,6 +90,7 @@ export default class loginView extends JetView{
             this.show("/start/body");
             //this.show("/start/top-menu");
         } else {
+            deleteCookie("linker-app");
             deleteCookie('linker_user');
             deleteCookie('linker_auth_key');
             deleteCookie('linker_role');

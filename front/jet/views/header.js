@@ -43,6 +43,7 @@ export default class HeaderView extends JetView{
             let url = app.config.r_url + "?setExit";
             let params = {"user":user};
             request(url, params);
+
             //alert('f');
             }
 
@@ -68,12 +69,15 @@ export default class HeaderView extends JetView{
                     on: {
                         onItemClick: () => {
                             onExit();
+                            deleteCookie("linker-app");
+                            //Удалить то что ниже в понедельник 1 октября после обновления
                             deleteCookie('linker_user');
                             deleteCookie('linker_auth_key');
                             deleteCookie('linker_role');
-                            this.app.config.user = '';
-                            this.app.config.role = '0';
-                            this.app.config.x_api = 'x_login';
+                            //////////////
+                            th.app.config.user = '';
+                            th.app.config.role = '0';
+                            th.app.config.x_api = 'x_login';
                             location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
                             }
                         },

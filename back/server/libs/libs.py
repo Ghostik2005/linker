@@ -502,7 +502,7 @@ def handle_commandline(profile, index):
 
 class UDPSocket(socket.socket):
 
-    def __init__(self, bind_addr=('127.0.0.1', 0), std_addr=('127.0.0.1', 4222),
+    def __init__(self, bind_addr=('127.0.0.1', 0), std_addr=('127.0.0.1', 4122),
                  family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=0, _sock=None):
         super(UDPSocket, self).__init__(family=family, type=type, proto=proto)
         try: self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

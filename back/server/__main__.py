@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.270.1600' #исправлены все фильтры с датами в приложении, обновлена блокировка файлов, API вынесено в отдельный файл
+__version__ = '18.271.1600' #отрефакторен код, авторизация регистронечувствительная, все запросы шлются в UDP
+#__version__ = '18.270.1600' #исправлены все фильтры с датами в приложении, обновлена блокировка файлов, API вынесено в отдельный файл
 #__version__ = '18.270.1312' #пофиксен неправильный отбор по дате в пропущенных
 #__version__ = '18.268.1725' #улучшен Брак
 #__version__ = '18.263.1705' #поиск по sh_prc в пропущенных и несвязанных
@@ -89,16 +90,13 @@ def main():
         "nginx": {
             "location": "/ms71/conf/location",
             "upstream": "/ms71/conf/upstream",
-        },
-    }
+            },
+        }
+    sys.APPCONF["udpsock"] = libs.UDPSocket()
     sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
     sys.APPCONF["api"] = app_api.API(log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg)
-
-    #import atexit
-    #atexit.register(libs.shutdown, sys.APPCONF["log"])
-    #threading.Thread(target=s_send, args=(), daemon=True).start()
 
     threads, processes = prepare_server(api = sys.APPCONF["api"])
     rc = 0
@@ -108,11 +106,9 @@ def main():
         server.serve_forever(sys.APPCONF["addr"], application)
     except KeyboardInterrupt as e:
         sys.APPCONF["log"]('KEYBOARD EXIT', kind="info")
-        #libs.shutdown(sys.APPCONF["log"])
     except SystemExit as e:
         if e:
             rc = e.code
-        #libs.shutdown(sys.APPCONF["log"])
     except:
         sys.APPCONF["log"](traceback.format_exc(), kind="error")
     finally:
@@ -123,7 +119,10 @@ def main():
     return (rc)
 
 def application(env):
-    """main bussiness script"""
+    """
+    main bussiness script
+    """
+
     tt = time.time()
     addr, pid = env["scgi.initv"][:2]
     msg = f'{addr[0]} {addr[1]} {env["HTTP_METHOD"]} {env["URI"]} {env["HTTP_PARAMS"]} {env["HTTP_KWARGS"] or ""}'
@@ -150,8 +149,6 @@ def application(env):
             _param = _p_http
             if fname:
                 _param.update({"data": data})
-            #sys.APPCONF["log"](_param, kind='error')
-            #content = u'not applicable format. use JSON-formated string'
         else:
             _param.update(_p_http)
         sys.APPCONF["log"](arg, kind='info:method:')
@@ -161,7 +158,10 @@ def application(env):
             t = _param.copy()
             t.pop('data')
             sys.APPCONF["log"](t, kind='info:params:')
-        #arg, _param = args.popitem()
+        udp_msg = [__appname__, 'info', arg, _param, time.strftime("%Y-%m-%d %H:%M:%S")]
+        #send to UDP socket our message:
+        #appname, kind of message('info', 'error', etc), called method, method's params, timestamp 
+        print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
     fileReturn = False
     if arg == 'saveData':
@@ -202,7 +202,7 @@ def prepare_server(api = None):
     sys.APPCONF["log"](f'{__appname__} started.\tinternal ip-> {sys.intip}')
     sys.APPCONF["log"](f'\t\t\textrnal  ip-> {sys.extip}')
 
-    #threads.append(threading.Thread(target=libs.warden, args=(Lock, st_queue, api), daemon=True))
+    #threads.append(threading.Thread(target=_insert_function_for_thread_here, args=(_insert_args_here,), daemon=True))
 
     for th in threads:
         th.start()
@@ -210,7 +210,7 @@ def prepare_server(api = None):
         pr.start()
     return threads, processes
 
-def s_send():
+def udp_send():
     import json
 
     udpsock = libs.UDPSocket()

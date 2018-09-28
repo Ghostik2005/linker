@@ -14,9 +14,21 @@ except ImportError:
 import psycopg2
 
 
-class pg_local(object):
+class Connect(object):
 
-    def __init__(self, log):
+    def __init__(self, *args, **kwargs):
+        print('args', args, sep='\t')
+        print('kwargs', kwargs, sep='\t')
+
+    def _print(self):
+        print('xxxxxxxxxxxxxxxxxxxx')
+        
+    pass
+
+class pg_local(Connect):
+
+    def __init__(self, log, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.log = log
         self.production = False
         self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
@@ -24,6 +36,7 @@ class pg_local(object):
             self.log("Production" if self.production else "Test")
         else:
             print("Production" if self.production else "Test", flush=True)
+        self._print()
 
     def _log(self, message, kind='info'):
         if callable(self.log):
@@ -156,7 +169,7 @@ class pg_local(object):
         return ret
 
 
-class fb_local:
+class fb_local(Connect):
 
     def __init__(self, log):
         try:
