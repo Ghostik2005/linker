@@ -1,6 +1,7 @@
 #coding: utf-8
 
 import os
+import sys
 import glob
 import json
 import time
@@ -38,7 +39,7 @@ class API:
             self._pg = False
             self.log("FB STARTED")
         if self._pg:
-            self.db = pg_local(self.log)
+            self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"])
         else:
             self.db = fb_local(self.log)
         self.start = 1
@@ -2284,7 +2285,7 @@ order by {3} {4}
             if id_spr:
                 sql = f"""select r.id, r.c_issue
 from issue r
-join spr_issue s on (s.id_is = r.id) 
+join spr_issue s on (cast(s.id_is as integer) = r.id) 
 where s.id_spr = {'?' if not self._pg else '%s'}"""
                 opt = (id_spr,)
                 t = self.db.request({"sql": sql, "options": opt})
@@ -2735,7 +2736,7 @@ WHERE lower(t1.C_TOVAR) like lower('%s') and lower(t2.series) like lower('%s') "
                 pars['c_dv'] = filt.get('c_dv')
                 ssss = []
                 if pars['id_spr']:
-                    s = "and r.id_spr like ('" + pars['id_spr'] + "%')"
+                    s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
                     ssss.append(s)
                 stri += ' ' + ' '.join(ssss)
             stri = stri.replace("lower(z.C_ZAVOD) like lower('%%%%') and", '')
@@ -2881,7 +2882,7 @@ WHERE {stri} ORDER by {field} {direction}
                             s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
                         ssss.append(s.format(pars['start_dt'], pars['end_dt']))
                 if pars['id_spr']:
-                    s = "and r.id_spr like ('" + pars['id_spr'] + "%')"
+                    s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
                     ssss.append(s)
                 if pars['id_zavod']:
                     s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
@@ -3142,7 +3143,7 @@ LEFT OUTER join
 LEFT OUTER join 
     (select g6.ID_SPR cc6, g6.ID_IS cg6, c6.C_ISSUE issue1
     from spr_issue g6
-    inner join ISSUE c6 on (g6.ID_IS = c6.ID)
+    inner join ISSUE c6 on (cast(g6.ID_IS as integer) = c6.ID)
     ) as ttt7 on (r.ID_SPR = cc6)
 WHERE r.id_spr = {'?' if not self._pg else '%s'}"""
                 opt = (id_spr,)
@@ -3181,7 +3182,7 @@ WHERE r.id_spr = {'?' if not self._pg else '%s'}"""
                     r['barcode'] = " ".join(b_code)
                     sql = f"""select s.C_ISSUE 
 from SPR_ISSUE r 
-JOIN ISSUE s on s.ID = r.ID_IS
+JOIN ISSUE s on s.ID = cast(r.ID_IS as integer)
 where r.id_spr ={'?' if not self._pg else '%s'}"""
                     t = self.db.request({"sql": sql, "options": opt})
                     b_code = []

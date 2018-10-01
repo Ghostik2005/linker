@@ -1,11 +1,9 @@
 #coding: utf-8
 import sys
+import json
+import time
 import traceback
 import configparser
-try:
-    from libs.ms71lib import client as ms71_cli
-except ImportError:
-    import ms71lib.client as ms71_cli
 try:
     import libs.fdb as fdb
 except ImportError:
@@ -19,9 +17,12 @@ class Connect(object):
     def __init__(self, *args, **kwargs):
         print('args', args, sep='\t')
         print('kwargs', kwargs, sep='\t')
+        self.udp = kwargs.get('udp')
 
-    def _print(self):
-        print('xxxxxxxxxxxxxxxxxxxx')
+    def _print(self, msg=None):
+        udp_msg = [sys.APPCONF["log"].appname, 'sql', '', msg, time.strftime("%Y-%m-%d %H:%M:%S")]
+        print(json.dumps(udp_msg), file=self.udp or sys.stdout)
+        #print('xxxxxxxxxxxxxxxxxxxx')
         
     pass
 
@@ -36,7 +37,7 @@ class pg_local(Connect):
             self.log("Production" if self.production else "Test")
         else:
             print("Production" if self.production else "Test", flush=True)
-        self._print()
+        self._print('xxxxxxxxxxxxx')
 
     def _log(self, message, kind='info'):
         if callable(self.log):
@@ -64,10 +65,12 @@ class pg_local(Connect):
                     cur.execute(sql)
                     if not self.production:
                         print(cur.query.decode())
+                    self._print(cur.query.decode())
                 else:
                     cur.execute(sql, options)
                     if not self.production:
                         print(cur.query.decode())
+                    self._print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
                 except Exception as Err:
@@ -142,10 +145,12 @@ class pg_local(Connect):
                     cur.execute(sql)
                     if not self.production:
                         print(cur.query.decode())
+                    self._print(cur.query.decode())
                 else:
                     cur.execute(sql, options)
                     if not self.production:
                         print(cur.query.decode())
+                    self._print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
                 except Exception as Err:
@@ -171,7 +176,9 @@ class pg_local(Connect):
 
 class fb_local(Connect):
 
-    def __init__(self, log):
+    def __init__(self, log, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._print()
         try:
             config = configparser.ConfigParser()
             config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
