@@ -56,7 +56,7 @@ class logs:
         self.profile = profile
         self.output = sys.stdout
 
-    def __call__(self, msg, kind='info', begin='', end='\n', clear=False):
+    def __call__(self, msg, kind='info', begin='', end='\n', clear=False, flush=True):
         try:
             ts = "%Y-%m-%d %H:%M:%S"
             try: ts = time.strftime(ts)
@@ -76,7 +76,8 @@ class logs:
                 s = '{0}{1}'.format(msg, end)
             #print(s, flush=True, file=open('1212.txt', 'a'))
             self.output.write(s)
-            self.output.flush()
+            if flush:
+                self.output.flush()
         except:
             traceback.print_exc()
 

@@ -97,7 +97,7 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 90, width: 385, localId: "_local_link_by",
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 100, width: 405, localId: "_local_link_by",
                             options: [
                                 {id: 1, value: "<span style='color: white'>поставщикам</span>"},
                                 {id: 2, value: "<span style='color: white'>дате</span>"},
@@ -105,14 +105,14 @@ export default class TopmenuView extends JetView{
                                 ],
                             on: {
                                 onChange: function() {
-                                    let v = this.getValue();
+                                    let v = +this.getValue();
                                     $$("_suppl").getList().clearAll();
                                     $$("_suppl").setValue('');
-                                    if (+v===1) {
+                                    if (v===1) {
                                         get_suppl("_suppl", this.$scope, "?getSupplUnlnk");
-                                    } else if (+v===2) {
+                                    } else if (v===2) {
                                         get_suppl("_suppl", this.$scope, "?getDatesUnlnk");
-                                    } else if (+v===3) {
+                                    } else if (v===3) {
                                         get_suppl("_suppl", this.$scope, "?getSourceUnlnk")
                                     } else {
                                         webix.message({type: "error", text: 'не сводим'});

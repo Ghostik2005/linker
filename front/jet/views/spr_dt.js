@@ -272,7 +272,7 @@ export default class SprView extends JetView{
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
-                        this.callEvent("onItemDblClick");
+                        if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
                     },
                 }
