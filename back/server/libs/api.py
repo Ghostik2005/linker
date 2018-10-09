@@ -3112,6 +3112,9 @@ ORDER by r.{1} {2}
         if self._check(x_hash):
             id_spr = int(params.get('id_spr'))
             if id_spr:
+                print("*"*30)
+                print(self._pg)
+                print("*"*30)
                 sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc, issue1
 FROM SPR r
 LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
