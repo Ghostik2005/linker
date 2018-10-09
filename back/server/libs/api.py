@@ -8,12 +8,19 @@ import time
 import uuid
 import hashlib
 import psycopg2
-from io import BytesIO
+import io
+#from dbfread import DBF
+from multiprocessing.dummy import Pool as ThreadPool
+
 from libs.connect import fb_local
 from libs.connect import pg_local
-from multiprocessing.dummy import Pool as ThreadPool
 import libs.xlsx as xlsx
 import libs.ods as ods
+try:
+    from libs.dbfread import DBF
+except ImportError:
+    print('eeee')
+
 
 
 class API:
@@ -3834,15 +3841,48 @@ matching (NAME)"""
             data = params.get("data")
             f_data = data.split(b'\r\n')
             f_data = f_data[4:-6]
-            #f_data = b'\r\n'.join([i.strip() for i in f_data])
             f_data = b'\r\n'.join([i for i in f_data])
             try:
                 f_data = f_data.decode()
             except:
                 pass
             if f_name:
-                with open(os.path.join("/ms71/temp", f_name), "w") as f_obj:
-                    f_obj.write(f_data)
+                print(f_data[:64])
+                print("*"*20)
+                f_obj = io.BytesIO()
+                f_obj.name = 'brak.dbf'
+                f_obj.write(f_data)
+                f_obj.flush()
+                print(f_obj.__sizeof__())
+                print()
+                print(f_obj)
+                print(f_obj.getbuffer())
+                f_r = io.BufferedReader(f_obj)
+                print(f_r)
+                print(f_r.read(512))
+                print("#"*20)
+                #print(f_obj)
+                print()
+                #print(type(f_obj))
+                print()
+                print(dir(f_obj))
+                print()
+                n = str(int(time.time())) + ".brak"
+                rows = []
+
+                for record in DBF('/ms71/temp/brak.dbf', encoding='cp866', ignore_missing_memofile=True):
+                    pass
+                for record in DBF(f_r, encoding='cp866', ignore_missing_memofile=True):
+                    new_row = []
+                    row = list(record.values())
+                    new_row = [10000, row[0], row[1], row[4], 0, self._genHash(10000, str(row[1]), str(row[4])), row[2], row[3]]
+                    rows.append('\t'.join([str(i) for i in new_row]))
+                    #print('\t'.join([str(i) for i in new_row]))
+                ret_dict = {n:rows}
+                f_obj.close()
+                save_data = '\n'.join(rows)
+                with open(os.path.join("/ms71/temp", n), "w") as f_obj:
+                    f_obj.write(save_data)
             #print("-"*20)
             #print(f_data)
             ret = {"result": True, "ret_val": f_name}
@@ -4095,6 +4135,28 @@ where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {'?' if not self._pg 
         opt = (user,)
         self.db.execute({"sql": sql, "options": opt})
         return 1
+
+    def _genHash(self, id_vnd, tovar, zavod):
+        s = u''.join((tovar.replace(u' /ЖНВЛС/', ''), zavod)).upper().replace(',', '.').split()
+        fg_ochki = u"ОЧКИ" in s
+        n = []
+        s1 = []
+        for x in u''.join(s):
+            c = ord(x)
+            if c > 57:
+                s1.append(x)
+            elif c > 47:
+                n.append(x)
+            elif fg_ochki and c in [43, 45]:
+                s1.append(x)
+        s1.sort()
+        n.extend(s1)
+        s = u''.join(n)
+        sh_prc = hashlib.md5()
+        sh_prc.update(str(id_vnd).encode())
+        sh_prc.update(s.encode('1251', 'ignore'))
+        return sh_prc.hexdigest()
+
 
 ###########applied sqls
 """

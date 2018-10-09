@@ -152,13 +152,11 @@ def application(env):
         else:
             _param.update(_p_http)
         sys.APPCONF["log"](arg, kind='info:method:')
-        if not fname:
-            sys.APPCONF["log"](_param, kind='info:params:')
-        else:
-            t = _param.copy()
+        t = _param.copy()
+        if fname:
             t.pop('data')
-            sys.APPCONF["log"](t, kind='info:params:')
-        udp_msg = [__appname__, 'info', arg, _param, time.strftime("%Y-%m-%d %H:%M:%S")]
+        sys.APPCONF["log"](t, kind='info:params:')
+        udp_msg = [__appname__, 'info', arg, t, time.strftime("%Y-%m-%d %H:%M:%S")]
         #send to UDP socket our message:
         #appname, kind of message('info', 'error', etc), called method, method's params, timestamp 
         print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 

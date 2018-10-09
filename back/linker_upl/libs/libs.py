@@ -445,6 +445,7 @@ SET (barcode, id_spr) = (%s, %s);"""
 
     def _genHash(self, id_vnd, tovar, zavod):
         s = u''.join((tovar.replace(u' /ЖНВЛС/', ''), zavod)).upper().replace(',', '.').split()
+        fg_ochki = u"ОЧКИ" in s
         n = []
         s1 = []
         for x in u''.join(s):
@@ -453,15 +454,15 @@ SET (barcode, id_spr) = (%s, %s);"""
                 s1.append(x)
             elif c > 47:
                 n.append(x)
+            elif fg_ochki and c in [43, 45]:
+                s1.append(x)
         s1.sort()
         n.extend(s1)
         s = u''.join(n)
         sh_prc = hashlib.md5()
         sh_prc.update(str(id_vnd).encode())
-        sh_prc.update(s.encode('1251'))
-        buf =  sh_prc.hexdigest()
+        sh_prc.update(s.encode('1251', 'ignore'))
         return sh_prc.hexdigest()
-
 
     def _erase_prc(self, db, dbc):
         #очищаем PRC если такие ключи есть в LNK
