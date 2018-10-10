@@ -34,16 +34,11 @@ class StructParser:
 
     def unpack(self, data):
         """Unpack struct from binary string and return a named tuple."""
-        print(self.size)
-        print(data)
-        print(data.__sizeof__())
         items = zip(self.names, self.struct.unpack(data))
         return self.Class(**dict(items))
 
     def read(self, file):
         """Read struct from a file-like object (implenting read())."""
-        print('ffffffff', file)
         buf = file.read(self.size)
-        print('bbbbbbbb', buf)
         #return self.unpack(file.read(self.struct.size))
         return self.unpack(buf)

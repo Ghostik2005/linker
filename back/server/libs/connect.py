@@ -59,7 +59,8 @@ class pg_local(Connect):
             try:
                 cur.execute(sql, options) if options else cur.execute(sql)
                 if not self.production:
-                    print(cur.query.decode())
+                    pass
+                    #print(cur.query.decode())
                 self._print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
@@ -96,7 +97,8 @@ class pg_local(Connect):
             try:
                 cur.executemany(sql, options)
                 if not self.production:
-                    print(cur.query.decode())
+                    pass
+                    #print(cur.query.decode())
                 self._print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
@@ -133,7 +135,8 @@ class pg_local(Connect):
             try:
                 cur.execute(sql, options) if options else cur.execute(sql)
                 if not self.production:
-                    print(cur.query.decode())
+                    pass
+                    #print(cur.query.decode())
                 self._print(cur.query.decode())
                 try:
                     ret = cur.fetchall()

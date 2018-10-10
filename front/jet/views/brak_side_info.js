@@ -219,7 +219,7 @@ export default class BrakSideInfoView extends JetView{
         }
 
     show_b() {
-        this.$$("_save").show();
+        //this.$$("_save").show(); //временно выключаем
         this.$$("_cancel").show();
         }
 

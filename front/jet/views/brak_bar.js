@@ -14,6 +14,18 @@ export default class BrakBarView extends JetView{
     config(){
         let app = this.app;
         let vi = this;
+        
+        var st_formating = function (d) {
+            var format = webix.Date.strToDate("%d-%m-%Y");
+            var data = d.order;
+            data.forEach(function(item, i, data) {
+                let obj = d.getItem(item);
+                obj.dt = format(obj.dt)
+                obj.$css = (+obj.m_count === 0) ? "highlighted":
+                           "nothing";
+                });
+            }
+
 
         let sprv = {view: "toolbar",
             css: {"border-top": "0px"},
@@ -123,7 +135,7 @@ export default class BrakBarView extends JetView{
                         let listItemId = subView.getSelectedId();
                         if (listItemId) {
                             let url = app.config.r_url + "?delBrakMail";
-                            let params = {"user": app.config.user, 'id': listItemId}
+                            let params = {"user": app.config.user, 'id': listItemId, "f_name": subView.getItem(listItemId).f_name}
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
@@ -269,8 +281,9 @@ export default class BrakBarView extends JetView{
                     let params = {"user": app.config.user, "sh_prc": item.sh_prc, "series": item.series, "razbr": value};
                     let res = request(url, params, !0).response;
                     },
-                onBeforeRender: function() {
+                onBeforeRender: function(d) {
                     webix.extend(this, webix.ProgressBar);
+                    st_formating(d);
                     },
                 onSubViewClose: function(id) {
                     this.$scope.sideView.$scope.hide_b();

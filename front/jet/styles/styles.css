@@ -315,3 +315,10 @@ div.webix_item_tab {
   -moz-osx-font-smoothing: grayscale;
   transform: translate(0, 0);
 }
+
+.highlighted {
+    color: red;
+    }
+
+.nothing {
+    }

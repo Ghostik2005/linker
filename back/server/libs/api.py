@@ -22,6 +22,21 @@ except ImportError:
     print('eeee')
 
 
+"""
+CREATE TABLE BRAK_MAIL_TEXT
+(
+  LINK_FILE VARCHAR(100) NOT NULL,
+  MAIL_TEXT BLOB SUB_TYPE 0,
+  DELETED SMALLINT DEFAULT 0 NOT NULL ,
+  CONSTRAINT PK_BRAK_MAIL_TEXT PRIMARY KEY (LINK_FILE)
+);
+
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON BRAK_MAIL_TEXT TO  SYSDBA WITH GRANT OPTION;
+
+"""
+
+
 
 class API:
     """
@@ -48,7 +63,7 @@ class API:
         if self._pg:
             self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"])
         else:
-            self.db = fb_local(self.log)
+            self.db = fb_local(self.log, udp=sys.APPCONF["udpsock"])
         self.start = 1
         self.count = 20
 
@@ -105,7 +120,7 @@ class API:
             pars = json.dumps(pars, ensure_ascii=False)
             if user:
                 if self._pg:
-                    ppprs = psycopg2.Binary(pars).encode()
+                    ppprs = psycopg2.Binary(pars.encode())
                 else:
                     ppprs = pars.encode()
                 #если у нас 
@@ -2542,6 +2557,10 @@ FROM RDB$DATABASE"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+
+
+
+
     def setBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
@@ -2558,6 +2577,7 @@ FROM RDB$DATABASE"""
             gv = item.get("gv", "") #"gv"
             title_doc = item.get("n_doc") #"title_doc"
             opis = item.get("desc", "") #"opis"
+            letter_text = item.get("letter") #letter text
             f_name = item.get("f_name") or str(uuid.uuid1()) #"link_file"
             ins = '?' if not self._pg else '%s'
             opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name)
@@ -2570,7 +2590,23 @@ n_rec = {ins}, dt_edit = current_timestamp, gv = {ins}, title_doc = {ins}, opis 
 where id = {ins} returning id;"""
                 opt = opt + (letter_id,)
             res = self.db.execute({"sql": sql, "options": opt})
-            print(res)
+
+
+            if self._pg:
+                ppprs = psycopg2.Binary(letter_text.encode())
+                sql_t = """insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
+values (%s, %s)
+ON CONFLICT (LINK_FILE) DO UPDATE
+SET (LINK_FILE, MAIL_TEXT) = (%s, %s)"""
+                opt_t = (f_name, ppprs) + (f_name, ppprs)
+            else:
+                ppprs = letter_text.encode()
+                sql_t = f"""UPDATE OR insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
+values (?, ?)"""
+                opt_t = (f_name, ppprs)
+            r = self.db.execute({"sql": sql_t, "options": opt_t})
+
+            #print(res)
             _return = 'OK'
             ret = {"result": True, "ret_val": _return}
         else:
@@ -2582,13 +2618,16 @@ where id = {ins} returning id;"""
         if self._check(x_hash):
             user = params.get("user")
             letter_id = params.get("id")
+            f_name = params.get("f_name")
             ins = '?' if not self._pg else '%s'
             sql = f"""update BRAK_MAIL set deleted = 1 where id = {ins};"""
             opt = (letter_id,)
             res = self.db.execute({"sql": sql, "options": opt})
+            sql = f"""update BRAK_MAIL_TEXT set deleted = 1 where id = {ins} """
+            opt = (f_name,)
+            res = self.db.execute({"sql": sql, "options": opt})
             print("del mail")
             print(params)
-            pass
             _return = 'OK'
             ret = {"result": True, "ret_val": _return}
         else:
@@ -2600,12 +2639,29 @@ where id = {ins} returning id;"""
         if self._check(x_hash):
             series = params.get('series','')
             sh_prc = params.get('sh_prc', '')
-            sql = f"""select sh_prc, title, title_torg, seriya, fabricator, region, n_rec, dt_edit, gv, title_doc, opis, link_file, id, dt from brak_mail
-where sh_prc = '{sh_prc}' and seriya = '{series}' and deleted != 1
-order by id asc;"""
+            sql = f"""select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv, 
+    bm.title_doc, bm.opis, bm.link_file, bm.id, bm.dt, 
+CASE 
+    WHEN bmt.MAIL_TEXT is null THEN ''
+    ELSE bmt.MAIL_TEXT
+END as m_text
+from brak_mail bm
+LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE
+where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
+order by id asc; """
             res = self.db.request({"sql": sql, "options": ()})
             _return = []
             for row in res:
+                pars = row[14]
+                try:
+                    if self._pg:
+                        pars = pars.tobytes()
+                        pars = pars.decode()
+                    else:
+                        pars = pars.decode()
+                except:
+                    pass
+                    
                 r = {
                     "sh_prc": row[0],
                     "name": row[1], #"title"
@@ -2621,7 +2677,7 @@ order by id asc;"""
                     "f_name": row[11], #"link_file"
                     "id": row[12], #"id"
                     "cre_date": str(row[13]), #"dt"
-                    "letter": """<p>йцуйа каыуа</p>\n<p>авфауц</p>"""
+                    "letter": pars #letter text
                     }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -2690,8 +2746,13 @@ WHERE lower(t1.C_TOVAR) like lower('%s') and lower(t2.series) like lower('%s') "
                     "c_zavod": row[3],
                     "series": row[4],
                     "razbr": row[5],
-                    "dt": row[6]
+                    "dt": row[6],
+                    "m_count": 0
                 }
+                sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{row[4]}'"""
+                opt = ()
+                ress = self.db.request({"sql": sql, "options": opt})
+                r['m_count'] = ress[0][0]
                 _return.append(r)
             count = results[1][0][0]
             t1 = time.time() - st_t
@@ -3850,44 +3911,28 @@ matching (NAME)"""
             except:
                 pass
             if f_name:
-                print(f_data[:64])
-                print("*"*20)
                 f_obj = io.BytesIO()
                 f_obj.name = 'brak.dbf'
                 f_obj.write(f_data)
-                f_obj.flush()
-                print(f_obj.__sizeof__())
-                print()
-                print(f_obj)
-                print(f_obj.getbuffer())
-                f_r = io.BufferedReader(f_obj)
-                print(f_r)
-                print(f_r.read(512))
-                print("#"*20)
-                #print(f_obj)
-                print()
-                #print(type(f_obj))
-                print()
-                print(dir(f_obj))
-                print()
+                f_obj.seek(0)
                 n = str(int(time.time())) + ".brak"
                 rows = []
-
-                for record in DBF('/ms71/temp/brak.dbf', encoding='cp866', ignore_missing_memofile=True):
-                    pass
-                for record in DBF(f_r, encoding='cp866', ignore_missing_memofile=True):
-                    new_row = []
-                    row = list(record.values())
-                    new_row = [10000, row[0], row[1], row[4], 0, self._genHash(10000, str(row[1]), str(row[4])), row[2], row[3]]
-                    rows.append('\t'.join([str(i) for i in new_row]))
-                    #print('\t'.join([str(i) for i in new_row]))
-                ret_dict = {n:rows}
-                f_obj.close()
-                save_data = '\n'.join(rows)
+                ret_dict = None
+                #for record in DBF('/ms71/temp/brak.dbf', encoding='cp866', ignore_missing_memofile=True):
+                    #pass
+                try:
+                    for record in DBF(f_obj, encoding='cp866', ignore_missing_memofile=True):
+                        new_row = []
+                        row = list(record.values())
+                        new_row = [10000, row[0], row[1], row[4], 0, self._genHash(10000, str(row[1]), str(row[4])), row[2], row[3]]
+                        rows.append('\t'.join([str(i) for i in new_row]))
+                    ret_dict = {n:rows}
+                except Exception as E:
+                    print(str(E))
+                finally:
+                    f_obj.close()
                 with open(os.path.join("/ms71/temp", n), "w") as f_obj:
-                    f_obj.write(save_data)
-            #print("-"*20)
-            #print(f_data)
+                    f_obj.write('\n'.join(rows))
             ret = {"result": True, "ret_val": f_name}
         else:
             ret = {"result": False, "ret_val": "access denied"}
