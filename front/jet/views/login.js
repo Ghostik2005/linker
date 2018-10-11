@@ -24,9 +24,9 @@ export default class loginView extends JetView{
                 var opt = {'path': '/'};
                 setCookie('linker-app', [res.user, res.key, res.role].join('::'), opt)
                 //Удалить то что ниже в понедельник 1 октября после обновления
-                setCookie('linker_user', res.user, opt);
-                setCookie('linker_auth_key', res.key, opt);
-                setCookie('linker_role', res.role, opt);
+                //setCookie('linker_user', res.user, opt);
+                //setCookie('linker_auth_key', res.key, opt);
+                //setCookie('linker_role', res.role, opt);
                 };
             return ret;
             }
@@ -36,7 +36,7 @@ export default class loginView extends JetView{
             localId: "auth_box",
             label:"Аутентификация",
             elements:[
-                {view:"text", label:"Пользователь", name:"user", labelWidth: 120, width: 400,
+                {view:"text", label:"Пользователь", name:"user", labelWidth: 120, width: 400, localId: "_user",
                     },
                 { view:"text", type:"password", label:"Пароль", name:"pass", labelWidth: 120, width: 400,
                     },
@@ -47,8 +47,6 @@ export default class loginView extends JetView{
                         click: function(){
                             if (validate_user(this)) {
                                 this.$scope.show("/start/body");
-                                //this.$scope.show("/start/top-menu");
-                                //webix.message('авторизованно');
                             } else {
                                 webix.message({'text': 'не авторизованно', "type" : "debug"});
                                 deleteCookie('linker-app');
@@ -76,13 +74,22 @@ export default class loginView extends JetView{
 
         return af
         }
+
+    ready() {
+        this.$$("_user").focus();
+        }
+        
     init() {
-        //let cook = getCookie('linker-app');
-        //let [uq, xq, rq] = cook.split('::');
+        let cook, u, x, r;
+        try {
+            cook = getCookie('linker-app');
+            [u, x, r] = cook.split('::');
+        } catch (e){
         //Удалить то что ниже в понедельник 1 октября после обновления и заменить буковки на такие же с q
-        let u = getCookie('linker_user');
-        let x = getCookie('linker_auth_key');
-        let r = getCookie('linker_role');
+            //u = getCookie('linker_user');
+            //x = getCookie('linker_auth_key');
+            //r = getCookie('linker_role');
+            };
         if (u && x && r) {
             this.app.config.user = u;
             this.app.config.role = r;

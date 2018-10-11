@@ -90,7 +90,8 @@ export default class BrakSideInfoView extends JetView{
             }
 
         var tiny = {view: "tinymce-editor",
-             borderless: true,
+            css: {"margin-top": "-1px !important"},
+            borderless: true,
             localId: '_editor',
             config: {
                 theme:"modern",
@@ -130,6 +131,7 @@ export default class BrakSideInfoView extends JetView{
                             res = checkVal(res, 's');
                             if (res) {
                                 webix.message({type: "success", text: "Сохранено", expire: 2500});
+                                this.$scope.$$("_dHead").config._topParent.getSelectedItem().m_count = +res.m_count;
                                 this.$scope.reopen();
                             } else {
                                 webix.message({type: "error", text: "Ошибка сохранения", expire: 2500});
@@ -183,7 +185,8 @@ export default class BrakSideInfoView extends JetView{
         }
 
     reopen() {
-        let tableSelectedId = this.$$("_dHead").config._topParent.getSelectedItem().id;
+        let tableSelectedItem = this.$$("_dHead").config._topParent.getSelectedItem()
+        let tableSelectedId = tableSelectedItem.id;
         this.clear_info();
         this.$$("_dHead").config._topParent.closeSub(tableSelectedId);
         this.$$("_dHead").config._topParent.openSub(tableSelectedId, this.$$("_dHead").config._topParent);
@@ -219,7 +222,7 @@ export default class BrakSideInfoView extends JetView{
         }
 
     show_b() {
-        //this.$$("_save").show(); //временно выключаем
+        this.$$("_save").show(); 
         this.$$("_cancel").show();
         }
 

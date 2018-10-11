@@ -78,6 +78,7 @@ export default class SprView extends JetView{
             };
 
         var sprv = {view: "datatable",
+            css: {"margin-top": "-5px !important"},
             name: "__dt",
             localId: "__table",
             navigation: "row",
@@ -279,6 +280,7 @@ export default class SprView extends JetView{
             }
         var dt = {
             view: "layout",
+            css: {'border-bottom': "0px solid #dddddd !important"},
             rows: [
                 sprv,
                 {$subview: PagerView},

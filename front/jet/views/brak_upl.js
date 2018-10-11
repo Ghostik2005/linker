@@ -26,7 +26,7 @@ export default class uplBrakMenuView extends JetView{
                         align: "left",
                         label:"Добавить файл",
                         directory: false,
-                        accept:"application/nolink",
+                        accept:"application/dbf",
                         urlData:{
                             },
                         link: undefined,//"mylist",
@@ -34,8 +34,14 @@ export default class uplBrakMenuView extends JetView{
                         datatype:"json",
                         on: {
                             onUploadComplete: (obj) => {
-                                webix.message({type: "success", text: obj.ret_val + " - сохранен", expire: 1500});
+                                //console.log("obj", obj.ret_val);
+                                if (obj.result) {
+                                    webix.message({type: "success", text: "брак сохранен", expire: 1500});
+                                } else {
+                                    webix.message({type: "error", text: obj.ret_val, expire: 1500});
+                                    };
                                 this.hide_window();
+                                
                                 },
                             },
                         },

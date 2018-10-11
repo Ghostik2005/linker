@@ -611,6 +611,11 @@ export function getDtParams(ui) {
     return [c_filter, ui.config.posPpage, ui.config.fi, ui.config.di]
     }
 
+export function dt_formating_no_sec(d) {
+    return webix.Date.dateToStr("%d-%m-%Y")(d)
+    };
+ 
+
 export function dt_formating_sec(d) {
     return webix.Date.dateToStr("%d-%m-%Y  %G:%i:%s")(d)
     };

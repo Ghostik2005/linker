@@ -5,7 +5,7 @@ import History from "../views/history";
 import {get_data_test, checkKey, getDtParams} from "../views/globals";
 import {fRender, fRefresh, checkVal} from "../views/globals";
 import {rRefresh, request} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue} from "../views/globals";
+import {dt_formating_no_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 import BrakSideInfoView from "../views/brak_side_info";
 import uplBrakMenuView from "../views/brak_upl";
@@ -16,11 +16,11 @@ export default class BrakBarView extends JetView{
         let vi = this;
         
         var st_formating = function (d) {
-            var format = webix.Date.strToDate("%d-%m-%Y");
+            //var format = webix.Date.strToDate("%d-%m-%Y");
             var data = d.order;
             data.forEach(function(item, i, data) {
                 let obj = d.getItem(item);
-                obj.dt = format(obj.dt)
+                //obj.dt = format(obj.dt)
                 obj.$css = (+obj.m_count === 0) ? "highlighted":
                            "nothing";
                 });
@@ -139,6 +139,8 @@ export default class BrakBarView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
+                                this.$$("_delletter").hide();
+                                this.$$("__table").getSelectedItem().m_count = +res.m_count;
                                 this.sideView.$scope.clear_info();
                                 this.sideView.$scope.disable_info();
                                 subView.remove(listItemId);
@@ -258,12 +260,12 @@ export default class BrakBarView extends JetView{
                     css: "center_p",
                     template: "{common.checkbox()}",
                     },
-                {id: "dt", width: 200, sort: 'server', hidden: !true, sort: 'server',
-                    format: dt_formating_sec,
+                {id: "dt", width: 140, sort: 'server', hidden: !true, sort: 'server',
+                    format: dt_formating_no_sec,
                     css: 'center_p',
                     header: [{text: "Дата добавления"},
                     {content: "dateRangeFilter", compare: compareTrue,
-                        inputConfig:{format:dt_formating, width: 180,},
+                        inputConfig:{format:dt_formating, width: 120,},
                         suggest:{
                             view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
                             },

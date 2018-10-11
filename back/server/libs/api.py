@@ -9,8 +9,9 @@ import uuid
 import hashlib
 import psycopg2
 import io
-#from dbfread import DBF
+import requests
 from multiprocessing.dummy import Pool as ThreadPool
+
 
 from libs.connect import fb_local
 from libs.connect import pg_local
@@ -2597,7 +2598,7 @@ where id = {ins} returning id;"""
                 sql_t = """insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
 values (%s, %s)
 ON CONFLICT (LINK_FILE) DO UPDATE
-SET (LINK_FILE, MAIL_TEXT) = (%s, %s)"""
+SET (LINK_FILE, MAIL_TEXT, DELETED) = (%s, %s, 0)"""
                 opt_t = (f_name, ppprs) + (f_name, ppprs)
             else:
                 ppprs = letter_text.encode()
@@ -2607,8 +2608,11 @@ values (?, ?)"""
             r = self.db.execute({"sql": sql_t, "options": opt_t})
 
             #print(res)
-            _return = 'OK'
-            ret = {"result": True, "ret_val": _return}
+            sql = f"""select count(*) from brak_mail where SH_PRC = '{sh_prc}' and SERIYA = '{series}' and DELETED = 0"""
+            opt = ()
+            ress = self.db.request({"sql": sql, "options": opt})
+            _return = ress[0][0]
+            ret = {"result": True, "ret_val": {"m_count": _return}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2620,16 +2624,21 @@ values (?, ?)"""
             letter_id = params.get("id")
             f_name = params.get("f_name")
             ins = '?' if not self._pg else '%s'
-            sql = f"""update BRAK_MAIL set deleted = 1 where id = {ins};"""
+            sql = f"""update BRAK_MAIL set deleted = 1 where id = {ins} returning sh_prc, seriya;"""
             opt = (letter_id,)
             res = self.db.execute({"sql": sql, "options": opt})
-            sql = f"""update BRAK_MAIL_TEXT set deleted = 1 where id = {ins} """
+            sh_prc = res[0][0]
+            series = res[0][1]
+            sql = f"""update BRAK_MAIL_TEXT set deleted = 1 where LINK_FILE = {ins} """
             opt = (f_name,)
             res = self.db.execute({"sql": sql, "options": opt})
-            print("del mail")
-            print(params)
-            _return = 'OK'
-            ret = {"result": True, "ret_val": _return}
+            #print("del mail")
+            #print(params)
+            sql = f"""select count(*) from brak_mail where SH_PRC = '{sh_prc}' and SERIYA = '{series}' and DELETED = 0"""
+            opt = ()
+            ress = self.db.request({"sql": sql, "options": opt})
+            _return = ress[0][0]
+            ret = {"result": True, "ret_val": {"m_count": _return}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2646,7 +2655,7 @@ CASE
     ELSE bmt.MAIL_TEXT
 END as m_text
 from brak_mail bm
-LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE
+LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE and bm.deleted = 0
 where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
 order by id asc; """
             res = self.db.request({"sql": sql, "options": ()})
@@ -2714,9 +2723,9 @@ order by id asc; """
                     if pars['start_dt'] and not pars['end_dt']:
                         pars['start_dt'] = pars['start_dt'].split()[0]
                         if self._pg:
-                            s = """and (cast(t2.DT as timestamp) > CAST('{0}' as TIMESTAMP) AND cast(t2.DT as timestamp) < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                            s = """and (cast(t2.DT as timestamp) >= CAST('{0}' as TIMESTAMP) AND cast(t2.DT as timestamp) < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
                         else:
-                            s = """and (cast(t2.DT as timestamp) > CAST('{0}' as TIMESTAMP) AND cast(t2.DT as timestamp) < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
+                            s = """and (cast(t2.DT as timestamp) >= CAST('{0}' as TIMESTAMP) AND cast(t2.DT as timestamp) < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
                         ssss.append(s.format(pars['start_dt']))
                     elif pars['start_dt'] and pars['end_dt']:
                         pars['end_dt'] = pars['end_dt'].split()[0]
@@ -2749,7 +2758,7 @@ WHERE lower(t1.C_TOVAR) like lower('%s') and lower(t2.series) like lower('%s') "
                     "dt": row[6],
                     "m_count": 0
                 }
-                sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{row[4]}'"""
+                sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{row[4]}' and DELETED = 0"""
                 opt = ()
                 ress = self.db.request({"sql": sql, "options": opt})
                 r['m_count'] = ress[0][0]
@@ -3173,9 +3182,6 @@ ORDER by r.{1} {2}
         if self._check(x_hash):
             id_spr = int(params.get('id_spr'))
             if id_spr:
-                print("*"*30)
-                print(self._pg)
-                print("*"*30)
                 sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc, issue1
 FROM SPR r
 LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
@@ -3504,7 +3510,7 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
                     s = "r.id_spr like '" + str(pars['id_spr']) + "%'"
                     ssss.append('and %s' % s)
                 if pars['id_tovar']:
-                    s = "r.ID_TOVAR STARTING with '%s'" % pars['id_tovar']
+                    s = f"r.ID_TOVAR like '{pars['id_tovar']}%'"
                     ssss.append('and %s' % s)
                 if pars['owner']:
                     s = f"""lower(r.OWNER) like lower('%{pars['owner']}%')"""
@@ -3595,9 +3601,9 @@ left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
                 sql = "select * from (" + sql + ins_ch_date
             sql_c = "select count(*) from ( " + sql + ") as foobar"
             sql = sql + self._insLimit(start_p, end_p)
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%') and", '')
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
+            #stri = stri.replace("lower(r.C_TOVAR) like lower('%%') and", '')
+            sql_c = sql_c.replace("lower(r.C_TOVAR) like lower('%%') and", '')
+            sql = sql.replace("lower(r.C_TOVAR) like lower('%%') and", '')
             opt = ()
             _return = []
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
@@ -3906,10 +3912,6 @@ matching (NAME)"""
             f_data = data.split(b'\r\n')
             f_data = f_data[4:-6]
             f_data = b'\r\n'.join([i for i in f_data])
-            try:
-                f_data = f_data.decode()
-            except:
-                pass
             if f_name:
                 f_obj = io.BytesIO()
                 f_obj.name = 'brak.dbf'
@@ -3918,22 +3920,26 @@ matching (NAME)"""
                 n = str(int(time.time())) + ".brak"
                 rows = []
                 ret_dict = None
-                #for record in DBF('/ms71/temp/brak.dbf', encoding='cp866', ignore_missing_memofile=True):
-                    #pass
                 try:
                     for record in DBF(f_obj, encoding='cp866', ignore_missing_memofile=True):
                         new_row = []
                         row = list(record.values())
                         new_row = [10000, row[0], row[1], row[4], 0, self._genHash(10000, str(row[1]), str(row[4])), row[2], row[3]]
                         rows.append('\t'.join([str(i) for i in new_row]))
-                    ret_dict = {n:rows}
+                    ret_dict = {n:'\n'.join(rows)}
                 except Exception as E:
-                    print(str(E))
+                    pass
                 finally:
                     f_obj.close()
-                with open(os.path.join("/ms71/temp", n), "w") as f_obj:
-                    f_obj.write('\n'.join(rows))
-            ret = {"result": True, "ret_val": f_name}
+                if ret_dict:
+                    send_d = json.dumps(ret_dict, ensure_ascii=False)
+                    res = requests.post('https://online365.pro/linker_upl?upload_nolinks', send_d.encode(), headers={"x-api-key": "any header"})
+                    #res = requests.post('http://saas.local/linker_upl?upload_nolinks', send_d.encode(), headers={"x-api-key": "any header"})
+                    ret = {"result": True, "ret_val": 'ok'}
+                else:
+                    ret = {"result": False, "ret_val": "non accepted format"}
+            else:
+                ret = {"result": False, "ret_val": "no file"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
