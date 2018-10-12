@@ -12,7 +12,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.283.1600",
+        version:        "18.285.1600",
         start:          "/login",
         user:           "",
         role:           "0",

@@ -70,7 +70,13 @@ export default class BrakSideInfoView extends JetView{
                             },
                         },
                     },
-                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt", disabled: true, p_disable: true},
+                {view: "text", value: "", label: "Дата изменения", labelWidth: 155, name: "ch_dt", disabled: true, p_disable: !true,
+                    on:{
+                        onKeyPress: function() {
+                            this.$scope.show_b()
+                            },
+                        },
+                    },
                 {view: "text", value: "", label: "ЖВ", labelWidth: 155, name: "gv",
                     on:{
                         onKeyPress: function() {

@@ -2580,14 +2580,15 @@ FROM RDB$DATABASE"""
             opis = item.get("desc", "") #"opis"
             letter_text = item.get("letter") #letter text
             f_name = item.get("f_name") or str(uuid.uuid1()) #"link_file"
+            ch_date = item.get("ch_date") #dt_edit
             ins = '?' if not self._pg else '%s'
-            opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name)
+            opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name, ch_date)
             if letter_id == 99999999:
                 sql = f"""insert into BRAK_MAIL (title, title_torg, seriya, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, link_file, dt, dt_edit ) 
-values ({ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins},  current_timestamp, current_timestamp) returning id;"""
+values ({ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins},  current_timestamp, {ins}) returning id;"""
             else:
                 sql = f"""update BRAK_MAIL set title = {ins}, title_torg = {ins}, seriya = {ins}, fabricator = {ins}, region = {ins}, 
-n_rec = {ins}, dt_edit = current_timestamp, gv = {ins}, title_doc = {ins}, opis = {ins}, sh_prc = {ins}, link_file = {ins} 
+n_rec = {ins}, gv = {ins}, title_doc = {ins}, opis = {ins}, sh_prc = {ins}, link_file = {ins}, dt_edit = {ins}
 where id = {ins} returning id;"""
                 opt = opt + (letter_id,)
             res = self.db.execute({"sql": sql, "options": opt})
@@ -2709,8 +2710,8 @@ order by id asc; """
             series = params.get('series','')
             name = params.get('search', '')
             field = params.get('field')
-            field = names.get(field, "t1.c_tovar")
-            direction = params.get('direction', 'asc')
+            field = names.get(field, "c_name")
+            direction = params.get('direction', 'desc')
             filt = params.get("c_filter")
             ssss = []
             if filt:
@@ -3442,12 +3443,12 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
             start_p = int(params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
-            field = params.get('field', 'c_tovar')
+            field = params.get('field', 'dt') #было c_tovar
             if field == 'dt':
                 field = 'ch_date'
             else:
                 field = 'r.' + field
-            direction = params.get('direction', 'asc')
+            direction = params.get('direction', 'desc') #было asc
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
             sti = """lower(r.C_TOVAR) like lower('%%')"""
