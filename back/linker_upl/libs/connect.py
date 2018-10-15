@@ -17,8 +17,8 @@ class pg_local(object):
 
     def __init__(self, log):
         self.log = log
-        self.production = False
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+        self.production = True
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5430}
         if callable(self.log):
             self.log("Production" if self.production else "Test")
         else:

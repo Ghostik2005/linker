@@ -50,8 +50,8 @@ class API:
         self.nauth = {}
         self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
         #########################3
-        #self._pg = True
-        self._pg = False
+        self._pg = True
+        #self._pg = False
         try:
             config = configparser.ConfigParser()
             config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
