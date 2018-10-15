@@ -496,10 +496,14 @@ def handle_commandline(profile, index):
     if "index" in kwargs:
         index = kwargs.pop("index")
     if "pg" in kwargs:
-        pg = True
+        pg = kwargs.pop("pg")
     else:
-        pg = False
-    return args, kwargs, profile, index, pg
+        pg = None
+    if "production" in kwargs:
+        production = True
+    else:
+        production = False
+    return args, kwargs, profile, index, pg, production
 
 class UDPSocket(socket.socket):
 

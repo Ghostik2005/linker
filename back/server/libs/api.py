@@ -45,7 +45,7 @@ class API:
     x_hash - API key
     """
 
-    def __init__(self, log, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k', pg=False):
+    def __init__(self, log, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k', pg=False, production=False):
         self.methods = []
         self.path = w_path
         self.p_path = p_path
@@ -57,14 +57,15 @@ class API:
         #################################
         if pg:
             self._pg = True
-            self.log("POSTGRES STARTED")
+            self.port = pg
+            self.log("POSTGRES STARTED on %s port" % self.port)
         else:
             self._pg = False
             self.log("FB STARTED")
         if self._pg:
-            self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"])
+            self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"], port = self.port, production=production)
         else:
-            self.db = fb_local(self.log, udp=sys.APPCONF["udpsock"])
+            self.db = fb_local(self.log, udp=sys.APPCONF["udpsock"], production=production)
         self.start = 1
         self.count = 20
 
@@ -2714,6 +2715,18 @@ order by id asc; """
             direction = params.get('direction', 'desc')
             filt = params.get("c_filter")
             ssss = []
+
+            search_re = name.split()
+            sti = "(lower(t1.C_TOVAR) like lower('%%') or lower(t2.series) like lower('%%'))"
+            stri = [] if len(search_re) > 0 else [sti,]
+            for i in range(len(search_re)):
+                ts1 = f"(lower(t1.C_TOVAR) like lower('%{search_re[i].strip()}%') or lower(t2.series) like lower('%{search_re[i].strip()}%'))"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+
+
             if filt:
                 pars = {}
                 dt = filt.get('dt')
@@ -2737,7 +2750,7 @@ order by id asc; """
                         ssss.append(s.format(pars['start_dt'], pars['end_dt']))
             sql = """select t1.sh_prc, t1.id_spr, t1.c_tovar, t1.c_zavod, t2.series, t2.RAZBRAK, t2.DT from brak t2
 join lnk t1 on ( t1.sh_prc = t2.sh_prc and t1.ID_VND = 10000)
-WHERE lower(t1.C_TOVAR) like lower('%s') and lower(t2.series) like lower('%s') """ % ( f"%{name}%", f"%{series}%" )
+WHERE %s""" % ' '.join(stri)
             sql = sql + " " + " ".join(ssss)
             sql_c = f"""select count(*) from ({sql}) as sc"""
             order = f""" ORDER by {field} {direction}"""

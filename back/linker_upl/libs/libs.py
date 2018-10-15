@@ -82,7 +82,7 @@ class API:
                     "charset" : 'WIN1251'
                     }
         if self._pg:
-            self.production = False
+            self.production = True
             print('-------POSTGRESQL--------')
         if callable(self.log):
             self.log("Production" if self.production else "Test")

@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.285.1800' #учтены некоторые пожелания
+__version__ = '18.288.1000' #добавлен выбор порта для pg
+#__version__ = '18.285.1800' #учтены некоторые пожелания
 #__version__ = '18.284.1600' #устранены ошибки в некоторых запросах, доработано удаление писем о браке
 #__version__ = '18.284.1030' #запущено приложение brak
 #__version__ = '18.283.1750' #сделанно добавление текста письма
@@ -97,10 +98,10 @@ def main():
             },
         }
     sys.APPCONF["udpsock"] = libs.UDPSocket()
-    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg = libs.handle_commandline(__profile__, __index__)
+    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg, production = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
-    sys.APPCONF["api"] = app_api.API(log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg)
+    sys.APPCONF["api"] = app_api.API(log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg, production=production)
 
     threads, processes = prepare_server(api = sys.APPCONF["api"])
     rc = 0

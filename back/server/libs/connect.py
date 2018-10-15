@@ -17,6 +17,7 @@ class Connect(object):
     def __init__(self, *args, **kwargs):
         #print('args', args, sep='\t')
         #print('kwargs', kwargs, sep='\t')
+        self.production = kwargs.get("production", False)
         self.udp = kwargs.get('udp')
 
     def _print(self, msg=None):
@@ -31,8 +32,9 @@ class pg_local(Connect):
     def __init__(self, log, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log = log
-        self.production = False
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+        self.port = kwargs.get('port', 5432)
+        
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': int(self.port)}
         self._log("Production" if self.production else "Test")
 
     def _log(self, message, kind='info'):
@@ -179,7 +181,7 @@ class fb_local(Connect):
                     "password":'masterkey',
                     "charset" : 'WIN1251'
                 }
-            self.production = True
+            #self.production = True
         except:
             traceback.print_exc()
             self.production = False
