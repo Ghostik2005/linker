@@ -48,7 +48,7 @@ class API:
         self.exec = sys.executable
         self.log = log
         self.nauth = {}
-        self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+        self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5430}
         #########################3
         self._pg = True
         #self._pg = False

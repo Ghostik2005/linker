@@ -24,16 +24,6 @@ except ImportError:
 
 
 """
-CREATE TABLE BRAK_MAIL_TEXT
-(
-  LINK_FILE VARCHAR(100) NOT NULL,
-  MAIL_TEXT BLOB SUB_TYPE 0,
-  DELETED SMALLINT DEFAULT 0 NOT NULL ,
-  CONSTRAINT PK_BRAK_MAIL_TEXT PRIMARY KEY (LINK_FILE)
-);
-
-GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
- ON BRAK_MAIL_TEXT TO  SYSDBA WITH GRANT OPTION;
 
 """
 
@@ -1047,7 +1037,7 @@ ORDER by r.SOURCE DESC
     WHEN not EXISTS(select id_spr from spr_strana where id_spr = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1132,7 +1122,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, 1) ret
     WHEN not EXISTS(select id from ISSUE where id = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1193,7 +1183,7 @@ FROM RDB$DATABASE"""
     WHEN not EXISTS(select id_spr from spr_issue where id_is = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (c_id,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 if result == 0:
@@ -1283,7 +1273,7 @@ FROM RDB$DATABASE"""
     WHEN not EXISTS(select id_spr from spr_zavod where id_spr = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1392,7 +1382,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, 1) ret
     WHEN not EXISTS(select id from dv where id = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1525,7 +1515,7 @@ FROM RDB$DATABASE"""
     WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1630,7 +1620,7 @@ FROM RDB$DATABASE"""
     WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1756,7 +1746,7 @@ where classifier.idx_group = 1
     WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -1861,7 +1851,7 @@ where classifier.idx_group = 2
     WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -2053,7 +2043,7 @@ PASSWD = {'?' if not self._pg else '%s'}, INN = {'?' if not self._pg else '%s'},
     WHEN not EXISTS(select r."USER" from users r where r."USER" = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (check,)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 _return = True if result == 0 else False
@@ -2382,7 +2372,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = {'?' if not self._pg else 
     WHEN not EXISTS(select id_spr from spr_barcode where id_spr = {'?' if not self._pg else '%s'} and barcode = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (id_spr, barcode)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 valid = True if result == 0 else False
@@ -2472,7 +2462,7 @@ FROM RDB$DATABASE"""
     WHEN not EXISTS(select act_ingr from dv where act_ingr = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (act_ingr,)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 valid = True if result == 0 else False
@@ -2511,7 +2501,7 @@ FROM RDB$DATABASE"""
     WHEN not EXISTS(select c_zavod from spr_zavod where c_zavod = {'?' if not self._pg else '%s'}) THEN 0
     ELSE 1
     END
-FROM RDB$DATABASE"""
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
                 opt = (c_zavod,)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 valid = True if result == 0 else False
@@ -4490,5 +4480,25 @@ commit;
 
 ALTER TABLE LNK ADD 
 SOURCE Smallint
+
+
+CREATE TABLE BRAK_MAIL_TEXT
+(
+  LINK_FILE VARCHAR(100) NOT NULL,
+  MAIL_TEXT BLOB SUB_TYPE 0,
+  DELETED SMALLINT DEFAULT 0 NOT NULL ,
+  CONSTRAINT PK_BRAK_MAIL_TEXT PRIMARY KEY (LINK_FILE)
+);
+
+GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ ON BRAK_MAIL_TEXT TO  SYSDBA WITH GRANT OPTION;
+
+
+create index prc_idx_id_tovar on prc (id_tovar);
+
+create index lnk_idx_id_tovar on lnk (id_tovar);
+
+create index lnk_idx_id_vnd on lnk (id_vnd);
+
 
 """
