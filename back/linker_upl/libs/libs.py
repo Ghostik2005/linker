@@ -218,56 +218,56 @@ ON CONFLICT (UIN) DO UPDATE
             ret = {"result": True, "ret_val": 'accept'}
         return json.dumps(ret, ensure_ascii=False)
 
-    def process(self, params, x_hash):
-        try: 
-            con, cur = self._connect()
-            self._load_from_nolink(con, cur)
-            self.prc_sync_lnk(con, cur)
-            con.close()
-        except:
-            ret = {"result": False, "ret_val": "db error"}
-        else:
-            ret = {"result": True, "ret_val": "ok"}
-        return json.dumps(ret, ensure_ascii=False)
+    #def process(self, params, x_hash):
+        #try: 
+            #con, cur = self._connect()
+            #self._load_from_nolink(con, cur)
+            #self.prc_sync_lnk(con, cur)
+            #con.close()
+        #except:
+            #ret = {"result": False, "ret_val": "db error"}
+        #else:
+            #ret = {"result": True, "ret_val": "ok"}
+        #return json.dumps(ret, ensure_ascii=False)
 
-    def clean(self, params, x_hash):
-        try:
-            con, cur = self._connect()
-            self._erase_prc(con, cur)
-            con.close()
-        except:
-            self.log(traceback.format_exc(), kind="error:clean:db")
-            ret = {"result": False, "ret_val": "db error"}
-        else:
-            ret = {"result": True, "ret_val": "ok"}
-        self.log(ret)
-        return json.dumps(ret, ensure_ascii=False)
+    #def clean(self, params, x_hash):
+        #try:
+            #con, cur = self._connect()
+            #self._erase_prc(con, cur)
+            #con.close()
+        #except:
+            #self.log(traceback.format_exc(), kind="error:clean:db")
+            #ret = {"result": False, "ret_val": "db error"}
+        #else:
+            #ret = {"result": True, "ret_val": "ok"}
+        #self.log(ret)
+        #return json.dumps(ret, ensure_ascii=False)
 
-    def _load_from_nolink(self, db, dbc):
-        if db:
-            sql = """SELECT r.CODE, r.NAME FROM LNK_CODES r where r.PROCESS = 1"""
-            dbc.execute(sql)
-            ret = dbc.fetchall()
-            count_insert = 0
-            count_all = 0
-            for id_vnd, v in ret:
-                id_vnd = int(id_vnd)
-                f_mask = os.path.join(self.path, "price%s*.nolink" % id_vnd)
-                for path in glob.glob(f_mask):
-                    self.log(f"path: {path}")
-                    count_insert, count_all = self.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all)
-                    self.log("- remove: ")
-                    try: 
-                        os.remove(path)
-                        self.log("[ OK ]")
-                    except Exception as e:
-                        self.log("[FAIL]")
-                        self.log(str(e), kind="error")
-            self.log(f"Добавил в PRC - {count_insert}")
-            self.log(f"Всего nolnk - {count_all}")
-            return True
-        else:
-            return False
+    #def _load_from_nolink(self, db, dbc):
+        #if db:
+            #sql = """SELECT r.CODE, r.NAME FROM LNK_CODES r where r.PROCESS = 1"""
+            #dbc.execute(sql)
+            #ret = dbc.fetchall()
+            #count_insert = 0
+            #count_all = 0
+            #for id_vnd, v in ret:
+                #id_vnd = int(id_vnd)
+                #f_mask = os.path.join(self.path, "price%s*.nolink" % id_vnd)
+                #for path in glob.glob(f_mask):
+                    #self.log(f"path: {path}")
+                    #count_insert, count_all = self.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all)
+                    #self.log("- remove: ")
+                    #try: 
+                        #os.remove(path)
+                        #self.log("[ OK ]")
+                    #except Exception as e:
+                        #self.log("[FAIL]")
+                        #self.log(str(e), kind="error")
+            #self.log(f"Добавил в PRC - {count_insert}")
+            #self.log(f"Всего nolnk - {count_all}")
+            #return True
+        #else:
+            #return False
 
     def upload_to_db(self, db, dbc, id_vnd, path, count_insert, count_all, source=1):
         uin = os.path.basename(path).split('.')[0]
@@ -466,21 +466,21 @@ SET (barcode, id_spr) = (%s, %s);"""
         sh_prc.update(s.encode('1251', 'ignore'))
         return sh_prc.hexdigest()
 
-    def _erase_prc(self, db, dbc):
-        #очищаем PRC если такие ключи есть в LNK
-        dbc.execute(u"""delete from prc pp
-        where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
-        if callable(db.commit):
-            db.commit()
-        #удаляем из spr_barcode позиции, которых нет в SPR
-        dbc = db.cursor()
-        dbc.execute(u"""delete from spr_barcode bb where bb.id_spr in (
-        select b.id_spr from spr_barcode b
-        left join spr s
-        on b.id_spr=s.id_spr
-        where s.id_spr is null)""")
-        if callable(db.commit):
-            db.commit()
+    #def _erase_prc(self, db, dbc):
+        ##очищаем PRC если такие ключи есть в LNK
+        #dbc.execute(u"""delete from prc pp
+        #where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
+        #if callable(db.commit):
+            #db.commit()
+        ##удаляем из spr_barcode позиции, которых нет в SPR
+        #dbc = db.cursor()
+        #dbc.execute(u"""delete from spr_barcode bb where bb.id_spr in (
+        #select b.id_spr from spr_barcode b
+        #left join spr s
+        #on b.id_spr=s.id_spr
+        #where s.id_spr is null)""")
+        #if callable(db.commit):
+            #db.commit()
 
     def prc_sync_lnk(self, db, dbc, uin=None):
 
@@ -1151,23 +1151,23 @@ def guardian(api):
             else:
                 db = fdb.connect(**api.connect_params)
             dbc = db.cursor()
-            sql_d = """DROP TABLE A_TEMP_PRC"""
-            sql_cre = """CREATE TABLE IF NOT EXISTS A_TEMP_PRC
-(
-  SH_PRC TSTR32 NOT NULL,
-  ID_VND TINT32,
-  ID_TOVAR TSTR32,
-  N_CENA TINT32,
-  C_TOVAR TSTR255,
-  C_ZAVOD TSTR255,
-  ID_ORG TINT32 DEFAULT 0 NOT NULL,
-  SOURCE SMALLINT,
-  BARCODE VARCHAR(255),
-  UIN VARCHAR(255),
-  CONSTRAINT T_PK_PRC PRIMARY KEY (SH_PRC)
-);
-GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
- ON A_TEMP_PRC TO  SYSDBA WITH GRANT OPTION;"""
+            #sql_d = """DROP TABLE A_TEMP_PRC"""
+            #sql_cre = """CREATE TABLE IF NOT EXISTS A_TEMP_PRC
+#(
+  #SH_PRC TSTR32 NOT NULL,
+  #ID_VND TINT32,
+  #ID_TOVAR TSTR32,
+  #N_CENA TINT32,
+  #C_TOVAR TSTR255,
+  #C_ZAVOD TSTR255,
+  #ID_ORG TINT32 DEFAULT 0 NOT NULL,
+  #SOURCE SMALLINT,
+  #BARCODE VARCHAR(255),
+  #UIN VARCHAR(255),
+  #CONSTRAINT T_PK_PRC PRIMARY KEY (SH_PRC)
+#);
+#GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
+ #ON A_TEMP_PRC TO  SYSDBA WITH GRANT OPTION;"""
  
             api.log('GUARDIAN| ---***---принудительный запуск')
             api.prc_sync_lnk(db, dbc)

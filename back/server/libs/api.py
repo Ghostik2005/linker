@@ -24,6 +24,8 @@ except ImportError:
 
 
 """
+alter table vnd add column permit smallint default 1;
+
 
 """
 
@@ -414,8 +416,8 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
             start_p = int(params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
-            field = params.get('field', 'c_tovar')
-            direction = params.get('direction', 'asc')
+            field = params.get('field', 'dt')
+            direction = params.get('direction', 'desc')
             search_re = params.get('search')
             search_field = params.get('s_field')
             user = params.get('user')
@@ -1490,7 +1492,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, 1) ret
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
             from classifier 
-            where classifier.idx_group = 6
+            where classifier.idx_group = 6 order by classifier.nm_group asc;
             """
             opt = ()
             _return = []
@@ -1595,7 +1597,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, 1) ret
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
             from classifier 
-            where classifier.idx_group = 3
+            where classifier.idx_group = 3 order by classifier.nm_group asc;
             """
             opt = ()
             _return = []
@@ -1721,7 +1723,7 @@ order by classifier.nm_group asc
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
 from classifier 
-where classifier.idx_group = 1
+where classifier.idx_group = 1 order by classifier.nm_group asc;
             """
             opt = ()
             _return = []
@@ -1826,7 +1828,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, 1) ret
         if self._check(x_hash):
             sql = """select classifier.nm_group, classifier.cd_group
 from classifier 
-where classifier.idx_group = 2
+where classifier.idx_group = 2 order by classifier.nm_group asc;
             """
             opt = ()
             _return = []
@@ -3440,6 +3442,7 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
         return json.dumps(ret, ensure_ascii=False)
 
     def getLnkSprs(self, params=None, x_hash=None):
+        sort_replace = {"dt": "ch_date", "c_tovar": "rct", "id_spr": "rids", "owner": "ro"}
         st_t = time.time()
         if self._check(x_hash):
             user = params.get('user')
@@ -3447,10 +3450,7 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'dt') #было c_tovar
-            if field == 'dt':
-                field = 'ch_date'
-            else:
-                field = 'r.' + field
+            field = sort_replace.get(field)
             direction = params.get('direction', 'desc') #было asc
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
@@ -3499,19 +3499,19 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
                             s = """(ch_date > CAST('{0}' as TIMESTAMP) AND ch_date < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
                         else:
                             s = """(ch_date > CAST('{0}' as TIMESTAMP) AND ch_date < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
-                        ins_ch_date = ') as foo where %s' % s.format(pars['start_dt'])
+                        ins_ch_date = 'and %s' % s.format(pars['start_dt'])
                     elif pars['start_dt'] and pars['end_dt']:
                         pars['end_dt'] = pars['end_dt'].split()[0]
                         if self._pg:
                             s = """(ch_date >= CAST('{0}' as TIMESTAMP) AND ch_date <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
                         else:
                             s = """(ch_date >= CAST('{0}' as TIMESTAMP) AND ch_date <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
-                        ins_ch_date = ') as foo where %s' % s.format(pars['start_dt'], pars['end_dt'])
+                        ins_ch_date = 'and %s' % s.format(pars['start_dt'], pars['end_dt'])
                 if pars['c_tovar']:
                     s = f"""lower(r.C_TOVAR) like lower('%{pars['c_tovar']}%')"""
                     ssss.append('and %s' % s)
                 if pars['id_spr']:
-                    s = "r.id_spr like '" + str(pars['id_spr']) + "%'"
+                    s = "cast(r.id_spr as text) like '" + str(pars['id_spr']) + "%'"
                     ssss.append('and %s' % s)
                 if pars['id_tovar']:
                     s = f"r.ID_TOVAR like '{pars['id_tovar']}%'"
@@ -3523,7 +3523,7 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
                     s = f"""lower(r.C_ZAVOD) like lower('%{pars['c_zavod']}%')"""
                     ssss.append('and %s' % s)
                 if pars['hash']:
-                    s = "r.SH_PRC = '%s'" % pars['hash']
+                    s = f"r.SH_PRC like '{pars['hash']}%'"
                     ssss.append('and %s' % s)
                 if pars['source']:
                     if 0 == int(pars['source']):
@@ -3564,53 +3564,29 @@ left join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"""
                 in_st.insert(0, """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD, rsou
 from (
     SELECT r.SH_PRC rsh, r.ID_TOVAR ridt, r.C_TOVAR rct, r.C_ZAVOD rcv, r.DT rdt, r.OWNER ro, r.CHANGE_DT rchd, r.ID_SPR rids, r.ID_VND ridv,
-        CASE 
-        WHEN r.CHANGE_DT is null THEN r.DT
-        ELSE r.CHANGE_DT
-        END as ch_date,
+        ch_date,
         r.SOURCE rsou
-        FROM (SELECT r.SH_PRC lsh,         
-        CASE 
-        WHEN r.CHANGE_DT is null THEN r.DT
-        ELSE r.CHANGE_DT
-        END as ch_date
-        FROM LNK r {0}) as tttt
-        JOIN LNK r on r.SH_PRC = lsh
+        FROM LNK r
+            ,LATERAL (select CASE 
+            WHEN r.CHANGE_DT is null THEN r.DT
+            ELSE r.CHANGE_DT
+            END ) AS s1(ch_date)
+        {0}
     ) as rrrr""")
                 sql = '\n'.join(in_st)
                 stri += ' ' + ' '.join(ssss)
             else:
-                sql = """SELECT rsh, v.C_VND, ridt, rct, rcv, rdt, ro, rchd, rids, s.C_TOVAR, ch_date, z.C_ZAVOD, rsou
-from (
-    SELECT r.SH_PRC rsh, r.ID_TOVAR ridt, r.C_TOVAR rct, r.C_ZAVOD rcv, r.DT rdt, r.OWNER ro, r.CHANGE_DT rchd, r.ID_SPR rids, r.ID_VND ridv,
-        CASE 
-        WHEN r.CHANGE_DT is null THEN r.DT
-        ELSE r.CHANGE_DT
-        END as ch_date,
-        r.SOURCE rsou
-        FROM (SELECT r.SH_PRC lsh,         
-        CASE 
-        WHEN r.CHANGE_DT is null THEN r.DT
-        ELSE r.CHANGE_DT
-        END as ch_date
-        FROM LNK l {0}) as tttt1
-        JOIN LNK r on r.SH_PRC = lsh
-    ) as rrrr1
-left JOIN VND v on (v.ID_VND = r.ID_VND)
-left join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)
-left JOIN SPR s on (s.ID_SPR = r.ID_SPR)"""
-            sql =  sql.format("""\nWHERE {0} ORDER by {1} {2}\n""")
-            sql = sql.format(stri, field, direction)
-            if ins_ch_date:
-                sql = "select * from (" + sql + ins_ch_date
-            sql_c = "select count(*) from ( " + sql + ") as foobar"
-            sql = sql + self._insLimit(start_p, end_p)
-            #stri = stri.replace("lower(r.C_TOVAR) like lower('%%') and", '')
-            sql_c = sql_c.replace("lower(r.C_TOVAR) like lower('%%') and", '')
-            sql = sql.replace("lower(r.C_TOVAR) like lower('%%') and", '')
-            opt = ()
+                raise Exception("Отсутсвует c_filt в getLnkSprs")
+            stri += ins_ch_date or ''
+            stri = stri.replace("lower(r.C_TOVAR) like lower('%%')", '1=1')
+            sql_c = sql.format("""\nWHERE {0}\n""")
+            sql_m =  sql_c + """ ORDER by {1} {2}\n"""
+            sql_c = sql_c.format(stri)
+            sql_c = "select count(*) from ( " + sql_c + ") as foobar"
+            sql_m = sql_m.format(stri, field, direction)
+            sql_m = sql_m + self._insLimit(start_p, end_p)
             _return = []
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            p_list = [{'sql': sql_m, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
             pool.close()
@@ -3680,7 +3656,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' i
 {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'},
 {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, CAST('NOW' AS TIMESTAMP),
 {'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'})"""
-                    opt = (result[0], result[2], result[3], 0, 0, result[4], result[5], 0, 0, -1, result[8])
+                    opt = (result[0], result[2], result[3], 12, 0, result[4], result[5], 0, 0, -1, result[8])
                 else:
                     sql = f"""insert into R_LNK
 (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, DT_R, USER_R)
@@ -3762,7 +3738,7 @@ values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'}, {'?' i
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def setLinkCodes(self, params=None, x_hash=None):
+    def setLinkSuppl(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
             data = params.get('data')
@@ -3785,12 +3761,34 @@ ON CONFLICT (CODE) DO UPDATE
                         sql = f"""update or insert into LNK_CODES (PROCESS, NAME, CODE, INN, OWNER)
 values (?, ?, ?, ?, ?) matching (CODE)"""
                 self.db.execute({"sql": sql, "options": opt})
-            ret = json.loads(self.getLinkCodes(params, x_hash))
+            ret = json.loads(self.getLinkSuppl(params, x_hash))
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def getLinkCodes(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            sql = """SELECT r.id_vnd, r.c_vnd, r.permit FROM vnd order by r.c_vnd;"""
+            opt = ()
+            _rp = []
+            _rr = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id_vnd"    : row[0],
+                    "c_vnd"     : row[1],
+                    }
+                if int(row[2]) = 1:
+                    _rp.append(r)
+                else:
+                    _rr.append(r)
+            ret = {"result": True, "ret_val": {"p": _rp, "r": _rr}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getLinkSuppl(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
             sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER FROM LNK_CODES r ORDER BY r.CODE"""
@@ -3957,7 +3955,7 @@ matching (NAME)"""
                    "_roles":"getAdmRoles", #adm_roles
                    "_seasons":"getSeasonAll", #adm-seasons
                    "_groups":"getGroupAll", #adm-groups
-                   "_codes":"getLinkCodes", #adm-linker-codes
+                   "_codes":"getLinkSuppl", #adm-linker-codes
                    "_dv":"getDvAll", #adm-dv
                    "_country":"getStranaAll", #adm-country
                    "_excldes":"getLinkExcludes", #adm-linker-excludes

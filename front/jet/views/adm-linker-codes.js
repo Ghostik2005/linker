@@ -2,12 +2,52 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, checkKey} from "../views/globals";
-import NewCodeView from "../views/new_code";
+//import NewCodeView from "../views/new_code";
 
 export default class LinkCodesView extends JetView{
     config(){
 
         let app = this.app;
+
+        var leftList = {rows: [
+            {view: "label", label: "Сводить по кодам автоматически"},
+            {view:"list",
+                localId: "_lList",
+                //width:350,
+                //height: document.documentElement.clientHeight * 0.7,
+                //template:"#c_tgroup#",
+                select:true,
+                on: {
+                    onItemDblClick: function(cid) {
+                        return
+                        let item = this.getItem(cid);
+                        this.remove(cid);
+                        this.$scope.$$("e_list").add(item);
+                        this.$scope.$$("e_list").sort("c_tgroup", "asc")
+                        },
+                    },
+                },
+            ]}
+
+        var rightList = {rows: [
+            {view: "label", label: "Не сводить по кодам автоматически"},
+            {view:"list",
+                localId: "_rList",
+                //width:350,
+                //height: document.documentElement.clientHeight * 0.7,
+                //template:"#c_tgroup#",
+                select:true,
+                on: {
+                    onItemDblClick: function(cid) {
+                        return
+                        let item = this.getItem(cid);
+                        this.remove(cid);
+                        this.$scope.$$("e_list").add(item);
+                        this.$scope.$$("e_list").sort("c_tgroup", "asc")
+                        },
+                    },
+                },
+            ]}
         
         var top = {height: 40, view: "toolbar",
             borderless: true,
@@ -26,42 +66,6 @@ export default class LinkCodesView extends JetView{
                                 };
                             }
                         },
-                    },
-                {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd, 
-                    //label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'>  код</span>", width: 80,
-                    localId: "_add",
-                    resizable: true,
-                    sWidth: 80,
-                    eWidth: 40,
-                    label: "",
-                    width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>код</span>",
-                    oldLabel: "<span class='webix_icon fa-plus'></span>",
-                    click: () => {
-                        this.newcode.show("Добавление нового кода", this.$$("__table"));
-                        }
-                    },
-                {view:"button", type: 'htmlbutton', hidden: true, localId: "del",
-                    //label: "<span class='webix_icon fa-minus'></span><span style='line-height: 20px;'> код</span>", width: 80,
-                    resizable: true,
-                    sWidth: 80,
-                    eWidth: 40,
-                    label: "",
-                    width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>код</span>",
-                    oldLabel: "<span class='webix_icon fa-minus'></span>",
-                    click: () => {
-                        let id = this.$$("__table").getSelectedId();
-                        this.$$("__table").getSelectedItem().change = 1;
-                        this.$$("__table").filter(function(obj){
-                            return obj.change != 1;
-                            });
-                        this.$$("del").hide();
-                        if (app.config.roles[app.config.role].useradd) {
-                            this.$$("apply").show();
-                            this.$$("cancel").show();
-                            }
-                        }
                     },
                 {view:"button", type: 'htmlbutton', localId: "apply", hidden: true,
                     //label: "<span class='webix_icon fa-check'></span><span style='line-height: 20px;'> Применить</span>", width: 130,
@@ -129,90 +133,24 @@ export default class LinkCodesView extends JetView{
                 ]
             }
 
-        var sprv = {view: "datatable",
-            name: "_codes",
-            localId: "__table",
-            select: true,
-            resizeColumn:true,
-            borderless: true,
-            navigation: "row",
-            rowHeight: 32,
-            fixedRowHeight:false,
-            rowLineHeight:32,
-            editable: !false,
-            editaction: "dblclick",
-            columns: [
-                {id: "change", hidden: true, headermenu: false},
-                {id: "process", css: "center_p", 
-                    width: 150,
-                    header: [{text: "Обрабатывать", css: "center_p"},
-                        {content: "masterCheckbox", css: "center_p", contentId: "ch1"},
-                        ],
-                    template:"{common.checkbox()}",
-                    },
-                {id: "code", header: "Код поставщика", 
-                    },
-                {id: "name", fillspace: true, editor:"text",
-                    width: 150,
-                    header: [{text: "Наименование поставщика"},
-                        ]
-                    },
-                { id: "inn", editor:"text",
-                    width: 150,
-                    header: [{text: "Непонятное поле"},
-                        ]
-                    },
-                { id: "owner", 
-                    width: 150,
-                    header: [{text: "Кто добавил"},
-                        ]
-                    },
-                ],
-            on: {
-                "data->onParse":function(i, data){
-                    this.clearAll();
-                    },
-                onCheck: (id, col, value) => {
-                    this.$$("__table").getItem(id).change = 2;
-                    if (app.config.roles[app.config.role].useradd) {
-                        this.$$("apply").show();
-                        this.$$("cancel").show();
-                        }
-                    },
-                onAfterAdd: () => {
-                    if (app.config.roles[app.config.role].useradd) {
-                        this.$$("apply").show();
-                        this.$$("cancel").show();
-                        }
-                    },
-                onEditorChange: (item, value) => {
-                    this.$$("__table").getItem(row).change = 2;
-                    if (app.config.roles[app.config.role].useradd) {
-                        this.$$("apply").show();
-                        this.$$("cancel").show();
-                        }
-                    },
-                onBeforeRender: function() {
-                    webix.extend(this, webix.ProgressBar);
-                    },
-                onAfterSelect: () => {
-                    this.$$("del").show();
-                    },
-                },
-            }
-
         return {
             view: "layout",
             css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 top,
-                sprv,
+                {
+                    cols: [
+                        leftList,
+                        {width: 10},
+                        rightList
+                        ]
+                    },
                 ]
             }
         }
         
     init() {
-        this.newcode = this.ui(NewCodeView);
+        //this.newcode = this.ui(NewCodeView);
         }
         
     ready() {
@@ -224,13 +162,13 @@ export default class LinkCodesView extends JetView{
             item.resize();
             })
         let user = this.app.config.user;
-        let url = this.app.config.r_url + "?getLinkCodes";
-        let params = {"user": user};
-        request(url, params).then( (data) => {
-            data = checkVal(data, 'a');
-            if (data) {
-                this.$$("__table").parse(data);
-                }
-            });
+        //let url = this.app.config.r_url + "?getLinkCodes";
+        //let params = {"user": user};
+        //request(url, params).then( (data) => {
+            //data = checkVal(data, 'a');
+            //if (data) {
+                //this.$$("__table").parse(data);
+                //}
+            //});
         }
     }

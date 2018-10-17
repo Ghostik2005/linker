@@ -28,6 +28,7 @@ export default class History extends JetView{
                         on: {
                             onItemDblClick: (item) => {
                                 const sbar = this.$$("_tb").config.searchBar;
+                                item = this.$$("_hist").getItem(item).value;
                                 sbar.setValue(item);
                                 sbar.refresh();
                                 this.getRoot().hide();

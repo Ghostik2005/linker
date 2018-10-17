@@ -497,6 +497,8 @@ def handle_commandline(profile, index):
         index = kwargs.pop("index")
     if "pg" in kwargs:
         pg = kwargs.pop("pg")
+        if not pg:
+            pg = 5432
     else:
         pg = None
     if "production" in kwargs:

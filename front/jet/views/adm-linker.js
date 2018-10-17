@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import {request, checkVal, checkKey} from "../views/globals";
 import LinkCodesView from "../views/adm-linker-codes";
+import LinkSupplView from "../views/adm-linker-suppliers";
 import LinkExclView from "../views/adm-linker-excludes";
 import LinkFilesView from "../views/adm-linker-files";
 
@@ -14,7 +15,14 @@ export default class LinkerView extends JetView{
             view: "tabview",
             multiview: true,
             cells: [
-                {header: "<span class='webix_icon fa-code'></span><span style='line-height: 20px;'> Коды для сведения</span>", width: 240, //close: true,
+                {header: "<span class='webix_icon fa-code'></span><span style='line-height: 20px;'> Разрешения для поставщиков</span>", width: 280, //close: true,
+                    body: { view: "layout",
+                        rows: [
+                            {$subview: LinkSupplView},
+                            ]
+                        }
+                    },
+                {header: "<span class='webix_icon fa-code'></span><span style='line-height: 20px;'> Сведение по кодам</span>", width: 240, //close: true,
                     body: { view: "layout",
                         rows: [
                             {$subview: LinkCodesView},

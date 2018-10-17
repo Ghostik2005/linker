@@ -443,9 +443,10 @@ export function get_data_test(inp_params) {
                 nav.$scope.$$("__page").refresh();
                 let hist = webix.storage.session.get(view.config.name);
                 if (hist) {
-                    hist.push(search_str)
+                    if (search_str !== "%%") hist.push(search_str);
                 } else {
-                    hist = [search_str,]
+                    let ssstr = (search_str !== "%%") ? search_str : ''
+                    hist = [ssstr,]
                     }
                 webix.storage.session.put(view.config.name, hist);
                 };
@@ -461,8 +462,8 @@ export function parse_unlinked_item(th, c_item) {
     c_item = c_item || $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
-    //let name = "<a target='_blank' rel='noreferrer noopener' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>"; //исправить на это!!!!!!!!!
-    let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
+    let name = "<a target='_blank' rel='noreferrer noopener' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>"; //исправить на это!!!!!!!!!
+    //let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
     let count = "<span style='color: #666666; text-decoration: underline;'>Осталось свести в текущей сессии:</span><span style='color: red; font-weight: bold;'>  "+ $$("prcs_dc").count() + "</span>";
     n_item['_name'] = name;
     n_item['_count'] = count;

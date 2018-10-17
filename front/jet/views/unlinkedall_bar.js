@@ -38,8 +38,8 @@ export default class AllUnlinkedBarView extends JetView{
             startPos: 1,
             posPpage: app.config.posPpage,
             totalPos: 0,
-            fi: 'c_tovar',
-            di: 'asc',
+            fi: 'dt',
+            di: 'desc',
             searchBar: undefined,
             searchMethod: "getPrcsAll",
             old_stri: "",
@@ -172,8 +172,8 @@ export default class AllUnlinkedBarView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: function(selected) {
-                    let item = this.getItem(selected.id)
-                    if (item.in_work !== '-1') return false;
+                    //let item = this.getItem(selected.id)
+                    //if (item.in_work !== '-1') return false;
                     }
                 }
             }

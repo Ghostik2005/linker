@@ -106,6 +106,7 @@ export default class LinksBarView extends JetView{
                 oldLabel: "",
                 click: () => {
                     this.$$("_br").hide();
+                    this.$$("_ls").setValue('');
                     var cv = getActDt();
                     var columns = $$(cv).config.columns;
                     columns.forEach(function(item){
