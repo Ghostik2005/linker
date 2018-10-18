@@ -124,7 +124,12 @@ class API:
             #ключ словаря - идентификатор накладной, значение - список строк товаров для сведения в фомате tab separated, все как в файле:
             #sh_prc, код поставщика, код товара у поставщика, название товара, изгтовитель, код организации, штрихкод
             name, value = data.popitem()
-            source = 2 if len(name) > 25 else 1
+            if 'agent' in name:
+                source = 3
+            elif len(name) > 25:
+                source = 2
+            else:
+                source = 1
             """
             ниже заглушка, чтобы не принимать файлы из PLExpert
 
@@ -132,7 +137,7 @@ class API:
                 ret = {"result": False, "ret_val": "temporary access denied"}
                 return json.dumps(ret, ensure_ascii=False)
             """
-            self.log('UPLOAD| source: %s' % ('Sklad' if source==2 else 'PLExpert'))
+            self.log('UPLOAD| source: %s' % source)
             self.log('UPLOAD| ' + '*'*50)
             if len(value.encode()) < 500:
                 self.log('UPLOAD| %s' % value)
@@ -1116,6 +1121,7 @@ def guardian(api):
                         h_name, source = h_name.split('.')
                     except:
                         source = 1
+                    log(f"----source---- {source}")
                     #заплатка чтоб сводилось все
                     if list(dbc.fetchone())[0]:# and int(source) != 2:
                     #if not list(dbc.fetchone())[0]:# and int(source) != 2:

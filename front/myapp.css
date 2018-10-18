@@ -267,6 +267,11 @@ div.webix_item_tab {
 .highlighted {
   color: red;
 }
+.c-label {
+  text-align: center;
+  /*color: black;*/
+  text-transform: uppercase;
+}
 
 @charset "UTF-8";
 /*!

@@ -94,6 +94,22 @@ export var fRefresh = function(master, node, value){
     cEvent(node, "keydown", this.on_key_down);
     };
 
+export var unFilter = function(cv) {
+    var columns = cv.config.columns;
+    columns.forEach(function(item){
+        if (cv.isColumnVisible(item.id)) {
+            if (item.header[1]) {
+                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
+                    cv.getFilter(item.id).setValue('');
+                } else {
+                    let qq = cv.getFilter(item.id);
+                    if (!qq.readOnly) qq.value = '';
+                    };
+                }
+            }
+        });
+    }
+
 export var rRefresh = function(master, node, value){
     if (master.$destructed) return;
     var select = webix.$$(value.richselect);
@@ -406,6 +422,9 @@ export function get_data_test(inp_params) {
     let params = gen_params(inp_params);
     let search_str = params.search;
     if (search_str === "") search_str="%%";
+    //console.log(search_str);
+    //params.search = params.search.replace(/\//g, "");
+    //console.log('sss', params.search);
     let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
     let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
     if (sl > 1 && rl > 1) {

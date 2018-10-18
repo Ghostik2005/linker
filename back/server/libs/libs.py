@@ -529,7 +529,7 @@ class UDPSocket(socket.socket):
             self._buf.append(text)
             fg =  text.rfind(b'\n') > -1
         if fg:
-            data = b''.join(self._buf)[:8192]
+            data = b''.join(self._buf)[:65536]
             self._buf.clear()
             return self.sendto(data, self._std_addr)
 
@@ -537,8 +537,8 @@ class UDPSocket(socket.socket):
         pass
 
     def readlines(self):
-        return self.recv(8192)
+        return self.recv(65536)
 
-    def read(self, n=8192):
+    def read(self, n=65536):
         return self.recv(n)
 

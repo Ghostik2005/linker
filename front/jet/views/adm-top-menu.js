@@ -16,7 +16,7 @@ export default class TopmenuView extends JetView{
                         data: [
                             {"id": 1, "value": "Справочники"},
                             {"id": 10, "value": "Пользователи"},
-                            {"id": 11, "value": "Автоматическое сведение"},
+                            {"id": 11, "value": "Сервис"},
                             ],
                         },
                     on: {

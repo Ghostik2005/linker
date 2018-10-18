@@ -24,7 +24,7 @@ except ImportError:
 
 
 """
-alter table vnd add column permit smallint default 1;
+
 
 
 """
@@ -377,7 +377,18 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
                         s = "ru.name = '" + pars['c_user'] + "'"
                     us_s = 'and %s' % s
                 if pars['c_tovar']:
-                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    #s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    #ssss.append('and %s' % s)
+                    sti = "lower(r.C_TOVAR) like lower('%%')"
+                    pars['c_tovar'] = pars['c_tovar'].split()
+                    s = [] if len(pars['c_tovar']) > 0 else [sti,]
+                    for i in range(len(pars['c_tovar'])):
+                        ts1 = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'][i].strip() + "%')"
+                        if i == 0:
+                            s.append(ts1)
+                        else:
+                            s.append('and %s' % ts1)
+                    s = ' '.join(s)
                     ssss.append('and %s' % s)
                 if pars['sh_prc']:
                     s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
@@ -447,7 +458,7 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
     r.SOURCE,
     r.in_work,
     uu."USER"
-from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {order if 'r.' in order else ''}) as sss1
+from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 {order if 'r.' in order else ''}) as sss1
 join prc r on r.SH_PRC = rsh
 {sql_2}
 {sql_1}
@@ -467,7 +478,7 @@ from prc r
 {sql_1}
 {sql_3}
 left join users uu on uu.id = r.in_work
-WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_stri} {us_s or ''}
+WHERE r.n_fg <> 1 {stri} {us_stri} {us_s or ''}
 order by {field} {direction}"""
             sql = sql_ if (stri or us_stri or us_s) else sql
             sql_tt = sql
@@ -479,7 +490,7 @@ order by {field} {direction}"""
 {sql_1 if us_s else ''}
 {sql_3 if us_s else ''}
 left join users uu on uu.id = r.in_work
-WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
+WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -492,6 +503,8 @@ WHERE r.n_fg <> 1 and r.IN_WORK != 99999999 {stri} {us_s or ''}"""
                     sou = "PLExpert"
                 elif str(row[13]) == '2':
                     sou = "Склад"
+                elif str(row[13]) == '3':
+                    sou = "Агент"
                 else:
                     sou = "Без источника"
                 if row[15] is None:
@@ -645,6 +658,8 @@ order by {field} {direction}"""
                     sou = "PLExpert"
                 elif str(row[11]) == '2':
                     sou = "Склад"
+                elif str(row[11]) == '3':
+                    sou = "Агент"
                 else:
                     sou = "Без источника"
                 r = {
@@ -2213,10 +2228,10 @@ from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty,
         FROM (select s.ID_SPR as idspr,
             count(s.ID_SPR) as qty
             FROM SPR_BARCODE s
-            GROUP BY idspr)
+            GROUP BY idspr) as fbar1
         ) as rrrr on (r.id_spr = idspr)
     WHERE {0}
-    )
+    ) as fbar
 where quantity >= {1} AND quantity <= {2}
             """.format(stri, cbars[0], cbars[1])
             sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
@@ -2231,10 +2246,10 @@ from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty,
         FROM (select s.ID_SPR as idspr,
             count(s.ID_SPR) as qty
             FROM SPR_BARCODE s
-            GROUP BY idspr)
+            GROUP BY idspr) as fbar1
         ) as rrrrr on (r.id_spr = idspr)
     WHERE {0}
-    )
+    ) as fbar
 where quantity >= {1} AND quantity <= {2}
 order by {3} {4}
 """.format(stri, cbars[0], cbars[1], field, direction)
@@ -2703,7 +2718,7 @@ order by id asc; """
             series = params.get('series','')
             name = params.get('search', '')
             field = params.get('field')
-            field = names.get(field, "c_name")
+            field = names.get(field)
             direction = params.get('direction', 'desc')
             filt = params.get("c_filter")
             ssss = []
@@ -3496,14 +3511,14 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
                     if pars['start_dt'] and not pars['end_dt']:
                         pars['start_dt'] = pars['start_dt'].split()[0]
                         if self._pg:
-                            s = """(ch_date > CAST('{0}' as TIMESTAMP) AND ch_date < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                            s = """(ch_date > CAST('{0}' as TIMESTAMP) AND ch_date < cast((CAST('{0}' as TIMESTAMP) + interval '1 day') as timestamp))"""
                         else:
                             s = """(ch_date > CAST('{0}' as TIMESTAMP) AND ch_date < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
                         ins_ch_date = 'and %s' % s.format(pars['start_dt'])
                     elif pars['start_dt'] and pars['end_dt']:
                         pars['end_dt'] = pars['end_dt'].split()[0]
                         if self._pg:
-                            s = """(ch_date >= CAST('{0}' as TIMESTAMP) AND ch_date <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                            s = """(ch_date >= CAST('{0}' as TIMESTAMP) AND ch_date <= cast((CAST('{1}' as TIMESTAMP) + interval '1 day') as timestamp))"""
                         else:
                             s = """(ch_date >= CAST('{0}' as TIMESTAMP) AND ch_date <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
                         ins_ch_date = 'and %s' % s.format(pars['start_dt'], pars['end_dt'])
@@ -3527,7 +3542,7 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
                     ssss.append('and %s' % s)
                 if pars['source']:
                     if 0 == int(pars['source']):
-                        s = "r.SOURCE is null or r.SOURCE = 0"
+                        s = "(r.SOURCE is null or r.SOURCE = 0) "
                     else:
                         s = "r.SOURCE = " + pars['source']
                     ssss.append('and %s' % s)
@@ -3598,6 +3613,8 @@ from (
                     sou = "PLExpert"
                 elif str(row[12]) == '2':
                     sou = "Склад"
+                elif str(row[12]) == '3':
+                    sou = "Агент"
                 else:
                     sou = "Без источника"
                 r = {
@@ -3766,10 +3783,50 @@ values (?, ?, ?, ?, ?) matching (CODE)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def setLinkCodes(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            data = params.get('data')
+            sql_template = """update vnd set permit = %s where id_vnd in (%s);"""
+            if data:
+                permit = data.get('p')
+                restrict = data.get('r')
+                p_list = []
+                r_list = []
+                for item in permit:
+                    p_list.append(int(item.get('id_vnd')))
+                for item in restrict:
+                    r_list.append(int(item.get('id_vnd')))
+                params = []
+
+                if p_list:
+                    a = {'sql': sql_template % ("1", f"{','.join([str(i) for i in p_list])}"), 'opt': ()}
+                    params.append(a)
+                if r_list:
+                    a = {'sql': sql_template % ("2", f"{','.join([str(i) for i in r_list])}"), 'opt': ()}
+                    params.append(a)
+                #print(params)
+                pool = ThreadPool(len(params))
+                results = pool.map(self._make_sql, params)
+                pool.close()
+                pool.join()
+                
+                
+                #print(opts)
+
+
+
+                #self.db.execute({"sql": sql, "options": opt})
+            ret = {"result": True, "ret_val": "OK"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
     def getLinkCodes(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = """SELECT r.id_vnd, r.c_vnd, r.permit FROM vnd order by r.c_vnd;"""
+            sql = """SELECT r.id_vnd, r.c_vnd, r.permit FROM vnd r order by r.c_vnd;"""
             opt = ()
             _rp = []
             _rr = []
@@ -3779,7 +3836,7 @@ values (?, ?, ?, ?, ?) matching (CODE)"""
                     "id_vnd"    : row[0],
                     "c_vnd"     : row[1],
                     }
-                if int(row[2]) = 1:
+                if int(row[2]) == 1:
                     _rp.append(r)
                 else:
                     _rr.append(r)
@@ -4120,7 +4177,8 @@ matching (NAME)"""
     def _make_sql(self, params):
         sql = params.get('sql')
         opt = params.get('opt')
-        res = self.db.request({"sql": sql, "options": opt})
+        res = self.db.execute({"sql": sql, "options": opt})
+        #res = self.db.request({"sql": sql, "options": opt})
         return res
 
     def _form_exclude(self, search_re):
@@ -4498,5 +4556,5 @@ create index lnk_idx_id_tovar on lnk (id_tovar);
 
 create index lnk_idx_id_vnd on lnk (id_vnd);
 
-
+alter table vnd add column permit smallint default 1;
 """

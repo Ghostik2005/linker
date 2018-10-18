@@ -323,3 +323,8 @@ div.webix_item_tab {
 .nothing {
     }
 
+.c-label {
+    text-align: center;
+    /*color: black;*/
+    text-transform: uppercase;
+    }

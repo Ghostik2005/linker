@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import History from "../views/history";
-import {get_data_test, checkKey, getDtParams} from "../views/globals";
+import {get_data_test, checkKey, getDtParams, unFilter} from "../views/globals";
 import {fRender, fRefresh, checkVal} from "../views/globals";
 import {rRefresh, request} from "../views/globals";
 import {dt_formating_no_sec, dt_formating, compareTrue} from "../views/globals";
@@ -87,20 +87,11 @@ export default class BrakBarView extends JetView{
                 click: () => {
                     this.$$("_ls").setValue("");
                     var cv = this.$$("__table");
-                    var columns = cv.config.columns;
-                    columns.forEach(function(item){
-                        if (cv.isColumnVisible(item.id)) {
-                            if (item.header[1]) {
-                                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                    cv.getFilter(item.id).setValue('');
-                                } else {
-                                    let qq = cv.getFilter(item.id);
-                                    if (!qq.readOnly) qq.value = '';
-                                    };
-                                }
-                            }
-                        });
-                    this.$$("__table").callEvent("onBeforeSort");
+                    unFilter(cv);
+                    let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
+                    let old_v = pager.$scope.$$("__page").getValue();
+                    pager.$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    pager.$scope.$$("__page").refresh();
                     }
                 },
             {view: "button", type: 'htmlbutton',

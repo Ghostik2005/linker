@@ -15,17 +15,17 @@ export default class LinkerView extends JetView{
             view: "tabview",
             multiview: true,
             cells: [
-                {header: "<span class='webix_icon fa-code'></span><span style='line-height: 20px;'> Разрешения для поставщиков</span>", width: 280, //close: true,
-                    body: { view: "layout",
-                        rows: [
-                            {$subview: LinkSupplView},
-                            ]
-                        }
-                    },
                 {header: "<span class='webix_icon fa-code'></span><span style='line-height: 20px;'> Сведение по кодам</span>", width: 240, //close: true,
                     body: { view: "layout",
                         rows: [
                             {$subview: LinkCodesView},
+                            ]
+                        }
+                    },
+                {header: "<span class='webix_icon fa-star'></span><span style='line-height: 20px;'> Разрешения для поставщиков</span>", width: 280, //close: true,
+                    body: { view: "layout",
+                        rows: [
+                            {$subview: LinkSupplView},
                             ]
                         }
                     },

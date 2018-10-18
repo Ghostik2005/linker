@@ -138,7 +138,7 @@ class pg_local(Connect):
                 cur.execute(sql, options) if options else cur.execute(sql)
                 if not self.production:
                     pass
-                    #print(cur.query.decode())
+                    print(cur.query.decode())
                 self._print(cur.query.decode())
                 try:
                     ret = cur.fetchall()
