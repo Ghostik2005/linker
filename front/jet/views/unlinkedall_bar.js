@@ -148,7 +148,7 @@ export default class AllUnlinkedBarView extends JetView{
                 onItemDblClick: (clickItem) => {
                     let item = this.$$("__table").getSelectedItem();
                     if (!item) return;
-                    if (item.id !== clickItem.row) return;
+                    if (clickItem && item.id !== clickItem.row) return;
                     if (+$$("_link_by").getValue() === 1) {
                         if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
                             $$("_suppl").config.state = true;
@@ -156,15 +156,22 @@ export default class AllUnlinkedBarView extends JetView{
                             setTimeout(()=> {
                                 this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('app-nav');
                                 }, 300);
+                            setTimeout(()=> {
+                                let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+                                vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                                vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                                }, 800);
+                                
                         } else {
                             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
                             }
                     } else {
-                        webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
+                        webix.message({"text": "Выберите сведение по поставщикам", "type": "debug"});
                         }
                     },
                 onKeyPress: function(code, e){
-                    if (13 === code) {
+                    var focused = document.activeElement;
+                    if (focused.type !== 'text' && 13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
                     },

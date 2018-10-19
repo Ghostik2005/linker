@@ -139,7 +139,8 @@ export default class SkippedBarView extends JetView{
                         }
                     },
                 onKeyPress: function(code, e){
-                    if (13 === code) {
+                    var focused = document.activeElement;
+                    if (focused.type !== 'text' && 13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
                     },

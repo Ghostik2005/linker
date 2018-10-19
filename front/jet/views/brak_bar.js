@@ -71,7 +71,10 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
                 oldLabel: "<span class='webix_icon fa-refresh'></span>",
                 click: () => {
-                    this.$$("__table").callEvent("onBeforeSort");
+                    let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
+                    let old_v = pager.$scope.$$("__page").getValue();
+                    pager.$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                    pager.$scope.$$("__page").refresh();
                     }
                 },
             {view:"button", width: 40,

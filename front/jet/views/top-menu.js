@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
-import {parse_unlinked_item, get_data_test, request} from "../views/globals";
+import {parse_unlinked_item, get_data_test, request, checkVal} from "../views/globals";
 import {prcs, delPrc, checkKey, get_spr, getDtParams, clear_names_bar} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import History from "../views/history";
@@ -329,6 +329,7 @@ export default class TopmenuView extends JetView{
             tabMoreWidth:70,
             animate: false,
             multiview: true,
+            keepViews:true,
             on: {
                 onOptionRemove: (id) => {
                     $$(id).destructor();
@@ -371,7 +372,7 @@ export default class TopmenuView extends JetView{
                          (view === LinksBarView) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>" :
                          //(view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
                          (view === AdmBarView) ? "<span class='webix_icon fa-magic'></span><span style='line-height: 20px;'>Админка</span>" :
-                         (view === BrakBarView) ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Разбраковка</span>" :
+                         (view === BrakBarView) ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Забраковка</span>" :
                          ""
             let uid = webix.uid();
             var tabConfig = {
@@ -435,7 +436,7 @@ export default class TopmenuView extends JetView{
                             },
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Пишем выловленные баги сюда", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Пишем выловленные баги сюда", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
@@ -479,7 +480,7 @@ export default class TopmenuView extends JetView{
                             }
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Админка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Админка", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
@@ -521,7 +522,7 @@ export default class TopmenuView extends JetView{
                             }
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, maxWidth: 40, b_id: undefined, longPress: false,
+                {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
@@ -697,6 +698,57 @@ export default class TopmenuView extends JetView{
                     click: function(){
                         var cv = getCurrentTable();
                         this.$scope.popreport.show_w("Создание отчета", $$(cv));
+                        }
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Выгрузка spr.db3", height: 40, b_id: undefined, longPress: false, localId: '_spr',
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "", width: 40,
+                    hidden: !app.config.roles[app.config.role].skipped,
+                    oldLabel: "<span class='side_icon webix_icon fa-database', style='color: green !important'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr.db3</span>",
+                    on: {
+                        onItemClick: function () {
+
+                            let qw = setTimeout( () => {
+                                this.$scope.$$("_spr").enable();
+                                }, 10000);
+                            this.$scope.$$("_spr").disable();
+                            let user = app.config.user;
+                            let url = app.config.r_url + "?processSpr";
+                            let params = {"user": user, 'type': 'spr'};
+                            request(url, params).then( (data) => {
+                                data = checkVal(data, 'a');
+                                //console.log('ret', data);
+                                });
+                            return
+                            }
+                        }
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Выгрузка spr-roz.db3", height: 40, b_id: undefined, longPress: false, localId: '_spr_r',
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "", width: 40,
+                    hidden: !app.config.roles[app.config.role].skipped,
+                    oldLabel: "<span class='side_icon webix_icon fa-database', style='color: blue !important'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr-roz.db3</span>",
+                    on: {
+                        onItemClick: function () {
+                            let qw = setTimeout( () => {
+                                this.$scope.$$("_spr_r").enable();
+                                }, 10000);
+                            this.$scope.$$("_spr_r").disable();
+                            let user = app.config.user;
+                            let url = app.config.r_url + "?processSpr";
+                            let params = {"user": user, 'type': 'spr-roz'};
+                            request(url, params).then( (data) => {
+                                data = checkVal(data, 'a');
+                                //console.log('ret', data);
+                                });
+                            return
+                            }
                         }
                     },
                 {}

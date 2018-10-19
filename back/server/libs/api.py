@@ -10,6 +10,7 @@ import hashlib
 import psycopg2
 import io
 import requests
+import subprocess
 from multiprocessing.dummy import Pool as ThreadPool
 
 
@@ -2566,10 +2567,6 @@ where ( classifier.idx_group = 7 and groups.cd_code = {'?' if not self._pg else 
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-
-
-
-
     def setBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
@@ -2588,7 +2585,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = {'?' if not self._pg else 
             opis = item.get("desc", "") #"opis"
             letter_text = item.get("letter") #letter text
             f_name = item.get("f_name") or str(uuid.uuid1()) #"link_file"
-            ch_date = item.get("ch_date") #dt_edit
+            ch_date = item.get("ch_dt") #dt_edit
             ins = '?' if not self._pg else '%s'
             opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name, ch_date)
             if letter_id == 99999999:
@@ -2600,8 +2597,6 @@ n_rec = {ins}, gv = {ins}, title_doc = {ins}, opis = {ins}, sh_prc = {ins}, link
 where id = {ins} returning id;"""
                 opt = opt + (letter_id,)
             res = self.db.execute({"sql": sql, "options": opt})
-
-
             if self._pg:
                 ppprs = psycopg2.Binary(letter_text.encode())
                 sql_t = """insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
@@ -2615,7 +2610,6 @@ SET (LINK_FILE, MAIL_TEXT, DELETED) = (%s, %s, 0)"""
 values (?, ?)"""
                 opt_t = (f_name, ppprs)
             r = self.db.execute({"sql": sql_t, "options": opt_t})
-
             #print(res)
             sql = f"""select count(*) from brak_mail where SH_PRC = '{sh_prc}' and SERIYA = '{series}' and DELETED = 0"""
             opt = ()
@@ -2722,7 +2716,6 @@ order by id asc; """
             direction = params.get('direction', 'desc')
             filt = params.get("c_filter")
             ssss = []
-
             search_re = name.split()
             sti = "(lower(t1.C_TOVAR) like lower('%%') or lower(t2.series) like lower('%%'))"
             stri = [] if len(search_re) > 0 else [sti,]
@@ -2732,12 +2725,9 @@ order by id asc; """
                     stri.append(ts1)
                 else:
                     stri.append('and %s' % ts1)
-
-
             if filt:
                 pars = {}
                 dt = filt.get('dt')
-
                 if dt:
                     pars['start_dt'] = dt.get('start')
                     pars['end_dt'] = dt.get('end')
@@ -3810,18 +3800,12 @@ values (?, ?, ?, ?, ?) matching (CODE)"""
                 results = pool.map(self._make_sql, params)
                 pool.close()
                 pool.join()
-                
-                
                 #print(opts)
-
-
-
                 #self.db.execute({"sql": sql, "options": opt})
             ret = {"result": True, "ret_val": "OK"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
     def getLinkCodes(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -4073,6 +4057,25 @@ matching (NAME)"""
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return ret
+
+    def processSpr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            script_type = params.get('type')
+            if script_type == 'spr':
+                command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot.sh"
+            elif script_type == 'spr-roz':
+                command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot_roz.sh"
+            else:
+                command = ""
+            if command:
+                command = command.split()
+                print(command)
+                subprocess.Popen(command, start_new_session=True)
+
+            ret = {"result": True, "ret_val": "OK"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def _genOds(self, data):
         ret = None

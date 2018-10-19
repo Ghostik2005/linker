@@ -517,6 +517,21 @@ SET (barcode, id_spr) = (%s, %s);"""
             db.commit()
         self.log("PRCSYNC ---Удалили по признаку")
         self.log('PRCSYNC Сводим по кодам')
+        #sql_old = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
+    #select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
+    #from prc p 
+    #join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' '
+        #and (select count(distinct ll.id_spr) as ccc
+            #from prc pp
+            #join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
+            #where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
+            #) = 1 
+    #where p.id_vnd in (20123,20129,20153,20171,20176,20229,20269,20276,20277,
+                       #20377,20378,20477,20557,20576,20577,20677,20871,20977,
+                       #21271,22077,22078,22240,23478,24477,28132,28162,28176,
+                       #28177,28178,29977,30144,30178,34157,40267,40277,40550,
+                       #40552,41977,44735,45277,48929,51066)
+        #"""
         sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
     from prc p 
@@ -526,12 +541,7 @@ SET (barcode, id_spr) = (%s, %s);"""
             join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
             where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
             ) = 1 
-    where p.id_vnd in (20123,20129,20153,20171,20176,20229,20269,20276,20277,
-                       20377,20378,20477,20557,20576,20577,20677,20871,20977,
-                       21271,22077,22078,22240,23478,24477,28132,28162,28176,
-                       28177,28178,29977,30144,30178,34157,40267,40277,40550,
-                       40552,41977,44735,45277,48929,51066)
-        """
+    where p.id_vnd in (select q.id_vnd from vnd q where permit = 1);"""
         dbc.execute(sql)
         dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
         if callable(db.commit):
