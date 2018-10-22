@@ -13,6 +13,8 @@ import datetime
 from urllib.parse import unquote
 from http.server import BaseHTTPRequestHandler
 
+import psycopg2
+
 try:
     import fdb
 except ImportError:
@@ -23,40 +25,52 @@ class API:
 
     def __init__(self, log):
         self.log = log
-        try:
-            config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
-            init = config['init']
-            self.prod_params = {
-                    'uri': init['uri'],
-                    'api_key': init['api'],
-                    'allow_none': True
-                    }
-            self.connect_params = {
-                    "host": "127.0.0.1",
-                    "port": 8025,
-                    "database": "spr",
-                    "user": 'SYSDBA',
-                    "password":'masterkey',
-                    "charset" : 'WIN1251'
-                }
-            self.production = True
-        except:
-            self.connect_params = {
-                    "host": "127.0.0.1",
-                    "database": "spr",
-                    "user": 'SYSDBA',
-                    "password":'masterkey',
-                    "charset" : 'WIN1251'
-                }
-            self.production = False
-            self.prod_params = {}
+
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5430}
+        self.production = True
             
         if callable(self.log):
             self.log("Production" if self.production else "Test")
         else:
             print("Production" if self.production else "Test", flush=True)
-        
+
+
+    def send_busy(self):
+        data = None
+        c = 0
+        while True:
+            k = list(sys._SSE.keys())
+            while k:
+                cur = None
+                con = None
+                v = k.pop()
+                _q, dt_old = sys._SSE.get(v)
+                if _q:
+                    spr_process = os.path.exists('/ms71/data/linker/spr.pid')
+                    spr_roz_process = os.path.exists('/ms71/data/linker/spr_roz.pid')
+                    if spr_process:
+                        params = ['enablespin', f'spr::0', c]
+                    else:
+                        try:
+                            with open('/ms71/data/linker/spr.lm', 'r') as f_obj:
+                                last_m = f_obj.read().strip()
+                        except:
+                            last_m = 0
+                        params = ['disablespin', f'spr::{last_m or 0}', c]
+                    _q.put(params)
+                    
+                    if spr_roz_process:
+                        params = ['enablespin', f'spr_roz::0', c]
+                    else:
+                        try:
+                            with open('/ms71/data/linker/spr_roz.lm', 'r') as f_obj:
+                                last_m = f_obj.read().strip()
+                        except:
+                            last_m = 0
+                        params = ['disablespin', f'spr_roz::{last_m or 0}', c]
+                    _q.put(params)
+            time.sleep(1.5)
+
 
     def send_data(self):
         data = None
@@ -71,7 +85,7 @@ class API:
                 if _q:
                     _, user = v.split('::')
                     try:
-                        con = fdb.connect(**self.connect_params)
+                        con = psycopg2.connect(**self.connect_params)
                     except Exception as Err:
                         self._log(traceback.format_exc(), kind="error:connection")
                     else:
@@ -79,9 +93,9 @@ class API:
                     if cur:
                         sql = """SELECT r.SH_PRC, r.CHANGE_DT
 FROM PRC r
-JOIN USERS u on u."GROUP" = r.ID_ORG AND u."USER" = ?
+JOIN USERS u on u."GROUP" = r.ID_ORG AND u."USER" = %s
 WHERE r.N_FG <> 1 ORDER by r.CHANGE_DT DESC
-ROWS 1 to 1"""
+limit 1"""
                         opt = (user,)
                         res = cur.execute(sql, opt)
                         try:

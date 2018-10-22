@@ -1085,3 +1085,34 @@ export function deleteCookie (name) {
         })
     }
 
+export function checkSSE(view) {
+    let eventS = view.$scope.app.config.eventS;
+    //console.log('sse', (eventS));
+    if (eventS && eventS.readyState===1) {
+        return true
+        }
+    try {
+        eventS.close()
+    } catch (e) {
+        };
+    return false
+        
+    // проверяем есть ли SSE соединение
+    //return false
+    }
+
+export function spinIconEnable(view) {
+    if (view.config.label.indexOf("fa-spin") === -1) {
+        let l = view.config.label.replace("webix_icon", "webix_icon fa-spin");
+        view.define({"label": l});
+        view.refresh();
+        }
+    }
+
+export function spinIconDisable(view) {
+    let l = view.config.label.replace(" fa-spin", "");
+    view.define({"label": l});
+    view.refresh();
+    clearTimeout(view.config.qw);
+    }
+

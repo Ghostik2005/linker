@@ -2,37 +2,82 @@
 
 import {JetView} from "webix-jet";
 import {request, deleteCookie, getCookie} from "../views/globals";
-
+import {spinIconEnable, spinIconDisable} from "../views/globals";
 
 export default class HeaderView extends JetView{
     config(){
         let app = this.app;
         let th = this;
         var uuid = require("uuid");
-        var eventS;
+        //app.config.eventS
         try {
-            eventS.close()
+            app.config.eventS.close()
         } catch (e) {
             };
         let iid = uuid.v4() + "::" + app.config.user;
         let sse_url = (location.hostname === 'localhost') ? "http://saas.local/events/SSE?" : "../events/SSE?";
         sse_url += iid
 
-        if (app.config.notify) {
-            eventS = new EventSource(sse_url);
-            eventS.onmessage = function(e) {
-                webix.message({'type': 'info', 'text': e.data, 'expire': app.config.nDelay});
+        function newSSE() {
+            app.config.eventS = new EventSource(sse_url);
+            if (app.config.notify) {
+                app.config.eventS.onmessage = function(e) {
+                    webix.message({'type': 'info', 'text': e.data, 'expire': app.config.nDelay});
+                    };
                 };
 
-            eventS.addEventListener('update', function(e) {
+            app.config.eventS.addEventListener('update', function(e) {
                 webix.message({'type': 'event', 'text': e.data, 'expire': app.config.nDelay});
                 });
 
-            eventS.addEventListener('close', function(e) {
+            app.config.eventS.addEventListener('enablespin', function(e) {
+                let n = e.data.split("::");
+                if (n[0]==='spr') {
+                    $$("_spr_button").blockEvent();
+                    spinIconEnable($$("_spr_button"));
+                    }
+                if (n[0]==='spr_roz') {
+                    $$("_spr_roz_button").blockEvent();
+                    spinIconEnable($$("_spr_roz_button"));
+                    }
+                });
+
+            app.config.eventS.addEventListener('disablespin', function(e) {
+                let n = e.data.split("::");
+                let butt;
+                if (n[0]==='spr') {
+                    butt = $$("_spr_button");
+                } else if (n[0]==='spr_roz') {
+                    butt = $$("_spr_roz_button")
+                    }
+
+                if (butt) {
+                    if (butt.config.lastModified !== +n[1]) {
+                        butt.config.lastModified = +n[1];
+                        let time_text = new Date(butt.config.lastModified*1000).toLocaleString("ru");
+                        let tooltipExt = (butt.config.lastModified > 0) ? time_text : " неизвестно";
+                        butt.define({"tooltip": butt.config.tooltipTemplate + "\nПоследняя выгрузка: " + tooltipExt});
+                        butt.refresh();
+                        }
+                    butt.unblockEvent();
+                    spinIconDisable(butt);
+                    }
+                });
+
+            app.config.eventS.addEventListener('close', function(e) {
                 eventS.close();
                 });
-        } else {
-            };
+            }
+
+        
+        var si = setTimeout( function tick() {
+            if (!app.config.eventS || app.config.eventS.readyState !== 1) {
+                newSSE()
+                };
+            si = setTimeout(tick, 4000);
+            }, 50);
+
+
             
         //window.onbeforeunload = function (event_s) {
             //return "Уверены?"

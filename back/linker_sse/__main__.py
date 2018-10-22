@@ -84,8 +84,8 @@ def init():
     if 0 == rc:
         sys._log('Serving SSE server at {0}:{1}'.format(srv_host, srv_port))
         api = libs.API(sys._log)
-        #threading.Thread(target=libs.send_data, args=(), daemon=True).start() #send data via SSE
-        threading.Thread(target=api.send_data, args=(), daemon=True).start() #send data via SSE
+        threading.Thread(target=api.send_data, args=(), daemon=True).start() #send info via SSE
+        threading.Thread(target=api.send_busy, args=(), daemon=True).start() #send busy signal via SSE
         return app_conf
     raise SystemExit(rc)
 

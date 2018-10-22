@@ -12,10 +12,11 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.291.1700",
+        version:        "18.295.1700",
         start:          "/login",
         user:           "",
         role:           "0",
+        eventS:         undefined,
         r_url:          (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic",
         router:         EmptyRouter,
         //router:         UrlRouter,

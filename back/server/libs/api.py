@@ -11,6 +11,7 @@ import psycopg2
 import io
 import requests
 import subprocess
+import traceback
 from multiprocessing.dummy import Pool as ThreadPool
 
 
@@ -51,7 +52,7 @@ class API:
         if pg:
             self._pg = True
             self.port = pg
-            self.log("POSTGRES STARTED on %s port" % self.port)
+            self.log("POSTGRES STARTING on %s port" % self.port)
         else:
             self._pg = False
             self.log("FB STARTED")
@@ -4063,16 +4064,31 @@ matching (NAME)"""
             script_type = params.get('type')
             if script_type == 'spr':
                 command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot.sh"
-            elif script_type == 'spr-roz':
+                #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_test.sh"
+            elif script_type == 'spr_roz':
                 command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot_roz.sh"
             else:
                 command = ""
+            if (os.path.exists(f'/ms71/data/linker/{script_type}.pid')):
+                command = ""
+            else:
+                with open(f'/ms71/data/linker/{script_type}.pid', 'w') as f_obj:
+                    f_obj.write("spr")
             if command:
                 command = command.split()
                 print(command)
-                subprocess.Popen(command, start_new_session=True)
+                #time.sleep(10)
+                rc = subprocess.Popen(command).wait()
+                try:
+                    os.remove(f'/ms71/data/linker/{script_type}.pid')
+                    with open(f'/ms71/data/linker/{script_type}.lm', 'w') as f_obj:
+                        f_obj.write(str(int(time.time())))
+                except:
+                    traceback.print_exc()
 
-            ret = {"result": True, "ret_val": "OK"}
+                ret = {"result": True, "ret_val": "OK"}
+            else:
+                ret = {"result": False, "ret_val": "no command"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)

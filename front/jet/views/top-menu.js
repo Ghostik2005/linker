@@ -4,6 +4,7 @@ import {JetView} from "webix-jet";
 import {get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
 import {parse_unlinked_item, get_data_test, request, checkVal} from "../views/globals";
 import {prcs, delPrc, checkKey, get_spr, getDtParams, clear_names_bar} from "../views/globals";
+import {checkSSE, spinIconEnable, spinIconDisable} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import History from "../views/history";
 import NewformView from "../views/new_form";
@@ -17,7 +18,6 @@ import SideFormView from "../views/side_form";
 import NewReportView from "../views/new_report";
 import PropView from "../views/prop_window";
 import BrakBarView from "../views/brak_bar";
-
 import FooterView from "../views/footer";
 
 export default class TopmenuView extends JetView{
@@ -700,7 +700,8 @@ export default class TopmenuView extends JetView{
                         this.$scope.popreport.show_w("Создание отчета", $$(cv));
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Выгрузка spr.db3", height: 40, b_id: undefined, longPress: false, localId: '_spr',
+                {view:"button", type: 'htmlbutton', height: 40, b_id: undefined, longPress: false, localId: '_spr',
+                    id: "_spr_button",
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
@@ -708,25 +709,37 @@ export default class TopmenuView extends JetView{
                     hidden: !app.config.roles[app.config.role].skipped,
                     oldLabel: "<span class='side_icon webix_icon fa-database', style='color: green !important'></span>",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr.db3</span>",
+                    lastModified: undefined,
+                    tooltip: "Выгрузка spr.db3", 
+                    tooltipTemplate: "Выгрузка spr.db3", 
                     on: {
                         onItemClick: function () {
-
-                            let qw = setTimeout( () => {
-                                this.$scope.$$("_spr").enable();
-                                }, 10000);
-                            this.$scope.$$("_spr").disable();
+                            if (!checkSSE(this)) { //нет sse соединения, ставим задержку 10 минут
+                                this.config.qw = setTimeout( () => {
+                                    this.unblockEvent();
+                                    spinIconDisable(this);
+                                    }, 600000);
+                                };
+                            spinIconEnable(this);
+                            this.blockEvent();
                             let user = app.config.user;
                             let url = app.config.r_url + "?processSpr";
                             let params = {"user": user, 'type': 'spr'};
                             request(url, params).then( (data) => {
                                 data = checkVal(data, 'a');
-                                //console.log('ret', data);
+                                //if (data) {
+                                    //this.unblockEvent();
+                                    //spinIconDisable(this);
+                                    //}
                                 });
-                            return
+
                             }
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Выгрузка spr-roz.db3", height: 40, b_id: undefined, longPress: false, localId: '_spr_r',
+                {view:"button", type: 'htmlbutton', height: 40, b_id: undefined, longPress: false, localId: '_spr_r',
+                    id: "_spr_roz_button",
+                    tooltip: "Выгрузка spr-roz.db3",
+                    tooltipTemplate: "Выгрузка spr-roz.db3",
                     resizable: true,
                     sWidth: 136,
                     eWidth: 40,
@@ -736,18 +749,24 @@ export default class TopmenuView extends JetView{
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr-roz.db3</span>",
                     on: {
                         onItemClick: function () {
-                            let qw = setTimeout( () => {
-                                this.$scope.$$("_spr_r").enable();
-                                }, 10000);
-                            this.$scope.$$("_spr_r").disable();
+                            if (!checkSSE(this)) { //нет sse соединения, ставим задержку 10 минут
+                                this.config.qw = setTimeout( () => {
+                                    this.unblockEvent();
+                                    spinIconDisable(this);
+                                    }, 600000);
+                                };
+                            spinIconEnable(this);
+                            this.blockEvent();
                             let user = app.config.user;
                             let url = app.config.r_url + "?processSpr";
-                            let params = {"user": user, 'type': 'spr-roz'};
+                            let params = {"user": user, 'type': 'spr_roz'};
                             request(url, params).then( (data) => {
                                 data = checkVal(data, 'a');
-                                //console.log('ret', data);
+                                //if (data) {
+                                    //this.unblockEvent();
+                                    //spinIconDisable(this);
+                                    //}
                                 });
-                            return
                             }
                         }
                     },
