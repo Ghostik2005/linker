@@ -119,7 +119,11 @@ export default class SprView extends JetView{
                     },
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
-                        {content:"txtFilt"}
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ],
                     headermenu:false,
                     },
@@ -131,8 +135,9 @@ export default class SprView extends JetView{
                 { id: "id_zavod", sort: "server",
                     width: 300,
                     header: [{text: "Производитель"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
                                 options: {
                                     data: vList
                                     },
@@ -143,8 +148,9 @@ export default class SprView extends JetView{
                 { id: "id_strana", sort: "server",
                     width: 200,
                     header: [{text: "Страна"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
                                 options: {
                                     data: stranaList
                                     },
@@ -155,8 +161,9 @@ export default class SprView extends JetView{
                 { id: "c_dv", hidden: true, sort: "server",
                     width: 300,
                     header: [{text: "Д. в-во"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
                                 options: {
                                     data: dvList
                                     },
@@ -167,8 +174,9 @@ export default class SprView extends JetView{
                 { id: "c_group", hidden: true,
                     width: 300,
                     header: [{text: "Группа"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
                                 options: {
                                     data: tgList,
                                     },

@@ -152,12 +152,17 @@ button {
     font-size: 120%;
     }
 
+.webix_view.webix_control.webix_el_datepicker.margin18 {
+    margin-top: 18px;
+    }
+
 .my_filter select,
 .my_filter input {
       width: 100%;
       font-size: inherit;
       color: #666666 !important;
-      margin-top: -2px;
+      /*margin-top: -2px;*/
+      margin-top: 5px;
       padding: 0 3px;
       vertical-align: top;
       border: 1px solid #dddddd;
@@ -165,10 +170,11 @@ button {
       -moz-box-sizing: border-box;
       -webkit-box-sizing: border-box;
       box-sizing: border-box;
-      height: 70%;
-      vertical-align: middle;
+      /*height: 70%;
+      vertical-align: middle;*/
       border-radius: 6px;
     }
+
 
 .my_filter select {
   padding: 3px;

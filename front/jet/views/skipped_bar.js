@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, fRender, fRefresh, checkVal, request} from "../views/globals";
+import {checkVal, request} from "../views/globals";
 import ConfirmView from "../views/yes-no";
 import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -56,20 +56,29 @@ export default class SkippedBarView extends JetView{
                 {id: "sh_prc", width: 280, 
                     hidden: true,
                     header: [{text: "sh_prc"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ],
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
                     header: [{text: "Название"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ]
                     },
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
                                 options: {
                                     filter: mcf_filter,
                                     data: rList,
@@ -81,7 +90,11 @@ export default class SkippedBarView extends JetView{
                 { id: "c_zavod", sort: "server",
                     width: 200,
                     header: [{text: "Производитель"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ]
                     },
                 {id: "dt", width: 200, sort: 'server',
@@ -100,6 +113,7 @@ export default class SkippedBarView extends JetView{
                     header: [{text: "Источник"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                pager: 2,
                                 options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}]
                                 },
                             }
@@ -107,7 +121,11 @@ export default class SkippedBarView extends JetView{
                     },
                 {id: "id_org", width: 100, hidden: true,
                     header: [{text: "id_org"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ]
                     },
                 ],

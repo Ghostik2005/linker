@@ -85,15 +85,6 @@ export var cEvent = function(a,b,c,d){
     webix.event(a,b,c,d);
     };
 
-export var fRefresh = function(master, node, value){
-    node.component = master.config.id;
-    master.registerFilter(node, value, this);
-    node._comp_id = master.config.id;
-    if (value.value && this.getValue(node) != value.value) this.setValue(node, value.value);
-    node.onclick = webix.html.preventEvent;
-    cEvent(node, "keydown", this.on_key_down);
-    };
-
 export var unFilter = function(cv) {
     var columns = cv.config.columns;
     columns.forEach(function(item){
@@ -109,39 +100,6 @@ export var unFilter = function(cv) {
             }
         });
     }
-
-export var rRefresh = function(master, node, value){
-    if (master.$destructed) return;
-    var select = webix.$$(value.richselect);
-    node._comp_id = master.config.id;
-    node.$webix = value.richselect;
-    node.style.marginLeft = "-10px";
-    value.compare = value.compare || this.compare;
-    value.prepare = value.prepare || this.prepare;
-    master.registerFilter(node, value, this);
-    var data = value.inputConfig.options;
-    var options = value.options;
-    var list = select.getPopup().getList();
-    var optview = webix.$$(options);
-    node.firstChild.appendChild(select.$view.parentNode);
-    if (list.parse){
-        list.clearAll();
-        list.parse(data);
-        if ((!this.$noEmptyOption && value.emptyOption !== false) || value.emptyOption){
-            var emptyOption = { id:"", value: value.emptyOption||"", $empty: true };
-            list.add(emptyOption,0);
-            }
-        };
-    if (value.value) this.setValue(node, value.value);
-    select.render();
-    webix.delay(select.resize, select);
-    }
-
-export var fRender = function(master, config){
-    if (this.init) this.init(config);
-    config.css = "my_filter";
-    return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
-    };
     
 export function checkKey(code) {
     let ret = false;
@@ -571,7 +529,8 @@ export function getDtParams(ui) {
             };
     } else if (ui.config.name === "__dt_a") {
         c_filter = {
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
+            //'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_org'    : ($$(ui).isColumnVisible('id_org')) ? $$(ui).getFilter('id_org').value : undefined,
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
@@ -584,7 +543,8 @@ export function getDtParams(ui) {
         c_filter = {
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'sh_prc'   : ($$(ui).isColumnVisible('sh_prc')) ? $$(ui).getFilter('sh_prc').value : undefined,
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
+            //'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_org'    : ($$(ui).isColumnVisible('id_org')) ? $$(ui).getFilter('id_org').value : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
@@ -687,81 +647,21 @@ export function init_first(app) {
                 })
             }
         }, webix.ui.window);
-    
-    webix.ui.datafilter.richFilt1 = Object.create(webix.ui.datafilter.richSelectFilter);
-    webix.ui.datafilter.richFilt1.refresh = rRefresh;
-    webix.ui.datafilter.richFilt1.render = function(master, config){
-        if (!config.richselect){
-            var d = webix.html.create("div", { "class" : "webix_richfilter" });
-            var richconfig = {
-                container:d,
-                view:this.inputtype,
-                options:[]
-                };
-            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-            webix.extend(richconfig, inputConfig, true);
-            if (config.separator) richconfig.separator = config.separator;
-            if (config.suggest) richconfig.suggest = config.suggest;
-            var richselect = webix.ui(richconfig);
-            richselect.attachEvent("onChange", function(){
-                var vid = master.config.id;
-                var vi = webix.$$(vid);
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout( () => {
-                    let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
-                    },app.config.searchDelay);
-                });
-            config.richselect = richselect.config.id;
-            };
-        config.css = "webix_div_filter";
-        return " ";
-        }
-
 
     webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
-    webix.ui.datafilter.richFilt.refresh = rRefresh;
-    webix.ui.datafilter.richFilt.render = function(master, config){
-        if (!config.richselect){
-            var d = webix.html.create("div", { "class" : "webix_richfilter" });
-            var richconfig = {
-                container:d,
-                view:this.inputtype,
-                options:[]
-                };
-            var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
-            webix.extend(richconfig, inputConfig, true);
-            if (config.separator) richconfig.separator = config.separator;
-            if (config.suggest) richconfig.suggest = config.suggest;
-            var richselect = webix.ui(richconfig);
-            richselect.attachEvent("onChange", function(){
-                var vid = master.config.id;
-                var vi = webix.$$(vid);
-                if (this._filter_timer) window.clearTimeout(this._filter_timer);
-                this._filter_timer=window.setTimeout( () => {
-                    let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                    },app.config.searchDelay);
-                });
-            config.richselect = richselect.config.id;
-            };
-        config.css = "webix_div_filter";
-        return " ";
-        }
-
-    webix.ui.datafilter.mycomboFilter = Object.create(webix.ui.datafilter.richSelectFilter);
-    webix.ui.datafilter.mycomboFilter.refresh = function(master, node, value){
+    webix.ui.datafilter.richFilt.refresh = function(master, node, value){
         if (master.$destructed) return;
-        var select = webix.$$(value.myfilt);
-        node.$webix = value.myfilt;
+        var select = webix.$$(value.richselect);
+        node._comp_id = master.config.id;
+        node.$webix = value.richselect;
         node.style.marginLeft = "-10px";
         value.compare = value.compare || this.compare;
         value.prepare = value.prepare || this.prepare;
         master.registerFilter(node, value, this);
-        var data = value.inputConfig.options.data;
+        var data = value.inputConfig.options;
+        var options = value.options;
         var list = select.getPopup().getList();
+        var optview = webix.$$(options);
         node.firstChild.appendChild(select.$view.parentNode);
         if (list.parse){
             list.clearAll();
@@ -775,32 +675,35 @@ export function init_first(app) {
         select.render();
         webix.delay(select.resize, select);
         };
-    webix.ui.datafilter.mycomboFilter.inputtype = "combo";
-    webix.ui.datafilter.mycomboFilter.render = function(master, config){
-        if (!config.myfilt){
+    webix.ui.datafilter.richFilt.render = function(master, config){
+        if (!config.richselect){
             var d = webix.html.create("div", { "class" : "webix_richfilter" });
+            var inputtype = (config.inputConfig) ? config.inputConfig.inputtype : undefined;
             var richconfig = {
                 container:d,
-                view:this.inputtype,
+                view: inputtype || this.inputtype,
                 options:[]
                 };
             var inputConfig = webix.extend( this.inputConfig||{}, config.inputConfig||{}, true );
             webix.extend(richconfig, inputConfig, true);
             if (config.separator) richconfig.separator = config.separator;
             if (config.suggest) richconfig.suggest = config.suggest;
-            var myfilt = webix.ui(richconfig);
-            myfilt.attachEvent("onChange", function(){
+            var richselect = webix.ui(richconfig);
+            var pager_num = config.inputConfig.pager || 2; //номер элемента на вкладке, где находится пейджер
+            //console.log('master', master);
+            richselect.attachEvent("onChange", function(){
                 var vid = master.config.id;
                 var vi = webix.$$(vid);
+                let pager_view = vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout( () => {
-                    let pv = vi.getParentView().getChildViews()[1].$scope.$$("__page") || vi.getParentView().getChildViews()[2].$scope.$$("__page");
-                    let old_v = pv.getValue();
-                    pv.setValue((+old_v ===0) ? '1' : "0");
-                    pv.refresh();
+                    let old_v = pager_view.getValue();
+                    pager_view.setValue((+old_v ===0) ? '1' : "0");
+                    pager_view.refresh();
                     },app.config.searchDelay);
                 });
-            config.myfilt = myfilt.config.id;
+                
+            config.richselect = richselect.config.id;
             };
         config.css = "webix_div_filter";
         return " ";
@@ -813,32 +716,31 @@ export function init_first(app) {
             if ((e.which || e.keyCode) == 9) return;
             if (!checkKey(e.keyCode)) return;
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
+            var pager_num = this._pager || 1; //номер элемента на вкладке, где находится пейджер
             this._filter_timer=window.setTimeout(function(){
-                let old_v = vi.getParentView().getChildViews()[1].$scope.$$("__page").getValue();
-                vi.getParentView().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                vi.getParentView().getChildViews()[1].$scope.$$("__page").refresh();
+                let pager_view = vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
+                let old_v = pager_view.getValue();
+                pager_view.setValue((+old_v ===0) ? '1' : "0");
+                pager_view.refresh();
                 },app.config.searchDelay);
+            };
+    webix.ui.datafilter.cFilt.refresh = function(master, node, value){
+        node.component = master.config.id;
+        master.registerFilter(node, value, this);
+        node._comp_id = master.config.id;
+        if (value.inputConfig) {
+            node._pager = value.inputConfig.pager;
             }
-    webix.ui.datafilter.cFilt.refresh = fRefresh;
-    webix.ui.datafilter.cFilt.render = fRender;
+        if (value.value && this.getValue(node) != value.value) this.setValue(node, value.value);
+        node.onclick = webix.html.preventEvent;
+        cEvent(node, "keydown", this.on_key_down);
+        };
+    webix.ui.datafilter.cFilt.render = function(master, config){
+        if (this.init) this.init(config);
+        config.css = "my_filter";
+        return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
+        };
 
-    webix.ui.datafilter.txtFilt = Object.create(webix.ui.datafilter.textFilter);
-    webix.ui.datafilter.txtFilt.on_key_down = function(e, node, value){
-            var id = this._comp_id;
-            var vi = webix.$$(id);
-            if ((e.which || e.keyCode) == 9) return;
-            if (!checkKey(e.keyCode)) return;
-            if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout(function(){
-                let old_v = vi.getParentView().getChildViews()[2].$scope.$$("__page").getValue();
-                vi.getParentView().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                vi.getParentView().getChildViews()[2].$scope.$$("__page").refresh();
-                },app.config.searchDelay);
-            }
-    webix.ui.datafilter.txtFilt.refresh = fRefresh;
-    webix.ui.datafilter.txtFilt.render = fRender;
-
-    
     let delay = app.config.searchDelay;
     setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
     let url = app.config.r_url + "?getRefs"
@@ -1116,3 +1018,27 @@ export function spinIconDisable(view) {
     clearTimeout(view.config.qw);
     }
 
+export function add_bar(parent, view) {
+    var tab_view = parent.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+    console.log('s', view.name);
+    let header = (view.name === "SkippedBarView") ? "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>" :
+                 (view.name === "AllUnlinkedBarView") ? "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>" :
+                 (view.name === "LinksBarView") ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>" :
+                 //(view.name === "AdmBarView") ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
+                 (view.name === "AdmBarView") ? "<span class='webix_icon fa-magic'></span><span style='line-height: 20px;'>Админка</span>" :
+                 (view.name === "BrakBarView") ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Забраковка</span>" :
+                 ""
+    let uid = webix.uid();
+    var tabConfig = {
+        id: uid,
+        value: header, width: 172, close: true
+        };
+    let formConfig = {
+        $scope: parent.$scope,
+        id: uid,
+        $subview: view
+        };
+    parent.config.b_id = uid;
+    tab_view.getChildViews()[2].addView(formConfig);
+    tab_view.getChildViews()[1].addOption(tabConfig, true);
+    }

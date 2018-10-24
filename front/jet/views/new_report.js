@@ -2,6 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, getDtParams} from "../views/globals";
+import {spinIconEnable, spinIconDisable} from "../views/globals";
 
 export default class NewReportView extends JetView{
     config(){
@@ -121,6 +122,7 @@ export default class NewReportView extends JetView{
                                         };
                                     });
                                 let pa = getDtParams(cv);
+                                console.log("pa", pa);
                                 let s_params = {"c_filt": pa[0], "field": pa[2], "direction": pa[3]};
                                 let search = undefined;
                                 try {
@@ -139,8 +141,12 @@ export default class NewReportView extends JetView{
                                     "table": this.$$("_form").config.c_view.config.name,
                                     "search": search || ''
                                     };
+                                spinIconEnable($$("_rep_button"));
+                                $$("_rep_button").blockEvent();
                                 webix.ajax().timeout(180000).headers({'Content-type': 'application/json'}).response("blob").post(url, params, function(text, data) {
-                                    webix.html.download(data, "report." + params.type)
+                                    webix.html.download(data, "report." + params.type);
+                                    $$("_rep_button").unblockEvent();
+                                    spinIconDisable($$("_rep_button"));
                                     })
                                 this.hide_w();
                                 }

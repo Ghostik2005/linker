@@ -52,21 +52,31 @@ export default class AllUnlinkedBarView extends JetView{
                 {id: "sh_prc", width: 280, 
                     hidden: true,
                     header: [{text: "sh_prc"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ],
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
                     header: [{text: "Название"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ]
                     },
                 { id: "c_vnd", sort: "server",
                     width: 200,
                     header: [{text: "Поставщик"},
-                        {content: "mycomboFilter",
+                        {content: "richFilt",
                             compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
+                                //pager: 2,
                                 options: {
                                     filter: mcf_filter,
                                     data: rList1,
@@ -78,7 +88,11 @@ export default class AllUnlinkedBarView extends JetView{
                 { id: "c_zavod", sort: "server",
                     width: 200,
                     header: [{text: "Производитель"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ]
                     },
                 { id: "c_user", sort: "server",
@@ -119,7 +133,11 @@ export default class AllUnlinkedBarView extends JetView{
                     },
                 {id: "id_org", width: 100, hidden: true,
                     header: [{text: "id_org"},
-                        {content: "txtFilt"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                    },
+                            },
                         ]
                     },
                 ],

@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, fRender, fRefresh} from "../views/globals";
-import {rRefresh, request, checkVal} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
@@ -50,13 +49,13 @@ export default class LinksViewLnk extends JetView{
                     {content: "cFilt"},
                     ]
                     },
-                {id: "id_tovar", width: 100, hidden: true,
+                {id: "id_tovar", width: 100, hidden: true, 
                     header: [{text: "Код"},
                     {content: "cFilt"},
                     ]
                     },
                 {id: "c_tovar", fillspace: true, sort: 'server',
-                    header: [{text: "Наименование"},
+                    header: [{text: "Наименование"}
                     ],
                     headermenu:false,
                     },
@@ -72,7 +71,11 @@ export default class LinksViewLnk extends JetView{
                     },
                 {id: "spr", width: 350,
                     header: [{text: "Эталон"},
-                    {content: "cFilt", placeholder: "!слово - исключить из поиска"},
+                    {content: "cFilt", placeholder: "!слово - исключить из поиска",
+                        inputConfig : {
+                                height: 30
+                                },
+                        },
                     ]
                     },
                 {id: "e_zavod", width: 300, hidden: true,
@@ -81,8 +84,11 @@ export default class LinksViewLnk extends JetView{
                     },
                 {id: "c_vnd", width: 300,
                     header: [{text: "Поставщик"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,  //height: 60, 
                             inputConfig : {
+                                inputtype: "multicombo",
+                                tagMode: false,
+                                pager: 1,
                                 options: {
                                     filter: mcf_filter,
                                     data: rList,
@@ -96,7 +102,7 @@ export default class LinksViewLnk extends JetView{
                     css: 'center_p',
                     header: [{text: "Дата изменения"},
                     {content: "dateRangeFilter", compare: compareTrue,
-                        inputConfig:{format:dt_formating, width: 180,},
+                        inputConfig:{format:dt_formating, width: 180},
                         suggest:{
                             view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
                             },
@@ -110,8 +116,9 @@ export default class LinksViewLnk extends JetView{
                     },
                 {id: "source", width: 150, hidden: true,
                     header: [{text: "Источник"},
-                        {content: "richFilt1", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                pager: 1,
                                 options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}]
                                 },
                             }

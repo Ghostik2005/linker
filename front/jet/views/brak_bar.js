@@ -3,8 +3,8 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import {get_data_test, checkKey, getDtParams, unFilter} from "../views/globals";
-import {fRender, fRefresh, checkVal} from "../views/globals";
-import {rRefresh, request} from "../views/globals";
+import {checkVal} from "../views/globals";
+import {request} from "../views/globals";
 import {dt_formating_no_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 import BrakSideInfoView from "../views/brak_side_info";

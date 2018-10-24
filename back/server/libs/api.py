@@ -370,7 +370,8 @@ WHERE r.SH_PRC = {'?' if not self._pg else '%s'}
                 us_s = ''
                 v_s = ''
                 if pars['c_vnd']:
-                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    s = "v.ID_VND in ({0})".format(pars['c_vnd'])
+                    #s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
                     v_s = 'and %s' % s
                 if pars['c_user']:
                     if pars['c_user'] == 'Не назначен':
@@ -553,7 +554,8 @@ WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
                 pars['sh_prc'] = filt.get('sh_prc')
                 ssss = []
                 if pars['c_vnd']:
-                    s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    #s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
+                    s = "v.ID_VND in ({0})".format(pars['c_vnd'])
                     ssss.append(pref % s)
                 if pars['c_user']:
                     s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
@@ -2712,7 +2714,7 @@ order by id asc; """
             end_p = int(params.get('count', self.count)) + start_p -1
             series = params.get('series','')
             name = params.get('search', '')
-            field = params.get('field')
+            field = params.get('field', 'dt')
             field = names.get(field)
             direction = params.get('direction', 'desc')
             filt = params.get("c_filter")
@@ -3346,7 +3348,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = {'?' if not self._pg else 
                             s = """(ch_date >= CAST('{0}' as TIMESTAMP) AND ch_date <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
                         ins_ch_date = ') as foo where %s' % s.format(pars['start_dt'], pars['end_dt'])
                 if pars['c_vnd']:
-                    s = "v.ID_VND = {0}".format(pars['c_vnd'])
+                    s = "v.ID_VND in ({0})".format(pars['c_vnd'])
                     ssss.append(pref % s)
                 if pars['owner']:
                     s = "lower(r.owner) like lower('%" + pars['owner'] + "%')"
@@ -3562,7 +3564,7 @@ WHERE r.ID_SPR = {'?' if not self._pg else '%s'}"""
 left join SPR_ZAVOD  z on (z.ID_SPR = s.ID_ZAVOD)"""
                     in_st.append(s)
                 if pars['c_vnd']:
-                    s = f"""JOIN VND v on (v.ID_VND = ridv) and v.ID_VND = {pars['c_vnd']}"""
+                    s = f"""JOIN VND v on (v.ID_VND = ridv) and v.ID_VND in ({pars['c_vnd']})"""
                     in_st.insert(0, s)
                 else:
                     s = "left JOIN VND v on (v.ID_VND = ridv)"
@@ -4001,7 +4003,7 @@ matching (NAME)"""
                    "_dv":"getDvAll", #adm-dv
                    "_country":"getStranaAll", #adm-country
                    "_excldes":"getLinkExcludes", #adm-linker-excludes
-                   "_ttl":"getLnkSprs", #links_form_lnk
+                   "__ttl":"getLnkSprs", #links_form_lnk
                    "_users":"getUsersAll", #adm-users
                    "__dt_s":"getPrcsSkip", #skiped_bar
                    "_nds":"getNdsAll", #adm-nds
@@ -4010,6 +4012,7 @@ matching (NAME)"""
                    "__tt":"getSprLnks", #links_form_spr
                    "__dtdb": "getBarsSpr", #adm-barcodes-b
                    "__dtd": "getSprBars", #adm-barcodes-s
+                   "__brak": "getBrakSearch"
         }
         if self._check(x_hash):
             user = params.get("user")
@@ -4125,7 +4128,7 @@ matching (NAME)"""
                 j += 1
             for i in max_widths:
                 ret.set_column_property(i+1, 'width', f"{max_widths[i]*2.4}mm")
-            ret_object = BytesIO()
+            ret_object = io.BytesIO()
             ret.save(ret_object)
             data = ret_object.getvalue()
             ret_object.close()
@@ -4147,7 +4150,7 @@ matching (NAME)"""
         return out_data.encode()
         
     def _genXlsx(self, data):
-        ret_object = BytesIO()
+        ret_object = io.BytesIO()
         ret_data = None
         properties = {
             'title':    'report',

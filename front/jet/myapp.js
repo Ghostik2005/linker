@@ -12,7 +12,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.295.1700",
+        version:        "18.297.1740",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -70,9 +70,9 @@ webix.ready( () => {
         return suppr; 
         };
 
-    //app.attachEvent("app:error:resolve", function(name, error) {
-        //window.console.error(error);
-        //})
+    app.attachEvent("app:error:resolve", function(name, error) {
+        window.console.error(error);
+        })
 
 
     });

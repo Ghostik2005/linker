@@ -51,7 +51,7 @@ webix.ui({
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr, fRefresh, fRender, checkKey, compareTrue, checkVal, request} from "../views/globals";
+import {get_spr, compareTrue, checkVal, request} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SideFormView from "../views/side_form";
 import SubRow from "../views/sub_row";
@@ -155,8 +155,10 @@ export default class SprView extends JetView{
                 { id: "c_dv", hidden: true,
                     width: 300,
                     header: [{text: "Д. в-во"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
+                                pager: 1,
                                 options: {
                                     data: dvList
                                     },

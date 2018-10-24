@@ -3,7 +3,6 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr, request, checkVal, compareTrue} from "../views/globals";
-import {checkKey, fRender, fRefresh} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import {dt_formating_sec, dt_formating, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -56,8 +55,10 @@ export default class LinksViewSpr extends JetView{
                     },
                 {id: "c_vnd", width: 300, sort: 'server',
                     header: [{text: "Поставщик"},
-                        {content: "mycomboFilter", compare: compareTrue,
+                        {content: "richFilt", compare: compareTrue,
                             inputConfig : {
+                                inputtype: "combo",
+                                pager: 1,
                                 options: {
                                     filter: mcf_filter,
                                     data: rList,
