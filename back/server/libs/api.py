@@ -4065,6 +4065,8 @@ matching (NAME)"""
     def processSpr(self, params=None, x_hash=None):
         if self._check(x_hash):
             script_type = params.get('type')
+            user = params.get('user')
+            print(user)
             if script_type == 'spr':
                 command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot.sh"
                 #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_test.sh"
@@ -4076,16 +4078,17 @@ matching (NAME)"""
                 command = ""
             else:
                 with open(f'/ms71/data/linker/{script_type}.pid', 'w') as f_obj:
-                    f_obj.write("spr")
+                    f_obj.write(user)
             if command:
                 command = command.split()
-                print(command)
+                #print(command)
                 #time.sleep(10)
                 rc = subprocess.Popen(command).wait()
                 try:
                     os.remove(f'/ms71/data/linker/{script_type}.pid')
                     with open(f'/ms71/data/linker/{script_type}.lm', 'w') as f_obj:
                         f_obj.write(str(int(time.time())))
+                        f_obj.write("::" + user)
                 except:
                     traceback.print_exc()
 

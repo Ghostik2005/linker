@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter1} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
 
@@ -83,15 +83,19 @@ export default class LinksViewLnk extends JetView{
                     ]
                     },
                 {id: "c_vnd", width: 300,
-                    header: [{text: "Поставщик"},
+                    header: [
+                        {text: "Поставщик"},
                         {content: "richFilt", compare: compareTrue,  //height: 60, 
                             inputConfig : {
                                 inputtype: "multicombo",
+                                //inputtype: "customcombo",
                                 tagMode: false,
+                                keepText: true,
                                 pager: 1,
                                 options: {
-                                    filter: mcf_filter,
+                                    filter: mcf_filter1,
                                     data: rList,
+                                    body: {yCount: 10},
                                     },
                                 },
                             }
@@ -162,7 +166,13 @@ export default class LinksViewLnk extends JetView{
                     },
                 onAfterSelect: function (item) {
                     this.$scope._break.show();
-                    }
+                    },
+                onAfterLoad: function() {
+                    let filter = this.getFilter('c_vnd');
+                    let filtering_value = filter.$getValue()
+                    $$(filter.config.popup).getList().filter("#value#", filtering_value);
+                    //console.log('filter', filter);
+                    },
                 },
             } 
 
@@ -204,6 +214,7 @@ export default class LinksViewLnk extends JetView{
         this._break = this.getRoot().getParentView().$scope.$$("_br")
         this._search = this.getRoot().getParentView().$scope.$$("_ls")
         this.$$("__table").config.searchBar = this._search.config.id;
+        $$(this.$$("__table").config.searchBar).focus();
         this._break.hide();
         }
 

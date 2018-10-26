@@ -396,6 +396,7 @@ export default class SideButtonsBar extends JetView{
                     oldLabel: "<span class='side_icon webix_icon fa-database', style='color: green !important'></span>",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr.db3</span>",
                     lastModified: undefined,
+                    lastUser: undefined,
                     tooltip: "Выгрузка spr.db3", 
                     tooltipTemplate: "Выгрузка spr.db3", 
                     on: {
@@ -424,6 +425,8 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', height: 40, b_id: undefined, longPress: false, localId: '_spr_r',
                     id: "_spr_roz_button",
+                    lastModified: undefined,
+                    lastUser: undefined,
                     tooltip: "Выгрузка spr-roz.db3",
                     tooltipTemplate: "Выгрузка spr-roz.db3",
                     resizable: true,

@@ -161,8 +161,8 @@ export default class LinksBarView extends JetView{
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
         let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         this.show(show_t);
+        //this.$$("_ls").focus();
         //this.$$("_ls").callEvent("onKeyPress", [13,]);
-        this.$$("_ls").focus();
         }
 
     init() {

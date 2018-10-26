@@ -9,10 +9,16 @@ import "./locales/ru";
 
 webix.ready( () => {
 
+
+    //webix.ui.customcombo = Object.create(webix.ui.multicombo);
+
+
+
+
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.297.1740",
+        version:        "18.299.1354",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -49,6 +55,7 @@ webix.ready( () => {
         save:           false,
         dtParams:       undefined,
     });
+
     
     webix.attachEvent("onBeforeAjax", 
         function(mode, url, data, request, headers, files, promise){

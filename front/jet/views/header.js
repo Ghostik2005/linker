@@ -32,13 +32,19 @@ export default class HeaderView extends JetView{
 
             app.config.eventS.addEventListener('enablespin', function(e) {
                 let n = e.data.split("::");
+                let butt;
                 if (n[0]==='spr') {
-                    $$("_spr_button").blockEvent();
-                    spinIconEnable($$("_spr_button"));
+                    butt = $$("_spr_button");
                     }
                 if (n[0]==='spr_roz') {
-                    $$("_spr_roz_button").blockEvent();
-                    spinIconEnable($$("_spr_roz_button"));
+                    butt = $$("_spr_roz_button");
+                    }
+                if (butt) {
+                    butt.blockEvent();
+                    spinIconEnable(butt);
+                    let tooltipExt = "\n выгружает: " +n[2]
+                    butt.define({"tooltip": butt.config.tooltipTemplate + tooltipExt});
+                    butt.refresh();
                     }
                 });
 
@@ -54,9 +60,11 @@ export default class HeaderView extends JetView{
                 if (butt) {
                     if (butt.config.lastModified !== +n[1]) {
                         butt.config.lastModified = +n[1];
+                        butt.config.lastUser = n[2]
+                        let u = ". Выгружал: " + (butt.config.lastUser || "неизвестно")
                         let time_text = new Date(butt.config.lastModified*1000).toLocaleString("ru");
                         let tooltipExt = (butt.config.lastModified > 0) ? time_text : " неизвестно";
-                        butt.define({"tooltip": butt.config.tooltipTemplate + "\nПоследняя выгрузка: " + tooltipExt});
+                        butt.define({"tooltip": butt.config.tooltipTemplate + "\nПоследняя выгрузка: " + tooltipExt + u});
                         butt.refresh();
                         }
                     butt.unblockEvent();

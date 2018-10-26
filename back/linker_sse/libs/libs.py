@@ -26,7 +26,7 @@ class API:
     def __init__(self, log):
         self.log = log
 
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5430}
         self.production = True
             
         if callable(self.log):
@@ -49,23 +49,31 @@ class API:
                     spr_process = os.path.exists('/ms71/data/linker/spr.pid')
                     spr_roz_process = os.path.exists('/ms71/data/linker/spr_roz.pid')
                     if spr_process:
-                        params = ['enablespin', f'spr::0', c]
+                        user_s = ''
+                        with open('/ms71/data/linker/spr.pid', 'r') as f_obj:
+                            user_s = f_obj.read().strip()
+                        params = ['enablespin', f'spr::0::{user_s}', c]
                     else:
                         try:
                             with open('/ms71/data/linker/spr.lm', 'r') as f_obj:
                                 last_m = f_obj.read().strip()
                         except:
+                            #traceback.print_exc()
                             last_m = 0
                         params = ['disablespin', f'spr::{last_m or 0}', c]
                     _q.put(params)
                     
                     if spr_roz_process:
-                        params = ['enablespin', f'spr_roz::0', c]
+                        user_r = ''
+                        with open('/ms71/data/linker/spr_roz.pid', 'r') as f_obj:
+                            user_r = f_obj.read().strip()
+                        params = ['enablespin', f'spr_roz::0::{user_r}', c]
                     else:
                         try:
                             with open('/ms71/data/linker/spr_roz.lm', 'r') as f_obj:
                                 last_m = f_obj.read().strip()
                         except:
+                            #traceback.print_exc()
                             last_m = 0
                         params = ['disablespin', f'spr_roz::{last_m or 0}', c]
                     _q.put(params)
