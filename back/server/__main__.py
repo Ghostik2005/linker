@@ -1,7 +1,9 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.299.1355' #улучшены кнопки выгрузки spr, подправлен фильтр по поставщику в связках
+__version__ = '18.302.1650' #добавлен метод getBrakMailApi
+#__version__ = '18.302.1125' #добавлена отправка данных о сервисе на UDP, убрано конфигурирование nginx для статики
+#__version__ = '18.299.1355' #улучшены кнопки выгрузки spr, подправлен фильтр по поставщику в связках
 #__version__ = '18.295.1700' #работаем с SSE, полностью реализованны выгрузки spr
 #__version__ = '18.291.1600' #исправлен отбор во всех несвязанных, добавлена возможность изменять поведение сведения по кодам
 #__version__ = '18.290.1500' #убраны (надеюсь все) проблемы с сортировками, работаем с базой pg, 
@@ -80,6 +82,7 @@ import uuid
 import queue
 import os.path
 import random
+import urllib
 import threading
 import traceback
 
@@ -102,16 +105,15 @@ def main():
             },
         }
     sys.APPCONF["udpsock"] = libs.UDPSocket()
-    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg, production = libs.handle_commandline(__profile__, __index__)
+    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg, production, sys.APPCONF["udp"] = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
     sys.APPCONF["api"] = app_api.API(log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg, production=production)
-
-    threads, processes = prepare_server(api = sys.APPCONF["api"])
     rc = 0
     try:
         server = libs.SCGIServer(sys.APPCONF["log"], hostname=None, version=__version__,
                                  appname=__appname__, profile=__profile__, index=__index__)
+        threads, processes = prepare_server(api = sys.APPCONF["api"])
         server.serve_forever(sys.APPCONF["addr"], application)
     except KeyboardInterrupt as e:
         sys.APPCONF["log"]('KEYBOARD EXIT', kind="info")
@@ -151,9 +153,25 @@ def application(env):
             _param = zlib.decompress(_param)
         except Exception as Err:
             pass
+        #######################
+        try:
+            _param = _param.decode()
+        except:
+            pass
+        if "{" not in _param:
+            try:
+                _param = urllib.parse.unquote(_param, encoding='utf-8')
+                _param = json.dumps(urllib.parse.parse_qs(_param))
+            except:
+                pass
+        ######################
+
         try:
             _param = json.loads(_param)
         except Exception as Err:
+
+            traceback.print_exc()
+            print('eeee')
             data = _param 
             _param = _p_http
             if fname:
@@ -210,31 +228,13 @@ def prepare_server(api = None):
     sys.APPCONF["log"](f'\t\t\textrnal  ip-> {sys.extip}')
 
     #threads.append(threading.Thread(target=_insert_function_for_thread_here, args=(_insert_args_here,), daemon=True))
+    threads.append(threading.Thread(target=libs.udp_send, args=(__appname__, __version__, sys.APPCONF["udp"]), daemon=True))
 
     for th in threads:
         th.start()
     for pr in processes:
         pr.start()
     return threads, processes
-
-def udp_send():
-    import json
-
-    udpsock = libs.UDPSocket()
-    pid = os.getpid() #pid of service
-    uid = uuid.uuid4().hex #guid of service
-    a_path = f'https://online365.pro/linker' #path for access from outside
-    w_p = os.path.abspath(sys.argv[0])#full path to running script.
-    f_size = os.path.getsize(w_p) #size of running file
-    m_time = os.path.getmtime(w_p) #last modify time of running file
-    sys.argv[0] = w_p
-    argv = '%%'.join(m for m in sys.argv) #formated string from sys.argv
-    while True: #infinite loop for heart beating
-        p_d = {'appname': __appname__, 'version': __version__, 'profile': __profile__, 'index': __index__, 'pid': pid, 'uid': uid,
-               'extip': sys.extip, 'intip': sys.intip, 'nginx path': a_path, 'argv': argv, 'm_time': m_time, 'size': f_size}
-        payload = json.dumps(p_d, ensure_ascii=False) #heart beat message, it needs to discuss
-        print(payload, file=udpsock) #send to UDP socket our message
-        time.sleep(1.5 + random.random())
 
 
 ###############################################

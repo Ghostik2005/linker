@@ -2649,6 +2649,63 @@ values (?, ?)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getBrakMailApi(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            action = params.get("action")
+            if isinstance(action, list):
+                action = action[0]
+            #print(type(action))
+            if isinstance(action, str):
+                action = json.loads(action)
+            if isinstance(action, dict):
+                series, sh_prc = action.get("mass")
+                sql = f"""select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv, 
+    bm.title_doc, bm.opis, bm.link_file, bm.id, bm.dt, 
+CASE 
+    WHEN bmt.MAIL_TEXT is null THEN ''
+    ELSE bmt.MAIL_TEXT
+END as m_text
+from brak_mail bm
+LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE and bm.deleted = 0
+where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
+order by id asc; """
+                res = self.db.request({"sql": sql, "options": ()})
+                _return = []
+                for row in res:
+                    pars = row[14]
+                    try:
+                        if self._pg:
+                            pars = pars.tobytes()
+                            pars = pars.decode()
+                        else:
+                            pars = pars.decode()
+                    except:
+                        pass       
+                    r = {
+                        "sh_prc": row[0],
+                        "name": row[1], #"title"
+                        "t_name": row[2], #"title_torg"
+                        "series": row[3], #"seriya"
+                        "vendor": row[4], #"fabricator"
+                        "region": row[5], #"region"
+                        "number": row[6], #n_rec"
+                        "ch_dt": str(row[7]), #"dt_edit"
+                        "gv": row[8], #"gv"
+                        "n_doc": row[9], #"title_doc"
+                        "desc": row[10], #"opis"
+                        "f_name": row[11], #"link_file"
+                        "id": row[12], #"id"
+                        "cre_date": str(row[13]), #"dt"
+                        "letter": pars #letter text
+                        }
+                    _return.append(r)
+                ret = {"results": _return, "success": True, "req": "getMail"}
+            else:
+                ret = {"result": False, "ret_val": "params missing"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getBrakMail(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):

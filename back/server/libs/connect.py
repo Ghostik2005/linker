@@ -7,6 +7,7 @@ import configparser
 try:
     import libs.fdb as fdb
 except ImportError:
+    #traceback.print_exc()
     import fdb
 
 import psycopg2

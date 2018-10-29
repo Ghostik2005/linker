@@ -6,6 +6,7 @@ import glob
 import json
 import time
 import socket
+import random
 import threading
 import traceback
 import subprocess
@@ -280,15 +281,15 @@ class SCGIServer:
         #tcp_nodelay on;
     }
 
-    location /linker/ {
-        #if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
-        #return 403;
-        #}
-        add_header Cache_Control no-cache;
-        #alias html/linker;
-        #index index.html;
-        try_files $uri $uri/index.html $uri.html =404;
-    }
+    # location /linker/ {
+    #     #if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
+    #     #return 403;
+    #     #}
+    #     add_header Cache_Control no-cache;
+    #     #alias html/linker;
+    #     #index index.html;
+    #     try_files $uri $uri/index.html $uri.html =404;
+    # }
     """
         filelocation = self._getfilename("location")
         dn = os.path.dirname(filelocation)
@@ -468,9 +469,7 @@ def parse_args(arg, _param, x_hash, api):
 def handle_commandline(profile, index):
     args = []
     kwargs = {}
-    ##########################################
-    sys.stdin.close() # проверить без ЭТОГО!!!!!!!!!!
-    ##########################################
+    sys.stdin.close()
     _argv = sys.argv[1:]
     for x in _argv:
         i = x.find('=')
@@ -501,11 +500,30 @@ def handle_commandline(profile, index):
             pg = 5432
     else:
         pg = None
+    if "udp" in kwargs:
+        udp = kwargs.pop("udp")
+        if not udp:
+            udp = 9119
+    else:
+        udp = 9119
     if "production" in kwargs:
         production = True
     else:
         production = False
-    return args, kwargs, profile, index, pg, production
+    return args, kwargs, profile, index, pg, production, udp
+
+
+def udp_send(appname, version, udpport=9119):
+    time.sleep(1.5)
+    udpsock = UDPSocket(std_addr=('127.0.0.1', udpport))
+    serving_port = sys.APPCONF["addr"][1]
+    payload = {'appname': appname, 'version': version, 'port': serving_port}
+    payload = json.dumps(payload, ensure_ascii=False) #heart beat message, it needs to discuss
+    #print(payload)
+    while True: #infinite loop for heart beating
+        print(payload, file=udpsock) #send to UDP socket our message
+        time.sleep(1 + random.random())
+
 
 class UDPSocket(socket.socket):
 

@@ -26,7 +26,7 @@ class API:
     def __init__(self, log):
         self.log = log
 
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5430}
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
         self.production = True
             
         if callable(self.log):
