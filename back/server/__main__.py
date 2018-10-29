@@ -154,24 +154,24 @@ def application(env):
         except Exception as Err:
             pass
         #######################
-        try:
-            _param = _param.decode()
-        except:
-            pass
-        if "{" not in _param:
+        if not _p_http:
             try:
-                _param = urllib.parse.unquote(_param, encoding='utf-8')
-                _param = json.dumps(urllib.parse.parse_qs(_param))
+                _param = _param.decode()
             except:
                 pass
+            if "{" not in _param:
+                try:
+                    _param = urllib.parse.unquote(_param, encoding='utf-8')
+                    _param = json.dumps(urllib.parse.parse_qs(_param))
+                except:
+                    pass
         ######################
 
         try:
             _param = json.loads(_param)
         except Exception as Err:
-
             traceback.print_exc()
-            print('eeee')
+            #print('eeee')
             data = _param 
             _param = _p_http
             if fname:
