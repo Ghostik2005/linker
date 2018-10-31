@@ -170,7 +170,7 @@ def application(env):
         try:
             _param = json.loads(_param)
         except Exception as Err:
-            traceback.print_exc()
+            #traceback.print_exc()
             #print('eeee')
             data = _param 
             _param = _p_http
