@@ -2683,20 +2683,20 @@ order by id asc; """
                         pass       
                     r = {
                         "sh_prc": row[0],
-                        "name": row[1], #"title"
-                        "t_name": row[2], #"title_torg"
-                        "series": row[3], #"seriya"
-                        "vendor": row[4], #"fabricator"
+                        "title": row[1], #"title"
+                        "title_torg": row[2], #"title_torg"
+                        "seriya": row[3], #"seriya"
+                        "fabricator": row[4], #"fabricator"
                         "region": row[5], #"region"
-                        "number": row[6], #n_rec"
-                        "ch_dt": str(row[7]), #"dt_edit"
+                        "n_rec": row[6], #n_rec"
+                        "dt_edit": str(row[7]), #"dt_edit"
                         "gv": row[8], #"gv"
-                        "n_doc": row[9], #"title_doc"
-                        "desc": row[10], #"opis"
-                        "f_name": row[11], #"link_file"
+                        "title_doc": row[9], #"title_doc"
+                        "opis": row[10], #"opis"
+                        "link_file": row[11], #"link_file"
                         "id": row[12], #"id"
-                        "cre_date": str(row[13]), #"dt"
-                        "letter": pars #letter text
+                        "dt": str(row[13]), #"dt"
+                        "doc_text": pars #letter text
                         }
                     _return.append(r)
                 ret = {"results": _return, "success": True, "req": "getMail"}
@@ -4125,10 +4125,12 @@ matching (NAME)"""
             user = params.get('user')
             print(user)
             if script_type == 'spr':
-                command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot.sh"
+                #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot.sh"
                 #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_test.sh"
+                command = "sudo /ms71/saas/spr_copy/start_snapshot.sh"
             elif script_type == 'spr_roz':
-                command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot_roz.sh"
+                #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot_roz.sh"
+                command = "sudo /ms71/saas/spr_copy/start_snapshot_roz.sh"
             else:
                 command = ""
             if (os.path.exists(f'/ms71/data/linker/{script_type}.pid')):
@@ -4141,6 +4143,7 @@ matching (NAME)"""
                 #print(command)
                 #time.sleep(10)
                 rc = subprocess.Popen(command).wait()
+                #print('rc', rc, sep='\t')
                 try:
                     os.remove(f'/ms71/data/linker/{script_type}.pid')
                     with open(f'/ms71/data/linker/{script_type}.lm', 'w') as f_obj:
