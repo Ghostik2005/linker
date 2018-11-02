@@ -41,8 +41,13 @@ export default class PropView extends JetView{
                     {height: 10},
                     {view: "checkbox", label: "Запоминать окна и параметры поиска", value: 0, labelWidth: 270, width: 370, readonly: true, localId: "save",
                         name: "save"},
+                    {view: "checkbox", 
+                        label: "<span>Я </span>" + "<span style='color:red; font-weight: bold'>НЕ</span>" + "<span> собираюсь сводить</span>", 
+                        value: 0, labelWidth: 270, width: 370, readonly: !true, localId: "link",
+                        name: "link"
+                        },
                     {height: 15},
-                    {view: "label", label: "<span style = 'color: red'>После сохранения настроек страница будет обновленна</span>"},
+                    {view: "label", label: "<span style='color: red'>После сохранения настроек страница будет обновленна</span>"},
                     {height: 15},
                     {cols: [
                         {view: "button", type: "base", label: "Отменить", width: 120, height: 32,
@@ -94,6 +99,7 @@ export default class PropView extends JetView{
         this.$$("nTime").setValue(app.config.nDelay/1000);
         this.$$("expert").setValue((app.config.expert===true) ? 1 : 0);
         this.$$("save").setValue(app.config.save);
+        this.$$("link").setValue(app.config.link);
         
         this.getRoot().show()
         }

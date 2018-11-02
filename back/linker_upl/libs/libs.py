@@ -126,6 +126,8 @@ class API:
             name, value = data.popitem()
             if 'agent' in name:
                 source = 3
+            elif 'edocs' in name:
+                source = 4
             elif len(name) > 25:
                 source = 2
             else:
@@ -548,7 +550,7 @@ SET (barcode, id_spr) = (%s, %s);"""
             db.commit()
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
-        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
+        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()

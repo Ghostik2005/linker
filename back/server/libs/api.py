@@ -87,13 +87,13 @@ class API:
                     for f_name in k_list:
                         with open(f_name, 'rb') as f_obj:
                             fuser = f_obj.read().decode().strip()
-                        if fuser == user:
+                        if fuser.lower() == user.lower():
                             os.remove(f_name)
-                            break
+                            #break
                     a_key = uuid.uuid4().hex
                     f_name = os.path.join(self.p_path, a_key)
                     with open(f_name, 'wb') as f_obj:
-                        f_obj.write(user.encode())
+                        f_obj.write(res[0][0].encode())
                     ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
         return json.dumps(ret, ensure_ascii=False)
         
@@ -508,6 +508,8 @@ WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
                     sou = "Склад"
                 elif str(row[13]) == '3':
                     sou = "Агент"
+                elif str(row[13]) == '4':
+                    sou = "edocs"
                 else:
                     sou = "Без источника"
                 if row[15] is None:
@@ -664,6 +666,8 @@ order by {field} {direction}"""
                     sou = "Склад"
                 elif str(row[11]) == '3':
                     sou = "Агент"
+                elif str(row[11]) == '4':
+                    sou = "edocs"
                 else:
                     sou = "Без источника"
                 r = {
@@ -3665,6 +3669,8 @@ from (
                     sou = "Склад"
                 elif str(row[12]) == '3':
                     sou = "Агент"
+                elif str(row[12]) == '4':
+                    sou = "edocs"
                 else:
                     sou = "Без источника"
                 r = {

@@ -123,7 +123,7 @@ export default class LinksViewLnk extends JetView{
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 pager: 1,
-                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}]
+                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}, {id: '4', value: "edocs"}]
                                 },
                             }
                         ]

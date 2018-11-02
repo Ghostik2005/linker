@@ -18,7 +18,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.299.1354",
+        version:        "18.306.1120",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -32,6 +32,7 @@ webix.ready( () => {
         popDelay:       800,
         roles:          {},
         expert:         true,
+        link:           false,
         getButt:        (view, buttonsList) => {
                             let bList = [];
                             let views = view.getChildViews()

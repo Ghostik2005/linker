@@ -1501,7 +1501,7 @@ export function after_call(text, data, XmlHttpRequest) {
         deleteCookie('linker_auth_key');
         deleteCookie('linker_role');
         /////////////////
-        alert('Требуется войти в систему');
+        //alert('Требуется войти в систему');
         location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
         };
 

@@ -26,7 +26,7 @@ export default class TopmenuView extends JetView{
                     css: {"border-top": "0px !important"},
                     height: 40,
                     cols: [
-                        {view: "combo",
+                        {view: "combo", hidden: app.config.link,
                             name: "suppliers", id: "_suppl", manual: false, state: false,
                             width: 300,
                             options: {
@@ -63,7 +63,9 @@ export default class TopmenuView extends JetView{
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", labelWidth: 100, width: 405, localId: "_local_link_by",
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", 
+                            labelWidth: 100, width: 405, localId: "_local_link_by",
+                            hidden: app.config.link,
                             options: [
                                 {id: 1, value: "<span style='color: white'>поставщикам</span>"},
                                 {id: 2, value: "<span style='color: white'>дате</span>"},
@@ -88,6 +90,7 @@ export default class TopmenuView extends JetView{
                             },
                         {},
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
+                            hidden: app.config.link,
                             resizable: true,
                             sWidth: 136,
                             eWidth: 38,
@@ -119,6 +122,7 @@ export default class TopmenuView extends JetView{
                                 },
                             {width: 10},
                             {view: "button", type: "htmlbutton", 
+                                hidden: app.config.link,
                                 label: "<span style='color: #3498db'>Обновить сессию</span>", width: 200, //height: 32,
                                 click: () => {
                                     if ($$("_suppl").getList().getItem($$("_suppl").getValue())) {
@@ -355,9 +359,11 @@ export default class TopmenuView extends JetView{
         }
 
     init() {
-        (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
-        (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
-                                             get_suppl("_suppl", this, "?getSupplUnlnk");
+        if (!this.app.config.link) {
+            (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
+            (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", this, "?getSourceUnlnk") :
+                                                 get_suppl("_suppl", this, "?getSupplUnlnk");
+            };
         this.sideForm = this.ui(SideFormView);
         this.popconfirm = this.ui(ConfirmView);
         this.popnew = this.ui(NewformView);
