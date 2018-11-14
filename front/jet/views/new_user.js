@@ -106,9 +106,11 @@ export default class NewUserView extends JetView{
                             {},
                             {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].useradd,
                                 click: () => {
+                                    //console.log('dd', this.$$("new_user").getValues());
                                     let valid = this.$$("new_user").validate({hidden:false, disabled:false});
                                     if (valid) {
                                         let params = this.$$("new_user").getValues();
+                                        if (+params.id_role === 1) params.id_role = '0';
                                         params.user = this.app.user;
                                         let url = (params.id) ? this.app.config.r_url + "?updUser" : this.app.config.r_url + "?setUser";
                                         if (checkVal(request(url, params, !0).response, 's')) {
@@ -116,10 +118,8 @@ export default class NewUserView extends JetView{
                                             request(url, params).then(function(data) {
                                                 data = checkVal(data, 'a');
                                                 if (data) {
-                                                    $$("users_dc").clearAll();
-                                                    $$("users_dc").parse(data);
                                                     this.$scope.users_dt.clearAll()
-                                                    this.$scope.users_dt.parse($$("users_dc"));
+                                                    this.$scope.users_dt.parse(data);
                                                     };
                                                 })
                                             this.hide();

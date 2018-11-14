@@ -18,7 +18,7 @@ webix.ready( () => {
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.306.1120",
+        version:        "18.318.1730",
         start:          "/login",
         user:           "",
         role:           "0",
@@ -38,6 +38,7 @@ webix.ready( () => {
                             let views = view.getChildViews()
                             views.forEach( (element, i, views) => {
                                 if (element.getChildViews().length > 0) {
+                                    //console.log('element', element);
                                     bList = element.$scope.app.config.getButt(element, bList);
                                 } else {
                                     if (element.config.view === "button" && element.config.resizable) {

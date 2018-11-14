@@ -23,6 +23,7 @@ __index__   =-1
 
 import os
 import sys
+import zlib
 import json
 import time
 import uuid
@@ -81,7 +82,7 @@ def main():
 
 def application(env):
     """main bussiness script"""
-    addr, pid = env["scgi.initv"][:2]
+    addr, _ = env["scgi.initv"][:2]
     msg = f'{addr[0]} {addr[1]} {env["HTTP_METHOD"]} {env["URI"]} {env["HTTP_PARAMS"]} {env["HTTP_KWARGS"]}'
     env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s close" % msg)
     #print(env['X-API-KEY'])
@@ -89,7 +90,7 @@ def application(env):
     ret_code = u'200 OK'
     content = u''
     _rm = env["HTTP_METHOD"].upper()
-    args=None
+    arg=None
     fname = env['HTTP_KWARGS'].get('filename')
     source = env['HTTP_KWARGS'].get('source')
     callback = env['HTTP_KWARGS'].get('callback')
@@ -98,7 +99,7 @@ def application(env):
             data = env['scgi.rfile'].read(env['CONTENT_LENGTH'])
             try:
                 data = zlib.decompress(data)
-            except Exception as Err:
+            except Exception:
                 pass
             if data and fname:
                 sys.APPCONF["log"](fname, kind='info:saving:')
@@ -110,11 +111,11 @@ def application(env):
             _param = env['scgi.rfile'].read(env['CONTENT_LENGTH'])
             try:
                 _param = zlib.decompress(_param)
-            except Exception as Err:
+            except Exception:
                 pass
             try:
                 _param = json.loads(_param)
-            except Exception as Err:
+            except Exception:
                 _param = _p_http
             else:
                 _param.update(_p_http)

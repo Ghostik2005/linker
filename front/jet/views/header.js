@@ -92,7 +92,9 @@ export default class HeaderView extends JetView{
             //}
 
         var onExit = function (e) {
-            let user = getCookie('linker_user');
+            let x,r;
+            let user = getCookie('linker-app');
+            [user, x, r] = user.split('::');
             let url = app.config.r_url + "?setExit";
             let params = {"user":user};
             request(url, params);
@@ -124,9 +126,9 @@ export default class HeaderView extends JetView{
                             onExit();
                             deleteCookie("linker-app");
                             //Удалить то что ниже в понедельник 1 октября после обновления
-                            deleteCookie('linker_user');
-                            deleteCookie('linker_auth_key');
-                            deleteCookie('linker_role');
+                            //deleteCookie('linker_user');
+                            //deleteCookie('linker_auth_key');
+                            //deleteCookie('linker_role');
                             //////////////
                             th.app.config.user = '';
                             th.app.config.role = '0';

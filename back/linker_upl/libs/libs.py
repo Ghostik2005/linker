@@ -20,12 +20,8 @@ import subprocess
 import configparser
 from urllib.parse import unquote
 from libs.lockfile import LockWait
-from libs.connect import fb_local
+
 from multiprocessing.dummy import Pool as ThreadPool
-try:
-    import libs.fdb as fdb
-except ImportError:
-    import fdb
 
 class API:
     """
@@ -48,39 +44,14 @@ class API:
         self.exec = sys.executable
         self.log = log
         self.nauth = {}
-        self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5430}
+        config = configparser.ConfigParser()
+        config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
+        self.nauth = config['nauth']
+        self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
         #########################3
         self._pg = True
+        self.production = True
         #self._pg = False
-        try:
-            config = configparser.ConfigParser()
-            config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
-            init = config['init']
-            self.nauth = config['nauth']
-            self.connect_params = {
-                    'uri': init['uri'],
-                    'api_key': init['api'],
-                    'allow_none': True
-                    }
-            self.connect_params = {
-                    "host": "127.0.0.1",
-                    "port": 8025,
-                    "database": "spr",
-                    "user": 'SYSDBA',
-                    "password":'masterkey',
-                    "charset" : 'WIN1251'
-                    }
-            self.production = True
-        except Exception as Err:
-            self.log(Err, kind="ERROR")
-            self.production = False
-            self.connect_params = {
-                    "host": "localhost",
-                    "database": "spr",
-                    "user": 'SYSDBA',
-                    "password":'masterkey',
-                    "charset" : 'WIN1251'
-                    }
         if self._pg:
             self.production = True
             print('-------POSTGRESQL--------')
@@ -93,11 +64,8 @@ class API:
         con = None
         cur = None
         try:
-            if self._pg:
-                con = psycopg2.connect(**self.pg_connect_params)
-            else:
-                con = fdb.connect(**self.connect_params)
-        except Exception as Err:
+            con = psycopg2.connect(**self.pg_connect_params)
+        except Exception:
             self.log(traceback.format_exc(), kind="error:connection")
         else:
             cur = con.cursor()
@@ -203,78 +171,8 @@ ON CONFLICT (UIN) DO UPDATE
         params = {filename: f_data}
         ret = self.upload_nolinks(params, x_hash)
 
-        #ret = {"result": True, "ret_val": 'accept'}
         return json.dumps(ret, ensure_ascii=False)
-        
-        con, cur = self._connect()
-        h_name = hashlib.md5()
-        h_name.update(str(filename).encode())
-        h_name =  h_name.hexdigest()
-        sql = f"insert into PRC_TASKS (uin, source, callback, dt) values ('{h_name}', {int(source)}, '{callback}', current_timestamp)"
-        self.log(sql)
-        cur.execute(sql)
-        con.commit()
-        fname = os.path.join(self.path, f"{h_name}.{source}")
-        try: 
-            with open(fname, 'wb') as f_obj:
-                f_obj.write(f_data)
-        except:
-            self.log(traceback.format_exc(), kind="error:write:file")
-            ret = {"result": False, "ret_val": "write error"}
-        else:
-            ret = {"result": True, "ret_val": 'accept'}
-        return json.dumps(ret, ensure_ascii=False)
-
-    #def process(self, params, x_hash):
-        #try: 
-            #con, cur = self._connect()
-            #self._load_from_nolink(con, cur)
-            #self.prc_sync_lnk(con, cur)
-            #con.close()
-        #except:
-            #ret = {"result": False, "ret_val": "db error"}
-        #else:
-            #ret = {"result": True, "ret_val": "ok"}
-        #return json.dumps(ret, ensure_ascii=False)
-
-    #def clean(self, params, x_hash):
-        #try:
-            #con, cur = self._connect()
-            #self._erase_prc(con, cur)
-            #con.close()
-        #except:
-            #self.log(traceback.format_exc(), kind="error:clean:db")
-            #ret = {"result": False, "ret_val": "db error"}
-        #else:
-            #ret = {"result": True, "ret_val": "ok"}
-        #self.log(ret)
-        #return json.dumps(ret, ensure_ascii=False)
-
-    #def _load_from_nolink(self, db, dbc):
-        #if db:
-            #sql = """SELECT r.CODE, r.NAME FROM LNK_CODES r where r.PROCESS = 1"""
-            #dbc.execute(sql)
-            #ret = dbc.fetchall()
-            #count_insert = 0
-            #count_all = 0
-            #for id_vnd, v in ret:
-                #id_vnd = int(id_vnd)
-                #f_mask = os.path.join(self.path, "price%s*.nolink" % id_vnd)
-                #for path in glob.glob(f_mask):
-                    #self.log(f"path: {path}")
-                    #count_insert, count_all = self.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all)
-                    #self.log("- remove: ")
-                    #try: 
-                        #os.remove(path)
-                        #self.log("[ OK ]")
-                    #except Exception as e:
-                        #self.log("[FAIL]")
-                        #self.log(str(e), kind="error")
-            #self.log(f"Добавил в PRC - {count_insert}")
-            #self.log(f"Всего nolnk - {count_all}")
-            #return True
-        #else:
-            #return False
+    
 
     def upload_to_db(self, db, dbc, id_vnd, path, count_insert, count_all, source=1):
         uin = os.path.basename(path).split('.')[0]
@@ -289,7 +187,7 @@ ON CONFLICT (UIN) DO UPDATE
         count_all+=len(rows)
         ret = []
         if rows:
-            c = 0
+            #c = 0
             ins_params = []
             for row in rows:
                 fgCont = False
@@ -370,7 +268,7 @@ ON CONFLICT (SH_PRC, SERIES) DO UPDATE
                         db.commit()
                 try:
                     sh_prc = self._genHash(_id_vnd, tovar, zavod)
-                except Exception as Err:
+                except Exception:
                     continue
                 barcode = barcode if barcode else None
                 source = source#1 - прайслистэксперт, 2 - склад
@@ -537,7 +435,7 @@ SET (barcode, id_spr) = (%s, %s);"""
         sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
     from prc p 
-    join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' '
+    join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' ' and p.n_fg != 12
         and (select count(distinct ll.id_spr) as ccc
             from prc pp
             join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
@@ -758,7 +656,7 @@ class SCGIServer:
             for data in g:
                 wfile.write(data)
                 wfile.flush()
-        except (BrokenPipeError) as e:
+        except (BrokenPipeError):
             pass
         except:
             self.log(conn)
@@ -863,15 +761,15 @@ class SCGIServer:
         limit_except POST HEAD OPTIONS GET{
             deny all;
         }
-        autoindex                   on;
+        autoindex                   off;
         client_body_temp_path       temp;
         client_body_in_file_only    clean;
         client_body_buffer_size     16K;
-        client_max_body_size        5M;
+        client_max_body_size        16M;
         include scgi_params;
         #scgi_param                X-BODY-FILE $request_body_file;
         scgi_param                X-API-KEY $http_x_api_key;
-        scgi_pass                 linker_upls;
+        scgi_pass                 linker_upl_ups;
         scgi_buffering            off;
         scgi_cache                off;
     }
@@ -888,7 +786,7 @@ class SCGIServer:
         bs = os.path.basename(fileupstream)
         _fileupstream = os.path.join(dn, bs.split('.', 1)[0].split('-', 1)[0])  # общий файл для всех экземпляров приложения
         _fileupstreamlock = bs.split('.', 1)[0].split('-', 1)[0]  # _fileupstream + '.lock'
-        data1 = """upstream linker_upls {
+        data1 = """upstream linker_upl_ups {
         least_conn;
         server %s:%s;  # %s
     }
@@ -927,16 +825,17 @@ class SCGIServer:
 
     def _getfilename(self, name):
         filename = ""
+        nginx_name = sys.APPCONF["nginx"][name]
         if self.index > -1:
             if self.profile:
-                filename = os.path.join(sys.APPCONF["nginx"][name], "%s-%s.%s" % (self.appname, self.index, self.profile))
+                filename = os.path.join(nginx_name, "%s-%s.%s" % (self.appname, self.index, self.profile))
             else:
-                filename = os.path.join(sys.APPCONF["nginx"][name], "%s-%s" % (self.appname, self.index))
+                filename = os.path.join(nginx_name, "%s-%s" % (self.appname, self.index))
         else:
             if self.profile:
-                filename = os.path.join(sys.APPCONF["nginx"][name], "%s.%s" % (self.appname, self.profile))
+                filename = os.path.join(nginx_name, "%s.%s" % (self.appname, self.profile))
             else:
-                filename = os.path.join(sys.APPCONF["nginx"][name], self.appname)
+                filename = os.path.join(nginx_name, self.appname)
         return filename
 
 def head(aContentLength, fgDeflate=True, fg_head=True):
@@ -963,9 +862,10 @@ def shutdown(log):
     function, runs when exiting
     """
 
-    fileupstream = sys.APPCONF.get("fileupstream")
+    app_conf = sys.APPCONF
+    fileupstream = app_conf.get("fileupstream")
     if fileupstream is None:
-        log("%s:%s critical" % sys.APPCONF["addr"], begin='')
+        log("%s:%s critical" % app_conf["addr"], begin='')
         return
     try:
         os.remove(fileupstream)
@@ -988,7 +888,7 @@ def shutdown(log):
             fg_noapp = 0 == len(src[2:-1])
         if fg_noapp:  # нет запущенных приложений, удаляем общую локацию и апстрим
             try:
-                os.remove(sys.APPCONF["filelocation"])
+                os.remove(app_conf["filelocation"])
             except: pass
             try:
                 os.remove(_fileupstream)
@@ -999,7 +899,7 @@ def shutdown(log):
                 f.write(src.encode())
 
     subprocess.call(['sudo', 'nginx', '-s', 'reload', '-c', '/ms71/saas.conf', '-p', '/ms71/'])
-    log("%s:%s shutdown" % sys.APPCONF["addr"], begin='')
+    log("%s:%s shutdown" % app_conf["addr"], begin='')
 
 def _int(x):
     try:
@@ -1048,7 +948,7 @@ def handle_commandline(profile, index):
             if x:
                 v = unquote(x).split(',')
                 if len(v) > 1:
-                    args.append(tuple(libs._int(x) for x in v))
+                    args.append(tuple(_int(x) for x in v))
                 else:
                     args.append(_int(v[0]))
     if "profile" in kwargs:
@@ -1057,53 +957,49 @@ def handle_commandline(profile, index):
         index = kwargs.pop("index")
     return args, kwargs, profile, index
 
-def monitor(api):
-    inw_dir = api.inw_path
-    connection = api.connect_params
-    while True:
-        try:
-            sql = "select r.uin from PRC_TASKS r"
-            db = fdb.connect(**connection)
-            dbc = db.cursor()
-            dbc.execute(sql)
-            result = dbc.fetchall()
-            for row in result:
-                uin = row[0]
-                sql = f"""SELECT CASE 
-        WHEN not EXISTS(select uin from PRC where uin = '{uin}' and n_fg != 1) THEN 0
-        ELSE 1
-        END
-    FROM RDB$DATABASE"""
-                dbc.execute(sql)
-                res = dbc.fetchone()
-                #print(uin, res)
-                if int(res[0]) == 0:
-                    sql = f"""delete from PRC_TASKS where uin = '{uin}' returning callback"""
-                    dbc.execute(sql)
-                    callback = dbc.fetchone()[0]
-                    db.commit()
+# def monitor(api):
+#     inw_dir = api.inw_path
+#     connection = api.connect_params
+#     while True:
+#         try:
+#             sql = "select r.uin from PRC_TASKS r"
+#             db = fdb.connect(**connection)
+#             dbc = db.cursor()
+#             dbc.execute(sql)
+#             result = dbc.fetchall()
+#             for row in result:
+#                 uin = row[0]
+#                 sql = f"""SELECT CASE 
+#         WHEN not EXISTS(select uin from PRC where uin = '{uin}' and n_fg != 1) THEN 0
+#         ELSE 1
+#         END
+#     FROM RDB$DATABASE"""
+#                 dbc.execute(sql)
+#                 res = dbc.fetchone()
+#                 #print(uin, res)
+#                 if int(res[0]) == 0:
+#                     sql = f"""delete from PRC_TASKS where uin = '{uin}' returning callback"""
+#                     dbc.execute(sql)
+#                     callback = dbc.fetchone()[0]
+#                     db.commit()
 
-                    print("form the message")
-                    print(f"send message to {callback or 'source'}")
-                    try:
-                        os.remove(os.path.join(inw_dir, uin))
-                    except:
-                        api.log(traceback.format_exc(), kind="error:removing")
-                else:
-                    continue
-            db.close()
-        except Exception as Err:
-            api.log(traceback.format_exc(), kind="error:monitor")
-        time.sleep(60)
+#                     print("form the message")
+#                     print(f"send message to {callback or 'source'}")
+#                     try:
+#                         os.remove(os.path.join(inw_dir, uin))
+#                     except:
+#                         api.log(traceback.format_exc(), kind="error:removing")
+#                 else:
+#                     continue
+#             db.close()
+#         except Exception:
+#             api.log(traceback.format_exc(), kind="error:monitor")
+#         time.sleep(60)
 
 def guardian(api):
     time.sleep(2)
     work_dir = api.path
     log = api.log
-    if api._pg:
-        connection = api.pg_connect_params
-    else:
-        connection = api.connect_params
     while True:
         try:
             f_mask = os.path.join(work_dir, "*")
@@ -1115,16 +1011,13 @@ def guardian(api):
                 with open(path, 'rb') as f_obj:
                     row = f_obj.readline()
                 if row:
-                    if api._pg:
-                        db = psycopg2.connect(**api.pg_connect_params)
-                    else:
-                        db = fdb.connect(**api.connect_params)
+                    db = psycopg2.connect(**api.pg_connect_params)
                     dbc = db.cursor()
                     row = row.decode('utf8')
                     id_vnd = int(row.split('\t')[0])
                     if id_vnd:
                         #если есть id_vnd, то проверяем его наличие в базе, если его нет - добавляем
-                        vnd_name = api.getNameByCode(id_vnd)
+                        api.getNameByCode(id_vnd)
                     #sql = f"""SELECT count(*) FROM LNK_CODES r where r.PROCESS = 1 and r.CODE = {id_vnd}"""
                     #пропускаем если явно запрещено
                     sql = f"""SELECT count(*) FROM LNK_CODES r where r.PROCESS = 0 and r.CODE = {id_vnd}"""
@@ -1165,33 +1058,12 @@ def guardian(api):
                             count_insert = dbc.fetchone()[0]
                     api.log(f'GUARDIAN| Добавленно к сведению: {count_insert}')
                     db.close()
-            if api._pg:
-                db = psycopg2.connect(**api.pg_connect_params)
-            else:
-                db = fdb.connect(**api.connect_params)
+            db = psycopg2.connect(**api.pg_connect_params)
             dbc = db.cursor()
-            #sql_d = """DROP TABLE A_TEMP_PRC"""
-            #sql_cre = """CREATE TABLE IF NOT EXISTS A_TEMP_PRC
-#(
-  #SH_PRC TSTR32 NOT NULL,
-  #ID_VND TINT32,
-  #ID_TOVAR TSTR32,
-  #N_CENA TINT32,
-  #C_TOVAR TSTR255,
-  #C_ZAVOD TSTR255,
-  #ID_ORG TINT32 DEFAULT 0 NOT NULL,
-  #SOURCE SMALLINT,
-  #BARCODE VARCHAR(255),
-  #UIN VARCHAR(255),
-  #CONSTRAINT T_PK_PRC PRIMARY KEY (SH_PRC)
-#);
-#GRANT DELETE, INSERT, REFERENCES, SELECT, UPDATE
- #ON A_TEMP_PRC TO  SYSDBA WITH GRANT OPTION;"""
- 
             api.log('GUARDIAN| ---***---принудительный запуск')
             api.prc_sync_lnk(db, dbc)
             db.close()
-        except Exception as Err:
+        except Exception:
             api.log("GUARDIAN| %s" % traceback.format_exc(), kind="error:monitor")
         #спим 5 секунд перед тем, как продолжить опрос папки
         time.sleep(55) 

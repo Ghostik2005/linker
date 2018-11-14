@@ -13,6 +13,7 @@ export default class NewExcludeView extends JetView{
         var form = { view: "form",
             localId: "_n_f",
             parent: undefined,
+            item: undefined,
             margin: 0,
             rules:{
                 "name": webix.rules.isNotEmpty,
@@ -53,8 +54,13 @@ export default class NewExcludeView extends JetView{
                                     _f['options_in'] = 0;
                                     };
                                 _f['owner'] = app.config.user;
-                                this.$$("_n_f").config.parent.add(_f, 0);
+                                if (this.$$("_n_f").config.item) {
+                                    this.$$("_n_f").config.parent.updateItem(this.$$("_n_f").config.item.id, _f);
+                                } else {
+                                    this.$$("_n_f").config.parent.add(_f, 0);
+                                    }
                                 this.hide();
+                                this.$$("_n_f").config.parent.$scope.show_b();
                             } else {
                                 }
                             }
@@ -79,10 +85,18 @@ export default class NewExcludeView extends JetView{
         return rrr
         }
 
-    show(new_head, parent){
+    show(new_head, parent, item){
         this.$$("_n_f").config.parent = parent;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
+        if (item) {
+            this.$$("_n_f").config.item = item;
+            this.$$('name').setValue(item.name);
+            this.$$("conditions").setValue((item.options_st) ? 0 : 1);
+            this.$$('_n_f').refresh();
+        } else {
+            this.$$("_n_f").config.item = undefined;
+            }
         }
     hide(){
         this.getRoot().hide()

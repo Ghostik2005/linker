@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, dt_formating_sec} from "../views/globals";
+import {request, setButtons, checkVal, dt_formating_sec} from "../views/globals";
 import uplMenuView from "../views/v_upl.js";
 
 export default class LinkFilesView extends JetView{
@@ -120,12 +120,7 @@ export default class LinkFilesView extends JetView{
         
     ready(view) {
         let r_but = [this.$$("_renew"), this.$$("_add")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         let user = this.app.config.user;
         let url = this.app.config.r_url + "?getTasks";
         let params = {"user": user};

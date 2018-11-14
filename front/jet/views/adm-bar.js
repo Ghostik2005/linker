@@ -21,7 +21,6 @@ export default class AdmBarView extends JetView{
         let app = this.app;
         let delay = app.config.searchDelay;
         setTimeout(get_refs, 0*delay, {"app": app, "type": "async", "method": "getRoles", "store": "roles_dc"});
-        setTimeout(get_refs, 0*delay, {"app": app, "type": "async", "method": "getUsersAll", "store": "users_dc"});
         }
     }
 

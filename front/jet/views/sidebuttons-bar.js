@@ -1,10 +1,10 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal} from "../views/globals";
+import {request, setButtons, checkVal} from "../views/globals";
 import {checkSSE, spinIconEnable, spinIconDisable} from "../views/globals";
 //import {add_bar} from "../views/globals";
-import UnlinkedView from "../views/unlinked";
+//import UnlinkedView from "../views/unlinked";
 import SkippedBarView from "../views/skipped_bar";
 import AllUnlinkedBarView from  "../views/unlinkedall_bar";
 import LinksBarView from "../views/links_form_bar";
@@ -67,8 +67,14 @@ export default class SideButtonsBar extends JetView{
             }
         
         function getCurrentTable() {
-            let mv = $$(c_th.getRoot().getParentView().getChildViews()[1].getChildViews()[2].getActiveId());
-            return getTable(mv.getChildViews()).config.id
+            let ct;
+            try {
+                let mv   = $$(c_th.getRoot().getParentView().getChildViews()[1].getChildViews()[2].getActiveId());
+                ct = getTable(mv.getChildViews()).config.id
+            } catch(e) {
+                //console.log(e)
+            }
+            return ct
             }
 
         var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'side_tool_bar', borderless: true,
@@ -381,7 +387,7 @@ export default class SideButtonsBar extends JetView{
                     on: {
                         onItemClick: function(){
                             var cv = $$(getCurrentTable());
-                            if (cv.config.name === "__brak") return;
+                            if (!cv || cv.config.name === "__brak") return;
                             this.$scope.popreport.show_w("Создание отчета", cv);
                             }
                         }
@@ -467,13 +473,8 @@ export default class SideButtonsBar extends JetView{
         }
 
     ready() {
-        let buttons = this.app.config.getButt(this.$$("sideMenu").getTopParentView());
-        buttons.forEach( (item, i, buttons) => {
-                item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                             label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-                item.refresh();
-                item.resize();
-            })
+        let r_but = this.app.config.getButt(this.$$("sideMenu").getTopParentView());
+        setButtons(this.app, r_but);
         }
 
     init() {

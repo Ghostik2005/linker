@@ -2,9 +2,6 @@
 
 import {JetApp, JetView} from "webix-jet";
 
-export var users = new webix.DataCollection({
-        id: "users_dc",
-        });
 
 export var adm_roles = new webix.DataCollection({
         id: "admroles_dc",
@@ -90,12 +87,14 @@ export var unFilter = function(cv) {
     columns.forEach(function(item){
         if (cv.isColumnVisible(item.id)) {
             if (item.header[1]) {
-                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                    cv.getFilter(item.id).setValue('');
-                } else {
-                    let qq = cv.getFilter(item.id);
-                    if (!qq.readOnly) qq.value = '';
-                    };
+                if (item.header[1].content) {
+                    let filt = cv.getFilter(item.id);
+                    if (typeof(filt.setValue) === 'function') {
+                        cv.getFilter(item.id).setValue('');
+                    } else {
+                        if (!filt.readOnly) filt.value = '';
+                        };
+                    }
                 }
             }
         });
@@ -1603,4 +1602,13 @@ export function add_bar(parent, view) {
     parent.config.b_id = uid;
     tab_view.getChildViews()[2].addView(formConfig);
     tab_view.getChildViews()[1].addOption(tabConfig, true);
+    }
+
+export function setButtons(app, buttons) {
+    buttons.forEach( (item, i, buttons) => {
+        item.define({width: (app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                     label: (app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+        item.refresh();
+        item.resize();
+        })
     }

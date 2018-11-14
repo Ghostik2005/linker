@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker_sse'
-__version__ = '2018.177.1220' #переделаны типы сообщений клиентам
+__version__ = '2018.312.1100' #убраны некоторые ошибки
+#__version__ = '2018.177.1220' #переделаны типы сообщений клиентам
 #__version__ = '2018.176.1330' #start project
 
 
@@ -9,9 +10,6 @@ __profile__ = ""
 __index__   =-1
 
 import sys
-import time
-import queue
-import random
 import threading
 import traceback
 import subprocess
@@ -27,9 +25,9 @@ def main():
     
     try:
         app_conf['sse_server'].serve_forever()
-    except KeyboardInterrupt as Err:
+    except KeyboardInterrupt:
         print('Keyboard break, exiting', flush=True)
-    except Exception as Err:
+    except Exception:
         print('Errr', flush=True)
     finally:
         libs.shutdown(app_conf)
@@ -49,7 +47,7 @@ def init():
     sse_server = libs.sseServer(('127.0.0.1', 0), libs.sseHandler)
     srv_host, srv_port = sse_server.socket.getsockname()
     app_conf['sse_server'] = sse_server
-    data = """location /events {
+    data = """location /events_logic {
 
          if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';

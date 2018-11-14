@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {dv, addDv, delDv, updDv, request, checkVal} from "../views/globals";
+import {dv, setButtons, addDv, delDv, updDv, request, checkVal} from "../views/globals";
 import NewDvView from "../views/new_dv";
 
 export default class DvView extends JetView{
@@ -69,7 +69,7 @@ export default class DvView extends JetView{
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
                     let params = {'text': item.act_ingr, 'id': item.id, "oa": item.oa,'type': 'Dv', 'callback': updDv, 'mode': 'upd', 'source': this};
-                    console.log(params);
+                    //console.log(params);
                     this.$scope.popnew.show('Редактирование действующего в-ва', params);
                     },
                 onAfterLoad: function() {
@@ -147,12 +147,7 @@ export default class DvView extends JetView{
 
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         }
         
     init() {

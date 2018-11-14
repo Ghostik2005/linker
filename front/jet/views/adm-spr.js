@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import History from "../views/history";
 import {get_spr} from "../views/globals";
-import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
+import {checkKey, setButtons, dt_formating_sec, dt_formating} from "../views/globals";
 import {compareTrue, request, checkVal} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SubRow from "../views/sub_row";
@@ -398,12 +398,7 @@ export default class SprView extends JetView{
 
     ready() {
         let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_add"), this.$$("_del")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         this.$$("__table").config.searchBar = this.$$("_sb");
         this.$$("_sb").callEvent("onKeyPress", [13,]);
         this.$$("_sb").focus();

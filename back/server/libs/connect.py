@@ -35,7 +35,7 @@ class pg_local(Connect):
         self.log = log
         self.port = kwargs.get('port', 5432)
         
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': int(self.port)}
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': int(self.port)}
         self._log("Production" if self.production else "Test")
 
     def _log(self, message, kind='info'):

@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, checkKey} from "../views/globals";
+import {request, setButtons, checkVal, checkKey} from "../views/globals";
 import NewCodeView from "../views/new_code";
 
 export default class LinkSupplView extends JetView{
@@ -217,12 +217,7 @@ export default class LinkSupplView extends JetView{
         
     ready() {
         let r_but = [this.$$("_add"), this.$$("del"), this.$$("apply"), this.$$("cancel")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         let user = this.app.config.user;
         let url = this.app.config.r_url + "?getLinkSuppl";
         let params = {"user": user};

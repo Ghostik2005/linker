@@ -2,8 +2,8 @@
 
 import {JetView} from "webix-jet";
 import History from "../views/history";
-import {get_data_test, checkKey, getDtParams, unFilter} from "../views/globals";
-import {checkVal} from "../views/globals";
+import {checkKey, unFilter} from "../views/globals";
+import {setButtons, checkVal} from "../views/globals";
 import {request} from "../views/globals";
 import {dt_formating_no_sec, dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -346,12 +346,7 @@ export default class BrakBarView extends JetView{
     ready() {
 
         let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_delletter"), this.$$("_renew")];
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            });
+        setButtons(this.app, r_but);
         let th = this;
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {

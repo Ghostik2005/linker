@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, request, checkVal} from "../views/globals";
+import {setButtons,request, checkVal} from "../views/globals";
 import {parseToLink} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -267,12 +267,7 @@ export default class AllUnlinkedBarView extends JetView{
 
     ready() {
         let r_but = [this.$$("_renew"), this.$$("_unfilt")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
         this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
         this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();

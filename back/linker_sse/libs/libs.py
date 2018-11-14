@@ -8,17 +8,11 @@ import random
 import traceback
 import subprocess
 import socketserver
-import configparser
-import datetime
 from urllib.parse import unquote
 from http.server import BaseHTTPRequestHandler
 
 import psycopg2
 
-try:
-    import fdb
-except ImportError:
-    import libs.fdb as fdb
 
 
 class API:
@@ -26,7 +20,7 @@ class API:
     def __init__(self, log):
         self.log = log
 
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
         self.production = True
             
         if callable(self.log):
@@ -36,13 +30,13 @@ class API:
 
 
     def send_busy(self):
-        data = None
+        #data = None
         c = 0
         while True:
             k = list(sys._SSE.keys())
             while k:
-                cur = None
-                con = None
+                #cur = None
+                #con = None
                 v = k.pop()
                 _q, dt_old = sys._SSE.get(v)
                 if _q:
@@ -81,7 +75,7 @@ class API:
 
 
     def send_data(self):
-        data = None
+        #data = None
         c = 0
         while True:
             k = list(sys._SSE.keys())
@@ -94,8 +88,8 @@ class API:
                     _, user = v.split('::')
                     try:
                         con = psycopg2.connect(**self.connect_params)
-                    except Exception as Err:
-                        self._log(traceback.format_exc(), kind="error:connection")
+                    except Exception:
+                        self.log(traceback.format_exc(), kind="error:connection")
                     else:
                         cur = con.cursor()
                     if cur:
@@ -112,7 +106,7 @@ limit 1"""
                         except:
                             dt = 0
                         c += 1
-                        rr = random.random() * 100
+                        #rr = random.random() * 100
                         #if rr > 95 or dt != dt_old:
                         if dt > dt_old:
                             params = ['update', 'Есть новые позиции для сведения. Обновите данные.', c]
@@ -183,7 +177,7 @@ class sseHandler(BaseHTTPRequestHandler):
             self.send_header("Connection", "keep-alive")
             self.send_header("Pragma", "no-cache")
             self.end_headers()
-        except Exception as Err:
+        except Exception:
             sys._log(f'client: \'{cl_id}\' error ->> {traceback.format_exc()}')
 
     def send_err(self, cl_id):
@@ -203,15 +197,17 @@ class sseHandler(BaseHTTPRequestHandler):
             data = "retry: {0}\n\n".format('5')
             self.wfile.write(data.encode())
             self.wfile.flush()
-        except Exception as Err:
+        except Exception:
             sys._log(f'client: \'{cl_id}\' error ->> {traceback.format_exc()}')
 
     def do_GET(self):
+        sys._log(f"1: {self.path}")
         try:
             self.path, cl_id = self.path.split('?')
             cl_id = unquote(cl_id)
         except:
             cl_id = None
+        sys._log(f"2: {self.path}")
         if not self.path.endswith('/SSE') or not cl_id:
             self.send_err(cl_id)
         else:
@@ -221,6 +217,7 @@ class sseHandler(BaseHTTPRequestHandler):
             # new connect
             sys._SSE[cl_id] = [q, 0]
             d2 = 'welcome %s !' % (cl_id)
+            sys._log(f'{d2}')
             data = "event: greating\ndata: %s\n\n" % d2
             try:
                 self.wfile.write(data.encode())
@@ -239,7 +236,7 @@ class sseHandler(BaseHTTPRequestHandler):
                 try:
                     self.wfile.write(data.encode())
                     self.wfile.flush()
-                except Exception as Err:
+                except Exception:
                     sys._log('except while main writing')
                     sys._log(f'client: \'{cl_id}\' error ->> connection lost')
                     break

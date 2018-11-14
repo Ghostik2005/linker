@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, checkKey, unFilter} from "../views/globals";
+import {request, checkVal, unFilter, setButtons} from "../views/globals";
 //import NewCodeView from "../views/new_code";
 
 export default class LinkCodesView extends JetView{
@@ -204,16 +204,6 @@ export default class LinkCodesView extends JetView{
                         let data = {}
                         data.p = this.$$("_lTable").serialize();
                         data.r = this.$$("_rTable").serialize();
-                        //this.$$("_lTable").eachRow( 
-                            //(id) => {
-                                //let item = this.$$("_lTable").getItem(id) 
-                                //data.p.push(item.id_vnd);
-                            //}, true);
-                        //this.$$("_rTable").eachRow( 
-                            //(id) => {
-                                //let item = this.$$("_rTable").getItem(id) 
-                                //data.r.push(item.id_vnd);
-                            //}, true);
                         this.hide_b()
                         let user = app.config.user;
                         let url = app.config.r_url + "?setLinkCodes";
@@ -274,12 +264,7 @@ export default class LinkCodesView extends JetView{
         this.$$("_lTable").clearAll();
         this.$$("_rTable").clearAll();
         let r_but = [this.$$("_renew"), this.$$("_apply"), this.$$("_cancel")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but)
         let user = this.app.config.user;
         let url = this.app.config.r_url + "?getLinkCodes";
         let params = {"user": user};

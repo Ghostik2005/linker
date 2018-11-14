@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import NewformView from "../views/new_form";
-import {get_data_test, checkKey, getDtParams} from "../views/globals";
+import {get_data_test, setButtons, checkKey, getDtParams} from "../views/globals";
 import UnlinkView from "../views/unlink";
 
 export default class LinksBarView extends JetView{
@@ -152,12 +152,7 @@ export default class LinksBarView extends JetView{
 
     ready() {
         let r_but = [this.$$("_history"), this.$$("_br"), this.$$("_unfilt")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         let hh = this.getRoot().getParentView().getParentView().getChildViews()[1].config.options;
         let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         this.show(show_t);

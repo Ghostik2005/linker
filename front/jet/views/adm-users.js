@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import NewUserView from "../views/new_user";
-import {request, checkVal, users, checkKey} from "../views/globals";
+import {request, setButtons, checkVal, checkKey, get_refs} from "../views/globals";
 import RolesView from "../views/adm_roles";
 
 export default class UsersView extends JetView{
@@ -156,19 +156,15 @@ export default class UsersView extends JetView{
         
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del"), this.$$("_aroles")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
+        let app = this.app;
+        let delay = app.config.searchDelay;
+        let store = this.$$("__table").config.id;
+        setTimeout(get_refs, 0*delay, {"app": app, "type": "async", "method": "getUsersAll", "store": store});
         }
 
     init() {
         this.poproles = this.ui(RolesView);
         this.popnewuser = this.ui(NewUserView);
-        let th = this.$$("__table");
-        th.clearAll();
-        th.parse(users);
         }
     }

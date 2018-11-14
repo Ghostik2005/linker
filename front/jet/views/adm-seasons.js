@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {sezon, addSez, delSez, updSez, request, checkVal} from "../views/globals";
+import {sezon, setButtons, addSez, delSez, updSez, request, checkVal} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 
@@ -139,12 +139,7 @@ export default class SeasonsView extends JetView{
 
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
-        r_but.forEach( (item, i, r_but) => {
-            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                         label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-            item.refresh();
-            item.resize();
-            })
+        setButtons(this.app, r_but);
         }
         
     init() {
