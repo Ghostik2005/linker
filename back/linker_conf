@@ -1,0 +1,9 @@
+location /linker/ {
+        #if (!-f /ms71/data/linker/api-k/$http_x_api_key) {
+        #return 403;
+        #}
+        add_header Cache_Control no-cache;
+        #alias html/linker;
+        #index index.html;
+        try_files $uri $uri/index.html $uri.html =404;
+    }
