@@ -141,7 +141,7 @@ export default class LinkExclView extends JetView{
                         },
                     onItemDblClick: function (clicked_item) {
                         let item = this.getItem(clicked_item);
-                        this.$scope.newcode.show("Редактирование исключения", this.$scope.$$("_lTable"), item);
+                        this.$scope.newexclude.show("Редактирование исключения", this.$scope.$$("_lTable"), item);
                         },
                     onKeyPress: function(code, e){
                         if (13 === code) {
@@ -169,7 +169,7 @@ export default class LinkExclView extends JetView{
                     extLabel: "<span style='line-height: 20px;padding-left: 5px'>исключение</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        this.newcode.show("Добавление нового исключения", this.$$("_rTable"));
+                        this.newexclude.show("Добавление нового исключения", this.$$("_rTable"));
                         }
                     },
                 {view:"button", type: 'htmlbutton', hidden: !app.config.roles[app.config.role].useradd,
@@ -320,7 +320,7 @@ export default class LinkExclView extends JetView{
                         },
                     onItemDblClick: function (clicked_item) {
                         let item = this.getItem(clicked_item);
-                        this.$scope.newcode.show("Редактирование исключения", this.$scope.$$("_rTable"), item);
+                        this.$scope.newexclude.show("Редактирование исключения", this.$scope.$$("_rTable"), item);
                         },
                     onKeyPress: function(code, e){
                         if (13 === code) {
@@ -405,7 +405,7 @@ export default class LinkExclView extends JetView{
         }
 
     init() {
-        this.newcode = this.ui(NewExcludeView);
+        this.newexclude = this.ui(NewExcludeView);
         }
 
     show_b() {

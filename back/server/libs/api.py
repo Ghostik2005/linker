@@ -3796,7 +3796,43 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, {self._wildcardIns()},
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _genSupplSql(self, process, item):
+        code = item.get('code')
+        int_id = item.get('int_id')
+        name = item.get('name')
+        inn = item.get('inn', '')
+        owner = item.get('owner')
+        if int_id:
+            sql = """UPDATE LNK_CODES
+SET (PROCESS, NAME, CODE, INN, OWNER) = (%s, %s, %s, %s, %s) where id = %s;"""
+            options = (process, name, code, inn, owner, int_id)
+        else:
+            sql = """insert into LNK_CODES (PROCESS, NAME, CODE, INN, OWNER) values (%s, %s, %s, %s, %s)"""
+            options = (process, name, code, inn, owner)
+        return {'sql': sql, 'opt': options}
+
     def setLinkSuppl(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            #user = params.get('user')
+            data = params.get('data')
+            if data:
+                restrict = data.get('l')
+                right = data.get('r')
+                params = []                
+                for item in restrict:
+                    params.append(self._genSupplSql(0, item))
+                for item in right:
+                    params.append(self._genSupplSql(1, item))
+                pool = ThreadPool(len(params))
+                pool.map(self._make_sql, params)
+                pool.close()
+                pool.join()
+            ret = {"result": True, "ret_val": "OK"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setLinkSuppl1(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
             data = params.get('data')
@@ -3819,7 +3855,7 @@ ON CONFLICT (CODE) DO UPDATE
                         sql = f"""update or insert into LNK_CODES (PROCESS, NAME, CODE, INN, OWNER)
 values (?, ?, ?, ?, ?) matching (CODE)"""
                 self.db.execute({"sql": sql, "options": opt})
-            ret = json.loads(self.getLinkSuppl(params, x_hash))
+            ret = json.loads(self.getLinkSuppl1(params, x_hash))
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -3878,6 +3914,35 @@ values (?, ?, ?, ?, ?) matching (CODE)"""
         return json.dumps(ret, ensure_ascii=False)
 
     def getLinkSuppl(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            #user = params.get('user')
+            sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER, r.ID FROM LNK_CODES r ORDER BY r.CODE"""
+            opt = ()
+            _rp = []
+            _rr = []
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "process"  : row[0],
+                    "code"     : row[1],
+                    "name"     : row[2],
+                    "inn"      : row[3],
+                    "owner"    : row[4],
+                    "int_id"   : row[5]
+                }
+                if int(r['process']) == 1:
+                    _rp.append(r)
+                else:
+                    _rr.append(r)
+                _return.append(r)
+            ret = {"result": True, "ret_val": {"p": _rp, "r": _rr}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def getLinkSuppl1(self, params=None, x_hash=None):
         if self._check(x_hash):
             #user = params.get('user')
             sql = """SELECT r.PROCESS, r.CODE, r.NAME, r.INN, r.OWNER FROM LNK_CODES r ORDER BY r.CODE"""

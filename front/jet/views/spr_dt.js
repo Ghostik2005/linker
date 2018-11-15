@@ -44,8 +44,6 @@ webix.ui({
     { id:3, title:"The Godfather: Part II", year:1974, votes:319352 }
   ]
 });
-
-
 */
 
 
@@ -53,7 +51,6 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr, compareTrue, checkVal, request} from "../views/globals";
 import PagerView from "../views/pager_view";
-import SideFormView from "../views/side_form";
 import SubRow from "../views/sub_row";
 
 export default class SprView extends JetView{
@@ -66,16 +63,16 @@ export default class SprView extends JetView{
             this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
             }
 
-        let url = app.config.r_url + "?getDvAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        var dvList = []
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.act_ingr};
-                dvList.push(tt);
-                });
-            };
+        // let url = app.config.r_url + "?getDvAll";
+        // let params = {"user": app.config.user};
+        // let res = checkVal(request(url, params, !0).response, 's');
+        // var dvList = []
+        // if (res) {
+        //     res.forEach(function(it, i, res) {
+        //         let tt = {'id': it.id, 'value': it.act_ingr};
+        //         dvList.push(tt);
+        //         });
+        //     };
 
         var sprv = {view: "datatable",
             css: {"margin-top": "-5px !important"},
@@ -122,8 +119,6 @@ export default class SprView extends JetView{
             columns: [
                 {id: "id_mnn", width: 75,
                     template: function (obj) {
-                        //let ret = (+obj.id_dv !== 0) ? "<div> <span style='color: green'>есть</span></div>" : "<div> <span style='color: red'>нет</span></div>";
-                        //return ret
                         return (+obj.id_dv !== 0) ? "<span class='webix_icon fa-check-circle', style='color: green'></span>" :
                                                     "<span class='webix_icon fa-times-circle', style='color: red'></span>";
                         },
@@ -160,7 +155,7 @@ export default class SprView extends JetView{
                                 inputtype: "combo",
                                 pager: 1,
                                 options: {
-                                    data: dvList
+                                    data: []//dvList
                                     },
                                 },
                             }
@@ -221,6 +216,20 @@ export default class SprView extends JetView{
                     this.clearAll();
                     $$("_link").hide();
                     
+                    },
+                onAfterColumnShow: function (id) {
+                    if (id==='c_dv') {
+                        let cc = this.getColumnConfig(id);
+                        var dvList = []
+                        let res = $$("dv_dc").data;
+                        res.each(function(it) {
+                            let tt = {'id': it.id, 'value': it.act_ingr};
+                            dvList.push(tt);
+                            });
+                        setTimeout( () => {
+                            cc.header[1].inputConfig.options.data = dvList
+                            }, 200)
+                        }
                     },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;

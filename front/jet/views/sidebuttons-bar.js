@@ -135,19 +135,24 @@ export default class SideButtonsBar extends JetView{
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Жуки</span>",
                     on: {
                         onAfterRender: function() {
-                            let node = this.getNode();
-                            node.onmousedown =  () => {
-                                this.interval = setInterval( () => {
-                                    this.config.longPress = true;
-                                    add_bar(this, AdmBarView);
-                                    clearInterval(this.interval);
-                                }, app.config.popDelay);
-                                node.onmouseup = () => {
-                                    clearInterval(this.interval);
-                                    }
-                                }
+                            // let node = this.getNode();
+                            // node.onmousedown =  () => {
+                            //     this.interval = setInterval( () => {
+                            //         this.config.longPress = true;
+                            //         add_bar(this, AdmBarView);
+                            //         clearInterval(this.interval);
+                            //     }, app.config.popDelay);
+                            //     node.onmouseup = () => {
+                            //         clearInterval(this.interval);
+                            //         }
+                            //     }
                             },
                         onItemClick: function () {
+                            if (this.$scope.admMenu.isVisible()) {
+                                this.$scope.admMenu.hide();
+                            } else {
+                                this.$scope.admMenu.show(this.getNode());
+                                };
                             webix.message("Пока недоступно");
                             return
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
@@ -480,5 +485,31 @@ export default class SideButtonsBar extends JetView{
     init() {
         this.popreport = this.ui(NewReportView);
         this.popprop = this.ui(PropView);
+
+        this.admMenu = this.ui({
+            view:"popup",
+            relative: true,
+            borderless: true,
+            autofit: true,
+            height: 132,
+            padding: 1,
+            css: {"border": "0px !important", "background-color": "#f8fafc !important"},
+            body:{
+                view: 'toolbar', css: 'side_tool_bar', borderless: true,                
+                rows:[
+                    {view: "button", type: 'htmlbutton', height: 40,
+                        resizable: !true,
+                        label: "<span class='side_icon', style='line-height: 20px'>Справочники</span>",
+                        width: 120,
+                        }, 
+                    {view: "button", type: 'htmlbutton', height: 40, width: 120,
+                        resizable: !true,
+                        label:"<span class='side_icon', style='line-height: 20px'>Пользователи</span>"}, 
+                    {view: "button", type: 'htmlbutton', height: 40, width: 120,
+                        resizable: !true,
+                        label:"<span class='side_icon', style='line-height: 20px'>Сервис</span>"}
+                ],
+                }
+            });
         }
     }
