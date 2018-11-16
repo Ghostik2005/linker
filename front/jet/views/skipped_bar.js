@@ -251,8 +251,8 @@ export default class SkippedBarView extends JetView{
             this.getParentView().getParentView().hide();
             })
         this.$$("__table").getFilter("c_tovar").focus();
+        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         }
-
     init() {
         this.popconfirm = this.ui(ConfirmView);
         }

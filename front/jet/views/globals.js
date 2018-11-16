@@ -395,7 +395,10 @@ export function get_data_test(inp_params) {
                 if (data.params) {
                     let c_params = str_join(gen_params(inp_params));
                     let r_params = str_join(data['params']);
-                    if (r_params !== c_params) return
+                    if (r_params !== c_params) { 
+                        view.hideProgress();
+                        return
+                        }
                     }
                 view.parse(data.datas);
                 view.config.startPos = data.start;
@@ -1464,6 +1467,7 @@ export function get_suppl(view, th, method) {
     }
 
 export function delPrc(inp_data, th) {
+    console.log("params", inp_data);
     let cursor = prcs.getCursor();
     let data = $$("prcs_dc").data.order;
     let _c;

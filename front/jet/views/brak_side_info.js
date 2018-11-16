@@ -191,11 +191,16 @@ export default class BrakSideInfoView extends JetView{
         }
 
     reopen() {
+        let noMail = this.$$("_dHead").config._topParent.$scope.$$("_noMail").getValue();
         let tableSelectedItem = this.$$("_dHead").config._topParent.getSelectedItem()
         let tableSelectedId = tableSelectedItem.id;
         this.clear_info();
-        this.$$("_dHead").config._topParent.closeSub(tableSelectedId);
-        this.$$("_dHead").config._topParent.openSub(tableSelectedId, this.$$("_dHead").config._topParent);
+        if (noMail ===1 && this.$$("_dHead").config._topParent.getItem(tableSelectedId).m_count > 0){
+            this.$$("_dHead").config._topParent.remove(tableSelectedId);
+        } else {
+            this.$$("_dHead").config._topParent.closeSub(tableSelectedId);
+            this.$$("_dHead").config._topParent.openSub(tableSelectedId, this.$$("_dHead").config._topParent);
+        }
         this.disable_info();
         }
 

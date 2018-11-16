@@ -2747,6 +2747,10 @@ order by id asc; """
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getBrakSearchNoMail(self, params=None, x_hash=None):
+        params['nomail'] = True
+        return self.getBrakSearch(params, x_hash)
+
     def getBrakSearch(self, params=None, x_hash=None):
         st_t = time.time()
         names = {"c_name": "t1.c_tovar",
@@ -2756,6 +2760,13 @@ order by id asc; """
                  "dt": "t2.DT",
                  "razbr": "t2.RAZBRAK"}
         if self._check(x_hash):
+            nomail = params.get("nomail")
+            mail_join = ''
+            mail_condition = ''
+            if nomail:
+                mail_join = 'left join brak_mail t3 on t3.SH_PRC = t2.SH_PRC and t3.SERIYA = t2.series and t3.deleted = 0'
+                mail_condition = 'and t3.link_file is null'
+                del params["nomail"]
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p -1
@@ -2795,12 +2806,13 @@ order by id asc; """
                         else:
                             s = """and (cast(t2.DT as timestamp) >= cast('{0}' as timestamp) AND cast(t2.DT as timestamp) <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
                         ssss.append(s.format(pars['start_dt'], pars['end_dt']))
-            sql = """select t1.sh_prc, t1.id_spr, t1.c_tovar, t1.c_zavod, t2.series, t2.RAZBRAK, t2.DT from brak t2
+            sql = f"""select t1.sh_prc, t1.id_spr, t1.c_tovar, t1.c_zavod, t2.series, t2.RAZBRAK, t2.DT from brak t2
+{mail_join}
 join lnk t1 on ( t1.sh_prc = t2.sh_prc and t1.ID_VND = 10000)
-WHERE %s""" % ' '.join(stri)
+WHERE {' '.join(stri)} {mail_condition}"""  
             sql = sql + " " + " ".join(ssss)
             sql_c = f"""select count(*) from ({sql}) as sc"""
-            order = f""" ORDER by {field} {direction}"""
+            order = f""" ORDER by {field} {direction}, t1.c_tovar"""
             sql = sql + order
             sql = sql + self._insLimit(start_p, end_p)
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
@@ -2808,7 +2820,9 @@ WHERE %s""" % ' '.join(stri)
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = results[1][0][0]
             _return = []
+            p_list = []
             for row in results[0]:
                 r = {
                     "sh_prc":  row[0],
@@ -2821,10 +2835,16 @@ WHERE %s""" % ' '.join(stri)
                 }
                 sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{row[4]}' and DELETED = 0"""
                 opt = ()
-                ress = self.db.request({"sql": sql, "options": opt})
-                r['m_count'] = ress[0][0]
+                p_list.append({'sql': sql, 'opt': opt})
+                #ress = self.db.request({"sql": sql, "options": opt})
+                #r['m_count'] = ress[0][0]
                 _return.append(r)
-            count = results[1][0][0]
+            pool = ThreadPool(len(p_list))
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            for i, row in enumerate(results):
+                _return[i]['m_count'] = row[0][0]
             t1 = time.time() - st_t
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1), 'params': params}}
         else:
@@ -2953,6 +2973,7 @@ WHERE {stri} ORDER by {field} {direction}
                     "c_sezon"       : row[9],
                     "c_mandat"      : row[10],
                     "c_prescr"      : row[11],
+                    "search"        : params.get('search')
                 }
                 _return.append(r)
             t2 = time.time() - st_t

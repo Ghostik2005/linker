@@ -116,8 +116,10 @@ export default class TopmenuView extends JetView{
                             {view: "label", label: "", css: 'right', name: "_count", width: 320,
                                 click: () => {
                                     let suppl = $$("_suppl").getValue();
-                                    suppl = $$("_suppl").getList().getItem(suppl).c_vnd
-                                    this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
+                                    if (suppl) {
+                                        suppl = $$("_suppl").getList().getItem(suppl).c_vnd
+                                        this.popunlink.show("Осталось связать в этой сессии по поставщику " + suppl);
+                                        }
                                     }
                                 },
                             {width: 10},
@@ -265,7 +267,8 @@ export default class TopmenuView extends JetView{
                                     let ui = uu.getChildViews()[0];
                                     if (!this.config.formOpen) {
                                         this.define({label: "<span class='webix_icon fa-caret-right'></span>", formOpen: true});
-                                        this.$scope.sideForm.show_f();
+                                        this.$scope.sideForm.show_f(this.$scope.$$("sideButton").getNode())
+                                        //this.$scope.sideForm.show_f();
                                         let item = (ui) ? ui.getSelectedItem() : undefined;
                                         if (item) {
                                             item = item.id_spr;

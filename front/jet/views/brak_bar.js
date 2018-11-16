@@ -45,6 +45,22 @@ export default class BrakBarView extends JetView{
                         }
                     },
                 },
+            {view: "checkbox", labelRight: "<span style='color: white'>Без писем</span>", labelWidth: 0,
+                width: 100, localId: "_noMail",
+                on: {
+                    onChange: function() {
+                        let value = this.getValue();
+                        if (value === 1) {
+                            this.$scope.$$("__table").define({"searchMethod": "getBrakSearchNoMail"});
+                        } else {
+                            this.$scope.$$("__table").define({"searchMethod": "getBrakSearch"});
+                            }
+                        this.$scope._search.callEvent("onKeyPress", [13,]);
+                        this.$scope._search.focus();
+                        //устанавливаем новый метод поиска по браку
+                        }
+                    }
+                },
             {view: "button", type: 'htmlbutton', 
                 localId: "_history",
                 resizable: true,

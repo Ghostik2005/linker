@@ -66,7 +66,7 @@ export default class SideFormView extends JetView{
                 "id_dv": webix.rules.isNotEmpty
                 },
             elements: [
-                {view: "label", label: "", name: "idspr"},
+                {view: "label", label: "Просмотр записи", name: "idspr"},
                 {rows: [
                     {view: "label", label:"Название товара:", name: 't_name'},
                     {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text"},
@@ -227,7 +227,9 @@ export default class SideFormView extends JetView{
                                 }
                             },
                         {hidden: true},
-                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].spredit, hidden: true,
+                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
+                        //hidden: !app.config.roles[app.config.role].spredit, 
+                        hidden: true,
                             click: () => {
                                 let valid = this.$$("new_form").validate({hidden:false, disabled:false});
                                 if (valid) {
@@ -275,17 +277,19 @@ export default class SideFormView extends JetView{
 
 
         return {view: "cWindow",
+            //view: "popup",
             localId: "sw",
+            relative: true,
             animate: true,
             head: false,
             resize: !true,
             modal: !true,
-            position: function (state) {
-                state.left = innerWidth - 724; // fixed values
-                state.top = 226;
-                //state.width -=innerWidth/2; // relative values
-                //state.height +=60;
-                },
+            // position: function (state) {
+            //     state.left = innerWidth - 724; // fixed values
+            //     state.top = 226;
+            //     //state.width -=innerWidth/2; // relative values
+            //     //state.height +=60;
+            //     },
             on: {
                 onHide: function() {
                     barcodes.clearAll();
@@ -307,14 +311,14 @@ export default class SideFormView extends JetView{
             }
         }
         
-    show_f(new_head, search_bar, item){
+    show_f(parent, search_bar, item){
         this.$$("new_form").config.search_bar = search_bar;
         if (item) {
             this.$$("new_form").parse(item);
             this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
             }
-        this.getRoot().show()
+        this.getRoot().show(parent)
         }
     hide_f(){
         this.getRoot().hide()

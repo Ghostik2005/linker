@@ -295,6 +295,7 @@ export default class AllUnlinkedBarView extends JetView{
             });
 
         this.$$("__table").getFilter("c_tovar").focus();
+        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         }
 
     }

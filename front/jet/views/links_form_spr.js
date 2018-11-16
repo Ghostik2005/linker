@@ -162,6 +162,7 @@ export default class LinksViewSpr extends JetView{
         this._search = this.getRoot().getParentView().$scope.$$("_ls");
         this.$$("__table").config.searchBar = this._search.config.id;
         this._break.hide();
+        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         
         }
     }

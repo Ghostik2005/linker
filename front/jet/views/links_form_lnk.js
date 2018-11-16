@@ -216,6 +216,7 @@ export default class LinksViewLnk extends JetView{
         this.$$("__table").config.searchBar = this._search.config.id;
         $$(this.$$("__table").config.searchBar).focus();
         this._break.hide();
+        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         }
 
     init() {

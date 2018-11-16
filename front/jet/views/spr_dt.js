@@ -133,6 +133,11 @@ export default class SprView extends JetView{
                     headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
+                    // template: function(obj, master, item) {
+                    //     console.log('obj', obj);
+                    //     console.log('sss', obj.search)
+                    //     return "<span style='color: red'>" + "---" + "</span>" + "<span style='color: black'>" + obj.c_tovar + "</span>";
+                    //     },
                     header: [{text: "Название"},
                         ],
                     headermenu:false,
@@ -251,17 +256,17 @@ export default class SprView extends JetView{
                     let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
                     let row_id = this.getSelectedId();
                     this.openSub(row_id);
-                    return
-                    if (!side_but.config.formOpen) {
-                        item = this.getSelectedItem();
-                        item = item.id_spr;
-                        item = get_spr(this.$scope, item);
-                        item["s_name"] = "Страна: " + item.c_strana;
-                        item["t_name"] = "Название товара: " + item.c_tovar;
-                        item["v_name"] = "Производитель: " + item.c_zavod;
-                        item["dv_name"] = "Д. вещество: " + item.c_dv;
-                        this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
-                        };
+
+                    // if (!side_but.config.formOpen) {
+                    //     item = this.getSelectedItem();
+                    //     item = item.id_spr;
+                    //     item = get_spr(this.$scope, item);
+                    //     item["s_name"] = "Страна: " + item.c_strana;
+                    //     item["t_name"] = "Название товара: " + item.c_tovar;
+                    //     item["v_name"] = "Производитель: " + item.c_zavod;
+                    //     item["dv_name"] = "Д. вещество: " + item.c_dv;
+                    //     this.$scope.popnew.show("Редактирование записи " + item.id_spr, $$("_spr_search"), item);
+                    //     };
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
@@ -298,6 +303,10 @@ export default class SprView extends JetView{
                 ]}
 
         return dt
+        }
+
+    ready() {
+        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         }
 
     init() {
