@@ -1,0 +1,152 @@
+.webixappstart{
+    opacity:0;
+}
+.webixapp{
+    transition: opacity 500ms;
+    opacity: 1;
+}
+
+/*data loading status*/
+.status_good, .status_error, .status_saving{
+	text-align: center;
+	margin-left:-12px;
+}
+.status_error{
+	color:red;
+}
+.status_good{
+	color:green;
+}
+
+/*login form*/
+.invalid_login .webix_header > div{
+    background: #FC3636;
+    transition: background 1s;
+}
+.invalid_login{
+    -webkit-animation: formshake .5s linear;
+}
+@-webkit-keyframes formshake {
+    8%, 41% {
+        -webkit-transform: translateX(-10px);
+    }
+    25%, 58% {
+        -webkit-transform: translateX(10px);
+    }
+    75% {
+        -webkit-transform: translateX(-5px);
+    }
+    92% {
+        -webkit-transform: translateX(5px);
+    }
+    0%, 100% {
+        -webkit-transform: translateX(0);
+    }
+}
+.app_header.webix_header{
+	text-align:center;
+}
+.app_layout.webix_layout_clean{
+	background: #EBEDF0;
+}
+.app_start .webix_template{
+	padding:12px 12px;
+}
+.app_menu .webix_icon{
+	font-size:20px;
+	vertical-align:middle;
+}
+
+/*custom css*/
+
+.webix_message_area{width: 600px;}
+
+:active, :hover, :focus {
+    outline: 0 !important;
+    outline-offset: 0 !important;
+}
+
+.webix_success {
+    font-size: 12px;
+    color: #fff;
+    font-weight: 600;
+    padding: 0px;
+    border-radius: 3px;
+    background-color: #15c15d;
+    border: 1px solid #15c15d;
+    box-shadow: 0px 0px 10px #175782;
+  }
+  
+  .webix_success div {
+    background-color: #15c15d;
+    border: 1px solid #3498db;
+    color: #fff;
+    }
+
+.ms-logo-text {
+    color: black !important;
+    font-size: 15px !important;
+}
+
+.side-icon {
+    color: #e77816 !important;
+}
+
+.delete-icon {
+    color: red !important;
+}
+
+.realy-header {
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #f8fafc;
+    border-top: 0px;
+    margin-top: 0 !important;
+    color: #404040 !important;
+}
+
+.ms-logo {
+    width: 36px;
+    height: 36px;
+    margin-top: -3px;
+    display: block;
+    background-repeat: round;
+}
+
+button {
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+}
+
+input, .webix_inp_static {
+    border-radius: 10px !important;
+}
+
+.webix_el_button button {
+    border-width: 1px !important;
+    border-color: #0e86fe !important;
+}
+.side-tool-bar {
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #f8fafc;
+    border-top: 0px;
+    margin-top: 0 !important;
+    color: #404040 !important;
+    }
+
+.pager-text {
+    background-color: transparent;
+    margin-left: 0px !important;
+}
+
+button:disabled{
+    border-width: 0px !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.webix_img_btn_abs .webix_image {
+    margin-right: 0px;
+}
