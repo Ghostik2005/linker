@@ -388,7 +388,7 @@ WHERE r.SH_PRC = {self._wildcardIns()}
                     s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
                     ssss.append('and %s' % s)
                 if pars['id_org']:
-                    s = "r.id_org like ('%" + pars['id_org'] + "')"
+                    s = f"""cast(r.id_org as text) like ('{pars['id_org']}%')"""
                     ssss.append('and %s' % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
@@ -485,6 +485,7 @@ order by {field} {direction}"""
 {sql_3 if us_s else ''}
 left join users uu on uu.id = r.in_work
 WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
+            self.log(sql)
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -577,7 +578,7 @@ WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
                     s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
                     ssss.append(pref % s)
                 if pars['id_org']:
-                    s = "r.id_org like ('%" + pars['id_org'] + "')"
+                    s = f"""cast(r.id_org as text) like ('{pars['id_org']}%')"""
                     ssss.append('and %s' % s)
                 if pars['source']:
                     if 0 == int(pars['source']):
@@ -2833,7 +2834,11 @@ WHERE {' '.join(stri)} {mail_condition}"""
                     "dt": row[6],
                     "m_count": 0
                 }
-                sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{row[4]}' and DELETED = 0"""
+                try:
+                    ser = row[4].replace("'", "''")
+                except:
+                    ser = row[4]
+                sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{ser}' and DELETED = 0"""
                 opt = ()
                 p_list.append({'sql': sql, 'opt': opt})
                 #ress = self.db.request({"sql": sql, "options": opt})
@@ -4146,7 +4151,7 @@ matching (NAME)"""
                 f_obj.name = 'brak.dbf'
                 f_obj.write(f_data)
                 f_obj.seek(0)
-                n = str(int(time.time())) + ".brak"
+                name = str(int(time.time())) + ".brak"
                 rows = []
                 ret_dict = None
                 try:
@@ -4154,8 +4159,8 @@ matching (NAME)"""
                         new_row = []
                         row = list(record.values())
                         new_row = [10000, row[0], row[1], row[4], 0, self._genHash(10000, str(row[1]), str(row[4])), row[2], row[3]]
-                        rows.append('\t'.join([str(i) for i in new_row]))
-                    ret_dict = {n:'\n'.join(rows)}
+                        rows.append('\t'.join([str(i).replace("\r\n", " ") for i in new_row]))
+                    ret_dict = {name:'\n'.join(rows)}
                 except Exception:
                     pass
                 finally:

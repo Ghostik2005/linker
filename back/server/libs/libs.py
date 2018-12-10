@@ -460,8 +460,10 @@ def parse_args(arg, _param, x_hash, api):
             try:
                 content = call(_param, x_hash)
             except:
-                api.log(traceback.format_exc())
-                content = json.dumps(u'use \'%s\' with correct parameters' % arg, ensure_ascii=False)
+                error_msg = traceback.format_exc()
+                api.log(error_msg)
+                content = json.dumps("""in method \'%s\' error occured:
+%s""" % (arg, error_msg), ensure_ascii=False)
         else:
             content = json.dumps(u'login please', ensure_ascii=False)
     return content

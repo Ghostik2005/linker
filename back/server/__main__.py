@@ -1,7 +1,9 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.320.1500' #сокращено время загрузки в забракованных, добавленна галочка 'без писем'
+__version__ = '18.341.0900' #добавлена корректировка файла забраковки
+#__version__ = '18.334.1500' #исправленны старые запросы, текст ошибки передает на фронт
+#__version__ = '18.320.1500' #сокращено время загрузки в забракованных, добавленна галочка 'без писем'
 #__version__ = '18.319.1535' #сокращено время загрузки приложения на 4 секунды, улучшения в админке
 #__version__ = '18.318.1735' #сделана сортировка по количеству вхождений в spr
 #__version__ = '18.317.1250' #подсчитыается количество групп при заведении новых позиций в справочнике, отрефаторен код  
@@ -82,6 +84,7 @@ __index__   =-1
 
 import os
 import sys
+import zlib
 import json
 import time
 import uuid
@@ -149,7 +152,7 @@ def application(env):
     ret_code = u'200 OK'
     content = u''
     _rm = env["HTTP_METHOD"].upper()
-    args=None
+    #args=None
     fname = env['HTTP_KWARGS'].get('filename')
     if 'POST' == _rm:
         arg = env.get('HTTP_PARAMS')[0]
@@ -157,7 +160,7 @@ def application(env):
         _param = env['scgi.rfile'].read(env['CONTENT_LENGTH'])
         try:
             _param = zlib.decompress(_param)
-        except Exception as Err:
+        except Exception:
             pass
         #######################
         if not _p_http:

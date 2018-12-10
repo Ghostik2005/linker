@@ -29,11 +29,15 @@ class API:
     x_hash - API key
     """
     
-    def __init__(self, Lock, log, w_path = '/ms71/data/linker_upl', p_path='/ms71/data/linker_upl/restricted'):
+    def __init__(self, Lock, log, w_path = '/ms71/data/linker_upl', p_path='/ms71/data/linker_upl/restricted', 
+                 skip_path='/ms71/data/linker_upl/skipped'):
         self.methods = []
         self.path = w_path
         self.p_path = p_path
+        self.skip_path = skip_path
         self.inw_path = os.path.join(self.path, 'in_work')
+        if not os.path.exists(self.skip_path):
+             os.makedirs(self.skip_path, mode=0o777)
         if not os.path.exists(self.path):
              os.makedirs(self.path, mode=0o777)
         if not os.path.exists(self.p_path):
@@ -215,7 +219,9 @@ ON CONFLICT (UIN) DO UPDATE
                 except:
                     fgCont = True
                 try:
-                    zavod = zavod[zavod.find('>')+1:]
+                    z_ind = zavod.lower().find('<маркетинг>')
+                    if z_ind != -1:
+                        zavod = zavod[z_ind+11:].strip()
                 except:
                     pass
                 if fgCont: 
@@ -1042,20 +1048,29 @@ def guardian(api):
                         log('GUARDIAN| - начинаем сведение')
                         count_insert = 0
                         count_all = 0
-                        count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
-                        log("GUARDIAN| - удаляем файл:")
-                        try:
-                            shutil.move(path, os.path.join(api.inw_path, h_name))
-                            #os.remove(path)
-                            log("GUARDIAN| [ OK ]")
-                        except Exception as e:
-                            log("GUARDIAN| [FAIL]")
-                            log("GUARDIAN| %s" % str(e), kind="error")
-                        if count_insert > 0:
-                            api.prc_sync_lnk(db, dbc, h_name)
-                            sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
-                            dbc.execute(sql)
-                            count_insert = dbc.fetchone()[0]
+                        try: 
+                            count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
+                        except:
+                            log(f"GUARDIAN| CRITICAL | {h_name}")
+                            log(f"error text:\n {traceback.format_exc()}")
+                            shutil.move(path, os.path.join(api.skip_path, h_name))
+                            ##############################################
+                            #отправляем куда-нибудь алерт
+                            ##############################################
+                        else:
+                            log("GUARDIAN| - удаляем файл:")
+                            try:
+                                shutil.move(path, os.path.join(api.inw_path, h_name))
+                                #os.remove(path)
+                                log("GUARDIAN| [ OK ]")
+                            except Exception as e:
+                                log("GUARDIAN| [FAIL]")
+                                log("GUARDIAN| %s" % str(e), kind="error")
+                            if count_insert > 0:
+                                api.prc_sync_lnk(db, dbc, h_name)
+                                sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
+                                dbc.execute(sql)
+                                count_insert = dbc.fetchone()[0]
                     api.log(f'GUARDIAN| Добавленно к сведению: {count_insert}')
                     db.close()
             db = psycopg2.connect(**api.pg_connect_params)
