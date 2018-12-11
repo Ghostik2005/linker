@@ -150,3 +150,19 @@ button:disabled{
 .webix_img_btn_abs .webix_image {
     margin-right: 0px;
 }
+
+.custom_button button {
+    border-width: 0px !important;
+}
+
+.custom_button button:hover{
+    border-width: 1px !important;
+}
+
+.custom_button {
+    margin-top: 0px !important;
+}
+
+.custom-input input{
+    text-align: center !important;
+}

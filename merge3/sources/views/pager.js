@@ -8,11 +8,12 @@ export default class PagerView extends JetView{
     config(){
 
         var pager = {view: "toolbar",
-            height: 36,
+            //height: 36,
             cols: [
                 {view: "button", //type: 'htmlbutton',
+                    height: 36,
                     //label: "<span class='webix_icon fas fa-angle-double-left'></span>", 
-                    width: 40,
+                    width: 36,
                     type:"imageButton", image: './library/img/double-left-arrows.svg',
                     click: () => {
                         this.$$("__page").setValue('1');
@@ -21,7 +22,7 @@ export default class PagerView extends JetView{
                 },
                 {view: "button", //type: 'htmlbutton',
                     //label: "<span class='webix_icon fas fa-angle-left'></span>", 
-                    width: 40,
+                    width: 36,
                     type:"imageButton", image: './library/img/left-arrow.svg',
                     click: () => {
                         let c_page = this.$$("__page").getValue();
@@ -36,6 +37,7 @@ export default class PagerView extends JetView{
                 {width: 200, type: "wide", css: 'pager-text', 
                     cols: [
                     {view: "text", label: "<span style='font-size: smaller'>Страница</span>", 
+                        css: "custom-input",
                         localId: "__page",
                         labelWidth: 65, width: 120, value: "1", manual: true,
                         on: {
@@ -81,12 +83,12 @@ export default class PagerView extends JetView{
                         css: {"margin-left": "0px !important"}
                     },
                     {view: "label", label: "1", width: 45, align: "center",
-                        css: {"margin-left": "0px !important", "margin-top": "-2px !important"}
+                        css: {"margin-left": "0px !important", "margin-top": "-2px !important", "line-height": "38px !important"}
                     },
                 ]},
                 {view: "button", //type: 'htmlbutton',
                     //label: "<span class='webix_icon fas fa-angle-right'></span>", 
-                    width: 40,
+                    width: 36,
                     type:"imageButton", image: './library/img/right-arrow.svg',
                     click: () => {
                         let c_page = this.$$("__page").getValue();
@@ -99,7 +101,7 @@ export default class PagerView extends JetView{
                 },
                 {view: "button", //type: 'htmlbutton',
                     //label: "<span class='webix_icon fas fa-angle-double-right'></span>", 
-                    width: 40,
+                    width: 36,
                     type:"imageButton", image: './library/img/double-right-arrows.svg',
                     click: () => {
                         let total_pages = Math.ceil(this.parent.config.totalPos/this.parent.config.posPpage)

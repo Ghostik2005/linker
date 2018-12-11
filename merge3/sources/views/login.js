@@ -2,7 +2,6 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, getCookie, setCookie, deleteCookie} from "../views/globals";
-import {init_first, get_refs} from "../views/globals";
 import md5 from "../views/md5";
 
 export default class login extends JetView{

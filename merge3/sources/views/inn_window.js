@@ -270,7 +270,7 @@ export default class InnView extends JetView{
                         {width: 10},
                         {view: "button", type: "htmlbutton", localId: "_cancel",
                             tooltip: "Отменить",
-                            label: "<span style='line-height: 16px; font-size: smaller'>Отменить</span>", 
+                            label: "<span style='line-height: 18px; font-size: smaller'>Отменить</span>", 
                             width: 120, height: 36,
                             click: () => {
                                 this.hide_w();

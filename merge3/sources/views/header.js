@@ -31,7 +31,7 @@ export default class HeaderView extends JetView{
                 },
                 {},
                 {view:"button", type: 'htmlbutton', tooltip: "Выход",
-                    label: "<span class='side-icon webix_icon fas fa-sign-out-alt'></span><span class='side-icon', style='line-height: 16px; padding-left: 5px; font-size: smaller'>Выйти</span>",
+                    label: "<span class='side-icon webix_icon fas fa-sign-out-alt'></span><span class='side-icon', style='line-height: 18px; padding-left: 5px; font-size: smaller'>Выйти</span>",
                     width: 106,
                     on: {
                         onItemClick: () => {

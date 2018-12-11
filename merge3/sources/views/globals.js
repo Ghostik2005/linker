@@ -143,21 +143,6 @@ export function get_data_test(inp_params) {
         };
  
 }
-
-export function get_spr(th, id_spr) {
-    let user = th.app.config.user;
-    let url = th.app.config.r_url + "?getSpr"
-    let params = {"user": user, "id_spr": id_spr};
-    let res = request(url, params, !0).response;
-    res = checkVal(res, 's');
-    if (res) {
-        return res[0]
-    } else {
-        webix.message('error');
-        return 'error';
-        };
-    }
-
     
 export function init_first(app) {
 
@@ -179,7 +164,8 @@ export function init_first(app) {
                         {view: "label", label: "Название окна"},
                         {view: "button",
                             tooltip: "Закрыть",
-                            type:"imageButton", image: './library/img/times.svg',
+                            css: "custom_button",
+                            type:"imageButton", image: './library/img/close-cross.svg',
                             //type: "htmlbutton",
                             //label: "<span class='webix_icon fas fa-times'></span>",
                             //css: "times",
@@ -195,34 +181,6 @@ export function init_first(app) {
         }
     }, webix.ui.window);
 }
-
-export function get_refs(inp_params){
-    let app = inp_params.app;
-    let method = inp_params.method;
-    let store = inp_params.store;
-    let user = app.config.user;
-    let url = app.config.r_url + "?" + method
-    let params = {"user": user};
-    let type = inp_params.type;
-    if (type !== "sync") {
-        request(url, params).then(function(data) {
-            data = checkVal(data, 'a');
-            if (data) {
-                $$(store).clearAll();
-                $$(store).parse(data);
-            } else {
-                webix.message('error');
-                };
-            })
-    } else {
-        let res = request(url, params, !0).response;
-        res = checkVal(res, 's');
-        if (res) {
-            $$(store).clearAll();
-            $$(store).parse(res);
-            };
-        };
-    }
 
 export function after_call(text, data, XmlHttpRequest) {
     if (XmlHttpRequest.status == 403) {

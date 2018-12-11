@@ -10,7 +10,7 @@ export default class PropView extends JetView{
         return {view: "popup",
             head: "sub-menu",
             loclalId: "_pop",
-            width: 200,
+            width: 160,
             padding: 10,
             border: false,
             css: {"background": "transparent !important", "box-shadow": "None"},
@@ -21,10 +21,11 @@ export default class PropView extends JetView{
                     {view: "button", 
                         type: 'htmlbutton',
                         tooltip: "Редактирование организаций",
-                        label: "<span class='side-icon', style='line-height: 16px; font-size: smaller'>Редактирование организаций</span>",
+                        label: "<span class='side-icon', style='line-height: 18px; font-size: smaller'>Редактор организаций</span>",
                         localId: "_companies",
                         hidden: true,
                         height: 50,
+                        
                         on: {
                             onItemClick: () => {
                                 //webix.message({text: "пока недоступно", type: "error", expire: 2000});
@@ -37,7 +38,7 @@ export default class PropView extends JetView{
                     {view: "button",
                         type: 'htmlbutton',
                         tooltip: "Редактирование пользователей",
-                        label: "<span class='side-icon', style='line-height: 16px; font-size: smaller'>Редактирование пользователей</span>",
+                        label: "<span class='side-icon', style='line-height: 18px; font-size: smaller'>Редактор пользователей</span>",
                         localId: "_users",
                         hidden: true,
                         height: 50,
