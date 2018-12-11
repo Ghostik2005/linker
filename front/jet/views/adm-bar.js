@@ -15,7 +15,7 @@ export default class AdmBarView extends JetView{
             }
         }
     ready(view) {
-        this.show("adm-references");
+        this.show("adm-linker");
         }
     init() {
         let app = this.app;

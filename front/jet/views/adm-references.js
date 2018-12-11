@@ -12,9 +12,8 @@ import HranView from "../views/adm-hran";
 import NdsView from "../views/adm-nds";
 import SeasonsView from "../views/adm-seasons";
 import IssueView from "../views/adm-issues";
-import AdmView from "../views/adm-adm-adm";
 
-export default class LinkerView extends JetView{
+export default class RefView extends JetView{
     config(){
         let app = this.app;
 
@@ -100,6 +99,15 @@ export default class LinkerView extends JetView{
             view: "layout", type: "clean",
             //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
+                {view: "toolbar",
+                height: 40,
+                    css: {"border-top": "0px"},
+                    cols: [
+                        {},
+                        {}
+
+                        ]
+                    },
                 {height: 3},
                 tabv,
                 ]

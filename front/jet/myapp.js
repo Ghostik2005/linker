@@ -3,29 +3,21 @@ import "./styles/animate.css";
 //import "./libs/webix/webix.js";
 //import "./libs/webix/skin.js";
 import {JetApp, JetView} from "webix-jet";
-import {StoreRouter, EmptyRouter, UrlRouter} from "webix-jet";
-import {init_first} from "./views/globals";
+import {EmptyRouter} from "webix-jet";
 import "./locales/ru";
 
 webix.ready( () => {
 
-
-    //webix.ui.customcombo = Object.create(webix.ui.multicombo);
-
-
-
-
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "18.320.1530",
+        version:        "18.345.1430",
         start:          "/login",
         user:           "",
         role:           "0",
         eventS:         undefined,
         r_url:          (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic",
         router:         EmptyRouter,
-        //router:         UrlRouter,
         x_api:          "x_login",
         debug:          !true,
         searchDelay:    1000,
@@ -66,9 +58,6 @@ webix.ready( () => {
         );
 
     app.render();
-
-    //console.log('search', location.search);
-
 
     window.onerror = function (message, source, lineNr, col, err) {
         webix.message({"text": "Возникла ошибка - мы работаем над ее исправлением. Текст в консоли", "type": "error", width: "800px", delay: "5"}); //

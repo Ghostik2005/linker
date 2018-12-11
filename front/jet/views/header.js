@@ -94,11 +94,12 @@ export default class HeaderView extends JetView{
         var onExit = function (e) {
             let x,r;
             let user = getCookie('linker-app');
-            [user, x, r] = user.split('::');
-            let url = app.config.r_url + "?setExit";
-            let params = {"user":user};
-            request(url, params);
-
+            if (user) {
+                [user, x, r] = user.split('::');
+                let url = app.config.r_url + "?setExit";
+                let params = {"user":user};
+                request(url, params);
+                };
             //alert('f');
             }
 

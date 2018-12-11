@@ -3,8 +3,6 @@
 import {JetView} from "webix-jet";
 import {request, setButtons, checkVal} from "../views/globals";
 import {checkSSE, spinIconEnable, spinIconDisable} from "../views/globals";
-//import {add_bar} from "../views/globals";
-//import UnlinkedView from "../views/unlinked";
 import SkippedBarView from "../views/skipped_bar";
 import AllUnlinkedBarView from  "../views/unlinkedall_bar";
 import LinksBarView from "../views/links_form_bar";
@@ -12,6 +10,7 @@ import AdmBarView from "../views/adm-bar";
 import NewReportView from "../views/new_report";
 import PropView from "../views/prop_window";
 import BrakBarView from "../views/brak_bar";
+import RefView from "../views/adm-references";
 
 
 export default class SideButtonsBar extends JetView{
@@ -28,6 +27,7 @@ export default class SideButtonsBar extends JetView{
                          //(view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
                          (view === AdmBarView) ? "<span class='webix_icon fa-magic'></span><span style='line-height: 20px;'>Админка</span>" :
                          (view === BrakBarView) ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Забраковка</span>" :
+                         (view === RefView) ? "<span class='webix_icon fa-stream'></span><span style='line-height: 20px;'>Справочники</span>" :
                          ""
             let uid = webix.uid();
             var tabConfig = {
@@ -135,17 +135,6 @@ export default class SideButtonsBar extends JetView{
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Жуки</span>",
                     on: {
                         onAfterRender: function() {
-                            // let node = this.getNode();
-                            // node.onmousedown =  () => {
-                            //     this.interval = setInterval( () => {
-                            //         this.config.longPress = true;
-                            //         add_bar(this, AdmBarView);
-                            //         clearInterval(this.interval);
-                            //     }, app.config.popDelay);
-                            //     node.onmouseup = () => {
-                            //         clearInterval(this.interval);
-                            //         }
-                            //     }
                             },
                         onItemClick: function () {
                             if (this.$scope.admMenu.isVisible()) {
@@ -155,21 +144,6 @@ export default class SideButtonsBar extends JetView{
                                 };
                             webix.message("Пока недоступно");
                             return
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                            let ui = $$(this.config.b_id);
-                            if (this.config.longPress) {
-                            } else {
-                                if (ui) {
-                                    webix.html.addCss(this.$view, "bounceIn animated");
-                                    setTimeout(() => {
-                                        webix.html.removeCss(this.$view, "bounceIn animated");
-                                      },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                } else {
-                                    add_bar(this, AdmBarView);
-                                    };
-                                };
-                            this.config.longPress = false;
                             }
                         }
                     },
@@ -179,7 +153,6 @@ export default class SideButtonsBar extends JetView{
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].adm,
-                    //oldLabel: "<span class='side_icon webix_icon fa-blind'></span>",
                     oldLabel: "<span class='side_icon webix_icon fa-magic'></span>",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Админка</span>",
                     on: {
@@ -209,6 +182,47 @@ export default class SideButtonsBar extends JetView{
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, AdmBarView);
+                                    };
+                                };
+                            this.config.longPress = false;
+                            }
+                        }
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Справочники", height: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 136,
+                    eWidth: 40,
+                    label: "", width: 40,
+                    hidden: !app.config.roles[app.config.role].adm,
+                    oldLabel: "<span class='side_icon webix_icon fa-list-alt'></span>",
+                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Справочники</span>",
+                    on: {
+                        onAfterRender: function() {
+                            let node = this.getNode();
+                            node.onmousedown =  () => {
+                                this.interval = setInterval( () => {
+                                    this.config.longPress = true;
+                                    add_bar(this, RefView);
+                                    clearInterval(this.interval);
+                                }, app.config.popDelay);
+                                node.onmouseup = () => {
+                                    clearInterval(this.interval);
+                                    }
+                                }
+                            },
+                        onItemClick: function () {
+                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                            let ui = $$(this.config.b_id);
+                            if (this.config.longPress) {
+                            } else {
+                                if (ui) {
+                                    webix.html.addCss(this.$view, "bounceIn animated");
+                                    setTimeout(() => {
+                                        webix.html.removeCss(this.$view, "bounceIn animated");
+                                      },900)
+                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                } else {
+                                    add_bar(this, RefView);
                                     };
                                 };
                             this.config.longPress = false;

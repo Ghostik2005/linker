@@ -386,7 +386,7 @@ export default class SprView extends JetView{
 
             
         var dt = {
-            view: "layout",
+            view: "layout", 
             rows: [
                 top,
                 sprv,
@@ -397,17 +397,6 @@ export default class SprView extends JetView{
         }
 
     ready() {
-        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_add"), this.$$("_del")]
-        setButtons(this.app, r_but);
-        this.$$("__table").config.searchBar = this.$$("_sb");
-        this.$$("_sb").callEvent("onKeyPress", [13,]);
-        this.$$("_sb").focus();
-        }
-    
-    init() {
-        this.popnew = this.ui(NewformView);
-        this.pophistory = this.ui(History);
-        this.poprelink = this.ui(RelinkFormView);
         let th = this;
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
@@ -419,6 +408,17 @@ export default class SprView extends JetView{
                 thh.$$("__page").refresh();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
-            })
+            });
+        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_add"), this.$$("_del")]
+        setButtons(this.app, r_but);
+        this.$$("__table").config.searchBar = this.$$("_sb");
+        this.$$("_sb").callEvent("onKeyPress", [13,]);
+        this.$$("_sb").focus();
+        }
+    
+    init() {
+        this.popnew = this.ui(NewformView);
+        this.pophistory = this.ui(History);
+        this.poprelink = this.ui(RelinkFormView);
         }
     }

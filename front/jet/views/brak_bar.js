@@ -5,7 +5,7 @@ import History from "../views/history";
 import {checkKey, unFilter} from "../views/globals";
 import {setButtons, checkVal} from "../views/globals";
 import {request} from "../views/globals";
-import {dt_formating_no_sec, dt_formating, compareTrue} from "../views/globals";
+import {dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 import BrakSideInfoView from "../views/brak_side_info";
 import uplBrakMenuView from "../views/brak_upl";
@@ -271,7 +271,7 @@ export default class BrakBarView extends JetView{
                     template: "{common.checkbox()}",
                     },
                 {id: "dt", width: 140, sort: 'server', hidden: !true, sort: 'server',
-                    format: dt_formating_no_sec,
+                    format: dt_formating,
                     css: 'center_p',
                     header: [{text: "Дата добавления"},
                     {content: "dateRangeFilter", compare: compareTrue,
