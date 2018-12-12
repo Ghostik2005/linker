@@ -204,7 +204,8 @@ export default class RView extends JetView{
                         body:{
                             multiselect: false,
                             timepicker: !true,
-                            weekNumber:!true
+                            weekNumber:!true,
+                            icons: true
                         }
                     },
                     width: 160, sort: "text", format: dt_format, 
