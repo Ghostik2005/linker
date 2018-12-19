@@ -276,6 +276,25 @@ div.webix_item_tab {
   /*color: black;*/
   text-transform: uppercase;
 }
+.check:hover {
+  color: red !important;
+}
+.webix_custom_checkbox:hover {
+  border-color: red;
+}
+.highlited {
+  font-weight: bolder;
+  font-style: italic;
+  color: black;
+}
+.shadow {
+  color: lightgrey;
+}
+.flag {
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  color: transparent !important;
+}
 
 @charset "UTF-8";
 /*!

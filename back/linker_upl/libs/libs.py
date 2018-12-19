@@ -454,20 +454,22 @@ SET (barcode, id_spr) = (%s, %s);"""
             db.commit()
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
-        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
-        #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
+        #dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
+        dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to stasya')
-        #dbc.execute(f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 {con_ins}
-        dbc.execute(f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        #f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        sql_upd_u = f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
 and  id_vnd in (10001,19987,19990,19992,19996,20123,20129,20153,20171,20176,20177,
-                20229,20269,20271,20276,20277,20377,20378,20471,20576,20577,20657,
+                20229,20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
                 20677,20871,20977,21271,22077,22078,22240,23478,24477,28132,28162,
                 28176,28177,28178,29271,29977,30144,30178,30371,33771,34071,34157,
                 34168,37471,40267,40277,40550,40552,40677,41177,44677,44735,44877,
                 45177,45277,45835,46676,46769,46869,47369,48761,51066,51072,10000,
-                52083)""")
+                52083)"""
+        #self.log(sql_upd_u)
+        dbc.execute(sql_upd_u)
         #self.log('assign to stasya 2')
         if callable(db.commit):
             db.commit()

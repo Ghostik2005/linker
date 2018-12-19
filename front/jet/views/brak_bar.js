@@ -9,6 +9,7 @@ import {dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 import BrakSideInfoView from "../views/brak_side_info";
 import uplBrakMenuView from "../views/brak_upl";
+import CheckView from "../views/excel_check";
 
 export default class BrakBarView extends JetView{
     config(){
@@ -46,7 +47,8 @@ export default class BrakBarView extends JetView{
                     },
                 },
             {view: "checkbox", labelRight: "<span style='color: white'>Без писем</span>", labelWidth: 0,
-                width: 100, localId: "_noMail",
+                tooltip: "Отображать только записи где нет писем",
+                width: 100, localId: "_noMail", css: "check",
                 on: {
                     onChange: function() {
                         let value = this.getValue();
@@ -61,10 +63,21 @@ export default class BrakBarView extends JetView{
                         }
                     }
                 },
+            {view: "checkbox", labelRight: "<span style='color: white'>Проверять с письмами</span>", labelWidth: 0,
+                tooltip: "При сохранении новых писем проверять записи с письмами",
+                value: 0,
+                hidden: true,
+                width: 160, localId: "_check_w_mails",
+                on: {
+                    onChange: function() {
+                        webix.message({"text": "Опция пока не доступна", "type": "error", "delay": 1000})
+                        }
+                    },
+                },
             {view: "button", type: 'htmlbutton', 
                 localId: "_history",
                 resizable: true,
-                sWidth: 126,
+                sWidth: 116,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -79,7 +92,7 @@ export default class BrakBarView extends JetView{
             {view: "button", type: "htmlbutton",
                 localId: "_renew",
                 resizable: true,
-                sWidth: 136,
+                sWidth: 116,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -117,7 +130,7 @@ export default class BrakBarView extends JetView{
                 tooltip: "Загрузить брак",
                 localId: "_fileload",
                 resizable: true,
-                sWidth: 180,
+                sWidth: 155,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -128,11 +141,25 @@ export default class BrakBarView extends JetView{
                     },
                 },
             {view: "button", type: 'htmlbutton',
+                tooltip: "Сверить базу забраковки с внешним файлом",
+                localId: "_filecheck",
+                resizable: true,
+                sWidth: 155,
+                eWidth: 40,
+                label: "",
+                width: 40,
+                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сверить брак</span>",
+                oldLabel: "<span class='webix_icon fa-check'></span>",
+                click: () => {
+                    this.pop_check.show_w();
+                    },
+                },
+            {view: "button", type: 'htmlbutton',
                 hidden: true,
                 tooltip: "Удалить письмо",
                 localId: "_delletter",
                 resizable: true,
-                sWidth: 180,
+                sWidth: 155,
                 eWidth: 40,
                 label: "",
                 width: 40,
@@ -361,7 +388,8 @@ export default class BrakBarView extends JetView{
 
     ready() {
 
-        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_delletter"), this.$$("_renew")];
+        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_delletter"), this.$$("_renew"),
+                     this.$$("_filecheck")];
         setButtons(this.app, r_but);
         let th = this;
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
@@ -387,6 +415,7 @@ export default class BrakBarView extends JetView{
     init() {
         this.pophistory = this.ui(History);
         this.pop_upl = this.ui(uplBrakMenuView);
+        this.pop_check = this.ui(CheckView);
         }
     }
 

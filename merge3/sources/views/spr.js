@@ -70,6 +70,10 @@ export default class SprView extends JetView{
             select: true,
             resizeColumn:true,
             fixedRowHeight:false,
+            resizeRow: true,
+            //autoheight:true,
+            rowLineHeight:30, 
+            rowHeight:60,
             editable: false,
             multiselect: false,
             headermenu:{
@@ -93,10 +97,14 @@ export default class SprView extends JetView{
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     header: [{text: "Название"},
                     ],
+                    template: "#c_tovar#<br><span style='color: darkgrey !important'>#c_zavod#, #c_strana#</span>",
                     headermenu:false,
                 },
             ],
             on: {
+                "onresize": webix.once(function(){ 
+                    this.adjustRowHeight(); 
+                }),
                 "data->onParse":function(i, data){
                     this.clearAll();
                 },

@@ -13,7 +13,7 @@ import requests
 import subprocess
 import traceback
 from multiprocessing.dummy import Pool as ThreadPool
-
+import xlrd
 
 from libs.connect import fb_local
 from libs.connect import pg_local
@@ -2568,54 +2568,115 @@ where ( classifier.idx_group = 7 and groups.cd_code = {self._wildcardIns()} )"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _checkBrakMail(self, sh_prc, letter_number=None):
+        ret_val = []
+        #проверяем, есть ли товары с таким же хешем и без писем
+        #если да, то формируем список из них (серия, хеш)
+        #если letter_number, то проверяем во всех письмах записях - придумать как выдергивать номер письма из названия
+        # если нет, то только в тех, где отсуствует письмо
+        if letter_number:
+            sql_check = f"""select distinct t1.sh_prc, t2.series from brak t2
+left join brak_mail t3 on t3.SH_PRC = t2.SH_PRC and t3.SERIYA = t2.series and t3.deleted = 0
+join lnk t1 on ( t1.sh_prc = t2.sh_prc and t1.ID_VND = 10000)
+WHERE t1.sh_prc = '{sh_prc}' and 
+((t3.link_file is null) or (lower(title_doc) not like lower('{letter_number}')))
+ORDER by t2.series"""
+        else:
+            sql_check = f"""select t1.sh_prc, t2.series from brak t2
+left join brak_mail t3 on t3.SH_PRC = t2.SH_PRC and t3.SERIYA = t2.series and t3.deleted = 0
+join lnk t1 on ( t1.sh_prc = t2.sh_prc and t1.ID_VND = 10000)
+WHERE t1.sh_prc = '{sh_prc}' and t3.link_file is null 
+ORDER by t2.series"""
+        _ret = self.db.request({"sql": sql_check, "options": ()})
+        for row in _ret:
+            r = {
+                "sh_prc": row[0],
+                "series": row[1]
+            }
+            ret_val.append(r)
+        return ret_val
+
+    def setMassBrakMail(self, params, x_hash=None):
+        if self._check(x_hash):
+            item  = params.get("item")
+            series_list = params.get('series_list')
+            self._setBrakMail(item, series_list)
+            ret = {"result": True, "ret_val": "OK"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setBrakMail_(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            item  = params.get("item")
+            sh_prc = item.get("sh_prc")
+            ret = {"result": True, "ret_val": {"m_count": 1, "similar":  self._checkBrakMail(sh_prc)}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def _setBrakMail(self, item, series_list):
+        opts_mails = []
+        opts_files = []
+
+        letter_id = item.get("id")
+        sh_prc = item.get("sh_prc")
+        title = item.get("name") #"title"
+        title_torg = item.get("t_name") #"title_torg"
+        fabricator = item.get("vendor") #"fabricator"
+        region = item.get("region", "") #"region"
+        n_rec = item.get("number", "") #n_rec"
+        gv = item.get("gv", "") #"gv"
+        title_doc = item.get("n_doc") #"title_doc"
+        opis = item.get("desc", "") #"opis"
+        letter_text = item.get("letter") #letter text
+        ch_date = item.get("ch_dt") #dt_edit
+        ins = self._wildcardIns()
+        sql_f = """insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
+values (%s, %s)
+ON CONFLICT (LINK_FILE) DO UPDATE
+SET (LINK_FILE, MAIL_TEXT, DELETED) = (%s, %s, 0)"""
+        if letter_id == 99999999:
+            sql = f"""insert into BRAK_MAIL (title, title_torg, seriya, fabricator, region, 
+n_rec, gv, title_doc, opis, sh_prc, link_file, dt, dt_edit ) 
+values ({ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins},  current_timestamp, {ins}) returning id;"""
+        else:
+            sql = f"""update BRAK_MAIL set title = {ins}, title_torg = {ins}, seriya = {ins}, fabricator = {ins}, region = {ins}, 
+n_rec = {ins}, gv = {ins}, title_doc = {ins}, opis = {ins}, sh_prc = {ins}, link_file = {ins}, dt_edit = {ins}
+where id = {ins} returning id;"""
+        for ser in series_list:
+            f_name = item.get("f_name") or str(uuid.uuid1()) #"link_file"
+            series = ser #"seriya"
+            opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name, ch_date)
+            ppprs = psycopg2.Binary(letter_text.encode())
+            opt_f = (f_name, ppprs) + (f_name, ppprs)
+            opts_files.append({'sql': sql_f, 'opt': opt_f})
+            if letter_id != 99999999:
+                opt = opt + (letter_id,)
+            opts_mails.append({'sql': sql, 'opt': opt})
+        pool = ThreadPool(len(opts_mails))
+        results = pool.map(self._make_sql, opts_mails)
+        pool.close()
+        pool.join()
+        pool1 = ThreadPool(len(opts_files))
+        results1 = pool1.map(self._make_sql, opts_files)
+        pool1.close()
+        pool1.join()
+        return True
+
     def setBrakMail(self, params=None, x_hash=None):
         if self._check(x_hash):
             #user = params.get("user")
             item  = params.get("item")
-            letter_id = item.get("id")
-            sh_prc = item.get("sh_prc")
-            title = item.get("name") #"title"
-            title_torg = item.get("t_name") #"title_torg"
             series = item.get("series") #"seriya"
-            fabricator = item.get("vendor") #"fabricator"
-            region = item.get("region", "") #"region"
-            n_rec = item.get("number", "") #n_rec"
-            gv = item.get("gv", "") #"gv"
-            title_doc = item.get("n_doc") #"title_doc"
-            opis = item.get("desc", "") #"opis"
-            letter_text = item.get("letter") #letter text
-            f_name = item.get("f_name") or str(uuid.uuid1()) #"link_file"
-            ch_date = item.get("ch_dt") #dt_edit
-            ins = self._wildcardIns()
-            opt = (title, title_torg, series, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, f_name, ch_date)
-            if letter_id == 99999999:
-                sql = f"""insert into BRAK_MAIL (title, title_torg, seriya, fabricator, region, n_rec, gv, title_doc, opis, sh_prc, link_file, dt, dt_edit ) 
-values ({ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins}, {ins},  current_timestamp, {ins}) returning id;"""
-            else:
-                sql = f"""update BRAK_MAIL set title = {ins}, title_torg = {ins}, seriya = {ins}, fabricator = {ins}, region = {ins}, 
-n_rec = {ins}, gv = {ins}, title_doc = {ins}, opis = {ins}, sh_prc = {ins}, link_file = {ins}, dt_edit = {ins}
-where id = {ins} returning id;"""
-                opt = opt + (letter_id,)
-            self.db.execute({"sql": sql, "options": opt})
-            if self._pg:
-                ppprs = psycopg2.Binary(letter_text.encode())
-                sql_t = """insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
-values (%s, %s)
-ON CONFLICT (LINK_FILE) DO UPDATE
-SET (LINK_FILE, MAIL_TEXT, DELETED) = (%s, %s, 0)"""
-                opt_t = (f_name, ppprs) + (f_name, ppprs)
-            else:
-                ppprs = letter_text.encode()
-                sql_t = f"""UPDATE OR insert into BRAK_MAIL_TEXT (LINK_FILE, MAIL_TEXT)
-values (?, ?)"""
-                opt_t = (f_name, ppprs)
-            self.db.execute({"sql": sql_t, "options": opt_t})
-            #print(res)
+            sh_prc = item.get("sh_prc")
+            series_list = [series, ]
+            self._setBrakMail(item, series_list)
             sql = f"""select count(*) from brak_mail where SH_PRC = '{sh_prc}' and SERIYA = '{series}' and DELETED = 0"""
             opt = ()
             ress = self.db.request({"sql": sql, "options": opt})
             _return = ress[0][0]
-            ret = {"result": True, "ret_val": {"m_count": _return}}
+            ret = {"result": True, "ret_val": {"m_count": _return, "similar":  self._checkBrakMail(sh_prc)}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -3907,7 +3968,6 @@ values (?, ?, ?, ?, ?) matching (CODE)"""
                 if r_list:
                     a = {'sql': sql_template % ("2", f"{','.join([str(i) for i in r_list])}"), 'opt': ()}
                     params.append(a)
-                #print(params)
                 pool = ThreadPool(len(params))
                 pool.map(self._make_sql, params)
                 pool.close()
@@ -4143,9 +4203,18 @@ matching (NAME)"""
             #user = params.get("user")
             f_name = params.get("filename")
             data = params.get("data")
-            f_data = data.split(b'\r\n')
-            f_data = f_data[4:-6]
-            f_data = b'\r\n'.join([i for i in f_data])
+            if f_name == "brak.dbf":
+                f_data = data.split(b'\r\n')
+                f_data = f_data[4:-6]
+                f_data = b'\r\n'.join([i for i in f_data])
+            else:
+                f_name = "brak.dbf"
+                f_data = data
+            with open("/ms71/temp/brak.dbf", 'wb') as f:
+                try:
+                    f.write(f_data)
+                except:
+                    f.write(f_data.encode())
             if f_name:
                 f_obj = io.BytesIO()
                 f_obj.name = 'brak.dbf'
@@ -4159,9 +4228,10 @@ matching (NAME)"""
                         new_row = []
                         row = list(record.values())
                         new_row = [10000, row[0], row[1], row[4], 0, self._genHash(10000, str(row[1]), str(row[4])), row[2], row[3]]
-                        rows.append('\t'.join([str(i).replace("\r\n", " ") for i in new_row]))
+                        rows.append('\t'.join([str(i).replace("\r\n", " ").replace("\t", " ") for i in new_row]))
                     ret_dict = {name:'\n'.join(rows)}
                 except Exception:
+                    self.log(f'upl_br_error: {traceback.format_exc()}')
                     pass
                 finally:
                     f_obj.close()
@@ -4253,7 +4323,7 @@ matching (NAME)"""
         if self._check(x_hash):
             script_type = params.get('type')
             user = params.get('user')
-            print(user)
+            #print(user)
             if script_type == 'spr':
                 #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_snapshot.sh"
                 #command = "ssh ms71 sudo bash /home/plexpert/neutron/modules/start_test.sh"
@@ -4506,3 +4576,118 @@ where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {self._wildcardIns()}
         sh_prc.update(s.encode('1251', 'ignore'))
         return sh_prc.hexdigest()
 
+    def _check_rus(self, orig_string):
+        rus  = False
+        for i in orig_string:
+            if ord(i) >= 1040 and ord(i) <= 1071:
+                rus = True
+        return rus
+
+
+    def _lang_trans(self, orig_string):
+        r2e = {"А": "A", "В": "B", "Е": "E", "К": "K", "М": "M", "Н": "H", "О": "O", 
+            "Р": "P", "С": "C", "Т": "T", "У": "Y", "Х": "X"
+        }
+        e2r = {"A": "А", "B": "В", "C": "С", "E": "Е", "H": "Н", "K": "К", "M": "М", 
+            "O": "О", "P": "Р", "T": "Т", "X": "Х", "Y": "У"
+        }
+        new_list = []
+        orig_list = list(orig_string)
+        for i in orig_list:
+            s = (r2e if self._check_rus(orig_string) else e2r).get(i, i)
+            new_list.append(s)        
+        return ''.join(new_list)
+
+    def _xls2csv(self, excel_file):
+        workbook = xlrd.open_workbook(excel_file)
+        all_worksheets = workbook.sheet_names()
+        series = []
+        for worksheet_name in all_worksheets:
+            worksheet = workbook.sheet_by_name(worksheet_name)
+            for rownum in range(worksheet.nrows):
+                if rownum ==0: continue
+                row = worksheet.row_values(rownum)
+                #print(row)
+                ser = {
+                    "file_series": str(row[3]),
+                    "file_number": str(row[4]),
+                    "file_title": str(row[6]).replace("\n", "")
+                }
+                series.append(ser)
+        return series
+
+    def checkBrakXls(self, params, x_hash):
+        #print(params)
+        if self._check(x_hash):
+            filename = params.get('filename')
+            data = params.get("data")
+            f_data = data.split(b'\r\n')
+            f_data = f_data[4:-6]
+            f_data = b'\r\n'.join([i for i in f_data])
+            file_name = os.path.join('/ms71/temp', filename)
+            with open(file_name, 'wb') as f:
+                try:
+                    f.write(f_data)
+                except:
+                    f.write(f_data.encode())
+            sql_template = """select distinct seriya, title_doc, 'eng'
+from brak_mail 
+where seriya = '%s' and deleted = 0--eng
+union all
+select distinct seriya, title_doc, 'rus'
+from brak_mail 
+where seriya = '%s' and deleted = 0--rus
+"""
+            sqls = []
+            series = self._xls2csv(file_name)
+            for row in series:
+                s = row.get('file_series')
+                if self._check_rus(s):
+                    s_rus = s
+                    s_eng = self._lang_trans(s)
+                else:
+                    s_eng = s
+                    s_rus = self._lang_trans(s)
+                sqls.append(sql_template % (s_eng, s_rus))
+            results = []
+            while sqls:
+                sqls_re = []
+                for i in range(9):
+                    try:
+                        sqls_re.append({'sql':sqls.pop(0), 'opt': ()})
+                    except:
+                        break
+                pool = ThreadPool(len(sqls_re))
+                #results.extend(pool.map(self._make_sql_1, sqls_re))
+                results.extend(pool.map(self._make_sql, sqls_re))
+                pool.close()
+                pool.join()
+            for i, s in enumerate(series):
+                row = results[i]
+                if row:
+                    if s.get('file_number') in row[0][1]:
+                        s['result'] = True
+                        s['letter_match'] = True
+                    else:
+                        s['result'] = False
+                        s['letter_match'] = False
+                    s['title'] = row[0][1]
+                    s['base_lang'] = row[0][2]
+                else:
+                    s['result'] = False
+                    s['title'] = ""
+                s['file_rus'] = 'rus' if self._check_rus(s.get('file_series')) else 'eng'
+                
+
+            # for i in series:
+            #     if i.get('result'):
+            #         print(i)
+            try:
+                os.remove(file_name)
+            except:
+                pass
+
+            ret = {"result": True, "ret_val": series}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)

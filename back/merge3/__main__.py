@@ -1,8 +1,9 @@
 #coding: utf-8
 
 __appname__ = 'merge3'
-__version__ = '18.340.1000' #production start
-#__version__ = '18.324.1000' #backend project start
+__version__ = '18.347.1520' #добавлен поиск по производителю
+#__version__ = '18.340.1000' #production start
+#__version__ = '18.324.1000' #project start
 
 __profile__ = ""
 __index__   =-1

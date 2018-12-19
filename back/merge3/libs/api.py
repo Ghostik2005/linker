@@ -77,7 +77,7 @@ class API:
         return json.dumps(ret, ensure_ascii=False)
 
     def setExit(self, params=None, x_hash=None):
-        user = params.get('user')
+        #user = params.get('user')
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
             f_name =(os.path.join(self.p_path, x_hash)) 
@@ -106,7 +106,7 @@ class API:
     
     def getCompanies(self, params=None, x_hash=None):
         if self._check(x_hash):
-            user = params.get('user')
+            #user = params.get('user')
             sql = """select inn, c_inn, id from companies order by c_inn;"""
             opt = ()
             _return = []
@@ -125,7 +125,7 @@ class API:
 
     def setUsersInn(self, params=None, x_hash=None):
         if self._check(x_hash):
-            user = params.get('user')
+            #user = params.get('user')
             inn_user = params.get("inn_user")
             user_id = params.get("edit_user")
             ins = []
@@ -145,7 +145,7 @@ class API:
 
     def getUserInn(self, params=None, x_hash=None):
         if self._check(x_hash):
-            user = params.get('user')
+            #user = params.get('user')
             user_id = params.get("user_id")
             inn_all = []
             inn_user = []
@@ -181,7 +181,7 @@ class API:
 
     def getUsers(self, params=None, x_hash=None):
         if self._check(x_hash):
-            user = params.get('user')
+            #user = params.get('user')
             sql = """select id, "USER" from users order by "USER";"""
             opt = ()
             _return = []
@@ -200,7 +200,7 @@ class API:
     def setCompanies(self, params=None, x_hash=None):
         if self._check(x_hash):
             ret = False
-            user = params.get('user')
+            #user = params.get('user')
             deleted = params.get("deleted")
             changed = params.get("changed")
             added = params.get("added")
@@ -213,6 +213,8 @@ class API:
                 if d:
                     sql = f"""delete from companies where id in ({','.join([str(j) for j in d])})"""
                     result = self.db.execute({"sql": sql, "options": ()})
+                    if result:
+                        pass
                     ret = True
             if changed:
                 sql_template = """update companies set c_inn = %s where id = %s;"""
@@ -260,7 +262,7 @@ where us."USER" = %s;"""
 
     def setVnd(self, params=None, x_hash=None):
         if self._check(x_hash):
-            user = params.get('user')
+            #user = params.get('user')
             datas = params.get('datas')
             remove = params.get('remove')
             inserts = {}
@@ -315,7 +317,7 @@ where us."USER" = %s;"""
         t0 = time.time()
         if self._check(x_hash):
             all_vnd = params.get('all')
-            user = params.get('user')
+            #user = params.get('user')
             customers = params.get('customers')
             id_spr = params.get('id_spr')
             _ret_all = []
@@ -387,27 +389,39 @@ where us."USER" = %s;"""
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-
+            search_re = search_re.split('+')
+            if len(search_re) > 1:
+                search_sup = search_re[1]
+            else:
+                search_sup = ''
+            search_re = search_re[0]
             search_re = search_re.split()
+            search_sup = search_sup.split()
             stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
+            stri1 = [] 
+            for it in search_sup:
+                ts2 = "lower(z.C_ZAVOD) like lower('%" + it.strip() + "%')"
+                stri1.append('and %s' % ts2)
             for i in range(len(search_re)):
                 ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
                 if i == 0:
                     stri.append(ts1)
                 else:
                     stri.append('and %s' % ts1)
-
             stri = ' '.join(stri)
-
+            stri1 = ' '.join(stri1)
             sql_c = f"""SELECT count(*)
 FROM SPR r WHERE {stri};"""
             sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            sql = f"""SELECT r.ID_SPR, r.C_TOVAR
+            sql = f"""SELECT r.ID_SPR, r.C_TOVAR, z.C_ZAVOD, c.C_STRANA
 FROM SPR r
-WHERE {stri} ORDER by {field} {direction}"""
+join spr_zavod z on z.id_spr = r.id_zavod {stri1}
+join spr_strana c on c.id_spr = r.id_strana
+WHERE ({stri}) ORDER by {field} {direction}"""
 
             sql = sql + self._insLimit(start_p, end_p)
             sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            sql = sql.replace("and lower(r.C_ZAVOD) like lower('%%%%')", '')
             t1 = time.time() - st_t
             _return = []
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
@@ -422,6 +436,8 @@ WHERE {stri} ORDER by {field} {direction}"""
                 r = {
                     "id_spr"        : row[0],
                     "c_tovar"       : row[1],
+                    "c_zavod"       : row[2],
+                    "c_strana"      : row[3],
                     "search"        : params.get('search')
                 }
                 _return.append(r)

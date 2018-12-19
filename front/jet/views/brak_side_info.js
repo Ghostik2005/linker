@@ -2,6 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal} from "../views/globals";
+import BrakAddMassView from "../views/brak-add-mass";
 
 
 export default class BrakSideInfoView extends JetView{
@@ -23,8 +24,8 @@ export default class BrakSideInfoView extends JetView{
                             },
                         onTimedKeyPress: function() {
                             let value = this.getValue();
-                            this.$scope.$$("_dHead").config._parent.getSelectedItem().n_doc = value;
-                            this.$scope.$$("_dHead").config._parent.refresh(this.$scope.$$("_dHead").config._parent.getSelectedId());
+                            this.$scope.parent.getSelectedItem().n_doc = value;
+                            this.$scope.parent.refresh(this.$scope.parent.getSelectedId());
                             },
                         },
                     },
@@ -131,16 +132,24 @@ export default class BrakSideInfoView extends JetView{
                         onItemClick: function() {
                             let item = this.$scope.$$("_dHead").getValues();
                             item['letter'] = this.$scope.$$("_editor").getValue();
+                            //console.log('this', this.$scope.topParent.$scope.$$("_check_w_mails").getValue());
+                            let check_letter = this.$scope.topParent.$scope.$$("_check_w_mails").getValue();
+                            let params = {"user": app.config.user, "item": item, "check_letter": check_letter};
                             let url = app.config.r_url + "?setBrakMail";
-                            let params = {"user": app.config.user, "item": item};
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                webix.message({type: "success", text: "Сохранено", expire: 2500});
-                                this.$scope.$$("_dHead").config._topParent.getSelectedItem().m_count = +res.m_count;
+                                webix.message({type: "success", text: "Сохранено", expire: 2000});
+                                this.$scope.topParent.getSelectedItem().m_count = +res.m_count;
                                 this.$scope.reopen();
+                                if (res.similar && res.similar.length && res.similar.length > 0) {
+                                    //есть еще серии, вызываем окно с их выбором.если там будет отмена - то просто зарываем и все
+                                    // если еще выберут - то перезаписываем все что выбрали.
+                                    this.$scope.popmass.show_w(this.$scope.topParent.$scope, item, res.similar);
+                                }
+
                             } else {
-                                webix.message({type: "error", text: "Ошибка сохранения", expire: 2500});
+                                webix.message({type: "error", text: "Ошибка сохранения", expire: 2000});
                                 this.$scope.$$("_cancel").callEvent('onItemClick');
                                 };
                             },
@@ -149,15 +158,15 @@ export default class BrakSideInfoView extends JetView{
                 {view: 'button', value: "Отменить", width: 120, localId: "_cancel", hidden: true,
                     on: {
                         onItemClick: function() {
-                            if (this.$scope.$$("_dHead").config._parent.config.$new) {
+                            if (this.$scope.parent.config.$new) {
                                 this.$scope.reopen()
                             } else {
                                 if (this.$scope.$$("_dHead").config.oldData) {
-                                    this.$scope.load_data(this.$scope.$$("_dHead").config.oldData, this.$scope.$$("_dHead").config._parent, this.$scope.$$("_dHead").config._topParent);
+                                    this.$scope.load_data(this.$scope.$$("_dHead").config.oldData, this.$scope.parent, this.$scope.topParent);
                                     this.$scope.hide_b()
                                     let value = this.$scope.$$("_dHead").getValues().n_doc;
-                                    this.$scope.$$("_dHead").config._parent.getSelectedItem().n_doc = value;
-                                    this.$scope.$$("_dHead").config._parent.refresh(this.$scope.$$("_dHead").config._parent.getSelectedId());
+                                    this.$scope.parent.getSelectedItem().n_doc = value;
+                                    this.$scope.parent.refresh(this.$scope.parent.getSelectedId());
                                 } else {
                                     this.$scope.clear_info()
                                     };
@@ -187,19 +196,17 @@ export default class BrakSideInfoView extends JetView{
         this.disable_info();
         }
 
-    init() {
-        }
 
     reopen() {
-        let noMail = this.$$("_dHead").config._topParent.$scope.$$("_noMail").getValue();
-        let tableSelectedItem = this.$$("_dHead").config._topParent.getSelectedItem()
+        let noMail = this.topParent.$scope.$$("_noMail").getValue();
+        let tableSelectedItem = this.topParent.getSelectedItem()
         let tableSelectedId = tableSelectedItem.id;
         this.clear_info();
-        if (noMail ===1 && this.$$("_dHead").config._topParent.getItem(tableSelectedId).m_count > 0){
-            this.$$("_dHead").config._topParent.remove(tableSelectedId);
+        if (noMail ===1 && this.topParent.getItem(tableSelectedId).m_count > 0){
+            this.topParent.remove(tableSelectedId);
         } else {
-            this.$$("_dHead").config._topParent.closeSub(tableSelectedId);
-            this.$$("_dHead").config._topParent.openSub(tableSelectedId, this.$$("_dHead").config._topParent);
+            this.topParent.closeSub(tableSelectedId);
+            this.topParent.openSub(tableSelectedId, this.topParent);
         }
         this.disable_info();
         }
@@ -211,8 +218,10 @@ export default class BrakSideInfoView extends JetView{
         this.clear_info();
         this.$$("_dHead").parse(data);
         this.$$("_editor").setValue(data.letter || '');
-        this.$$("_dHead").config._parent = parent;
-        this.$$("_dHead").config._topParent = topParent;
+        this.parent = parent;
+        //this.$$("_dHead").config._parent = parent;
+        this.topParent = topParent;
+        //this.$$("_dHead").config._topParent = topParent;
         this.$$("_dHead").config.oldData = this.$$("_dHead").getValues();
         this.$$("_dHead").config.oldData.letter = this.$$("_editor").getValue();
         if (parent.config.$new) this.show_b();
@@ -258,6 +267,10 @@ export default class BrakSideInfoView extends JetView{
             });
         }
     
+    init() {
+        this.popmass = this.ui(BrakAddMassView);
+    }
+
         
     }
 

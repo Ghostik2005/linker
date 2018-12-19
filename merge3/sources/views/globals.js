@@ -86,6 +86,10 @@ export function get_data_test(inp_params) {
     let url = app.config.r_url + "?" + inp_params.method;
     let params = gen_params(inp_params);
     let search_str = params.search;
+    let plus = undefined;
+    if (search_str.indexOf("+") != -1) {
+        search_str = search_str.replace('+', '+++++')
+    }
     if (search_str === "") search_str="%%";
     let rl = (typeof search_str !== "undefined") ? search_str.replace(/\ /g, "").length : 2;
     let sl = (typeof search_str !== "undefined") ? search_str.length : 2;
