@@ -489,7 +489,7 @@ def handle_commandline(profile, index):
             if x:
                 v = unquote(x).split(',')
                 if len(v) > 1:
-                    args.append(tuple(libs._int(x) for x in v))
+                    args.append(tuple(_int(x) for x in v))
                 else:
                     args.append(_int(v[0]))
     if "profile" in kwargs:
@@ -505,9 +505,9 @@ def handle_commandline(profile, index):
     if "udp" in kwargs:
         udp = kwargs.pop("udp")
         if not udp:
-            udp = 9119
+            udp = 4122
     else:
-        udp = 9119
+        udp = 4122
     if "production" in kwargs:
         production = True
     else:
@@ -515,7 +515,7 @@ def handle_commandline(profile, index):
     return args, kwargs, profile, index, pg, production, udp
 
 
-def udp_send(appname, version, udpport=9119):
+def udp_send(appname, version, udpport=9122):
     time.sleep(1.5)
     udpsock = UDPSocket(std_addr=('127.0.0.1', udpport))
     serving_port = sys.APPCONF["addr"][1]

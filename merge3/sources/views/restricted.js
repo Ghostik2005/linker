@@ -362,6 +362,7 @@ export default class RView extends JetView{
         }
         var view = {
             view: "layout",
+            gravity: 4,
             css: {'border-top': "1px solid #dadee0 !important", "background": "lightgreen"},
             rows: [
                 {view: "label", label: "Активные", align:"center"},

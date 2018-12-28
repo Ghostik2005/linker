@@ -5,6 +5,7 @@ import PagerView from "../views/pager"
 //import NewformView from "../views/new_form";
 import {checkKey, getDtParams, get_data_test, request, checkVal} from "../views/globals";
 import History from "../views/history";
+import SprHistory from "../views/spr_history"
 
 export default class SprView extends JetView{
     config(){
@@ -87,6 +88,25 @@ export default class SprView extends JetView{
             old_stri: "",
             searchBar: "_spr_search",
             searchMethod: "getSprSearch",
+            css: "spr_table",
+            type:{
+                itemIcon: () => {
+                    let img = "<div class='webix_image', style='width:30px;height:30px;background-image:url(./library/img/log.svg);'</div>"
+                    let but = "<div class='webix_el_button posi'><button class='webix_img_btn_abs spr_button', style='background:transparent'>" + img + "</button> </div>";
+                    //but = "<div class='webix_el_button spr_button'> <button class='webixtype_base'>C</button> </div>";
+                    return but
+                },
+            }, 
+            onClick:{
+                spr_button:function(ev, id, html){
+                    let item = this.getItem(id);
+                    this.$scope.popsprh.show_w(item);
+
+
+                    console.log('item', item);
+                    //webix.alert("Clicked row "+ q.id_spr);
+                }
+            },
             columns: [
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
@@ -97,7 +117,14 @@ export default class SprView extends JetView{
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     header: [{text: "Название"},
                     ],
-                    template: "#c_tovar#<br><span style='color: darkgrey !important'>#c_zavod#, #c_strana#</span>",
+                    template: (obj, common, value)=>{
+                        let butt = common.itemIcon();
+                        let first_row = "<span class='first_row'>" + value + "</span>";
+                        let second_row = "<span style='color: darkgrey !important'>" + obj.c_zavod + ","  + obj.c_strana  + "</span>";
+                        let col = "<div class='right_col'>" + first_row +  "<br>" + second_row + "</div>"
+                        return "<div class = 'spr_hover'>" + butt + col + "</div>";
+                    },
+                    //template: "{common.itemIcon()}#c_tovar#<br><span style='color: darkgrey !important'>#c_zavod#, #c_strana#</span>",
                     headermenu:false,
                 },
             ],
@@ -173,7 +200,8 @@ export default class SprView extends JetView{
         }
         var view = {
             view: "layout",
-            width: document.documentElement.clientWidth*.3,
+            //width: document.documentElement.clientWidth*.3,
+            gravity: 3,
             css: {'border-top': "1px solid #dadee0 !important", "background": "#f4f5f9"},
             rows: [
                 {view: "label", label: "Эталоны", align:"center",
@@ -197,6 +225,7 @@ export default class SprView extends JetView{
 
     init() {
         this.pophistory = this.ui(History);
+        this.popsprh = this.ui(SprHistory)
         
     }
 }

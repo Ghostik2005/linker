@@ -57,6 +57,7 @@ export default class uplBrakXlsView extends JetView{
                         obj = obj.ret_val;
                         if (obj) {
                             this.view.$$("__table").parse(obj);
+                            this.view.$$("__table").adjustRowHeight("title");
                             row_format(this.view.$$("__table"));
                             };
                     } else{

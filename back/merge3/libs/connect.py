@@ -17,7 +17,7 @@ class Connect(object):
 
     def _print(self, msg=None):
         udp_msg = [sys.APPCONF["log"].appname, 'sql', '', msg, time.strftime("%Y-%m-%d %H:%M:%S")]
-        print(json.dumps(udp_msg), file=self.udp or sys.stdout)
+        print(str(json.dumps(udp_msg)), file=self.udp or sys.stdout)
         #print('xxxxxxxxxxxxxxxxxxxx')
         
     pass

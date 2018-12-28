@@ -201,24 +201,20 @@ export default class PView extends JetView{
         }
         var view = {
             view: "layout",
-            width: document.documentElement.clientWidth*.3,
+            //width: document.documentElement.clientWidth*.3,
+            gravity: 3,
             css: {'border-top': "1px solid #dadee0 !important", "background": "orange"},
             rows: [
                 {cols: [
                     {view: "label", 
                         width: 40,
                         align: "center",
-                        //label: "<span class='webix_icon fas fa-cogs'></span>",
-                        label: "<span style='color: transparent'>111</span>",
-                        //label: "  ",        
                         css: {'border-left': "1px solid #dadee0 !important", 'border-right': "1px solid #dadee0 !important",
-                              "background-image": "url(./library/img/options_permited.svg)",
-                              "background-repeat": "no-repeat", "background-position": "center center"},
+                            },
+                        label: "<span class='custom_image', style='background-image:url(./library/img/options_permited.svg); width: 30px; height: 30px;'></span>",
                         on: {
                             onItemClick: () => {
-                                //console.log('s', this.getParentView())
                                 this.popvnd.show_w(this.getParentView());
-                                //console.log("click")
                             },
                         }
                     },

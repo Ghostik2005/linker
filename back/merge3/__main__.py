@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'merge3'
-__version__ = '18.347.1520' #добавлен поиск по производителю
+__version__ = '18.355.1000' #запись логов в udp
+#__version__ = '18.347.1520' #добавлен поиск по производителю
 #__version__ = '18.340.1000' #production start
 #__version__ = '18.324.1000' #project start
 

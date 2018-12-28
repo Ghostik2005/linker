@@ -25,6 +25,7 @@ class API:
     """
 
     def __init__(self, log, w_path = '/ms71/data/merge3', p_path='/ms71/data/merge3/api-k', pg=False, production=False):
+        self.udp = sys.APPCONF["udpsock"]
         self.methods = []
         self.path = w_path
         self.p_path = p_path
@@ -34,9 +35,13 @@ class API:
              os.makedirs(self.p_path, mode=0o777)
         self.log = log
         self.key = ""
+        self.ch_key = ""
         #################################
         with open('api.key', 'r') as f_obj:
             self.key = f_obj.read().strip()
+        with open("ch.key", "r") as f_obj:
+            self.ch_key = f_obj.read().strip()
+        self.ch_connect_params = {"uri":"https://online365.pro/ch/", "verbose":False, "api_key":self.ch_key}
         if pg:
             self._pg = True
             self.port = pg
@@ -48,7 +53,15 @@ class API:
         self.start = 1
         self.count = 20
 
+    def _print(self, user=None, msg=None):
+        udp_msg = [sys.APPCONF["log"].appname, 'change', user or '', msg or '', time.strftime("%Y-%m-%d %H:%M:%S")]
+        print(str(json.dumps(udp_msg)), file=self.udp or sys.stdout)
+        #print(udp_msg, file=self.udp or sys.stdout)
+
     #####################################################
+    def _make_msg(self, user, params):
+        for i in params:
+            self._print(user, i)
 
     def login(self, params=None, x_hash=None):
         user = params.get('user')
@@ -74,6 +87,76 @@ class API:
                     with open(f_name, 'wb') as f_obj:
                         f_obj.write(res[0][0].encode())
                     ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getHistory(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            id_spr = params.get("id_spr")
+            #id_spr = 17660
+            sql = """select user, payload, dt from udp_logs.logs where application='merge3' and type='change' %s FORMAT TabSeparatedRaw;"""
+            ins = ''
+            if id_spr:
+                ins = f"""and payload like '%\"ref_id": "{str(id_spr)}"%\'"""
+            sql = sql % ins
+            server = ms71lib.ServerProxy(**self.ch_connect_params)
+            request = server("request")
+            result = request(sql.encode())
+            server('close')
+            ret_val = []
+            ii = set()
+            vn = []
+            vendors = {}
+            companies = {}
+            for row in result:
+                row = row.decode()
+                row = row.split("\t")
+                #print(type(row), row)
+                payload = row[1]
+                payload = payload.replace('True', '"True"')
+                pl = json.loads(payload)
+                inns = pl.get('inn')
+                vnd = pl.get('scode');
+                for i in inns:
+                    ii.add(i)
+                vn.append(vnd)
+                hard = pl.get("abso", "")
+                if hard == "True":
+                    hard = True
+                r = {
+                    "user": row[0],
+                    "remove": pl.get('remove', ""),
+                    "expires": pl.get("expires", ""),
+                    "hard": hard,
+                    "inns": inns,
+                    "c_inns": [],
+                    "id_vnd": vnd,
+                    "c_vnd": "",
+                    "dt": row[2]
+                }
+                ret_val.append(r)
+            ii = list(ii)
+            sql_inns = f"""select inn, c_inn from companies where inn in ({','.join(["'%s'"%i for i in ii])});"""
+            sql_vnd = f"""select id_vnd, c_vnd, merge3 from vnd where id_vnd in ({','.join(["%s"%i for i in vn])});"""
+            p_list = [{'sql': sql_inns, 'opt': ()}, {'sql': sql_vnd, 'opt': ()}]
+            pool = ThreadPool(2)
+            result_inns, result_vnd = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            for row in result_vnd:
+                vendors[int(row[0])] = row[1]
+            for row in result_inns:
+                companies[int(row[0])] = row[1]
+            for row in ret_val:
+                inns = row['inns']
+                c_inns = []
+                for inn in inns:
+                    c_inns.append(companies.get(int(inn)))
+                row["c_inns"] = c_inns
+                row["c_vnd"] = vendors.get(int(row["id_vnd"]))
+            ret = {"result": True, "ret_val": ret_val}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def setExit(self, params=None, x_hash=None):
@@ -262,7 +345,7 @@ where us."USER" = %s;"""
 
     def setVnd(self, params=None, x_hash=None):
         if self._check(x_hash):
-            #user = params.get('user')
+            user = params.get('user')
             datas = params.get('datas')
             remove = params.get('remove')
             inserts = {}
@@ -294,24 +377,27 @@ where us."USER" = %s;"""
                 if hard != '0' and not remove:
                     r['abso'] = True
                 params.append(r)
-
-            pool = ThreadPool(len(params))
-            results = pool.map(self._set_vnd, params)
-            pool.close()
-            pool.join()
             _return = []
-            for i, result in enumerate(results):
-                _return.append({"params": params[i], "result": result})
-                print(params[i], result, sep="\t")
+            if len(params) > 0:
+                self._make_msg(user, params)
+                pool = ThreadPool(len(params))
+                results = pool.map(self._set_vnd, params)
+                pool.close()
+                pool.join()
+                
+                for i, result in enumerate(results):
+                    _return.append({"params": params[i], "result": result})
+                    print(params[i], result, sep="\t")
             ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def _set_vnd(self, params):
+        #return params
         rpc = ms71lib.ServerProxy("https://sklad71.org/apps/mrksrv/uri/RPC2", api_key=self.key)
         return rpc.plx("reference_links_change", **params)[0]
-        #return True
+
 
     def getVnd(self, params=None, x_hash=None):
         t0 = time.time()

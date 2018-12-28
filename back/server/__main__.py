@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '18.353.1500' #добавлено сравнение файла xls с нашей базой
+__version__ = '18.355.0900' #исправленно сравнение файла xls с нашей базой
+#__version__ = '18.353.1500' #добавлено сравнение файла xls с нашей базой
 #__version__ = '18.347.1725' #добавлено сравнение хешей для сохраняемого письма в браку
 #__version__ = '18.341.0900' #добавлена корректировка файла забраковки
 #__version__ = '18.334.1500' #исправленны старые запросы, текст ошибки передает на фронт
@@ -208,8 +209,8 @@ def application(env):
             ret_value = ret_v.get('data')
             header = libs.f_head(len(ret_value), f_type)
             fileReturn = True
-        else:
-            ret_value = json.dumps(ret, ensure_ascii=False)
+        #else:
+            #ret_value = json.dumps(ret, ensure_ascii=False)
     if not fileReturn:
         ret_value = content.encode()
         if arg == 'login':

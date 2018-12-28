@@ -509,12 +509,12 @@ def handle_commandline(profile, index):
     return args, kwargs, profile, index, pg, production, udp
 
 
-def udp_send(appname, version, udpport=9119):
+def udp_send(appname, version, udpport=4122):
     time.sleep(1.5)
     udpsock = UDPSocket(std_addr=('127.0.0.1', udpport))
     serving_port = sys.APPCONF["addr"][1]
     payload = {'appname': appname, 'version': version, 'port': serving_port}
-    payload = json.dumps(payload, ensure_ascii=False) #heart beat message, it needs to discuss
+    payload = str(json.dumps(payload)) #heart beat message, it needs to discuss
     #print(payload)
     while True: #infinite loop for heart beating
         print(payload, file=udpsock) #send to UDP socket our message

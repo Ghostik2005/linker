@@ -4607,9 +4607,14 @@ where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {self._wildcardIns()}
             for rownum in range(worksheet.nrows):
                 if rownum ==0: continue
                 row = worksheet.row_values(rownum)
-                #print(row)
+                s = row[3]
+                if not isinstance(s, str):
+                    try:
+                        s = str(int(row[3]))
+                    except:
+                        pass
                 ser = {
-                    "file_series": str(row[3]),
+                    "file_series": s,
                     "file_number": str(row[4]),
                     "file_title": str(row[6]).replace("\n", "")
                 }
@@ -4638,6 +4643,9 @@ select distinct seriya, title_doc, 'rus'
 from brak_mail 
 where seriya = '%s' and deleted = 0--rus
 """
+            sql_t2 = """select distinct seriya, title_doc, 'eng'
+from brak_mail 
+where seriya = '%s'"""
             sqls = []
             series = self._xls2csv(file_name)
             for row in series:
@@ -4648,7 +4656,11 @@ where seriya = '%s' and deleted = 0--rus
                 else:
                     s_eng = s
                     s_rus = self._lang_trans(s)
-                sqls.append(sql_template % (s_eng, s_rus))
+                if s_eng == s_rus:
+                    sql = sql_t2 % s_eng
+                else: 
+                    sql = sql_template % (s_eng, s_rus)
+                sqls.append(sql)
             results = []
             while sqls:
                 sqls_re = []
@@ -4665,13 +4677,21 @@ where seriya = '%s' and deleted = 0--rus
             for i, s in enumerate(series):
                 row = results[i]
                 if row:
-                    if s.get('file_number') in row[0][1]:
+                    qw = []
+                    if len(row) > 1:
+                        for j in row:
+                            qw.append(j[1])
+                    else:
+                        qw.append(row[0][1])
+                    qw = ", ".join(qw)
+
+                    if s.get('file_number') in qw:
                         s['result'] = True
                         s['letter_match'] = True
                     else:
                         s['result'] = False
                         s['letter_match'] = False
-                    s['title'] = row[0][1]
+                    s['title'] = qw
                     s['base_lang'] = row[0][2]
                 else:
                     s['result'] = False

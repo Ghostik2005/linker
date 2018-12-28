@@ -65,6 +65,8 @@ export default class CheckView extends JetView{
             resizeColumn:true,
             navigation: "row",
             editable: false,
+            fixedRowHeight:false, rowLineHeight: 24, rowHeight:24,
+            autowidth:true,
             headermenu:{
                 autowidth: true, 
                 },
@@ -102,7 +104,7 @@ export default class CheckView extends JetView{
                                                     "<span class='webix_icon fa-times-circle', style='color: red'></span>";
                         },
                 },
-                {id: "title", fillspace: true, headermenu: false, sort: 'text',
+                {id: "title", width: document.documentElement.clientWidth * 0.7 - 470, headermenu: false, sort: 'text',
                     header: [{text: "Название письма в базе"},
                     ],
                     headermenu:false,
@@ -117,6 +119,9 @@ export default class CheckView extends JetView{
                 },
             ],
             on: {
+                "onresize": webix.once(function(){ 
+                    this.adjustRowHeight("title", true); 
+                }),
                 "data->onParse":function(i, data){
                     this.clearAll();
                 },
