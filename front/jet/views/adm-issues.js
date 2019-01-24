@@ -1,7 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {allIs, setButtons, addIssue, delIssue, updIssue, request, checkVal} from "../views/globals";
+import {issueReload, setButtons, addIssue, delIssue, updIssue, request, checkVal, DelEdIcons} from "../views/globals";
+import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 export default class IssueView extends JetView{
@@ -22,18 +23,40 @@ export default class IssueView extends JetView{
             posPpage: 20,
             totalPos: 1250,
             old_stri: "",
+            type:{
+                itemIcon: DelEdIcons,
+            }, 
+            onClick:{
+                delete_button:function(ev, id, html){
+                    let item = this.getItem(id);
+                    if (item.delete===false) {
+                        webix.message({"type": "debug", "text": "Удаление группы "+ item.c_issue  + " невозможно", "expire": 5000});
+                        return
+                    };
+                    setTimeout( () => {
+                        this.select(item.id, false);
+                        this.$scope.$$("_del").callEvent("onItemClick");
+                    }, 50)
+                },
+                edit_button:function(ev, id, html){
+                    this.select(id, false);
+                    this.callEvent("onItemDblClick", id);
+                },
+
+            },
             columns: [
-                {id: "id", sort: "text",
-                    width: 75,
-                    header: [{text: "ID"},
-                        ],
-                    },
                 { id: "c_issue", headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "Форма выпуска"},
-                        ]
+                        ],
+                    template: refTemplate,
+                },
+                {id: "id", sort: "text",
+                    width: 300,
+                    header: [{text: "ID"},
+                        ],
                     },
-                { id: "id_state", 
+                { id: "id_state", hidden: true,
                     width: 150,
                     header: [{text: "Статус"},
                         ]
@@ -60,7 +83,7 @@ export default class IssueView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").show();
+                    //this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -94,14 +117,14 @@ export default class IssueView extends JetView{
                     extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить форму</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let url = app.config.r_url + "?getIsId"
-                        let params = {"user": app.config.user};
-                        let res = request(url, params, !0).response;
-                        params = {'type': 'Issue', 'callback': addIssue, 'mode': 'new', 'source': this.$$("__table")};
-                        res = checkVal(res, 's');
-                        if (res) {
-                            params['id_is'] = res;
-                            };
+                        // let url = app.config.r_url + "?getIsId"
+                        // let params = {"user": app.config.user};
+                        // let res = request(url, params, !0).response;
+                        let params = {'type': 'Issue', 'callback': addIssue, 'mode': 'new', 'source': this.$$("__table")};
+                        // res = checkVal(res, 's');
+                        // if (res) {
+                        //     params['id_is'] = res;
+                        //     };
                         this.popnew.show('Добавление формы выпуска', params);
                         }
                     },
@@ -110,21 +133,22 @@ export default class IssueView extends JetView{
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
                     extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить форму</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
-                    click: () => {
-                        let item_id = this.$$("__table").getSelectedItem().id
-                        let params = {};
-                        params['user'] = this.app.config.user;
-                        params['id'] = item_id;
-                        let url = this.app.config.r_url + "?delIssue";
-                        let res = JSON.parse(request(url, params, !0).response);
-                        if (res.result) {
-                            console.log(res.ret_val.id)
-                            delIssue(res.ret_val.id);
-                            this.$$("_del").hide()
-                        } else {
-                            webix.message({'type': 'error', 'text': res.ret_val})
-                            };
-                        }
+                    on: {
+                        onItemClick: () => {
+                            let item_id = this.$$("__table").getSelectedItem().id
+                            let params = {};
+                            params['user'] = this.app.config.user;
+                            params['id'] = item_id;
+                            let url = this.app.config.r_url + "?delIssue";
+                            let res = JSON.parse(request(url, params, !0).response);
+                            if (res.result) {
+                                delIssue(res.ret_val.id, this.$$("__table"));
+                                this.$$("_del").hide()
+                            } else {
+                                webix.message({'type': 'error', 'text': res.ret_val})
+                                };
+                            }
+                    }
                     },
                 ]
             }
@@ -141,12 +165,14 @@ export default class IssueView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
+        issueReload(this.app, this.$$("__table"));
+        //this.$$("__table").parse(issReload(this.app));
         }
 
         
     init() {
         this.popnew = this.ui(NewPropView);
         webix.extend(this.$$("__table"), webix.ProgressBar);
-        this.$$("__table").sync(allIs.data);
+        //this.$$("__table").sync(allIs.data);
         }
     }

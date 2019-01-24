@@ -10,6 +10,21 @@ export default class RView extends JetView{
         var app = this.app;
         let view_this = this;
 
+        var remAll = function (parentTable, items, all=false) {
+            let id_spr = 50516;
+            let inns = ['3525165470', '3525211102', '3525014376', '3525016140', '3525142956', '3525303699', '3528112460',
+                        '3525261142', '3525087085', '3526009890', '3525313697', '3528291272', '440701038915', '2907003938', 
+                        '3528083025', '2907017722', '3526022193', '2901258714', '2901101953', '2901294180'];
+            let url = app.config.r_url + "?delVndAll";
+            let params = {'user': app.config.user, 'id_spr': id_spr, 'inn': inns};
+            request(url, params).then( (data) => {
+                data = checkVal(data, 'a');
+                if (data) {
+                    console.log('res_data', data)        
+                }
+            });
+        }
+
         var removeFromTable = function (parentTable, items, all=false) {
             var removes = [];
             //console.log('remove items', items);
@@ -87,8 +102,10 @@ export default class RView extends JetView{
                         let table = this.$$("__table");
                         if (table.count() < 1) {
                             //webix.message({type: "error", text: "Нет активных элементов", expire: 2000})
+                            //
                             return false;
                         };
+                        //remAll(table, table.serialize(), true);
                         removeFromTable(table, table.serialize(), true);
                     },
                 },

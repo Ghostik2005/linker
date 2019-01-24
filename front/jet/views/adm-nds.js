@@ -1,7 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {nds, addNds, setButtons, delNds, updNds, request, checkVal} from "../views/globals";
+import {DelEdIcons, ndsReload, addNds, setButtons, delNds, updNds, request, checkVal} from "../views/globals";
+import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 export default class NdsView extends JetView{
@@ -22,24 +23,45 @@ export default class NdsView extends JetView{
             posPpage: 20,
             totalPos: 1250,
             old_stri: "",
+            type:{
+                itemIcon: DelEdIcons,
+            }, 
+            onClick:{
+                delete_button:function(ev, id, html){
+                    let item = this.getItem(id);
+                    if (item.delete===false) {
+                        webix.message({"type": "debug", "text": "Удаление группы "+ item.c_issue  + " невозможно", "expire": 5000});
+                        return
+                    };
+                    setTimeout( () => {
+                        this.select(item.id, false);
+                        this.$scope.$$("_del").callEvent("onItemClick");
+                    }, 50)
+                },
+                edit_button:function(ev, id, html){
+                    this.select(id, false);
+                    this.callEvent("onItemDblClick", id);
+                },
+            },
             columns: [
-                {id: "id",
-                    width: 200,
-                    header: [{text: "ID"},
-                        ],
-                    },
                 { id: "nds", headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "НДС"},
-                        ]
+                        ],
+                    template: refTemplate,
+                },
+                {id: "id",
+                    width: 200, sort: "text",
+                    header: [{text: "ID"},
+                        ],
                     },
                 { id: "id_state", 
-                    width: 150,
+                    width: 150, hidden: true,
                     header: [{text: "Статус"},
                         ]
                     },
                 { id: "dt", 
-                    width: 250,
+                    width: 250, hidden: true,
                     header: [{text: "Дата заведения"},
                         ]
                     }
@@ -65,7 +87,7 @@ export default class NdsView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").show();
+                    //this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -108,19 +130,21 @@ export default class NdsView extends JetView{
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
                     extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить НДС</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
-                    click: () => {
-                        let item_id = this.$$("__table").getSelectedItem().id
-                        let params = {};
-                        params['user'] = this.app.config.user;
-                        params['id'] = item_id;
-                        let url = this.app.config.r_url + "?delNds";
-                        let res = request(url, params, !0).response;
-                        res = checkVal(res, 's');
-                        if (res) {
-                            delNds(res.id);
-                            this.$$("_del").hide()
-                            };
-                        }
+                    on: {
+                        onItemClick: () => {
+                            let item_id = this.$$("__table").getSelectedItem().id
+                            let params = {};
+                            params['user'] = this.app.config.user;
+                            params['id'] = item_id;
+                            let url = this.app.config.r_url + "?delNds";
+                            let res = request(url, params, !0).response;
+                            res = checkVal(res, 's');
+                            if (res) {
+                                delNds(res.id, this.$$("__table"));
+                                this.$$("_del").hide()
+                                };
+                            },
+                        },
                     },
                 ]
             }
@@ -137,11 +161,12 @@ export default class NdsView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
+        ndsReload(this.app, this.$$("__table"));
         }
         
     init() {
         this.popnew = this.ui(NewPropView);
         webix.extend(this.$$("__table"), webix.ProgressBar);
-        this.$$("__table").sync(nds.data);
+        //this.$$("__table").sync(nds.data);
         }
     }

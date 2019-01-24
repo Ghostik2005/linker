@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, checkKey} from "../views/globals";
+import {getRefs, request, checkVal, checkKey} from "../views/globals";
 import SprView from "../views/adm-spr";
 import CountryView from "../views/adm-country";
 import VendorsView from "../views/adm-vendors";
@@ -12,6 +12,7 @@ import HranView from "../views/adm-hran";
 import NdsView from "../views/adm-nds";
 import SeasonsView from "../views/adm-seasons";
 import IssueView from "../views/adm-issues";
+import TGroupsView from "../views/adm-t-groups";
 
 export default class RefView extends JetView{
     config(){
@@ -25,6 +26,13 @@ export default class RefView extends JetView{
                     body: { view: "layout",
                         rows: [
                             {$subview: SprView},
+                            ]
+                        }
+                    },
+                {header: "<span style='line-height: 20px;'>Товарные группы</span>", width: 140, //close: true,
+                    body: { view: "layout",
+                        rows: [
+                            {$subview: TGroupsView},
                             ]
                         }
                     },
@@ -113,4 +121,9 @@ export default class RefView extends JetView{
                 ]
             }
         }
+
+    ready() {
+        getRefs(this.app);
+    }
+
     }

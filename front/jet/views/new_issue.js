@@ -10,12 +10,6 @@ export default class NewIssueView extends JetView{
         
         return {view: "cWindow",
             modal: true,
-            on: {
-                onHide: () => {
-                    },
-                onShow: () => {
-                    },
-                },
             body: { view: "form",
                 localId: "_n_is",
                 margin: 0,

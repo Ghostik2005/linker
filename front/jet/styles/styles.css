@@ -360,3 +360,73 @@ div.webix_item_tab {
     background-position: center center !important;
     color: transparent !important;
 }
+
+.edit_button {
+    opacity: 0;
+    border: 0px !important;
+    width: 30px !important;
+    height: 30px !important;
+    background:transparent;
+}
+
+.dt_hover:hover .right_col_2{
+    width: 80%;
+    margin-left: 0px;
+    -webkit-transition: margin-left 0.5s; 
+    transition: margin-left 0.5s;
+}
+
+.dt_hover:hover .right_col_1 {
+    width: 80%;
+    margin-left: 0px;
+    -webkit-transition: margin-left 0.5s; 
+    transition: margin-left 0.5s;
+}
+
+.dt_hover:hover .edit_button {
+    opacity: 1;
+    -webkit-transition: opacity 0.5s; 
+    transition: opacity 0.5s;
+}
+
+.delete_button {
+    opacity: 0;
+    border: 0px !important;
+    width: 30px !important;
+    height: 30px !important;
+    background:transparent;
+}
+
+.dt_hover:hover .delete_button {
+    opacity: 1;
+    -webkit-transition: opacity 0.5s; 
+    transition: opacity 0.5s;
+}
+
+.webix_el_button.posi {
+    float: left;
+    padding-top: 0px;
+}
+
+.right_col_1 {
+    padding-left: 5px;
+    width: 85%;
+    text-overflow: clip;
+    /*white-space: nowrap;*/
+    margin-left: -30px;
+    float: left;
+}
+
+.right_col_2 {
+    padding-left: 5px;
+    width: 85%;
+    text-overflow: clip;
+    /*white-space: nowrap;*/
+    margin-left: -60px;
+    float: left;
+}
+
+.image20x20 {
+    width:20px;
+    height:20px
+}

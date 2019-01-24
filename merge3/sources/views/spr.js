@@ -101,10 +101,6 @@ export default class SprView extends JetView{
                 spr_button:function(ev, id, html){
                     let item = this.getItem(id);
                     this.$scope.popsprh.show_w(item);
-
-
-                    console.log('item', item);
-                    //webix.alert("Clicked row "+ q.id_spr);
                 }
             },
             columns: [

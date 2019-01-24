@@ -6,7 +6,7 @@ import {get_data_test, checkKey, setButtons, getDtParams} from "../views/globals
 
 export default class BarcodesView extends JetView{
     config(){
-
+        let app = this.app;
         var top = {height: 40,  view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Начните набирать название товара здесь",  fillspace: true, localId: "_sb",
@@ -100,6 +100,26 @@ export default class BarcodesView extends JetView{
                             },
                         }
                     },
+                {view: "button", type: 'htmlbutton', width: 35,
+                    localId: "_rep",
+                    resizable: true,
+                    sWidth: 160,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отчет по дублям</span>",
+                    oldLabel: "<span class='webix_icon fa-file'></span>",
+                    on: {
+                        onItemClick: () => {
+                            let url = app.config.r_url + "?barcodeReport";
+                            let params = {};
+                            webix.ajax().timeout(180000).headers({'Content-type': 'application/json'}).response("blob").post(url, params, function(text, data, xmlhttpreq) {
+                                let f_n = xmlhttpreq.getResponseHeader('content-disposition').split('filename=')[1].replace(/^\s+|\s+$/g, '')
+                                webix.html.download(data, f_n);//"report." + params.type);
+                                })
+                            },
+                        },
+                    },
                 ]
             }
 
@@ -113,7 +133,7 @@ export default class BarcodesView extends JetView{
         }
 
     ready() {
-        let r_but = [this.$$("_history"), ]
+        let r_but = [this.$$("_history"), this.$$("_rep")]
         setButtons(this.app, r_but);
         }
 

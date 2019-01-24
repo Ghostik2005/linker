@@ -1,7 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {hran, setButtons, addHran, delHran, updHran, request, checkVal} from "../views/globals";
+import {DelEdIcons, hranReload, setButtons, addHran, delHran, updHran, request, checkVal} from "../views/globals";
+import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
 
@@ -23,23 +24,44 @@ export default class HranView extends JetView{
             posPpage: 20,
             totalPos: 1250,
             old_stri: "",
+            type:{
+                itemIcon: DelEdIcons,
+            }, 
+            onClick:{
+                delete_button:function(ev, id, html){
+                    let item = this.getItem(id);
+                    if (item.delete===false) {
+                        webix.message({"type": "debug", "text": "Удаление группы "+ item.c_issue  + " невозможно", "expire": 5000});
+                        return
+                    };
+                    setTimeout( () => {
+                        this.select(item.id, false);
+                        this.$scope.$$("_del").callEvent("onItemClick");
+                    }, 50)
+                },
+                edit_button:function(ev, id, html){
+                    this.select(id, false);
+                    this.callEvent("onItemDblClick", id);
+                },
+            },
             columns: [
-                {id: "id",
-                    width: 200,
-                    header: [{text: "ID"},
-                        ],
-                    },
                 { id: "usloviya", headermenu: false,
                     fillspace: 1, sort: "text",
                     header: [{text: "Условия хранения"},
-                        ]
+                        ],
+                    template: refTemplate,
+                },
+                {id: "id",
+                    width: 300, sort: "text",
+                    header: [{text: "ID"},
+                        ],
                     },
-                { id: "id_state", 
+                { id: "id_state", hidden: true,
                     width: 150,
                     header: [{text: "Статус"},
                         ]
                     },
-                { id: "dt", 
+                { id: "dt",  hidden: true,
                     width: 250,
                     header: [{text: "Дата заведения"},
                         ]
@@ -66,7 +88,7 @@ export default class HranView extends JetView{
                     this.hideProgress();
                     },
                 onBeforeSelect: () => {
-                    this.$$("_del").show();
+                    //this.$$("_del").show();
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -109,19 +131,21 @@ export default class HranView extends JetView{
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
                     extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить условия</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
-                    click: () => {
-                        let item_id = this.$$("__table").getSelectedItem().id
-                        let params = {};
-                        params['user'] = this.app.config.user;
-                        params['id'] = item_id;
-                        let url = this.app.config.r_url + "?delHran";
-                        let res = request(url, params, !0).response;
-                        res = checkVal(res, 's');
-                        if (res) {
-                            delHran(res.id);
-                            this.$$("_del").hide()
-                            };
-                        }
+                    on: {
+                        onItemClick: () => {
+                            let item_id = this.$$("__table").getSelectedItem().id
+                            let params = {};
+                            params['user'] = this.app.config.user;
+                            params['id'] = item_id;
+                            let url = this.app.config.r_url + "?delHran";
+                            let res = request(url, params, !0).response;
+                            res = checkVal(res, 's');
+                            if (res) {
+                                delHran(res.id, this.$$("__table"));
+                                this.$$("_del").hide()
+                                };
+                            },
+                        },
                     },
                 ]
             }
@@ -138,11 +162,12 @@ export default class HranView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
+        hranReload(this.app, this.$$("__table"));
         }
         
     init() {
         this.popnew = this.ui(NewPropView);
         webix.extend(this.$$("__table"), webix.ProgressBar);
-        this.$$("__table").sync(hran.data);
+        //this.$$("__table").sync(hran.data);
         }
     }

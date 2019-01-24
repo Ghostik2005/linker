@@ -50,8 +50,9 @@ class API:
             self.port = pg
             self.log("POSTGRES STARTING on %s port" % self.port)
         else:
-            self._pg = False
-            self.log("FB STARTED")
+            self._pg = True
+            self.port = 5432
+            self.log("FORCE PG STARTING on %s port" % self.port)
         if self._pg:
             self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"], port = self.port, production=production)
         else:
@@ -351,11 +352,12 @@ WHERE r.SH_PRC = {self._wildcardIns()}
         if self._check(x_hash):
             filt = params.get('c_filter')
             stri = ""
+            c_tov = params.get("search", '')
             if filt:
                 pars = {}
                 pars['c_vnd'] = filt.get('c_vnd')
                 pars['c_zavod'] = filt.get('c_zavod')
-                pars['c_tovar'] = filt.get('c_tovar')
+                pars['c_tovar'] = filt.get('c_tovar', c_tov)
                 pars['c_user'] = filt.get('c_user')
                 pars['source'] = filt.get('source')
                 pars['id_org'] = filt.get('id_org')
@@ -485,7 +487,7 @@ order by {field} {direction}"""
 {sql_3 if us_s else ''}
 left join users uu on uu.id = r.in_work
 WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
-            self.log(sql)
+            #self.log(sql)
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -938,7 +940,16 @@ ORDER by r.SOURCE DESC
                     {'sql': "select nm_group, cd_group from classifier where idx_group = 3 order by gr_count desc", 'opt': ()},
                     {'sql': "select nm_group, cd_group from classifier where idx_group = 6 order by gr_count desc", 'opt': ()},
                     {'sql': "select nm_group, cd_group from classifier where idx_group = 1 order by gr_count desc", 'opt': ()},
-                    {'sql': "select nm_group, cd_group from classifier where idx_group = 7 order by gr_count desc", 'opt': ()},
+                    {'sql': """select cl.nm_group, cl.cd_group,
+    CASE 
+    WHEN not EXISTS(select g.cd_code 
+from classifier c
+join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
+    ELSE 1
+    END
+from classifier cl
+where cl.idx_group = 7
+order by cl.nm_group asc;""", 'opt': ()},
                     {'sql': "select r.ID, r.C_ISSUE from ISSUE r where r.flag=1 order by r.C_ISSUE", 'opt': ()}
                     ]
             pool = ThreadPool(len(p_list))
@@ -1012,7 +1023,8 @@ ORDER by r.SOURCE DESC
             for row in results[7]:
                 r = {
                     "id"            : row[1],
-                    "c_tgroup"         : row[0]
+                    "c_tgroup"         : row[0],
+                    "delete": True if row[2]==0 else False,
                 }
                 _return.append(r)
             re['tg'] = _return
@@ -1032,14 +1044,22 @@ ORDER by r.SOURCE DESC
 
     def getStranaAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select c_strana, id_spr from spr_strana where flag=1 order by c_strana"""
+            sql = """select ss.c_strana, ss.id_spr,
+    CASE 
+    WHEN not EXISTS(select g.id_spr
+from spr_strana ii
+join SPR g on ii.id_spr = g.id_strana and ii.id_spr=ss.id_spr) THEN 0
+    ELSE 1
+    END 
+from spr_strana ss where flag=1 order by ss.c_strana"""
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
                 r = {
                     "id"        : row[1],
-                    "c_strana"       : row[0]
+                    "c_strana"       : row[0],
+                    "delete": True if row[2]==0 else False,
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1053,7 +1073,7 @@ ORDER by r.SOURCE DESC
             if check:
                 sql = f"""SELECT 
     CASE 
-    WHEN not EXISTS(select id_spr from spr_strana where id_spr = {self._wildcardIns()}) THEN 0
+    WHEN not EXISTS(select c_strana from spr_strana where c_strana = {self._wildcardIns()}) THEN 0
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
@@ -1067,9 +1087,19 @@ ORDER by r.SOURCE DESC
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _genStranaId(self):
+        sql = """select max(r.id_spr) from spr_strana r"""
+        opt = ()
+        res = self.db.request({"sql": sql, "options": opt})[0][0]
+        if res:
+            t = int(res) + 1
+        else:
+            t = 1
+        return t
+
     def setStrana(self, params=None, x_hash=None):
         if self._check(x_hash):
-            c_id = params.get('id')
+            c_id = self._genStranaId() #params.get('id')
             val = params.get('value')
             if c_id and val:
                 sql = f"""insert into spr_strana (ID_SPR, C_STRANA, FLAG)
@@ -1138,7 +1168,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             if check:
                 sql = f"""SELECT 
     CASE 
-    WHEN not EXISTS(select id from ISSUE where id = {self._wildcardIns()}) THEN 0
+    WHEN not EXISTS(select c_issue from ISSUE where c_issue = {self._wildcardIns()}) THEN 0
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
@@ -1154,14 +1184,22 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def getIssueAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select c_issue, id from ISSUE where flag=1 order by c_issue"""
+            sql = """select i.c_issue, i.id,
+    CASE 
+    WHEN not EXISTS(select g.id_is
+from ISSUE ii
+join SPR_ISSUE g on cast(ii.id as text) = g.id_is and ii.id=i.id) THEN 0
+    ELSE 1
+    END
+from ISSUE i where flag=1 order by i.c_issue"""
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
                 r = {
                     "id"        : row[1],
-                    "value"     : row[0]
+                    "c_issue"     : row[0],
+                    "delete": True if row[2]==0 else False,
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1169,10 +1207,19 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _genIssueId(self):
+        sql = """select max(r.id) from issue r"""
+        opt = ()
+        res = self.db.request({"sql": sql, "options": opt})[0][0]
+        if res:
+            t = int(res) + 1
+        else:
+            t = 1
+        return t
 
     def setIssue(self, params=None, x_hash=None):
         if self._check(x_hash):
-            c_id = params.get('id')
+            c_id = self._genIssueId() #params.get('id')
             val = params.get('value')
             if c_id and val:
                 sql = f"""insert into ISSUE (ID, C_ISSUE, FLAG)
@@ -1203,7 +1250,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
-                opt = (c_id,)
+                opt = (str(c_id),)
                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
                 if result == 0:
                     sql = f"""delete from ISSUE where ID = {self._wildcardIns()} returning ID"""
@@ -1268,14 +1315,26 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def getVendorAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select c_zavod, id_spr from spr_zavod where flag=1 order by c_zavod"""
+            sql = """select ss.c_zavod, ss.id_spr,
+    CASE 
+    WHEN not EXISTS(select g.id_spr
+from spr_zavod ii
+join SPR g on ii.id_spr = g.id_zavod and ii.id_spr=ss.id_spr) THEN 0
+    ELSE 1
+    END,
+    ss.website
+ from spr_zavod ss where ss.flag=1 order by ss.c_zavod"""
+            sql = """select ss.c_zavod, ss.id_spr, ss.website
+ from spr_zavod ss where ss.flag=1 order by ss.c_zavod"""
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
                 r = {
-                    "id"        : row[1],
-                    "c_zavod"       : row[0]
+                    "id": row[1],
+                    "c_zavod": row[0],
+                    "delete": False,
+                    "website": row[2] or "" 
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1289,7 +1348,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             if check:
                 sql = f"""SELECT 
     CASE 
-    WHEN not EXISTS(select id_spr from spr_zavod where id_spr = {self._wildcardIns()}) THEN 0
+    WHEN not EXISTS(select c_zavod from spr_zavod where c_zavod = {self._wildcardIns()}) THEN 0
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
@@ -1303,19 +1362,32 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _genVendorId(self):
+        sql = """select max(r.id_spr) from spr_zavod r"""
+        opt = ()
+        res = self.db.request({"sql": sql, "options": opt})[0][0]
+        if res:
+            t = int(res) + 1
+        else:
+            t = 1
+        return t
+
     def setVendor(self, params=None, x_hash=None):
         if self._check(x_hash):
-            c_id = params.get('id')
+            c_id = self._genVendorId() #params.get('id')
             val = params.get('value')
+            website = params.get('website', '')
             if c_id and val:
-                sql = f"""insert into spr_zavod (ID_SPR, C_ZAVOD, FLAG)
-values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
-                opt = (c_id, val)
+                sql = f"""insert into spr_zavod (ID_SPR, C_ZAVOD, FLAG, website)
+values ({self._wildcardIns()}, {self._wildcardIns()}, 1, {self._wildcardIns()}) returning ID_SPR"""
+                opt = (c_id, val, website)
                 res = self.db.execute({"sql": sql, "options": opt})
                 if res[0]:
                     _ret = {
                         'id'    : c_id,
-                        'c_zavod' : val
+                        'c_zavod' : val,
+                        'website': website,
+                        'delete': True
                     }
                     ret = {"result": True, "ret_val": _ret}
                 else:
@@ -1350,14 +1422,18 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
         if self._check(x_hash):
             c_id = params.get('id')
             val = params.get('value')
+            website = params.get('website', '')
             if c_id and val:
-                sql = f"""update SPR_ZAVOD set C_ZAVOD = {self._wildcardIns()} where ID_SPR = {self._wildcardIns()} returning ID_SPR"""
-                opt = (val, c_id)
+                sql = f"""update SPR_ZAVOD set C_ZAVOD = {self._wildcardIns()}, website = {self._wildcardIns()}
+where ID_SPR = {self._wildcardIns()} returning ID_SPR"""
+                opt = (val, website, c_id)
                 res = self.db.execute({"sql": sql, "options": opt})
                 if res[0]:
                     _ret = {
                         'id'    : c_id,
-                        'value' : val
+                        'value' : val,
+                        'website': website,
+                        'delete': False
                     }
                     ret = {"result": True, "ret_val": _ret}
                 else:
@@ -1370,7 +1446,14 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def getDvAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select r.ID, r.ACT_INGR, r.OA from dv r where r.flag=1 order by r.ACT_INGR"""
+            sql = """select i.ID, i.ACT_INGR, i.OA,
+    CASE 
+    WHEN not EXISTS(select g.id_spr
+from dv ii
+join SPR g on ii.id = g.id_dv and ii.id=i.id) THEN 0
+    ELSE 1
+    END 
+ from dv i where i.flag=1 order by i.ACT_INGR"""
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -1384,7 +1467,8 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
                 r = {
                     "id"        : row[0],
                     "act_ingr"  : row[1],
-                    "oa"        : oa
+                    "oa"        : oa,
+                    "delete": True if row[3]==0 else False,
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1398,7 +1482,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             if check:
                 sql = f"""SELECT 
     CASE 
-    WHEN not EXISTS(select id from dv where id = {self._wildcardIns()}) THEN 0
+    WHEN not EXISTS(select act_ingr from dv where act_ingr = {self._wildcardIns()}) THEN 0
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
@@ -1412,9 +1496,19 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _genDvId(self):
+        sql = """select max(r.id) from DV r"""
+        opt = ()
+        res = self.db.request({"sql": sql, "options": opt})[0][0]
+        if res:
+            t = int(res) + 1
+        else:
+            t = 1
+        return t
+
     def setDv(self, params=None, x_hash=None):
         if self._check(x_hash):
-            c_id = params.get('id')
+            c_id = self._genDvId() #params.get('id')
             val = params.get('value')
             oa1 = int(params.get('oa'))
             if oa1 == 1:
@@ -1507,9 +1601,15 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def getSezonAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select classifier.nm_group, classifier.cd_group
-            from classifier 
-            where classifier.idx_group = 6 order by classifier.nm_group asc;
+            sql = """select cl.nm_group, cl.cd_group,
+    CASE 
+    WHEN not EXISTS(select g.cd_code 
+from classifier c
+join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
+    ELSE 1
+    END
+            from classifier cl
+            where cl.idx_group = 6 order by cl.nm_group asc;
             """
             opt = ()
             _return = []
@@ -1517,7 +1617,8 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             for row in result:
                 r = {
                     "id"        : row[1],
-                    "sezon"       : row[0]
+                    "sezon"       : row[0],
+                    "delete": True if row[2]==0 else False,
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1531,7 +1632,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             if check:
                 sql = f"""SELECT 
     CASE 
-    WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {self._wildcardIns()}) THEN 0
+    WHEN not EXISTS(select classifier.nm_group from classifier where classifier.nm_group = {self._wildcardIns()}) THEN 0
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
@@ -1547,7 +1648,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def setSez(self, params=None, x_hash=None):
         if self._check(x_hash):
-            c_id = params.get('id')
+            c_id = self._genClassId() #params.get('id')
             val = params.get('value')
             if c_id and val:
                 sql = f"""insert into classifier (cd_group, nm_group, IDX_GROUP)
@@ -1612,9 +1713,15 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def getHranAll(self, params=None, x_hash=None):
         if self._check(x_hash):
-            sql = """select classifier.nm_group, classifier.cd_group
-            from classifier 
-            where classifier.idx_group = 3 order by classifier.nm_group asc;
+            sql = """select cl.nm_group, cl.cd_group,
+    CASE 
+    WHEN not EXISTS(select g.cd_code 
+from classifier c
+join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
+    ELSE 1
+    END
+            from classifier cl
+            where cl.idx_group = 3 order by cl.nm_group asc;
             """
             opt = ()
             _return = []
@@ -1622,7 +1729,8 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             for row in result:
                 r = {
                     "id"               : row[1],
-                    "usloviya"         : row[0]
+                    "usloviya"         : row[0],
+                    "delete": True if row[2]==0 else False,
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}
@@ -1636,7 +1744,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
             if check:
                 sql = f"""SELECT 
     CASE 
-    WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {self._wildcardIns()}) THEN 0
+    WHEN not EXISTS(select classifier.nm_group from classifier where classifier.nm_group = {self._wildcardIns()}) THEN 0
     ELSE 1
     END
 {'FROM RDB$DATABASE' if not self._pg else ';'}"""
@@ -1652,7 +1760,7 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning ID_SPR"""
 
     def setHran(self, params=None, x_hash=None):
         if self._check(x_hash):
-            c_id = params.get('id')
+            c_id = self._genClassId() #params.get('id')
             val = params.get('value')
             if c_id and val:
                 sql = f"""insert into classifier (cd_group, nm_group, IDX_GROUP)
@@ -1715,89 +1823,229 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 3) returning cd_group"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-#     def getTgAll(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             sql = """select classifier.nm_group, classifier.cd_group
-# from classifier 
-# where classifier.idx_group = 7
-# order by classifier.nm_group asc
-#             """
-#             opt = ()
-#             _return = []
-#             result = self.db.request({"sql": sql, "options": opt})
-#             for row in result:
-#                 r = {
-#                     "id"            : row[1],
-#                     "c_tgroup"         : row[0]
-#                 }
-#                 _return.append(r)
-#             ret = {"result": True, "ret_val": _return}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def genGrId(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            repeat = True
+            genId = ''
+            sql = """SELECT 
+    CASE 
+    WHEN not EXISTS(select c.cd_group from classifier c where c.cd_group = %s) THEN 0
+    ELSE 1
+    END ;"""
+            while repeat:
+                genId = uuid.uuid4().hex
+                opt = (genId,)
+                result = self.db.request({"sql": sql, "options": opt})
+                #print(result)
+                if result[0][0] == 0:
+                    repeat = False
+                #repeat = False
+            ret = {"result": True, "ret_val": genId}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
-#     def getGroupAll(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             sql = """select classifier.nm_group, classifier.cd_group
-# from classifier 
-# where classifier.idx_group = 1 order by classifier.nm_group asc;
-#             """
-#             opt = ()
-#             _return = []
-#             result = self.db.request({"sql": sql, "options": opt})
-#             for row in result:
-#                 r = {
-#                     "id"            : row[1],
-#                     "group"         : row[0]
-#                 }
-#                 _return.append(r)
-#             ret = {"result": True, "ret_val": _return}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def getTgAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select cl.nm_group, cl.cd_group,
+    CASE 
+    WHEN not EXISTS(select g.cd_code 
+from classifier c
+join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
+    ELSE 1
+    END
+from classifier cl
+where cl.idx_group = 7
+order by cl.nm_group asc;
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"            : row[1],
+                    "c_tgroup"         : row[0],
+                    "delete": True if row[2]==0 else False,
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
-#     def checkGr(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             check = params.get('check')
-#             if check:
-#                 sql = f"""SELECT 
-#     CASE 
-#     WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {self._wildcardIns()}) THEN 0
-#     ELSE 1
-#     END
-# {'FROM RDB$DATABASE' if not self._pg else ';'}"""
-#                 opt = (check,)
-#                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
-#                 _return = True if result == 0 else False
-#                 ret = {"result": True, "ret_val": _return}
-#             else:
-#                 ret = {"result": False, "ret_val": "Empty string"}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def getGroupAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select cl.nm_group, cl.cd_group,
+    CASE 
+    WHEN not EXISTS(select g.cd_code 
+from classifier c
+join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
+    ELSE 1
+    END
+from classifier cl 
+where cl.idx_group = 1 order by cl.nm_group asc;
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"            : row[1],
+                    "group"         : row[0],
+                    "delete": True if row[2]==0 else False,
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
-#     def setGr(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             c_id = params.get('id')
-#             val = params.get('value')
-#             if c_id and val:
-#                 sql = f"""insert into classifier (cd_group, nm_group, IDX_GROUP)
-# values ({self._wildcardIns()}, {self._wildcardIns()}, 1) returning cd_group"""
-#                 opt = (c_id, val)
-#                 res = self.db.execute({"sql": sql, "options": opt})
-#                 if res[0]:
-#                     _ret = {
-#                         'id'    : c_id,
-#                         'group' : val
-#                     }
-#                     ret = {"result": True, "ret_val": _ret}
-#                 else:
-#                     ret = {"result": False, "ret_val": "upd error"}
-#             else:
-#                 ret = {"result": False, "ret_val": "no id or value"}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def checkGr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = f"""SELECT 
+    CASE 
+    WHEN not EXISTS(select classifier.nm_group from classifier where classifier.nm_group = {self._wildcardIns()}) THEN 0
+    ELSE 1
+    END
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setTGrMass(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_sprs = params.get('items', [])
+            t_groups = params.get('prop_id', [])
+            if id_sprs and t_groups:
+                sql = """insert into GROUPS (CD_CODE, CD_GROUP) values (%s, %s)
+on conflict do nothing;"""
+                opts = []
+                for id_spr in id_sprs:
+                    for t_g in t_groups:
+                        opts.append((int(id_spr), str(t_g)))
+                if len(opts) > 0:
+                    self.db.executemany({"sql": sql, "options": opts})
+                    ret = {"result": True, "ret_val": "OK"}
+                else:
+                    ret = {"result": False, "ret_val": "set_error"}    
+            else:
+                ret = {"result": False, "ret_val": "no id_sprs or id_groups"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def _updateSprIssue(self, id_sprs, prop_id):
+        if prop_id:
+            opts = []
+            for id_spr in id_sprs:
+                t = (id_spr, prop_id)
+                opts.append(t)
+            sql_del = f"""delete from spr_issue where id_spr in {str(tuple(id_sprs))}"""
+            sql_ins = f"""INSERT INTO spr_issue (id_spr, id_is) VALUES (%s, %s)"""
+            opt = ()
+            self.db.execute({"sql": sql_del, "options": opt})
+            if len(opts) > 0:
+                self.db.executemany({"sql": sql_ins, "options": opts})
+                return True
+        return False
+
+    def _updateSpr(self, column, id_sprs, prop_id):
+        sprs = tuple([int(i) for i in id_sprs])
+        sql = f"""update spr set {column} = %s where id_spr in {str(sprs)} returning id_spr;"""
+        ret = self.db.execute({"sql": sql, "options": (prop_id,)})
+        if ret:
+            return True
+        return False
+
+    def _updateSprGroups(self, idx, id_sprs, prop_id):
+        sprs = [int(i) for i in id_sprs]
+        sql_del = f"""delete FROM GROUPS as g
+WHERE g.CD_GROUP in 
+    (SELECT c.CD_GROUP
+    FROM CLASSIFIER as c
+    WHERE c.IDX_GROUP  = %s)
+and g.CD_CODE in {str(tuple(sprs))}"""
+        opt = (idx,)
+        self.db.execute({"sql": sql_del, "options": opt})
+        if prop_id:
+            opts = []
+            sql_ins = f"""insert into groups (cd_code, cd_group) values (%s, %s);"""
+            for id_spr in sprs:
+                opts.append((id_spr, prop_id))
+            if len(opts) > 0:
+                self.db.executemany({"sql": sql_ins, "options": opts})
+                return True
+            return False
+        return True
+
+    def setPropMass(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            method = params.get('method')
+            id_sprs = params.get('items', [])
+            prop_id = params.get('prop_id')
+            if prop_id:
+                prop_id = prop_id.get('id')
+            if id_sprs and prop_id and method:
+                if method == 'dv':
+                    res = self._updateSpr('id_dv', id_sprs, prop_id)
+                elif method == 'gr': 
+                    res = self._updateSprGroups(1, id_sprs, prop_id)
+                elif method == 'recipt':
+                    res = res = self._updateSprGroups(5, id_sprs, 'ZakMedCtg.16' if prop_id == '_set_' else None)
+                elif method == 'mandat':
+                    res = res = self._updateSprGroups(4, id_sprs, 'ZakMedCtg.15' if prop_id == '_set_' else None)
+                elif method == 'sezon':
+                    res = res = self._updateSprGroups(6, id_sprs, prop_id)
+                elif method == 'hran':
+                    res = res = self._updateSprGroups(3, id_sprs, prop_id)
+                elif method == 'issue':
+                    res = res = self._updateSprIssue(id_sprs, prop_id)
+                elif method == 'nds':
+                    res = res = self._updateSprGroups(2, id_sprs, prop_id)
+                else:
+                    res = False
+                if res:
+                    ret = {"result": True, "ret_val": "OK"}
+                else:
+                    ret = {"result": False, "ret_val": "set_error"}    
+            else:
+                ret = {"result": False, "ret_val": "no id_sprs or id_groups"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setGr(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = self._genClassId() #params.get('id')
+            val = params.get('value')
+            index = params.get('index')
+            if c_id and val and index: 
+                sql = f"""insert into classifier (cd_group, nm_group, IDX_GROUP)
+values ({self._wildcardIns()}, {self._wildcardIns()}, {self._wildcardIns()}) returning cd_group"""
+                opt = (c_id, val, index)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'group' : val,
+                        'delete': True
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def delGr(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -1841,68 +2089,75 @@ values ({self._wildcardIns()}, {self._wildcardIns()}, 3) returning cd_group"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-#     def getNdsAll(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             sql = """select classifier.nm_group, classifier.cd_group
-# from classifier 
-# where classifier.idx_group = 2 order by classifier.nm_group asc;
-#             """
-#             opt = ()
-#             _return = []
-#             result = self.db.request({"sql": sql, "options": opt})
-#             for row in result:
-#                 r = {
-#                     "id"          : row[1],
-#                     "nds"         : row[0]
-#                 }
-#                 _return.append(r)
-#             ret = {"result": True, "ret_val": _return}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def getNdsAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select cl.nm_group, cl.cd_group,
+    CASE 
+    WHEN not EXISTS(select g.cd_code 
+from classifier c
+join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
+    ELSE 1
+    END
+from classifier cl
+where cl.idx_group = 2 order by cl.nm_group asc;
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    "id"          : row[1],
+                    "nds"         : row[0],
+                    "delete": True if row[2]==0 else False,
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
-#     def checkNds(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             check = params.get('check')
-#             if check:
-#                 sql = f"""SELECT 
-#     CASE 
-#     WHEN not EXISTS(select classifier.cd_group from classifier where classifier.cd_group = {self._wildcardIns()}) THEN 0
-#     ELSE 1
-#     END
-# {'FROM RDB$DATABASE' if not self._pg else ';'}"""
-#                 opt = (check,)
-#                 result = int(self.db.request({"sql": sql, "options": opt})[0][0])
-#                 _return = True if result == 0 else False
-#                 ret = {"result": True, "ret_val": _return}
-#             else:
-#                 ret = {"result": False, "ret_val": "Empty string"}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def checkNds(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            check = params.get('check')
+            if check:
+                sql = f"""SELECT 
+    CASE 
+    WHEN not EXISTS(select classifier.nm_group from classifier where classifier.nm_group = {self._wildcardIns()}) THEN 0
+    ELSE 1
+    END
+{'FROM RDB$DATABASE' if not self._pg else ';'}"""
+                opt = (check,)
+                result = int(self.db.request({"sql": sql, "options": opt})[0][0])
+                _return = True if result == 0 else False
+                ret = {"result": True, "ret_val": _return}
+            else:
+                ret = {"result": False, "ret_val": "Empty string"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
-#     def setNds(self, params=None, x_hash=None):
-#         if self._check(x_hash):
-#             c_id = params.get('id')
-#             val = params.get('value')
-#             if c_id and val:
-#                 sql = f"""insert into classifier (cd_group, nm_group, IDX_GROUP)
-# values ({self._wildcardIns()}, {self._wildcardIns()}, 2) returning cd_group"""
-#                 opt = (c_id, val)
-#                 res = self.db.execute({"sql": sql, "options": opt})
-#                 if res[0]:
-#                     _ret = {
-#                         'id'    : c_id,
-#                         'nds'   : val
-#                     }
-#                     ret = {"result": True, "ret_val": _ret}
-#                 else:
-#                     ret = {"result": False, "ret_val": "add error"}
-#             else:
-#                 ret = {"result": False, "ret_val": "no id or value"}
-#         else:
-#             ret = {"result": False, "ret_val": "access denied"}
-#         return json.dumps(ret, ensure_ascii=False)
+    def setNds(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            c_id = self._genClassId() #params.get('id')
+            val = params.get('value')
+            if c_id and val:
+                sql = f"""insert into classifier (cd_group, nm_group, IDX_GROUP)
+values ({self._wildcardIns()}, {self._wildcardIns()}, 2) returning cd_group"""
+                opt = (c_id, val)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res[0]:
+                    _ret = {
+                        'id'    : c_id,
+                        'nds'   : val
+                    }
+                    ret = {"result": True, "ret_val": _ret}
+                else:
+                    ret = {"result": False, "ret_val": "add error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def delNds(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -2278,7 +2533,7 @@ order by {3} {4}
                     "barcode"     : st1,
                     "data"        : [],
                 }
-                sql = r"""select r.barcode, r.ch_date from spr_barcode r where r.id_spr = {self._wildcardIns()} order by r.barcode ASC"""
+                sql = f"""select r.barcode, r.ch_date from spr_barcode r where r.id_spr = {self._wildcardIns()} order by r.barcode ASC"""
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
                 for rrr in res:
@@ -2974,14 +3229,7 @@ WHERE {2}
             sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc
 FROM SPR r
-LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
 LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
-{"join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv']) if pars['c_dv'] else "LEFT OUTER join dv d on (r.ID_DV = d.ID)"}
-LEFT OUTER join 
-    (select g.CD_CODE cc, g.CD_GROUP cg, c.NM_GROUP gr
-    from GROUPS g
-    inner join CLASSIFIER c on (g.CD_GROUP = c.CD_GROUP) where c.IDX_GROUP = 1
-    ) as rrr1 on (r.ID_SPR = cc)
 LEFT OUTER join 
     (select g1.CD_CODE cc1, g1.CD_GROUP cg1, c1.NM_GROUP nds
     from GROUPS g1
@@ -3007,6 +3255,13 @@ LEFT OUTER join
     from GROUPS g5
     inner join CLASSIFIER c5 on (g5.CD_GROUP = c5.CD_GROUP) where c5.IDX_GROUP = 5
     ) as rrr6 on (r.ID_SPR = cc5)
+LEFT OUTER join 
+    (select g.CD_CODE cc, g.CD_GROUP cg, c.NM_GROUP gr
+    from GROUPS g
+    inner join CLASSIFIER c on (g.CD_GROUP = c.CD_GROUP) where c.IDX_GROUP = 1
+    ) as rrr1 on (r.ID_SPR = cc)
+{"join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv']) if pars['c_dv'] else "LEFT OUTER join dv d on (r.ID_DV = d.ID)"}
+LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
 WHERE {stri} ORDER by {field} {direction}
 """
             sql = sql + self._insLimit(start_p, end_p)
@@ -3048,7 +3303,7 @@ WHERE {stri} ORDER by {field} {direction}
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def getSprSearchAdm(self, params=None, x_hash=None):
+    def getSprSearchAdmRls(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
@@ -3061,6 +3316,7 @@ WHERE {stri} ORDER by {field} {direction}
             filt = params.get('c_filter')
             in_st = []
             in_c = []
+            in_c_w = []
             exclude, search_re = self._form_exclude(search_re)
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
@@ -3087,6 +3343,7 @@ WHERE {stri} ORDER by {field} {direction}
                 pars['c_sezon'] = filt.get('c_sezon')
                 pars['mandat'] = filt.get('mandat')
                 pars['prescr'] = filt.get('prescr')
+                pars['dt_ins'] = filt.get('dt_ins')
                 dt = filt.get('dt')
                 ssss = []
                 if dt:
@@ -3124,19 +3381,34 @@ WHERE {stri} ORDER by {field} {direction}
                     s = "LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)"
                     in_st.append(s)
                 if pars['c_dv']:
-                    s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
-                    in_c.insert(0, s)
+                    if pars['c_dv'] != "-100":
+                        s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
+                        in_c.insert(0, s)
+                    else: 
+                        s = "LEFT join dv d on d.ID = r.ID_DV and d.ACT_INGR is null"
+                        in_c.insert(0, "LEFT join dv d on d.ID = r.ID_DV")
+                        in_c_w.append("d.ACT_INGR is null")
                     in_st.insert(0, s)
                 else:
                     s = "LEFT join dv d on (d.ID = r.ID_DV)"
                     in_st.append(s)
                 if pars['c_hran']:
-                    s = """join 
+                    if pars['c_hran'] != "-100":
+                        s = """join 
                     (select g2.CD_CODE cc2, c2.NM_GROUP uhran
                     from GROUPS g2
                     inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3 and c2.CD_GROUP = '%s'
                     ) as eee1 on (cc2 = r.ID_SPR)""" % pars['c_hran']
-                    in_c.insert(0, s)
+                        in_c.insert(0, s)
+                    else: 
+                        s = """LEFT join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                    ) as eee2 on cc2 = r.ID_SPR"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" uhran is null")
+                        s += " and uhran is null"
                     in_st.insert(0, s)
                 else:
                     s = """LEFT join 
@@ -3196,13 +3468,12 @@ WHERE {stri} ORDER by {field} {direction}
                         ) as eee7 on (cc5 = r.ID_SPR)"""
                     in_st.append(s)
                 if pars['c_group']:
-                    s = """join 
+                    s = """LEFT join 
                     (select g.CD_CODE cc, c.NM_GROUP gr
                     from GROUPS g
-                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1 and c.CD_GROUP = '%s'
-                    ) as eee8 on (cc = r.ID_SPR)""" % pars['c_group']
-                    in_c.insert(0, s)
-                    in_st.insert(0, s)
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) as eee9 on (cc = r.ID_SPR)"""
+                    in_st.append(s)
                 else:
                     s = """LEFT join 
                     (select g.CD_CODE cc, c.NM_GROUP gr
@@ -3211,12 +3482,22 @@ WHERE {stri} ORDER by {field} {direction}
                     ) as eee9 on (cc = r.ID_SPR)"""
                     in_st.append(s)
                 if pars['c_nds']:
-                    s = """join 
+                    if pars['c_nds'] != "-100":
+                        s = """join 
                     (select g1.CD_CODE cc1, c1.NM_GROUP nds
                     from GROUPS g1
                     inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2 and c1.CD_GROUP = '%s'
                     ) as eee10 on (cc1 = r.ID_SPR)""" % pars['c_nds']
-                    in_c.insert(0, s)
+                        in_c.insert(0, s)
+                    else: 
+                        s = """LEFT join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                    ) as eee11 on (cc1 = r.ID_SPR)"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" nds is null")
+                        s += " and nds is null"
                     in_st.insert(0, s)
                 else:
                     s = """LEFT join 
@@ -3226,12 +3507,22 @@ WHERE {stri} ORDER by {field} {direction}
                     ) as eee11 on (cc1 = r.ID_SPR)"""
                     in_st.append(s)
                 if pars['c_sezon']:
-                    s = """join 
+                    if pars['c_sezon'] != "-100":
+                        s = """join 
                     (select g3.CD_CODE cc3, c3.NM_GROUP sezon
                     from GROUPS g3
                     inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6 and c3.CD_GROUP = '%s'
                     ) as eee12 on (cc3 = r.ID_SPR)""" % pars['c_sezon']
-                    in_c.insert(0, s)
+                        in_c.insert(0, s)
+                    else: 
+                        s = """left join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                    ) as eee13 on (cc3 = r.ID_SPR)"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" sezon is null")
+                        s += " and sezon is null"
                     in_st.insert(0, s)
                 else:
                     s = """left join 
@@ -3240,22 +3531,40 @@ WHERE {stri} ORDER by {field} {direction}
                     inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
                     ) as eee13 on (cc3 = r.ID_SPR)"""
                     in_st.append(s)
-                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT FROM SPR r""")
+                if pars['dt_ins']:
+                    s = """left join 
+                    (select min(l.dt) as aa, s.id_spr as idd
+                    from spr s
+                    join lnk l on l.id_spr = s.id_spr
+                    group by s.id_spr
+                    ) as qw on r.id_spr = idd"""
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = """left join 
+                    (select min(l.dt) as aa, s.id_spr as idd
+                    from spr s
+                    join lnk l on l.id_spr = s.id_spr
+                    group by s.id_spr
+                    ) as qw on r.id_spr = idd"""
+                    in_st.append(s)
+
+                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa 
+FROM SPR r
+join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
+and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078) """)
                 sql = '\n'.join(in_st)
-                in_c.insert(0, """select count(*) from spr r""")
+                in_c.insert(0, """select count(*) from spr r
+                join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
+and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078) """)
                 sql_c = '\n'.join(in_c)
                 stri += ' ' + ' '.join(ssss)
             else:
-                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT
+                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa
                 FROM SPR r
-                LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-                LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)
-                LEFT join dv d on (d.ID = r.ID_DV)
-                LEFT join 
-                    (select g.CD_CODE cc, c.NM_GROUP gr
-                    from GROUPS g
-                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
-                    ) as ttt1 on (cc = r.ID_SPR)
+join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
+and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078)
+                LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
                 LEFT join 
                     (select g1.CD_CODE cc1, c1.NM_GROUP nds
                     from GROUPS g1
@@ -3280,7 +3589,22 @@ WHERE {stri} ORDER by {field} {direction}
                     (select g5.CD_CODE cc5, c5.NM_GROUP presc
                     from GROUPS g5
                     inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-                    ) as ttt6 on (cc5 = r.ID_SPR)"""
+                    ) as ttt6 on (cc5 = r.ID_SPR)
+                LEFT join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) as ttt1 on (cc = r.ID_SPR)
+
+                LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                LEFT join dv d on (d.ID = r.ID_DV)
+                left join 
+                    (select min(l.dt) as aa, s.id_spr as idd
+                    from spr s
+                    join lnk l on l.id_spr = s.id_spr
+                    group by s.id_spr
+                    ) as qw on r.id_spr = idd
+                    """
                 sql_c = """SELECT count(*) FROM SPR r"""
 
             sql += """\nWHERE {0}
@@ -3289,6 +3613,8 @@ ORDER by r.{1} {2}
             sql = sql + self._insLimit(start_p, end_p)
             stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
             sql_c += """ WHERE {0}""".format(stri)
+            if in_c_w:
+                sql_c = sql_c + " and " + ' and '.join(in_c_w)
             sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
             sql = sql.format(stri, field, direction)
             sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
@@ -3318,7 +3644,364 @@ ORDER by r.{1} {2}
                     "c_sezon"       : row[9],
                     "c_mandat"      : row[10],
                     "c_prescr"      : row[11],
-                    "dt"            : str(row[12])
+                    "dt"            : str(row[12]),
+                    "dt_ins"        : str(row[13])
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def getSprSearchAdm(self, params=None, x_hash=None):
+
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
+            search_re = params.get('search')
+            search_re = search_re.replace("'", "").replace('"', "")
+            filt = params.get('c_filter')
+            in_st = []
+            in_c = []
+            in_c_w = []
+            exclude, search_re = self._form_exclude(search_re)
+            search_re = search_re.split()
+            stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
+            for i in range(len(search_re)):
+                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            if len(exclude) > 0:
+                for i in range(len(exclude)):
+                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    stri.append('and %s' % ts3)
+            stri = ' '.join(stri)
+            if filt:
+                pars = {}
+                pars['id_spr'] = filt.get('id_spr')
+                pars['id_zavod'] = filt.get('id_zavod')
+                pars['id_strana'] = filt.get('id_strana')
+                pars['c_dv'] = filt.get('c_dv')
+                pars['c_group'] = filt.get('c_group')
+                pars['c_nds'] = filt.get('c_nds')
+                pars['c_hran'] = filt.get('c_hran')
+                pars['c_sezon'] = filt.get('c_sezon')
+                pars['mandat'] = filt.get('mandat')
+                pars['prescr'] = filt.get('prescr')
+                pars['dt_ins'] = filt.get('dt_ins')
+                dt = filt.get('dt')
+                ssss = []
+                if dt:
+                    pars['start_dt'] = dt.get('start')
+                    pars['end_dt'] = dt.get('end')
+                    if pars['start_dt'] and not pars['end_dt']:
+                        pars['start_dt'] = pars['start_dt'].split()[0]
+                        if self._pg:
+                            s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                        else:
+                            s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
+                        ssss.append(s.format(pars['start_dt']))
+                    elif pars['start_dt'] and pars['end_dt']:
+                        pars['end_dt'] = pars['end_dt'].split()[0]
+                        if self._pg:
+                            s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                        else:
+                            s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
+                        ssss.append(s.format(pars['start_dt'], pars['end_dt']))
+                if pars['id_spr']:
+                    s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
+                    ssss.append(s)
+                if pars['id_zavod']:
+                    s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)"
+                    in_st.append(s)
+                if pars['id_strana']:
+                    s = "join spr_strana s on (s.ID_SPR = r.ID_STRANA) and s.ID_SPR = {0}".format(pars['id_strana'])
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)"
+                    in_st.append(s)
+                if pars['c_dv']:
+                    if pars['c_dv'] != "-100":
+                        s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
+                        in_c.insert(0, s)
+                    else: 
+                        s = "LEFT join dv d on d.ID = r.ID_DV and d.ACT_INGR is null"
+                        in_c.insert(0, "LEFT join dv d on d.ID = r.ID_DV")
+                        in_c_w.append("d.ACT_INGR is null")
+                    in_st.insert(0, s)
+                else:
+                    s = "LEFT join dv d on (d.ID = r.ID_DV)"
+                    in_st.append(s)
+                if pars['c_hran']:
+                    if pars['c_hran'] != "-100":
+                        s = """join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3 and c2.CD_GROUP = '%s'
+                    ) as eee1 on (cc2 = r.ID_SPR)""" % pars['c_hran']
+                        in_c.insert(0, s)
+                    else: 
+                        s = """LEFT join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                    ) as eee2 on cc2 = r.ID_SPR"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" uhran is null")
+                        s += " and uhran is null"
+                    in_st.insert(0, s)
+                else:
+                    s = """LEFT join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                    ) as eee2 on (cc2 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['mandat']:
+                    if (int(pars['mandat'])) == 1:
+                        s = """INNER join 
+                            (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                            from GROUPS g4
+                            inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                            ) as eee3  on (cc4 = r.ID_SPR) and mandat is not null"""
+                        in_c.insert(0, s)
+                        in_st.insert(0, s)
+                    else:
+                        s = """left join 
+                            (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                            from GROUPS g4
+                            inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                            ) as eeee1 on (cc4 = r.ID_SPR)"""
+                        in_c.append(s)
+                        in_st.append(s)
+                        ssss.append(" and mandat is null")
+                else:
+                    s = """left join 
+                        (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                        from GROUPS g4
+                        inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                        ) as eee4 on (cc4 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['prescr']:
+                    if (int(pars['prescr'])) == 1:
+                        s = f"""INNER join 
+                            (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                            from GROUPS g5
+                            inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                            ) as eee5 on (cc5 = r.ID_SPR) and presc is not null"""
+                        in_c.insert(0, s)
+                        in_st.insert(0, s)
+                    else:
+                        s = """left join 
+                            (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                            from GROUPS g5
+                            inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                            ) as eee6 on (cc5 = r.ID_SPR)"""
+                        in_c.append(s)
+                        in_st.append(s)
+                        ssss.append(" and presc is null")
+                else:
+                    s = """left join 
+                        (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                        from GROUPS g5
+                        inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                        ) as eee7 on (cc5 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_group']:
+                    if pars['c_group'] != "-100":
+                        s = """join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1 and c.CD_GROUP = '%s'
+                    ) as eee8 on (cc = r.ID_SPR)""" % pars['c_group']
+                        in_c.insert(0, s)
+                    else: 
+                        s = """LEFT join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) as eee9 on (cc = r.ID_SPR)"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" gr is null")
+                        s += " and gr is null"
+                    in_st.insert(0, s)
+                else:
+                    s = """LEFT join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) as eee9 on (cc = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_nds']:
+                    if pars['c_nds'] != "-100":
+                        s = """join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2 and c1.CD_GROUP = '%s'
+                    ) as eee10 on (cc1 = r.ID_SPR)""" % pars['c_nds']
+                        in_c.insert(0, s)
+                    else: 
+                        s = """LEFT join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                    ) as eee11 on (cc1 = r.ID_SPR)"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" nds is null")
+                        s += " and nds is null"
+                    in_st.insert(0, s)
+                else:
+                    s = """LEFT join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                    ) as eee11 on (cc1 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['c_sezon']:
+                    if pars['c_sezon'] != "-100":
+                        s = """join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6 and c3.CD_GROUP = '%s'
+                    ) as eee12 on (cc3 = r.ID_SPR)""" % pars['c_sezon']
+                        in_c.insert(0, s)
+                    else: 
+                        s = """left join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                    ) as eee13 on (cc3 = r.ID_SPR)"""
+                        in_c.insert(0, s)
+                        in_c_w.append(" sezon is null")
+                        s += " and sezon is null"
+                    in_st.insert(0, s)
+                else:
+                    s = """left join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                    ) as eee13 on (cc3 = r.ID_SPR)"""
+                    in_st.append(s)
+                if pars['dt_ins']:
+                    s = """left join 
+                    (select min(l.dt) as aa, s.id_spr as idd
+                    from spr s
+                    join lnk l on l.id_spr = s.id_spr
+                    group by s.id_spr
+                    ) as qw on r.id_spr = idd"""
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
+                else:
+                    s = """left join 
+                    (select min(l.dt) as aa, s.id_spr as idd
+                    from spr s
+                    join lnk l on l.id_spr = s.id_spr
+                    group by s.id_spr
+                    ) as qw on r.id_spr = idd"""
+                    in_st.append(s)
+
+                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa FROM SPR r""")
+                sql = '\n'.join(in_st)
+                in_c.insert(0, """select count(*) from spr r""")
+                sql_c = '\n'.join(in_c)
+                stri += ' ' + ' '.join(ssss)
+            else:
+                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa
+                FROM SPR r
+                LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
+                LEFT join 
+                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                    from GROUPS g1
+                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                    ) as ttt2 on (cc1 = r.ID_SPR)
+                LEFT join 
+                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                    from GROUPS g2
+                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                    ) as ttt3 on (cc2 = r.ID_SPR)
+                LEFT join 
+                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                    from GROUPS g3
+                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                    ) as ttt4 on (cc3 = r.ID_SPR)
+                LEFT join 
+                    (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                    from GROUPS g4
+                    inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                    ) as ttt5 on (cc4 = r.ID_SPR)
+                LEFT join 
+                    (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                    from GROUPS g5
+                    inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                    ) as ttt6 on (cc5 = r.ID_SPR)
+                LEFT join 
+                    (select g.CD_CODE cc, c.NM_GROUP gr
+                    from GROUPS g
+                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                    ) as ttt1 on (cc = r.ID_SPR)
+
+                LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+                LEFT join dv d on (d.ID = r.ID_DV)
+                left join 
+                    (select min(l.dt) as aa, s.id_spr as idd
+                    from spr s
+                    join lnk l on l.id_spr = s.id_spr
+                    group by s.id_spr
+                    ) as qw on r.id_spr = idd
+                    """
+                sql_c = """SELECT count(*) FROM SPR r"""
+
+            sql += """\nWHERE {0}
+ORDER by r.{1} {2}
+"""
+            sql = sql + self._insLimit(start_p, end_p)
+            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
+            sql_c += """ WHERE {0}""".format(stri)
+            if in_c_w:
+                sql_c = sql_c + " and " + ' and '.join(in_c_w)
+            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            sql = sql.format(stri, field, direction)
+            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            t1 = time.time() - st_t
+            opt = ()
+            _return = []
+            st_t = time.time()
+            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1][0][0]
+            t2 = time.time() - t1 - st_t
+            for row in result:
+                r = {
+                    "id_spr"        : row[0],
+                    "c_tovar"       : row[1],
+                    "id_dv"         : row[2],
+                    "id_zavod"      : row[3],
+                    "id_strana"     : row[4],
+                    "c_dv"          : row[5],
+                    "c_group"       : row[6],
+                    "c_nds"         : row[7],
+                    "c_hran"        : row[8],
+                    "c_sezon"       : row[9],
+                    "c_mandat"      : row[10],
+                    "c_prescr"      : row[11],
+                    "dt"            : str(row[12]),
+                    "dt_ins"        : str(row[13])
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
@@ -3528,8 +4211,8 @@ order by r.{1} {2}
             opt = ()
             _return = []
             st_t = time.time()
-            self.log(sql, clear=True)
-            self.log(sql_c, clear=True)
+            #self.log(sql, clear=True)
+            #self.log(sql_c, clear=True)
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
@@ -4247,12 +4930,66 @@ matching (NAME)"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def barcodeReport(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select barcod, sb.id_spr, s.c_tovar, sb.ch_date
+from 
+	(
+	select count(r.id_spr) as qty, r.barcode barcod
+	from spr_barcode r
+	group by r.barcode
+	) as ww
+join spr_barcode sb on barcod=sb.barcode and qty>1
+join spr s on sb.id_spr=s.id_spr
+order by barcod, sb.id_spr;"""
+            headers = [{'Штрихкод': 'Штрихкод'}, 
+                       {'id_spr': 'id_spr'}, 
+                       {'Название': 'Название'}, 
+                       {'Дата изменения': 'Дата изменения'}, 
+            ]
+            r_data = self.db.request({"sql": sql, "options": ()})
+            data = []
+            out_data = None
+            for row in r_data:
+                r = {
+                    "Штрихкод": row[0],
+                    "id_spr": row[1],
+                    "Название": row[2],
+                    "Дата изменения": row[3]
+                }
+                data.append(r)
+            if data:
+                output_data = []
+                for item in data:
+                    keys = item.keys()
+                    re = {}
+                    for k in keys:
+                        hh = None
+                        for h in headers:
+                             hh = h.get(k)
+                             if hh:
+                                 break
+                        if hh:
+                            re[hh] = item.get(k)
+                    output_data.append(re)
+                out_data = self._genXlsx(output_data)
+                if out_data:
+                    ret = {"result": True, "ret_val": {'type': 'xlsx', 'data': out_data}}
+                else:
+                    ret = {"result": False, "ret_val": "no data"}
+            else:
+                ret = {"result": False, "ret_val": "error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return ret
+
+
     def saveData(self, params=None, x_hash=None):
         methods = {"__dt":"getSprSearch", #spr_dt
                    "_files": "getTasks", #adm-linker-files
                    "__dt_a": "getPrcsAll", #unlinkedall-bar
                    "_hran": "getHranAll", #adm-hran
-                   "_vendors": "getVendorsAll", #adm-vendors
+                   "_vendors": "getVendorAll", #adm-vendors
                    "_roles":"getAdmRoles", #adm_roles
                    "_seasons":"getSeasonAll", #adm-seasons
                    "_groups":"getGroupAll", #adm-groups
@@ -4620,6 +5357,24 @@ where IN_WORK = (SELECT u.ID FROM USERS u WHERE u."USER" = {self._wildcardIns()}
                 }
                 series.append(ser)
         return series
+
+    def _genClassId(self):
+        repeat = True
+        genId = ''
+        sql = """SELECT 
+CASE 
+WHEN not EXISTS(select c.cd_group from classifier c where c.cd_group = %s) THEN 0
+ELSE 1
+END ;"""
+        while repeat:
+            genId = uuid.uuid4().hex
+            opt = (genId,)
+            result = self.db.request({"sql": sql, "options": opt})
+            #print(result)
+            if result[0][0] == 0:
+                repeat = False
+            #repeat = False
+        return genId
 
     def checkBrakXls(self, params, x_hash):
         #print(params)

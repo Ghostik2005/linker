@@ -176,7 +176,33 @@ ON CONFLICT (UIN) DO UPDATE
         ret = self.upload_nolinks(params, x_hash)
 
         return json.dumps(ret, ensure_ascii=False)
-    
+
+    def _calculate_checksum(self, ean12):
+        s1 = 0
+        s2 = 0
+        for i, s in enumerate(ean12):
+            if divmod(13-i, 2)[1]:
+                s1+=int(s)
+            else:
+                s2+=int(s)
+            c1 = s2*3 + s1
+            c2 = c1//10
+            if c1/10-c2:
+                c2+=1
+        return '%s' % (c2*10-c1)
+
+    def _check_barcode(self, barcode):
+        try:
+            ean = str(barcode).strip()
+            ean = ean[:12]
+            if not ean.isdigit():
+                return None
+            return '{0}{1}'.format(ean, self._calculate_checksum(ean))
+        except:
+            self.log(f"BARCODE_CH error: ean: {barcode} \n{traceback.format_exc()}")
+            return None
+
+
 
     def upload_to_db(self, db, dbc, id_vnd, path, count_insert, count_all, source=1):
         uin = os.path.basename(path).split('.')[0]
@@ -201,7 +227,7 @@ ON CONFLICT (UIN) DO UPDATE
                 except:
                     try:
                         _, kod, tovar, zavod, idorg, barcode = row.split('\t')[0:6]
-                        barcode = barcode.strip()
+                        barcode = self._check_barcode(barcode)
                     except:
                         try:
                             _, kod, tovar, zavod, idorg = row.split('\t')[0:5]
@@ -276,9 +302,14 @@ ON CONFLICT (SH_PRC, SERIES) DO UPDATE
                     sh_prc = self._genHash(_id_vnd, tovar, zavod)
                 except Exception:
                     continue
-                barcode = barcode if barcode else None
-                source = source#1 - прайслистэксперт, 2 - склад
-                inss = (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, source, barcode, uin)
+                #barcode = barcode if barcode else None
+                #source = source#1 - прайслистэксперт, 2 - склад
+                instr = (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, source, barcode, uin) 
+                if len(tovar) > 255:
+                    # with open("/ms71/data/linker_upl/skipped/error.txt", 'a') as ff:
+                    #     ff.write('\t'.join(list(instr)) + '\n')
+                    continue
+                inss = instr
                 if self._pg:
                     inss = inss + inss
                 ins_params.append(inss)
@@ -314,6 +345,18 @@ SET (barcode, id_spr) = (%s, %s);"""
     (SELECT r.SH_PRC FROM A_TEMP_PRC r
         JOIN LNK l on l.SH_PRC = r.SH_PRC)""")
                 self.log('UPLOAD2DB - sames with lnk deleted')
+                dbc.execute("""INSERT INTO lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
+    select r.SH_PRC, s.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, CURRENT_TIMESTAMP, 'barcode'
+    FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE
+    on conflict do nothing""")
+                dbc.execute("""DELETE FROM A_TEMP_PRC a WHERE a.SH_PRC in (
+    select r.SH_PRC FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE) """)
+                self.log('UPLOAD2DB - linked by barcode')
+                dbc.execute("""DELETE FROM A_TEMP_PRC WHERE sh_prc in 
+    (SELECT r.SH_PRC FROM A_TEMP_PRC r
+        JOIN LNK l on l.SH_PRC = r.SH_PRC)""")
+                self.log('UPLOAD2DB - sames with lnk deleted after barcodes')
+
                 dbc.execute("""  UPDATE PRC SET C_INDEX = C_INDEX + 1
     WHERE PRC.SH_PRC in ( SELECT r.SH_PRC FROM PRC r
         WHERE EXISTS (SELECT p.SH_PRC FROM A_TEMP_PRC p
@@ -324,6 +367,8 @@ SET (barcode, id_spr) = (%s, %s);"""
         SELECT p.SH_PRC FROM A_TEMP_PRC p
         WHERE p.SH_PRC = r.SH_PRC))""")
                 self.log('UPLOAD2DB - doubles with prc deleted')
+
+
                 for row in self._getGen(dbc, """    SELECT r.sh_prc FROM A_TEMP_PRC r 
     JOIN (select rr.BARCODE bc, count(rr.BARCODE) cbc FROM A_TEMP_PRC rr
         JOIN SPR_BARCODE s on s.BARCODE = rr.BARCODE
@@ -333,12 +378,7 @@ SET (barcode, id_spr) = (%s, %s);"""
     FROM A_TEMP_PRC r where r.SH_PRC = {'?' if not self._pg else '%s'}""", (row[0],))
                     dbc.execute(f"""DELETE FROM A_TEMP_PRC WHERE SH_PRC = {'?' if not self._pg else '%s'}""", (row[0],))
                 #self.log('UPLOAD2DB  - some actions')
-                dbc.execute("""INSERT INTO lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
-    select r.SH_PRC, s.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, CURRENT_TIMESTAMP, 'barcode'
-    FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE""")
-                self.log('UPLOAD2DB - linked by barcode')
-                dbc.execute("""DELETE FROM A_TEMP_PRC a WHERE a.SH_PRC in (
-    select r.SH_PRC FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE) """)
+
                 dbc.execute("""SELECT COUNT(*) FROM A_TEMP_PRC""")
                 count_i = dbc.fetchone()[0]
                 dbc.execute("""INSERT INTO prc (ID_VND, ID_TOVAR, N_CENA, SH_PRC, C_TOVAR, C_ZAVOD, ID_ORG, in_work, source, uin)
@@ -353,6 +393,7 @@ SET (barcode, id_spr) = (%s, %s);"""
     def _getGen(self, dbc, sql):
         dbc.execute(sql)
         ret = dbc.fetchall()
+        self.log(f'SQL_GEN: {sql}, \n count: {len(ret)}')
         for row in ret:
             yield row
 
@@ -441,26 +482,29 @@ SET (barcode, id_spr) = (%s, %s);"""
         sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
     from prc p 
-    join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' ' and p.n_fg != 12
-        and (select count(distinct ll.id_spr) as ccc
-            from prc pp
-            join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
-            where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
-            ) = 1 
-    where p.id_vnd in (select q.id_vnd from vnd q where permit = 1);"""
+    join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' ' 
+        and p.n_fg != 12 and p.n_fg != 1
+        and (select count(distinct ll.id_spr)
+                from prc pp
+                join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
+                where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
+                ) = 1 
+        --and (select count(w.id_tovar) from prc w where w.id_vnd = p.id_vnd and w.id_tovar = p.id_tovar) = 1
+    and p.id_vnd in (select q.id_vnd from vnd q where permit = 1);"""
         dbc.execute(sql)
         dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
         if callable(db.commit):
             db.commit()
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
-        #dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
-        dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
+        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
+    and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987)""")
+        #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to stasya')
-        #f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
-        sql_upd_u = f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        #f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        sql_upd_u = f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
 and  id_vnd in (10001,19987,19990,19992,19996,20123,20129,20153,20171,20176,20177,
                 20229,20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
                 20677,20871,20977,21271,22077,22078,22240,23478,24477,28132,28162,
@@ -473,7 +517,9 @@ and  id_vnd in (10001,19987,19990,19992,19996,20123,20129,20153,20171,20176,2017
         #self.log('assign to stasya 2')
         if callable(db.commit):
             db.commit()
-        dbc.execute(f"""update prc set id_org=40035 where id_org=12 {con_ins} and (id_vnd=19994 or id_vnd=19985)""")
+        #назначаем на антей - разобраться
+        dbc.execute(f"""update prc set id_org=40035 where id_org=12 or id_org = 0 {con_ins} 
+and id_vnd in (19994, 19985, 19976, 19987) and n_fg = 0;""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to 40035')
@@ -773,7 +819,7 @@ class SCGIServer:
         client_body_temp_path       temp;
         client_body_in_file_only    clean;
         client_body_buffer_size     16K;
-        client_max_body_size        16M;
+        client_max_body_size        64M;
         include scgi_params;
         #scgi_param                X-BODY-FILE $request_body_file;
         scgi_param                X-API-KEY $http_x_api_key;

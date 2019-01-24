@@ -88,7 +88,6 @@ export default class LinksViewLnk extends JetView{
                         {content: "richFilt", compare: compareTrue,  //height: 60, 
                             inputConfig : {
                                 inputtype: "multicombo",
-                                //inputtype: "customcombo",
                                 tagMode: false,
                                 keepText: true,
                                 pager: 1,

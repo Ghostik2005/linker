@@ -13,15 +13,11 @@ export default class NewDvView extends JetView{
             params['check'] = value;
             params['user'] = this.$scope.app.config.user;
             var ret = false;
-            if (this.$scope.$$("_n_f").config._params.mode=='new') {
-                let res = request(url, params, !0).response;
-                res = checkVal(res, 's');
-                if (res || this.config._params.text) {
-                    ret = true
-                    }
-                } else {
-                    ret = true;
-                    };
+            let res = request(url, params, !0).response;
+            res = checkVal(res, 's');
+            if (res || (this.config._params.text===value)) {
+                ret = true
+                }
             return ret;
             }
             
@@ -39,14 +35,14 @@ export default class NewDvView extends JetView{
                 margin: 0,
                 rules:{
                     "id": check_s,
-                    "text": webix.rules.isNotEmpty,
+                    "text": check_s, //webix.rules.isNotEmpty,
                     },
                 elements: [
                     {view: "text", localId: "_id",label: "ID", value: "", name: "id", placeholder: "Введите значение", readonly: true, 
-                        required: true, invalidMessage: "Такой ID уже есть"
+                        required: !true, invalidMessage: "Такой ID уже есть", hidden: true,
                         },
                     {view: "text", label: "Название", value: "", name: "text", placeholder: "Введите значение",
-                        required: true, invalidMessage: "Введите название"
+                        required: true, invalidMessage: "Неверное название"
                         },
                     {view: "select", label: "Обязательный ассортимент", value: 3, labelWidth: 200, width: 450, name: "oa", 
                         // сделаем загрузку с сервера 

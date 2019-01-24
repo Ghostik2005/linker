@@ -1,11 +1,13 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {allTg, tg, get_tg} from "../views/globals";
+import {tgReload, get_tg} from "../views/globals";
 
 
 export default class NewtgView extends JetView{
     config(){
+        let th = this;
+        let app = th.app;
 
         return {view: "cWindow",
             modal: true,
@@ -19,20 +21,17 @@ export default class NewtgView extends JetView{
                 onShow: () => {
                     this.$$("_filt").setValue("");
                     let id_spr = this.$$("_n_tg").config.id_spr
-                    get_tg(this, id_spr);
                     var qw = this.$$("e_list");
                     qw.clearAll(true);
-                    this.$$("t_list").clearAll();
-                    this.$$("t_list").parse(tg);
-                    let pp = allTg.data.order;
-                    pp.forEach(function(item, i, pp) {
-                        qw.add(allTg.getItem(item));
-                        });
-                    //qw.parse(allTg); //непонятно почему глючит при повторном вызове, если перед этим удалять позиции из list'а???
-                    pp = this.$$("t_list").data.order;
-                    pp.forEach(function(item, i, pp) {
-                        qw.remove(item);
-                        });
+                    qw.parse(tgReload(app));
+                    if (typeof(id_spr) === 'number'){
+                        let pp = this.$$("t_list");
+                        pp.clearAll(true);
+                        pp.parse(get_tg(app, id_spr));
+                        pp.data.order.forEach(function(item) {
+                            qw.remove(item);
+                            });
+                    };
                     this.$$("_filt").focus();
                     },
                 },
@@ -103,23 +102,26 @@ export default class NewtgView extends JetView{
                                     this.$$("t_list").selectAll();
                                     let tgs = this.$$("t_list").getSelectedItem();
                                     var p = '';
+                                    let tgs_id = [];
                                     let th = this.$$("_n_tg").config.th;
                                     let id_spr = this.$$("_n_tg").config.id_spr;
                                     let callback = this.$$("_n_tg").config.callback;
                                     if (tgs) {
-                                        let t = typeof(tgs);
+                                        let t = typeof(tgs);  
                                         try {
                                             tgs.forEach(function(item, i, tgs) {
                                                 p += item.c_tgroup + '; ';
+                                                tgs_id.push(item.id);
                                                 });
                                         } catch(err) {
                                             p = tgs.c_tgroup;
+                                            tgs_id.push(tgs.id);
                                             }
                                         }
                                     if (th) {th.$$("_c_tgroup").setValue(p);
                                         th.$$("_c_tgroup").refresh();
                                         };
-                                    if (callback) callback(id_spr, p);
+                                    if (callback) callback(id_spr, p, tgs_id);
                                     this.hide();
                                     }
                                 }

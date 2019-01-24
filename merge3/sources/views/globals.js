@@ -268,3 +268,18 @@ export function insert_inns(active_label, insert) {
     active_label.define({'label': insert, 'tooltip': tooltip});
     active_label.refresh();
 }
+
+export var onExit = function (app) {
+    let x;
+    let user = getCookie('merge3-app');
+    //deleteCookie(app.config.sklad_cook);
+    //включить когда все будет готово
+    deleteCookie("merge3-app");
+    if (user) {
+        [user, x] = user.split('::');
+        let url = app.config.r_url + "?setExit";
+        let params = {"user":user};
+        request(url, params);
+    }
+
+}

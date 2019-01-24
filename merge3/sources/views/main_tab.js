@@ -71,6 +71,5 @@ export default class MainTabView extends JetView{
 
     init() {
         this.popinn = this.ui(InnView);
-        console.log("in")
     }
 }

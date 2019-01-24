@@ -1,24 +1,46 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, vendorReload, setButtons, addVendor, delVendor, updVendor, request, checkVal} from "../views/globals";
+import {tgReload, addTGr, setButtons, delTGr, updTGr, request, checkVal, DelEdIcons} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
-export default class VendorsView extends JetView{
+export default class TGroupsView extends JetView{
     config(){
 
+        var th = this;
+        var app = th.app;
+
+        var delete_gr = function() {
+            let canDeleted = th.$$("__table").getSelectedItem().delete;
+            if (!canDeleted) {
+                webix.message({"type": "debug", "text": "Удаление невозможно", "expire": 5000});
+                return
+            }
+            let item_id = th.$$("__table").getSelectedId().id;
+            let params = {};
+            params['user'] = app.config.user;
+            params['id'] = item_id;
+            let url = app.config.r_url + "?delGr";
+            let res = request(url, params, !0).response;
+            res = checkVal(res, 's');
+            if (res) {
+                delTGr(item_id, th.$$("__table"));
+                th.$$("_del").hide();
+                };
+
+        }
+
         var sprv = {view: "datatable",
-            name: "_vendors",
+            name: "_tgroups",
             localId: "__table",
             navigation: "row",
-            select: true,
+            select: "row",
             resizeColumn:true,
             fixedRowHeight:false,
             rowLineHeight:32,
             rowHeight:32,
             editable: false,
-            //footer: true,
             headermenu:true,
             startPos: 1,
             posPpage: 20,
@@ -31,51 +53,40 @@ export default class VendorsView extends JetView{
                 delete_button:function(ev, id, html){
                     let item = this.getItem(id);
                     if (item.delete===false) {
-                        webix.message({"type": "debug", "text": "Удаление группы "+ item.c_issue  + " невозможно", "expire": 5000});
+                        webix.message({"type": "debug", "text": "Удаление группы "+ item.c_tgroup  + " невозможно", "expire": 5000});
                         return
                     };
                     setTimeout( () => {
                         this.select(item.id, false);
-                        this.$scope.$$("_del").callEvent("onItemClick");
+                        delete_gr();    
                     }, 50)
                 },
                 edit_button:function(ev, id, html){
+                    let item = this.getItem(id);
                     this.select(id, false);
                     this.callEvent("onItemDblClick", id);
                 },
+
             },
+
             columns: [
-                { id: "c_zavod",
-                    headermenu: false,
+                { id: "c_tgroup", headermenu: false,
                     fillspace: 1, sort: "text",
-                    header: [{text: "Производитель"},
-                        ],
+                    header: [{text: "Группа"},
+                    ],
                     template: refTemplate,
                 },
-                {id: "website",
-                    width: 320, 
-                    header: [{text: "Веб-сайт"}],
-                    template: function(obj, common, value) {
-                        if (value) {
-                            let link = "<a href='" + value + "'>" + value + "</a>";
-                            return link;
-                        } else {
-                            return ""
-                        }
-                    },
-                },
-                {id: "id", sort: 'text',
-                    width: 150,
+                {id: "id",
+                    width: 300,
                     header: [{text: "ID"},
                         ],
                     },
-
                 { id: "id_state", hidden: true,
                     width: 150,
                     header: [{text: "Статус"},
                         ]
                     },
-                { id: "dt",  hidden: true,
+                { id: "dt", hidden: true,
                     width: 250,
                     header: [{text: "Дата заведения"},
                         ]
@@ -95,16 +106,16 @@ export default class VendorsView extends JetView{
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.c_zavod, 'id': item.id, 'type': 'Vendor', 'callback': updVendor, 
-                                  'mode': 'upd', 'source': this, 'website': item.website};
-                    this.$scope.popnew.show('Редактирование поставщика', params);
+                    let params = {'text': item.c_tgroup, 'id': item.id, 'type': 'Gr', 'callback': updTGr, 'mode': 'upd', 'source': this};
+                    this.$scope.popnew.show('Редактирование группы', params);
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-                onBeforeSelect: () => {
-                    //this.$$("_del").show();
-                    },
+                onAfterSelect: function(item) {
+                    //item = this.getItem(item);
+                    //this.$scope.$$("_del").show();
+                },
                 onKeyPress: function(code, e){
                     if (13 === code) {
                         this.callEvent("onItemDblClick");
@@ -113,56 +124,42 @@ export default class VendorsView extends JetView{
                 },
             }
 
-        var top = { view: "toolbar",
-            height: 40,
+        var top = {height: 40, view: "toolbar",
             cols: [
                 {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Строка поиска", 
-                    keyPressTimeout: 900, tooltip: "поиск по поставщику",
+                    keyPressTimeout: 900, tooltip: "поиск по группе",
                     on: {
                         onTimedKeyPress: function(code, event) {
                             let value = this.getValue().toString().toLowerCase();
                             this.$scope.$$("__table").filter(function(obj){
-                                return obj.c_zavod.toString().toLowerCase().indexOf(value) != -1;
+                                return obj.c_tgroup.toString().toLowerCase().indexOf(value) != -1;
                                 })
                             }
                         },
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Добавить производителя",
+                {view:"button", type: 'htmlbutton', tooltip: "Добавить группу",
                     //label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     localId: "_add",
                     resizable: true,
-                    sWidth: 200,
+                    sWidth: 180,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить производителя</span>",
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить группу</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Vendor', 'callback': addVendor, 'mode': 'new', 'source': this.$$("__table")};
-                        this.popnew.show('Добавление производителя', params);
+                        let params = {'type': 'Gr', 'callback': addTGr, 'mode': 'new', 'source': this.$$("__table"), 'index': 7};
+                        this.popnew.show('Добавление группы', params, true);
                         }
                     },
-                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить производителя",
-                    //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
-                    resizable: true, sWidth: 200, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить производителя</span>",
+                {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить группу",
+                    resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить гпуппу</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
-                        onItemClick: () => {
-                            let item_id = this.$$("__table").getSelectedItem().id
-                            let params = {};
-                            params['user'] = this.app.config.user;
-                            params['id'] = item_id;
-                            let url = this.app.config.r_url + "?delVendor";
-                            let res = request(url, params, !0).response;
-                            res = checkVal(res, 's');
-                            if (res) {
-                                delVendor(res.id, this.$$("__table"));
-                                this.$$("_del").hide();
-                                };
-                            },
-                        },
+                        onItemClick: delete_gr,
                     },
+                },
                 ]
             }
 
@@ -176,13 +173,14 @@ export default class VendorsView extends JetView{
         }
 
     ready() {
-        let r_but = [this.$$("_add"), this.$$("_del")];
+        let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        vendorReload(this.app, this.$$("__table"));
+        tgReload(this.app, this.$$("__table"));
         }
         
     init() {
         this.popnew = this.ui(NewPropView);
         webix.extend(this.$$("__table"), webix.ProgressBar);
+        
         }
     }

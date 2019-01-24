@@ -1,23 +1,12 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, deleteCookie, getCookie} from "../views/globals";
+import {request, deleteCookie, getCookie, onExit} from "../views/globals";
 
 export default class HeaderView extends JetView{
     config(){
         let app = this.app;
         let th = this;
-
-        var onExit = function () {
-            let x;
-            let user = getCookie('merge3-app');
-            [user, x] = user.split('::');
-            let url = app.config.r_url + "?setExit";
-            let params = {"user":user};
-            request(url, params);
-        }
-
-        //window.addEventListener('beforeunload', onExit, false);
 
         var view = {view: 'toolbar',
             css: 'realy-header',
@@ -35,7 +24,7 @@ export default class HeaderView extends JetView{
                     width: 106,
                     on: {
                         onItemClick: () => {
-                            onExit();
+                            onExit(app);
                             deleteCookie("merge3-app");
                             th.app.config.user = '';
                             th.app.config.x_api = 'x_login';

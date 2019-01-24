@@ -12,6 +12,7 @@ import io
 import requests
 import subprocess
 import traceback
+import sqlite3
 from multiprocessing.dummy import Pool as ThreadPool
 
 
@@ -25,6 +26,8 @@ class API:
     """
 
     def __init__(self, log, w_path = '/ms71/data/merge3', p_path='/ms71/data/merge3/api-k', pg=False, production=False):
+        self.production = production
+        print('production', production)
         self.udp = sys.APPCONF["udpsock"]
         self.methods = []
         self.path = w_path
@@ -33,6 +36,7 @@ class API:
              os.makedirs(self.path, mode=0o777)
         if not os.path.exists(self.p_path):
              os.makedirs(self.p_path, mode=0o777)
+        self._create_sqlite()
         self.log = log
         self.key = ""
         self.ch_key = ""
@@ -53,10 +57,48 @@ class API:
         self.start = 1
         self.count = 20
 
+    def _create_sqlite(self):
+        sql_req = [
+            'PRAGMA synchronous = OFF;',
+            'PRAGMA journal_mode = OFF;',
+            'PRAGMA page_size = 8192;',
+            'create table if not exists tasks (task_id String Primary key, task_status String, task_reason String, dt Datetime DEFAULT CURRENT_TIMESTAMP);',
+            'create table if not exists tasks_history (task_id String Primary key, task_text String);', 
+            ]
+        for sql in sql_req:
+            self._sqlite(sql)
+
+        #сделать проверку, может задачи уже выполнились из нашей базы
+        
+        return True
+
+    def _sqlite(self, sql, basename='merge3.db3'):
+        base_name = os.path.join(self.path, basename)
+        #autocommit
+        answer = None
+        con = sqlite3.connect(base_name, isolation_level=None)
+        cur = con.cursor()
+        #print(f'SQL:\n{sql}')
+        try:
+            answer = cur.execute(sql) 
+        except:
+            err = traceback.format_exc()
+            self.log(f"SQLite SQL Error: \n{err}")
+        else:
+            answer = answer.fetchall()
+        finally:
+            try:
+                cur.close()
+                con.close()
+            except:
+                err = traceback.format_exc()
+                self.log(f"SQLite conn close Error: \n{err}")
+        #print(f'ANSWER:\n{answer}')
+        return answer
+
     def _print(self, user=None, msg=None):
         udp_msg = [sys.APPCONF["log"].appname, 'change', user or '', msg or '', time.strftime("%Y-%m-%d %H:%M:%S")]
         print(str(json.dumps(udp_msg)), file=self.udp or sys.stdout)
-        #print(udp_msg, file=self.udp or sys.stdout)
 
     #####################################################
     def _make_msg(self, user, params):
@@ -64,36 +106,43 @@ class API:
             self._print(user, i)
 
     def login(self, params=None, x_hash=None):
+        from_sklad = params.get('from_sklad', False)
         user = params.get('user')
         p_hash = params.get('pass')
         ret = {"result": False, "ret_val": "access denied"}
         if self._check(x_hash):
-            sql = f"""select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where lower(r."USER") = lower(%s)"""
-            opt = (user,)
-            res = self.db.request({"sql": sql, "options": opt})
-            if len(res) > 0:
-                md = hashlib.md5()
-                md.update(res[0][1].encode())
-                if md.hexdigest() == p_hash:
-                    # k_list = glob.glob(os.path.join(self.p_path, '*'))
-                    # for f_name in k_list:
-                    #     with open(f_name, 'rb') as f_obj:
-                    #         fuser = f_obj.read().decode().strip()
-                    #     if fuser.lower() == user.lower():
-                    #         os.remove(f_name)
-                    #         #break
-                    a_key = uuid.uuid4().hex
-                    f_name = os.path.join(self.p_path, a_key)
-                    with open(f_name, 'wb') as f_obj:
-                        f_obj.write(res[0][0].encode())
-                    ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
+            if not from_sklad:
+                sql = f"""select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where lower(r."USER") = lower(%s)"""
+                opt = (user,)
+                res = self.db.request({"sql": sql, "options": opt})
+                if len(res) > 0:
+                    md = hashlib.md5()
+                    md.update(res[0][1].encode())
+                    if md.hexdigest() == p_hash:
+                        # k_list = glob.glob(os.path.join(self.p_path, '*'))
+                        # for f_name in k_list:
+                        #     with open(f_name, 'rb') as f_obj:
+                        #         fuser = f_obj.read().decode().strip()
+                        #     if fuser.lower() == user.lower():
+                        #         os.remove(f_name)
+                        #         #break
+                        a_key = uuid.uuid4().hex
+                        f_name = os.path.join(self.p_path, a_key)
+                        with open(f_name, 'wb') as f_obj:
+                            f_obj.write(res[0][0].encode())
+                        ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
+            else:
+                a_key = uuid.uuid4().hex
+                f_name = os.path.join(self.p_path, a_key)
+                with open(f_name, 'wb') as f_obj:
+                    f_obj.write(user.encode())
+                ret = {"result": True, "ret_val": {"key": a_key, "user":user}}
         return json.dumps(ret, ensure_ascii=False)
 
     def getHistory(self, params=None, x_hash=None):
         if self._check(x_hash):
-            user = params.get('user')
+            #user = params.get('user')
             id_spr = params.get("id_spr")
-            #id_spr = 17660
             sql = """select user, payload, dt from udp_logs.logs where application='merge3' and type='change' %s FORMAT TabSeparatedRaw;"""
             ins = ''
             if id_spr:
@@ -111,12 +160,11 @@ class API:
             for row in result:
                 row = row.decode()
                 row = row.split("\t")
-                #print(type(row), row)
                 payload = row[1]
                 payload = payload.replace('True', '"True"')
                 pl = json.loads(payload)
                 inns = pl.get('inn')
-                vnd = pl.get('scode');
+                vnd = pl.get('scode')
                 for i in inns:
                     ii.add(i)
                 vn.append(vnd)
@@ -165,7 +213,8 @@ class API:
         if self._check(x_hash):
             f_name =(os.path.join(self.p_path, x_hash)) 
             try:
-                os.remove(f_name)
+                if 'x_login' not in f_name:
+                    os.remove(f_name)
             except:
                 pass
                 ret = {"result": True, "ret_val": "logout"}
@@ -224,7 +273,6 @@ class API:
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
-
 
     def getUserInn(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -343,6 +391,218 @@ where us."USER" = %s;"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def _create_ins_tasks(self, id_spr):
+        params = []
+        if id_spr:
+            rpc = ms71lib.ServerProxy("https://sklad71.org/apps/mrksrv/uri/RPC2", api_key=self.key)
+            plxdata = rpc.plx('reference_links_search', ref_id=str(id_spr))[0]
+            rpc('close')()
+            inserts = {}
+            for pd in plxdata:
+                index_id = ':%:'.join([str(pd[1]), str(id_spr)])
+                if inserts.get(index_id):
+                    #апдейтим запись
+                    inserts[index_id].append(str(pd[0]))
+                else:
+                    inserts[index_id] = [str(pd[0]),]
+            for item in inserts:
+                vnd, id_spr = item.split(':%:')
+                r = {'inn': inserts.get(item), 'ref_id': str(id_spr), 
+                        'scode': str(vnd), "remove": 1
+                }
+                params.append(r)
+        return params
+
+    def delVndAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            inns = params.get('inn')
+            if inns and not isinstance(inns, list):
+                inns = [inns, ]
+            for i in range(len(inns)):
+                inns[i] = str(inns[i])
+            id_spr = params.get('id_spr')
+            params = self._create_ins_tasks(id_spr)
+            _return = []
+            if len(params) > 0:
+                self._make_msg(user, params)
+                while params:
+                    pr = []
+                    for i in range(4):
+                        try:
+                            p = params.pop(0)
+                        except:
+                            break
+                        else:
+                            pr.append(p)
+                    pool = ThreadPool(len(pr))
+                    results = pool.map(self._set_vnd, pr)
+                    pool.close()
+                    pool.join()
+                    for i, result in enumerate(results):
+                        _return.append({"params": pr[i], "result": result})
+                        self.log(f"\nQ: {pr[i]}\nA: {result}")
+            ret = {"result": True, "ret_val": "OK"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def taskBegin(self, params=None, x_hash=None):
+        ret = {"result": False, "reason": "insert_error"}
+        user = params.get('user')
+        if user:
+            task_id = uuid.uuid4().hex
+            task_text = json.dumps(params)
+            sql_task = f"""insert into tasks (task_id, task_status, task_reason) values ('{task_id}', 'incomplete', 'new_task');"""
+            sql_history = f"""insert into tasks_history (task_id, task_text) values ('{task_id}', '{task_text}'); """
+            answer = self._sqlite(sql_task)
+            if answer != None:
+                a1 = self._sqlite(sql_history)
+            if a1 != None:
+                ret = {"result": True, "id": task_id, "reason": "task_inserted"}
+        else:
+            ret = {"result": False, "reason": "user_must_be_specified"}
+        return json.dumps(ret)
+
+    def _taskProcess(self):
+        sql_task_upd_status = """update tasks set task_status = '%s', task_reason = '%s' where task_id = '%s';"""
+        sql_tasks = """select task_id from tasks where task_status = 'incomplete';"""
+        sql_get_task = "select task_text from tasks_history where task_id = '%s';"
+        answer = self._sqlite(sql_tasks)
+        if answer:
+            tasks = []
+            for a in answer:
+                tasks.append(str(a[0]))
+            if len(tasks) > 0:
+                if len(tasks) == 1:
+                    tasks_ins = f"('{tasks[0]}')"
+                else:
+                    tasks_ins = str(tuple(tasks))
+                sql_tasks_upd = f"""update tasks set task_status = 'processing' where task_id in {tasks_ins};"""
+                self._sqlite(sql_tasks_upd)
+                for task in tasks:
+                    params = self._sqlite(sql_get_task % task)
+                    if params:
+                        try:
+                            params = json.loads(params[0][0])
+                        except:
+                            self.log(f"""TASK_TEXT_CONVERT_ERROR: task_id: {task}\n{traceback.format_exc()}""")
+                            self._sqlite(sql_task_upd_status % ('incomplete', 'cannot_convert_task_text', task))
+                            continue
+                    else:
+                        self.log(f"""TASK_TEXT_READ_ERROR: task_id: {task}\n{traceback.format_exc()}""")
+                        self._sqlite(sql_task_upd_status % ('incomplete', 'cannot_read_task_text', task))
+                        continue
+                    vnds = params.get('vnds')
+                    inns = params.get('inn')
+                    id_spr = params.get('id_spr')
+                    remove = params.get('remove')
+                    expires = params.get('expires')
+                    hard = params.get('hard', False)
+                    user = params.get('user')
+                    #формируем задачи разбивая ее на группы по поставщику
+                    if isinstance(inns, list):
+                        for i in range(len(inns)):
+                            inns[i] = str(inns[i])
+                    else:
+                        inns = str(inns)
+                    if not isinstance(vnds, list):
+                        vnds = [str(vnds), ]
+                    task_datas = []
+                    results_task = []
+                    params_log = []
+                    for vnd in vnds:
+                        r = {'inn': inns, 'ref_id': str(id_spr), 'scode': str(vnd)}
+                        if str(remove) == '1':
+                            r['remove'] = 1
+                        if expires and not remove: 
+                            r['expires'] = expires
+                        if str(hard) == '1' and not remove:
+                            r['abso'] = True    
+                        task_datas.append(r)
+                        
+                        #выполняем задачи последовательно пулами, в пуле не больше 4 задач
+                        while task_datas:
+                            pr = []
+                            for i in range(4):
+                                try:
+                                    p = task_datas.pop(0)
+                                except:
+                                    break
+                                else:
+                                    pr.append(p)
+                            try:
+                                pool = ThreadPool(len(pr))
+                                results = pool.map(self._set_vnd, pr)
+                                pool.close()
+                                pool.join()
+                            except:
+                                self.log(f"""TASK_INCOMPLETED: {task}""")
+                                self._sqlite(sql_task_upd_status % ('incomplete', 'server_error', task))
+                            for i, result in enumerate(results):
+                                results_task.append([pr[i], result])
+                                self.log(f"\nQ: {pr[i]}\nA: {result}")
+                    complete = True
+                    for r in results_task:
+                        if str(r[1]) != 'True' and str(r[1]) != 'None':
+                            complete = False
+                        else:
+                            params_log.append(r[0])
+                    self._make_msg(user, params_log)
+                    if complete:
+                        #задача выполнена
+                        self.log(f"""TASK_DONE: {task}""")
+                        self._sqlite(sql_task_upd_status % ('done', 'task_success', task))
+                    else:
+                        #задача не выполнена
+                        self.log(f"""TASK_INCOMPLETED: {task}""")
+                        self._sqlite(sql_task_upd_status % ('incomplete', 'server_error', task))
+
+    def taskStatus(self, params=None, x_hash=None):
+        task_id = params.get('id')
+        if task_id:
+            sql = f"""select task_id, task_status, task_reason from tasks where task_id = '{task_id}' """
+            sql_result = self._sqlite(sql)
+            status = None
+            reason = None
+            if sql_result:
+                status = sql_result[0][1]
+                reason = sql_result[0][2]
+                ret = {"result": True, "id": task_id, "status": status, "reason": reason}
+            else:
+                ret = {"result": False, "id": task_id, "reason": "no_task"}
+        else:
+            ret = {"result": False, "reason": "no_id"}
+        return json.dumps(ret)
+
+
+    def taskComplete(self, params=None, x_hash=None):
+        task_id = params.get('id')
+        if task_id:
+            sql_check = f"""select 
+CASE
+	WHEN EXISTS (select task_id from tasks where task_id = '{task_id}' and task_status='done') THEN 1
+	WHEN EXISTS (select task_id from tasks where task_id = '{task_id}' and task_status!='done') THEN 2
+	ELSE 0
+END;"""
+            #c = self._sqlite(f"select task_id from tasks where task_id = '{task_id}' and task_status='done';")
+            c = self._sqlite(sql_check)
+            if c and int(c[0][0])==1:
+                sqls = [f"""delete from tasks where task_id = '{task_id}'""", 
+                        f"""delete from tasks_history where task_id = '{task_id}'"""
+                        ]
+                for sql in sqls:
+                    self._sqlite(sql)
+                ret = {"result": True, "id": task_id, "reason": "complete"}
+            elif c and int(c[0][0])==2:
+                ret = {"result": False, "id": task_id, "reason": "task_incomplete"}
+            else:
+                ret = {"result": True, "id": task_id, "reason": "complete"}
+        else:
+            ret = {"result": False, "reason": "no_id"}
+        return json.dumps(ret)
+        
+
     def setVnd(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
@@ -384,19 +644,21 @@ where us."USER" = %s;"""
                 results = pool.map(self._set_vnd, params)
                 pool.close()
                 pool.join()
-                
                 for i, result in enumerate(results):
                     _return.append({"params": params[i], "result": result})
-                    print(params[i], result, sep="\t")
+                    self.log(f"\nQ: {params[i]}\nA: {result}")
             ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def _set_vnd(self, params):
-        #return params
+        if not self.production:
+            return True #enable for test
         rpc = ms71lib.ServerProxy("https://sklad71.org/apps/mrksrv/uri/RPC2", api_key=self.key)
-        return rpc.plx("reference_links_change", **params)[0]
+        ret = rpc.plx("reference_links_change", **params)[0]
+        rpc('close')()
+        return ret
 
 
     def getVnd(self, params=None, x_hash=None):

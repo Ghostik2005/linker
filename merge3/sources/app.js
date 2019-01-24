@@ -16,15 +16,23 @@ export default class app extends JetApp{
 			searchDelay:    1000,
 			posPpage:       20,
 			start	: "/login",
-			adm: false
+			adm: false,
+			//sklad_cook: 'sklad_auth_coockie'
+			sklad_cook: "manuscriptsid"
 		};
 		super({ ...defaults, ...config });
 		this.attachEvent("app:error:resolve", function(name, error) {
 			window.console.error(error);
 		})
 		var app = this;
-		webix.attachEvent("onBeforeAjax", 
-		function(mode, url, data, request, headers, files, promise){
+		var search = location.search;
+		app.config.testmode = (search.search('enabletestmode') == 1) ? true : false;
+
+		let index = search.indexOf(app.config.sklad_cook);
+		if (index != -1) {
+			app.config.skladcookie = search.split(app.config.sklad_cook+'=')[1];
+		};
+		webix.attachEvent("onBeforeAjax", function(mode, url, data, request, headers, files, promise){
 			headers["x-api-key"] = app.config.x_api;
 		});
 	}

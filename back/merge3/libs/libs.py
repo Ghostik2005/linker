@@ -233,7 +233,6 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
             add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,b_size';
-
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
             add_header 'Content-Length' 0;
@@ -556,3 +555,12 @@ class UDPSocket(socket.socket):
     def read(self, n=65536):
         return self.recv(n)
 
+
+def tasks_process_thread(api, delay=1):
+    while True:
+        try:
+            api._taskProcess()
+        except:
+            api.log(f"TASK_PROCESS_THREAD_ERROR: \n{traceback.format_exc()}")
+            api.log("TASK_PROCESS_THREAD_continue_after_error")
+        time.sleep(delay)

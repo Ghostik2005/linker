@@ -193,7 +193,7 @@ export default class SideButtonsBar extends JetView{
                     sWidth: 136,
                     eWidth: 40,
                     label: "", width: 40,
-                    hidden: !app.config.roles[app.config.role].adm,
+                    hidden: !app.config.roles[app.config.role].skipped,
                     oldLabel: "<span class='side_icon webix_icon fa-list-alt'></span>",
                     extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Справочники</span>",
                     on: {

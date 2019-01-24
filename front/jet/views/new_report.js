@@ -122,7 +122,7 @@ export default class NewReportView extends JetView{
                                         };
                                     });
                                 let pa = getDtParams(cv);
-                                console.log("pa", pa);
+                                // console.log("pa", pa);
                                 let s_params = {"c_filt": pa[0], "field": pa[2], "direction": pa[3]};
                                 let search = undefined;
                                 try {
@@ -143,8 +143,11 @@ export default class NewReportView extends JetView{
                                     };
                                 spinIconEnable($$("_rep_button"));
                                 $$("_rep_button").blockEvent();
-                                webix.ajax().timeout(180000).headers({'Content-type': 'application/json'}).response("blob").post(url, params, function(text, data) {
-                                    webix.html.download(data, "report." + params.type);
+                                webix.ajax().timeout(180000).headers({'Content-type': 'application/json'}).response("blob").post(url, params, function(text, data, xmlhttpreq) {
+                                    // console.log('hhs', xmlhttpreq.getAllResponseHeaders());
+                                    // console.log('h', xmlhttpreq.getResponseHeader('content-disposition'));
+                                    let f_n = xmlhttpreq.getResponseHeader('content-disposition').split('filename=')[1].replace(/^\s+|\s+$/g, '')
+                                    webix.html.download(data, f_n);//"report." + params.type);
                                     $$("_rep_button").unblockEvent();
                                     spinIconDisable($$("_rep_button"));
                                     })

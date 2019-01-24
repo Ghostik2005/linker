@@ -356,10 +356,11 @@ class SCGIServer:
 def f_head(aContentLength, fType='csv'):
     aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
     r = []
+    file_datetime = time.strftime('%Y%m%d-%H%M%S')
     r.append(("Content-Length", "%i" % aContentLength))
     r.append(("X-Accel-Buffering", "no"))
     r.append(("Content-Type", "application/octet-stream"))
-    r.append(("Content-Disposition", f"attachment; filename=report.{fType}"))
+    r.append(("Content-Disposition", f"attachment; filename=report_{file_datetime}.{fType}"))
     return r
 
 def authHead(content, aContentLength):
@@ -505,9 +506,9 @@ def handle_commandline(profile, index):
     if "udp" in kwargs:
         udp = kwargs.pop("udp")
         if not udp:
-            udp = 4122
+            udp = 9122
     else:
-        udp = 4122
+        udp = 9122
     if "production" in kwargs:
         production = True
     else:

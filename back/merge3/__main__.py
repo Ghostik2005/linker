@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'merge3'
-__version__ = '18.355.1000' #запись логов в udp
+__version__ = '19.023.2000' #сделан API взамен старого Merge3
+#__version__ = '18.355.1000' #запись логов в udp
 #__version__ = '18.347.1520' #добавлен поиск по производителю
 #__version__ = '18.340.1000' #production start
 #__version__ = '18.324.1000' #project start
@@ -138,7 +139,9 @@ def prepare_server(api = None):
     sys.APPCONF["log"](f'\t\t\textrnal  ip-> {sys.extip}')
 
     #threads.append(threading.Thread(target=_insert_function_for_thread_here, args=(_insert_args_here,), daemon=True))
-    threads.append(threading.Thread(target=libs.udp_send, args=(__appname__, __version__, sys.APPCONF["udp"]), daemon=True))
+    threads.append(threading.Thread(target=libs.udp_send, args=(__appname__, __version__, sys.APPCONF["udp"]), name='udp_sending', daemon=True))
+    threads.append(threading.Thread(target=libs.tasks_process_thread, args=(api,), name='processing',daemon=True))
+
 
     for th in threads:
         th.start()
