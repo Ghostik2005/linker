@@ -85,26 +85,15 @@ export default class SprView extends JetView{
             }, 
             onClick:{
                 delete_button:function(ev, id, html){
-                    let node = this.getNode();
-                    console.log('ht', html);
-                    console.log('ev', ev);
-                    // node.onmousedown = () => {
-                    //     let x = setInterval( () => {
-                            let item = this.getItem(id);
-                            if (item.delete===false) {
-                                webix.message({"type": "debug", "text": "Удаление  "+ item.c_item  + " невозможно", "expire": 5000});
-                                return
-                            };
-                            setTimeout( () => {
-                                this.select(item.id, false);
-                                this.$scope.$$("_del").callEvent("onItemClick");
-                            }, 50)
-                        // },
-                        // 500);
-                        // node.onmouseup = function () {
-                        //     clearInterval(x);
-                        // }
-                    // },
+                    let item = this.getItem(id);
+                    if (item.delete===false) {
+                        webix.message({"type": "debug", "text": "Удаление  "+ item.c_item  + " невозможно", "expire": 5000});
+                        return
+                    };
+                    setTimeout( () => {
+                        this.select(item.id, false);
+                        this.$scope.$$("_del").callEvent("onItemClick");
+                    }, 50)
                 },
                 edit_button:function(ev, id, html){
                     this.select(id, false);
@@ -331,6 +320,21 @@ export default class SprView extends JetView{
                 },
                 onAfterLoad: function() {
                     this.hideProgress();
+                },
+                onAfterRender: function() {
+                    let butts =  Array.from(document.getElementsByClassName("delete_button"));
+                    butts.forEach((butt) => {
+                        butt.onmousedown =  (event) => {
+                            this.$scope.$$("_del").blockEvent();
+                            butt.onmouseup = () => {
+                                clearInterval(this.interval);
+                            };
+                            this.interval = setTimeout ( () => {
+                                this.$scope.$$("_del").unblockEvent();
+                            }, 1000)
+                        }
+                    });
+
                 },
                 onAfterSelect: function() {
                     let selected = this.getSelectedItem();

@@ -1,0 +1,8 @@
+#linker_sse
+
+	location /events {
+	    proxy_set_header Connection keep-alive;
+	    proxy_buffering off;
+	    proxy_cache off;
+	    proxy_pass http://78.155.207.51/events_logic;
+	}

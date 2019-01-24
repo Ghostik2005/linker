@@ -1,0 +1,8 @@
+#linker
+
+	location /linker_logic {
+	    #proxy_set_header Connection keep-alive;
+	    proxy_buffering off;
+	    proxy_cache off;
+	    proxy_pass http://78.155.207.51/linker_logic;
+	}

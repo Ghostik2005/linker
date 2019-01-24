@@ -1224,7 +1224,6 @@ export function setButtons(app, buttons) {
     }
 
 export function DelEdIcons (can_delete) {
-    console.log('th_d', this);
     let del_img = "<div class='webix_image image20x20', style='background-image:url(./addons/img/delete_20x20.svg);'</div>";
     let edit_img = "<div class='webix_image image20x20', style='background-image:url(./addons/img/edit_20x20.svg);'</div>";
     let del_but = "<div class='webix_el_button posi'><button class='webix_img_btn_abs delete_button'>" + del_img + "</button> </div>";
@@ -1233,7 +1232,6 @@ export function DelEdIcons (can_delete) {
 }
 
 export function refTemplate(obj, common, value) {
-    console.log('th', this);
     let colSize = (obj.delete===false) ? "_1" : "_2";
     let col = "<div class='right_col"+ colSize + "'>" + value + "</div>";
     return "<div class = 'dt_hover'>" + common.itemIcon((obj.delete===false)?false:true) + col + "</div>";

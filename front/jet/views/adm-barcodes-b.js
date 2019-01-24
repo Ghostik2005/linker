@@ -68,19 +68,30 @@ export default class BarcodesBView extends JetView{
             columns: [
                 {id: "c_tovar", header: "Товар" , fillspace: true, sort: "server", headermenu: false,
                     template:"<span>{common.treetable()} #c_tovar#</span>" 
-                    },
+                },
+                {id: "c_zavod",
+                    width: 300,
+                    header: [{text: "Завод-изготовитель"},
+                    ]
+                },
+                {id: "c_strana",
+                    width: 200,
+                    header: [{text: "Страна"},
+                    ]
+                },
+
                 {id: "id_spr",
                     width: 150,
                     header: [{text: "IDSPR"},
                         ]
                     },
-                { id: "id_state", 
+                {id: "dt", header: "Дата", width: 160, hidden: true},
+                {id: "owner", header: "Создал", width: 120, hidden: true},
+                { id: "id_state", hidden: true,
                     width: 150,
                     header: [{text: "Статус"},
-                        ]
-                    },
-                {id: "dt", header: "Дата", width: 160},
-                {id: "owner", header: "Создал", width: 120}
+                    ]
+                },
                 ],
             on: {
                 "data->onParse":function(i, data){

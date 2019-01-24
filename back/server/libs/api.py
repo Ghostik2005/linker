@@ -2425,8 +2425,11 @@ INNER JOIN ROLES a on (a.ID = r.ID_ROLE) WHERE r.ID = {self._wildcardIns()}"""
                     "data"        : []
                 }
                 idc += 1
-                sql = f"""select r.id_spr, s.c_tovar, r.ch_date from spr_barcode r
-join spr s on (r.id_spr = s.id_spr)
+                sql = f"""select r.id_spr, s.c_tovar, r.ch_date, st.c_strana, zav.c_zavod
+from spr_barcode r
+join spr s on r.id_spr = s.id_spr
+left join spr_strana st on s.id_strana = st.id_spr
+left join spr_zavod zav on s.id_zavod = zav.id_spr
 where r.barcode = {self._wildcardIns()} order by s.id_spr ASC"""
                 opt = (row[0],)
                 res = self.db.request({"sql": sql, "options": opt})
@@ -2436,7 +2439,10 @@ where r.barcode = {self._wildcardIns()} order by s.id_spr ASC"""
                         "c_tovar"   : rrr[1],
                         "id_state"  : "active",
                         "dt"        : str(rrr[2]) or '',
-                        "owner"     : ""
+                        "owner"     : "",
+                        "c_strana"  : rrr[3],
+                        "c_zavod"   : rrr[4]
+
                     }
                     r['data'].append(rr)
                 _return.append(r)

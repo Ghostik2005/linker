@@ -334,6 +334,7 @@ export default class RelinkFormView extends JetView{
             modal: true,
             on: {
                 onHide: function() {
+                    //this.$scope.$$("__reset").callEvent("onItemClick");
                     this.$scope.$$("__table").clearAll();
                     }
                 },
@@ -346,13 +347,14 @@ export default class RelinkFormView extends JetView{
             this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + item.c_tovar);
             this.$$("__table").config.old_spr = item.id_spr;
             this.$$("__table").config.old_id = item.id;
-            this.$$("__reset").callEvent("onItemClick");
-            let s = item.c_tovar.split(' ')[0];
+            let s = item.c_tovar.replace(/^\s+|\s+$/g, '').split(' ')[0];
             this.$$("__table").config.searchBar.setValue(s)
+            this.$$("__reset").callEvent("onItemClick");
+
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()
-        this.$$("_sb").callEvent("onKeyPress", [13,]);
+        //this.$$("_sb").callEvent("onKeyPress", [13,]);
         }
     hide(){
         this.getRoot().hide()
