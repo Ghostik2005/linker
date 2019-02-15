@@ -274,7 +274,7 @@ export var onExit = function (app) {
     let user = getCookie('merge3-app');
     //deleteCookie(app.config.sklad_cook);
     //включить когда все будет готово
-    deleteCookie("merge3-app");
+    // deleteCookie("merge3-app");
     if (user) {
         [user, x] = user.split('::');
         let url = app.config.r_url + "?setExit";

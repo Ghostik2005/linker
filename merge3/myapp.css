@@ -118,8 +118,12 @@ input,
   border-radius: 10px !important;
 }
 .webix_el_button button {
-  border-width: 1px !important;
-  border-color: #0e86fe !important;
+  /* border-width: 1px !important; */
+  border-width: 0px;
+  border-color: #0e86fe;
+}
+button:hover {
+  border-width: 1px;
 }
 .side-tool-bar {
   background-color: #f8fafc !important;
@@ -194,5 +198,25 @@ button:disabled {
   background-position: center center;
   vertical-align: bottom;
   display: inline-block;
+}
+@keyframes ani {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.1;
+  }
+  15% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.anibut {
+  animation: ani 1s ease infinite;
 }
 

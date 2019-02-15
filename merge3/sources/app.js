@@ -27,6 +27,7 @@ export default class app extends JetApp{
 		var app = this;
 		var search = location.search;
 		app.config.testmode = (search.search('enabletestmode') == 1) ? true : false;
+		app.config.testmode = true;
 
 		let index = search.indexOf(app.config.sklad_cook);
 		if (index != -1) {
