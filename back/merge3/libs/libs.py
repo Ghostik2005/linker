@@ -392,6 +392,17 @@ def head(aContentLength, fgDeflate=True, fg_head=True):
         r.append(("Content-Encoding", "deflate"))
     return r
 
+def f_head(aContentLength, fType='xlsx'):
+    aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
+    r = []
+    file_datetime = time.strftime('%Y%m%d-%H%M%S')
+    r.append(("Content-Length", "%i" % aContentLength))
+    r.append(("X-Accel-Buffering", "no"))
+    r.append(("Content-Type", "application/octet-stream"))
+    r.append(("Content-Disposition", f"attachment; filename=report_{file_datetime}.{fType}"))
+    return r
+
+
 def shutdown(log):
     """
     function, runs when exiting
@@ -556,7 +567,7 @@ class UDPSocket(socket.socket):
         return self.recv(n)
 
 
-def tasks_process_thread(api, delay=1):
+def tasks_process_thread(api, delay=2):
     while True:
         try:
             api._taskProcess()

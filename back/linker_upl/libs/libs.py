@@ -118,7 +118,7 @@ class API:
             else:
                 self.log('UPLOAD| %s' % 'слишком много значений для вывода')
             con, cur = self._connect()
-            h_name = self._get_checksum(str(name).encode())
+            h_name = self._get_checksum((str(name) + str(time.time())).encode())
             c_sum = self._get_checksum(value.encode())
             self.log('UPLOAD| file: %s, h_name: %s, c_summ: %s' % (name.encode(), h_name, c_sum))
             if source == 1:
@@ -505,12 +505,12 @@ SET (barcode, id_spr) = (%s, %s);"""
         #self.log('assign to stasya')
         #f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
         sql_upd_u = f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
-and  id_vnd in (10001,19987,19990,19992,19996,20123,20129,20153,20171,20176,20177,
+and  id_vnd in (10001,19990,19992,19996,20123,20129,20153,20171,20176,20177,
                 20229,20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
                 20677,20871,20977,21271,22077,22078,22240,23478,24477,28132,28162,
                 28176,28177,28178,29271,29977,30144,30178,30371,33771,34071,34157,
                 34168,37471,40267,40277,40550,40552,40677,41177,44677,44735,44877,
-                45177,45277,45835,46676,46769,46869,47369,48761,51066,51072,10000,
+                45177,45277,45835,46676,46769,46869,47369,48761,51066,51072,51078,10000,
                 52083)"""
         #self.log(sql_upd_u)
         dbc.execute(sql_upd_u)
@@ -518,10 +518,10 @@ and  id_vnd in (10001,19987,19990,19992,19996,20123,20129,20153,20171,20176,2017
         if callable(db.commit):
             db.commit()
         #назначаем на антей - разобраться
-        dbc.execute(f"""update prc set id_org=40035 where id_org=12 or id_org = 0 {con_ins} 
-and id_vnd in (19994, 19985, 19976, 19987) and n_fg = 0;""")
-        if callable(db.commit):
-            db.commit()
+#         dbc.execute(f"""update prc set id_org=40035 where id_org=12 or id_org = 0 {con_ins} 
+# and id_vnd in (19994, 19985, 19976, 19987) and n_fg = 0;""")
+#         if callable(db.commit):
+#             db.commit()
         #self.log('assign to 40035')
         #dbc.execute(f"""update prc set id_org=40035 where id_vnd=19985 and id_org=12 {con_ins}""")
         #if callable(db.commit):

@@ -552,7 +552,11 @@ class UDPSocket(socket.socket):
         if fg:
             data = b''.join(self._buf)[:65536]
             self._buf.clear()
-            return self.sendto(data, self._std_addr)
+            try: 
+                self.sendto(data, self._std_addr)
+            except:
+                pass
+            return
 
     def flush(self):
         pass

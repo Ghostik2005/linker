@@ -1,7 +1,11 @@
 #coding: utf-8
 
 __appname__ = 'merge3'
-__version__ = '19.023.2000' #сделан API взамен старого Merge3
+__version__ = '19.045.1030' #добавлен отчет по связкам
+# __version__ = '19.037.1330' #сделанна прямая вставка данных в plx
+#__version__ = '19.035.1330' #удаляем выполненные задачи из базы
+#__version__ = '19.034.1255' #исправлен принцип работы задачЖ теперь они повторно не обрабатываются
+#__version__ = '19.023.2000' #сделан API взамен старого Merge3
 #__version__ = '18.355.1000' #запись логов в udp
 #__version__ = '18.347.1520' #добавлен поиск по производителю
 #__version__ = '18.340.1000' #production start
@@ -111,11 +115,32 @@ def application(env):
         print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
 
-    ret_value = content.encode()
-    if arg == 'login':
-        header = libs.authHead(content, len(ret_value))
-    else:
-        header = libs.head(len(ret_value), False, True)
+    fileReturn = False
+    if arg == 'makeReport':
+        res = content.get('result')
+        if res:
+            ret_v = content.get('ret_val')
+            f_type = ret_v.get('type')
+            ret_value = ret_v.get('data')
+            header = libs.f_head(len(ret_value), f_type)
+            fileReturn = True
+        #else:
+            #ret_value = json.dumps(ret, ensure_ascii=False)
+    if not fileReturn:
+        ret_value = content.encode()
+        if arg == 'login':
+            header = libs.authHead(content, len(ret_value))
+        else:
+            header = libs.head(len(ret_value), False, True)
+
+
+
+
+    # ret_value = content.encode()
+    # if arg == 'login':
+    #     header = libs.authHead(content, len(ret_value))
+    # else:
+    #     header = libs.head(len(ret_value), False, True)
     tt = time.time() - tt
     env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE in %s secs" % (msg, tt))
     # передаем: статус, заголовки, содержание
@@ -140,7 +165,7 @@ def prepare_server(api = None):
 
     #threads.append(threading.Thread(target=_insert_function_for_thread_here, args=(_insert_args_here,), daemon=True))
     threads.append(threading.Thread(target=libs.udp_send, args=(__appname__, __version__, sys.APPCONF["udp"]), name='udp_sending', daemon=True))
-    threads.append(threading.Thread(target=libs.tasks_process_thread, args=(api,), name='processing',daemon=True))
+    threads.append(threading.Thread(target=libs.tasks_process_thread, args=(api, ), name='processing',daemon=True))
 
 
     for th in threads:

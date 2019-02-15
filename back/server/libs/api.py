@@ -1966,7 +1966,12 @@ on conflict do nothing;"""
         return False
 
     def _updateSprGroups(self, idx, id_sprs, prop_id):
+        t = time.time()
         sprs = [int(i) for i in id_sprs]
+        # sql_get_prop_id = """SELECT c.CD_GROUP FROM CLASSIFIER as c WHERE c.IDX_GROUP  = %s """
+        # opt = (idx,)
+        # res = self.db.execute({"sql": sql_get_prop_id, "options": opt})[0][0]
+        
         sql_del = f"""delete FROM GROUPS as g
 WHERE g.CD_GROUP in 
     (SELECT c.CD_GROUP
@@ -1974,14 +1979,37 @@ WHERE g.CD_GROUP in
     WHERE c.IDX_GROUP  = %s)
 and g.CD_CODE in {str(tuple(sprs))}"""
         opt = (idx,)
+
+#         sql_del = f"""delete FROM GROUPS as g
+# WHERE g.CD_GROUP =  %s
+# and g.CD_CODE in {str(tuple(sprs))}"""
+#         opt = (res,)
+
         self.db.execute({"sql": sql_del, "options": opt})
+
+        t1 = time.time()
+        # print(f'dddddddddd: {t1-t} sec.')
+
+#         opts = []
+#         sql_del = """delete FROM GROUPS as g WHERE g.CD_GROUP =  %s
+# and g.CD_CODE = %s"""
+#         for id_spr in sprs:
+#             opts.append((res, id_spr))
+#         if len(opts) > 0:
+#             self.db.executemany({"sql": sql_del, "options": opts})
+
         if prop_id:
             opts = []
-            sql_ins = f"""insert into groups (cd_code, cd_group) values (%s, %s);"""
+            sql_ins = f"""insert into groups (cd_code, cd_group) values (%s, %s) on conflict do nothing;"""
             for id_spr in sprs:
                 opts.append((id_spr, prop_id))
             if len(opts) > 0:
+                # self.db.execute({"sql": "drop index groups_idx1;", "options": ()})
+                # self.db.execute({"sql": "drop index groups_idx2;", "options": ()})
                 self.db.executemany({"sql": sql_ins, "options": opts})
+                # self.db.execute({"sql": "CREATE UNIQUE INDEX groups_idx1 ON groups USING btree (cd_code, cd_group);", "options": ()})
+                # self.db.execute({"sql": "CREATE UNIQUE INDEX groups_idx2 ON groups USING btree (cd_group, cd_code);", "options": ()})
+                # print(f'iiiiiiii: {time.time()-t1} sec.')
                 return True
             return False
         return True
@@ -1991,6 +2019,7 @@ and g.CD_CODE in {str(tuple(sprs))}"""
             method = params.get('method')
             id_sprs = params.get('items', [])
             prop_id = params.get('prop_id')
+            print(id_sprs)
             if prop_id:
                 prop_id = prop_id.get('id')
             if id_sprs and prop_id and method:
@@ -3660,326 +3689,338 @@ ORDER by r.{1} {2}
         return json.dumps(ret, ensure_ascii=False)
 
 
-    def getSprSearchAdm(self, params=None, x_hash=None):
+    def _createSqlGetSprSearchAdm(self, params):
+        id_sprs = params.get('id_sprs')
 
-        st_t = time.time()
-        if self._check(x_hash):
-            start_p = int( params.get('start', self.start))
-            start_p = 1 if start_p < 1 else start_p
-            end_p = int(params.get('count', self.count)) + start_p - 1
-            field = params.get('field', 'c_tovar')
-            direction = params.get('direction', 'asc')
-            search_re = params.get('search')
-            search_re = search_re.replace("'", "").replace('"', "")
-            filt = params.get('c_filter')
-            in_st = []
-            in_c = []
-            in_c_w = []
-            exclude, search_re = self._form_exclude(search_re)
-            search_re = search_re.split()
-            stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
-            for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
-                if i == 0:
-                    stri.append(ts1)
+        start_p = int( params.get('start', self.start))
+        start_p = 1 if start_p < 1 else start_p
+        end_p = int(params.get('count', self.count)) + start_p - 1
+        field = params.get('field', 'c_tovar')
+        direction = params.get('direction', 'asc')
+        search_re = params.get('search', '')
+        search_re = search_re.replace("'", "").replace('"', "")
+        filt = params.get('c_filter')
+        in_st = []
+        in_c = []
+        in_c_w = []
+        exclude, search_re = self._form_exclude(search_re)
+        search_re = search_re.split()
+        stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
+        for i in range(len(search_re)):
+            ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+            if i == 0:
+                stri.append(ts1)
+            else:
+                stri.append('and %s' % ts1)
+        if len(exclude) > 0:
+            for i in range(len(exclude)):
+                ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                stri.append('and %s' % ts3)
+        if id_sprs:
+            id_sprs_tuple = []
+            for i in id_sprs:
+                try:
+                    i = int(i)
+                except:
+                    continue
                 else:
-                    stri.append('and %s' % ts1)
-            if len(exclude) > 0:
-                for i in range(len(exclude)):
-                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
-                    stri.append('and %s' % ts3)
-            stri = ' '.join(stri)
-            if filt:
-                pars = {}
-                pars['id_spr'] = filt.get('id_spr')
-                pars['id_zavod'] = filt.get('id_zavod')
-                pars['id_strana'] = filt.get('id_strana')
-                pars['c_dv'] = filt.get('c_dv')
-                pars['c_group'] = filt.get('c_group')
-                pars['c_nds'] = filt.get('c_nds')
-                pars['c_hran'] = filt.get('c_hran')
-                pars['c_sezon'] = filt.get('c_sezon')
-                pars['mandat'] = filt.get('mandat')
-                pars['prescr'] = filt.get('prescr')
-                pars['dt_ins'] = filt.get('dt_ins')
-                dt = filt.get('dt')
-                ssss = []
-                if dt:
-                    pars['start_dt'] = dt.get('start')
-                    pars['end_dt'] = dt.get('end')
-                    if pars['start_dt'] and not pars['end_dt']:
-                        pars['start_dt'] = pars['start_dt'].split()[0]
-                        if self._pg:
-                            s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
-                        else:
-                            s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
-                        ssss.append(s.format(pars['start_dt']))
-                    elif pars['start_dt'] and pars['end_dt']:
-                        pars['end_dt'] = pars['end_dt'].split()[0]
-                        if self._pg:
-                            s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
-                        else:
-                            s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
-                        ssss.append(s.format(pars['start_dt'], pars['end_dt']))
-                if pars['id_spr']:
-                    s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
-                    ssss.append(s)
-                if pars['id_zavod']:
-                    s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
-                    in_c.insert(0, s)
-                    in_st.insert(0, s)
-                else:
-                    s = "LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)"
-                    in_st.append(s)
-                if pars['id_strana']:
-                    s = "join spr_strana s on (s.ID_SPR = r.ID_STRANA) and s.ID_SPR = {0}".format(pars['id_strana'])
-                    in_c.insert(0, s)
-                    in_st.insert(0, s)
-                else:
-                    s = "LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)"
-                    in_st.append(s)
-                if pars['c_dv']:
-                    if pars['c_dv'] != "-100":
-                        s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
-                        in_c.insert(0, s)
-                    else: 
-                        s = "LEFT join dv d on d.ID = r.ID_DV and d.ACT_INGR is null"
-                        in_c.insert(0, "LEFT join dv d on d.ID = r.ID_DV")
-                        in_c_w.append("d.ACT_INGR is null")
-                    in_st.insert(0, s)
-                else:
-                    s = "LEFT join dv d on (d.ID = r.ID_DV)"
-                    in_st.append(s)
-                if pars['c_hran']:
-                    if pars['c_hran'] != "-100":
-                        s = """join 
-                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
-                    from GROUPS g2
-                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3 and c2.CD_GROUP = '%s'
-                    ) as eee1 on (cc2 = r.ID_SPR)""" % pars['c_hran']
-                        in_c.insert(0, s)
-                    else: 
-                        s = """LEFT join 
-                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
-                    from GROUPS g2
-                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
-                    ) as eee2 on cc2 = r.ID_SPR"""
-                        in_c.insert(0, s)
-                        in_c_w.append(" uhran is null")
-                        s += " and uhran is null"
-                    in_st.insert(0, s)
-                else:
-                    s = """LEFT join 
-                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
-                    from GROUPS g2
-                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
-                    ) as eee2 on (cc2 = r.ID_SPR)"""
-                    in_st.append(s)
-                if pars['mandat']:
-                    if (int(pars['mandat'])) == 1:
-                        s = """INNER join 
-                            (select g4.CD_CODE cc4, c4.NM_GROUP mandat
-                            from GROUPS g4
-                            inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
-                            ) as eee3  on (cc4 = r.ID_SPR) and mandat is not null"""
-                        in_c.insert(0, s)
-                        in_st.insert(0, s)
+                    id_sprs_tuple.append(i)
+            id_sprs_tuple = tuple(id_sprs_tuple)
+            stri.append(f'and r.id_spr in {str(id_sprs_tuple)}' if len(id_sprs_tuple) > 1 else f'and r.id_spr = {id_sprs_tuple[0]}')
+
+        stri = ' '.join(stri)
+        if filt:
+            pars = {}
+            pars['id_spr'] = filt.get('id_spr')
+            pars['id_zavod'] = filt.get('id_zavod')
+            pars['id_strana'] = filt.get('id_strana')
+            pars['c_dv'] = filt.get('c_dv')
+            pars['c_group'] = filt.get('c_group')
+            pars['c_nds'] = filt.get('c_nds')
+            pars['c_hran'] = filt.get('c_hran')
+            pars['c_sezon'] = filt.get('c_sezon')
+            pars['mandat'] = filt.get('mandat')
+            pars['prescr'] = filt.get('prescr')
+            pars['dt_ins'] = filt.get('dt_ins')
+            dt = filt.get('dt')
+            ssss = []
+            if dt:
+                pars['start_dt'] = dt.get('start')
+                pars['end_dt'] = dt.get('end')
+                if pars['start_dt'] and not pars['end_dt']:
+                    pars['start_dt'] = pars['start_dt'].split()[0]
+                    if self._pg:
+                        s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
                     else:
-                        s = """left join 
-                            (select g4.CD_CODE cc4, c4.NM_GROUP mandat
-                            from GROUPS g4
-                            inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
-                            ) as eeee1 on (cc4 = r.ID_SPR)"""
-                        in_c.append(s)
-                        in_st.append(s)
-                        ssss.append(" and mandat is null")
+                        s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < DATEADD(DAY, 1, CAST('{0}' as TIMESTAMP)))"""
+                    ssss.append(s.format(pars['start_dt']))
+                elif pars['start_dt'] and pars['end_dt']:
+                    pars['end_dt'] = pars['end_dt'].split()[0]
+                    if self._pg:
+                        s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                    else:
+                        s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= DATEADD(DAY, 1, CAST('{1}' as TIMESTAMP)))"""
+                    ssss.append(s.format(pars['start_dt'], pars['end_dt']))
+            if pars['id_spr']:
+                s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
+                ssss.append(s)
+            if pars['id_zavod']:
+                s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
+                in_c.insert(0, s)
+                in_st.insert(0, s)
+            else:
+                s = "LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)"
+                in_st.append(s)
+            if pars['id_strana']:
+                s = "join spr_strana s on (s.ID_SPR = r.ID_STRANA) and s.ID_SPR = {0}".format(pars['id_strana'])
+                in_c.insert(0, s)
+                in_st.insert(0, s)
+            else:
+                s = "LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)"
+                in_st.append(s)
+            if pars['c_dv']:
+                if pars['c_dv'] != "-100":
+                    s = "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv'])
+                    in_c.insert(0, s)
+                else: 
+                    s = "LEFT join dv d on d.ID = r.ID_DV and d.ACT_INGR is null"
+                    in_c.insert(0, "LEFT join dv d on d.ID = r.ID_DV")
+                    in_c_w.append("d.ACT_INGR is null")
+                in_st.insert(0, s)
+            else:
+                s = "LEFT join dv d on (d.ID = r.ID_DV)"
+                in_st.append(s)
+            if pars['c_hran']:
+                if pars['c_hran'] != "-100":
+                    s = """join 
+                (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                from GROUPS g2
+                inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3 and c2.CD_GROUP = '%s'
+                ) as eee1 on (cc2 = r.ID_SPR)""" % pars['c_hran']
+                    in_c.insert(0, s)
+                else: 
+                    s = """LEFT join 
+                (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                from GROUPS g2
+                inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                ) as eee2 on cc2 = r.ID_SPR"""
+                    in_c.insert(0, s)
+                    in_c_w.append(" uhran is null")
+                    s += " and uhran is null"
+                in_st.insert(0, s)
+            else:
+                s = """LEFT join 
+                (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                from GROUPS g2
+                inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                ) as eee2 on (cc2 = r.ID_SPR)"""
+                in_st.append(s)
+            if pars['mandat']:
+                if (int(pars['mandat'])) == 1:
+                    s = """INNER join 
+                        (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                        from GROUPS g4
+                        inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                        ) as eee3  on (cc4 = r.ID_SPR) and mandat is not null"""
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
                 else:
                     s = """left join 
                         (select g4.CD_CODE cc4, c4.NM_GROUP mandat
                         from GROUPS g4
                         inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
-                        ) as eee4 on (cc4 = r.ID_SPR)"""
+                        ) as eeee1 on (cc4 = r.ID_SPR)"""
+                    in_c.append(s)
                     in_st.append(s)
-                if pars['prescr']:
-                    if (int(pars['prescr'])) == 1:
-                        s = f"""INNER join 
-                            (select g5.CD_CODE cc5, c5.NM_GROUP presc
-                            from GROUPS g5
-                            inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-                            ) as eee5 on (cc5 = r.ID_SPR) and presc is not null"""
-                        in_c.insert(0, s)
-                        in_st.insert(0, s)
-                    else:
-                        s = """left join 
-                            (select g5.CD_CODE cc5, c5.NM_GROUP presc
-                            from GROUPS g5
-                            inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-                            ) as eee6 on (cc5 = r.ID_SPR)"""
-                        in_c.append(s)
-                        in_st.append(s)
-                        ssss.append(" and presc is null")
+                    ssss.append(" and mandat is null")
+            else:
+                s = """left join 
+                    (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                    from GROUPS g4
+                    inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                    ) as eee4 on (cc4 = r.ID_SPR)"""
+                in_st.append(s)
+            if pars['prescr']:
+                if (int(pars['prescr'])) == 1:
+                    s = f"""INNER join 
+                        (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                        from GROUPS g5
+                        inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                        ) as eee5 on (cc5 = r.ID_SPR) and presc is not null"""
+                    in_c.insert(0, s)
+                    in_st.insert(0, s)
                 else:
                     s = """left join 
                         (select g5.CD_CODE cc5, c5.NM_GROUP presc
                         from GROUPS g5
                         inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-                        ) as eee7 on (cc5 = r.ID_SPR)"""
+                        ) as eee6 on (cc5 = r.ID_SPR)"""
+                    in_c.append(s)
                     in_st.append(s)
-                if pars['c_group']:
-                    if pars['c_group'] != "-100":
-                        s = """join 
-                    (select g.CD_CODE cc, c.NM_GROUP gr
-                    from GROUPS g
-                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1 and c.CD_GROUP = '%s'
-                    ) as eee8 on (cc = r.ID_SPR)""" % pars['c_group']
-                        in_c.insert(0, s)
-                    else: 
-                        s = """LEFT join 
-                    (select g.CD_CODE cc, c.NM_GROUP gr
-                    from GROUPS g
-                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
-                    ) as eee9 on (cc = r.ID_SPR)"""
-                        in_c.insert(0, s)
-                        in_c_w.append(" gr is null")
-                        s += " and gr is null"
-                    in_st.insert(0, s)
-                else:
-                    s = """LEFT join 
-                    (select g.CD_CODE cc, c.NM_GROUP gr
-                    from GROUPS g
-                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
-                    ) as eee9 on (cc = r.ID_SPR)"""
-                    in_st.append(s)
-                if pars['c_nds']:
-                    if pars['c_nds'] != "-100":
-                        s = """join 
-                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
-                    from GROUPS g1
-                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2 and c1.CD_GROUP = '%s'
-                    ) as eee10 on (cc1 = r.ID_SPR)""" % pars['c_nds']
-                        in_c.insert(0, s)
-                    else: 
-                        s = """LEFT join 
-                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
-                    from GROUPS g1
-                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
-                    ) as eee11 on (cc1 = r.ID_SPR)"""
-                        in_c.insert(0, s)
-                        in_c_w.append(" nds is null")
-                        s += " and nds is null"
-                    in_st.insert(0, s)
-                else:
-                    s = """LEFT join 
-                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
-                    from GROUPS g1
-                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
-                    ) as eee11 on (cc1 = r.ID_SPR)"""
-                    in_st.append(s)
-                if pars['c_sezon']:
-                    if pars['c_sezon'] != "-100":
-                        s = """join 
-                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
-                    from GROUPS g3
-                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6 and c3.CD_GROUP = '%s'
-                    ) as eee12 on (cc3 = r.ID_SPR)""" % pars['c_sezon']
-                        in_c.insert(0, s)
-                    else: 
-                        s = """left join 
-                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
-                    from GROUPS g3
-                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
-                    ) as eee13 on (cc3 = r.ID_SPR)"""
-                        in_c.insert(0, s)
-                        in_c_w.append(" sezon is null")
-                        s += " and sezon is null"
-                    in_st.insert(0, s)
-                else:
-                    s = """left join 
-                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
-                    from GROUPS g3
-                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
-                    ) as eee13 on (cc3 = r.ID_SPR)"""
-                    in_st.append(s)
-                if pars['dt_ins']:
-                    s = """left join 
-                    (select min(l.dt) as aa, s.id_spr as idd
-                    from spr s
-                    join lnk l on l.id_spr = s.id_spr
-                    group by s.id_spr
-                    ) as qw on r.id_spr = idd"""
-                    in_c.insert(0, s)
-                    in_st.insert(0, s)
-                else:
-                    s = """left join 
-                    (select min(l.dt) as aa, s.id_spr as idd
-                    from spr s
-                    join lnk l on l.id_spr = s.id_spr
-                    group by s.id_spr
-                    ) as qw on r.id_spr = idd"""
-                    in_st.append(s)
-
-                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa FROM SPR r""")
-                sql = '\n'.join(in_st)
-                in_c.insert(0, """select count(*) from spr r""")
-                sql_c = '\n'.join(in_c)
-                stri += ' ' + ' '.join(ssss)
+                    ssss.append(" and presc is null")
             else:
-                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa
-                FROM SPR r
-                LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
-                LEFT join 
-                    (select g1.CD_CODE cc1, c1.NM_GROUP nds
-                    from GROUPS g1
-                    inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
-                    ) as ttt2 on (cc1 = r.ID_SPR)
-                LEFT join 
-                    (select g2.CD_CODE cc2, c2.NM_GROUP uhran
-                    from GROUPS g2
-                    inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
-                    ) as ttt3 on (cc2 = r.ID_SPR)
-                LEFT join 
-                    (select g3.CD_CODE cc3, c3.NM_GROUP sezon
-                    from GROUPS g3
-                    inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
-                    ) as ttt4 on (cc3 = r.ID_SPR)
-                LEFT join 
-                    (select g4.CD_CODE cc4, c4.NM_GROUP mandat
-                    from GROUPS g4
-                    inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
-                    ) as ttt5 on (cc4 = r.ID_SPR)
-                LEFT join 
+                s = """left join 
                     (select g5.CD_CODE cc5, c5.NM_GROUP presc
                     from GROUPS g5
                     inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-                    ) as ttt6 on (cc5 = r.ID_SPR)
-                LEFT join 
-                    (select g.CD_CODE cc, c.NM_GROUP gr
-                    from GROUPS g
-                    inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
-                    ) as ttt1 on (cc = r.ID_SPR)
+                    ) as eee7 on (cc5 = r.ID_SPR)"""
+                in_st.append(s)
+            if pars['c_group']:
+                if pars['c_group'] != "-100":
+                    s = """join 
+                (select g.CD_CODE cc, c.NM_GROUP gr
+                from GROUPS g
+                inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1 and c.CD_GROUP = '%s'
+                ) as eee8 on (cc = r.ID_SPR)""" % pars['c_group']
+                    in_c.insert(0, s)
+                else: 
+                    s = """LEFT join 
+                (select g.CD_CODE cc, c.NM_GROUP gr
+                from GROUPS g
+                inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                ) as eee9 on (cc = r.ID_SPR)"""
+                    in_c.insert(0, s)
+                    in_c_w.append(" gr is null")
+                    s += " and gr is null"
+                in_st.insert(0, s)
+            else:
+                s = """LEFT join 
+                (select g.CD_CODE cc, c.NM_GROUP gr
+                from GROUPS g
+                inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                ) as eee9 on (cc = r.ID_SPR)"""
+                in_st.append(s)
+            if pars['c_nds']:
+                if pars['c_nds'] != "-100":
+                    s = """join 
+                (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                from GROUPS g1
+                inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2 and c1.CD_GROUP = '%s'
+                ) as eee10 on (cc1 = r.ID_SPR)""" % pars['c_nds']
+                    in_c.insert(0, s)
+                else: 
+                    s = """LEFT join 
+                (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                from GROUPS g1
+                inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                ) as eee11 on (cc1 = r.ID_SPR)"""
+                    in_c.insert(0, s)
+                    in_c_w.append(" nds is null")
+                    s += " and nds is null"
+                in_st.insert(0, s)
+            else:
+                s = """LEFT join 
+                (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                from GROUPS g1
+                inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                ) as eee11 on (cc1 = r.ID_SPR)"""
+                in_st.append(s)
+            if pars['c_sezon']:
+                if pars['c_sezon'] != "-100":
+                    s = """join 
+                (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                from GROUPS g3
+                inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6 and c3.CD_GROUP = '%s'
+                ) as eee12 on (cc3 = r.ID_SPR)""" % pars['c_sezon']
+                    in_c.insert(0, s)
+                else: 
+                    s = """left join 
+                (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                from GROUPS g3
+                inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                ) as eee13 on (cc3 = r.ID_SPR)"""
+                    in_c.insert(0, s)
+                    in_c_w.append(" sezon is null")
+                    s += " and sezon is null"
+                in_st.insert(0, s)
+            else:
+                s = """left join 
+                (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                from GROUPS g3
+                inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                ) as eee13 on (cc3 = r.ID_SPR)"""
+                in_st.append(s)
 
-                LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-                LEFT join dv d on (d.ID = r.ID_DV)
-                left join 
-                    (select min(l.dt) as aa, s.id_spr as idd
-                    from spr s
-                    join lnk l on l.id_spr = s.id_spr
-                    group by s.id_spr
-                    ) as qw on r.id_spr = idd
-                    """
-                sql_c = """SELECT count(*) FROM SPR r"""
+            in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT FROM SPR r""")
+            sql = '\n'.join(in_st)
+            in_c.insert(0, """select count(*) from spr r""")
+            sql_c = '\n'.join(in_c)
+            stri += ' ' + ' '.join(ssss)
+        else:
+            sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT
+            FROM SPR r
+            LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
+            LEFT join 
+                (select g1.CD_CODE cc1, c1.NM_GROUP nds
+                from GROUPS g1
+                inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
+                ) as ttt2 on (cc1 = r.ID_SPR)
+            LEFT join 
+                (select g2.CD_CODE cc2, c2.NM_GROUP uhran
+                from GROUPS g2
+                inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
+                ) as ttt3 on (cc2 = r.ID_SPR)
+            LEFT join 
+                (select g3.CD_CODE cc3, c3.NM_GROUP sezon
+                from GROUPS g3
+                inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
+                ) as ttt4 on (cc3 = r.ID_SPR)
+            LEFT join 
+                (select g4.CD_CODE cc4, c4.NM_GROUP mandat
+                from GROUPS g4
+                inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
+                ) as ttt5 on (cc4 = r.ID_SPR)
+            LEFT join 
+                (select g5.CD_CODE cc5, c5.NM_GROUP presc
+                from GROUPS g5
+                inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
+                ) as ttt6 on (cc5 = r.ID_SPR)
+            LEFT join 
+                (select g.CD_CODE cc, c.NM_GROUP gr
+                from GROUPS g
+                inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
+                ) as ttt1 on (cc = r.ID_SPR)
 
-            sql += """\nWHERE {0}
-ORDER by r.{1} {2}
-"""
-            sql = sql + self._insLimit(start_p, end_p)
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
-            sql_c += """ WHERE {0}""".format(stri)
-            if in_c_w:
-                sql_c = sql_c + " and " + ' and '.join(in_c_w)
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            sql = sql.format(stri, field, direction)
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
+            LEFT join dv d on (d.ID = r.ID_DV)
+                """
+            sql_c = """SELECT count(*) FROM SPR r"""
+        sql += """\nWHERE {0}
+ORDER by r.{1} {2}"""
+        sql = sql + self._insLimit(start_p, end_p)
+        stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
+        sql_c += """ WHERE {0}""".format(stri)
+        if in_c_w:
+            sql_c = sql_c + " and " + ' and '.join(in_c_w)
+        sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+        sql = sql.format(stri, field, direction)
+        sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+        return [sql, sql_c]
+
+    def getIdSprSearchAdm(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            _, sql_c = self._createSqlGetSprSearchAdm(params)
+            sql_c = sql_c.replace('count(*)', 'r.id_spr')
+            t1 = time.time() - st_t
+            result = self._make_sql({'sql': sql_c, 'opt': ()})
+            _return = []
+            for row in result:
+                _return.append(row[0])
+            ret = {"result": True, "ret_val": _return, "time": t1}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def getSprSearchAdm(self, params=None, x_hash=None):
+        st_t = time.time()
+        if self._check(x_hash):
+            start_p = int( params.get('start', self.start))
+            start_p = 1 if start_p < 1 else start_p
+
+            sql, sql_c = self._createSqlGetSprSearchAdm(params)
+
             t1 = time.time() - st_t
             opt = ()
             _return = []
@@ -4007,13 +4048,34 @@ ORDER by r.{1} {2}
                     "c_mandat"      : row[10],
                     "c_prescr"      : row[11],
                     "dt"            : str(row[12]),
-                    "dt_ins"        : str(row[13])
+                    "dt_ins"        : ""#str(row[13])
                 }
                 _return.append(r)
+            _return = self._getInsDt(_return)
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
+
+    def _getInsDt(self, _return):
+        sql_dt = """select min(l.dt) as aa, s.id_spr as idd
+from spr s
+join lnk l on l.id_spr = s.id_spr
+where s.id_spr = %s
+group by s.id_spr;"""
+        dt_ins = []
+        for row in _return:
+            dt_ins.append({'sql': sql_dt, 'opt': (int(row["id_spr"]), )})
+        if len(dt_ins) > 0:
+            pool = ThreadPool(len(dt_ins))
+            res_dt = pool.map(self._make_sql, dt_ins)
+            pool.close()
+            pool.join()
+            for i, r in enumerate(res_dt):
+                _return[i]['dt_ins'] = str(r[0][0]) if r else ""
+        return _return
+
+
 
     def getSpr(self, params=None, x_hash=None):
         if self._check(x_hash):

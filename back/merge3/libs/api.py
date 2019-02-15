@@ -13,9 +13,11 @@ import requests
 import subprocess
 import traceback
 import sqlite3
+import io
 from multiprocessing.dummy import Pool as ThreadPool
 
 
+import libs.xlsx as xlsx
 from libs.connect import pg_local
 import ms71lib
 
@@ -64,13 +66,57 @@ class API:
             'PRAGMA page_size = 8192;',
             'create table if not exists tasks (task_id String Primary key, task_status String, task_reason String, dt Datetime DEFAULT CURRENT_TIMESTAMP);',
             'create table if not exists tasks_history (task_id String Primary key, task_text String);', 
+            'create table if not exists tasks_complete (task_id String, task_params String PRIMARY KEY);'
             ]
         for sql in sql_req:
             self._sqlite(sql)
-
         #сделать проверку, может задачи уже выполнились из нашей базы
-        
+        sql_check = """update tasks set task_status='incomplete' where task_status='processing';"""
+        self._sqlite(sql_check)
+        sql_delete = """delete from tasks_complete where task_id in (select t.task_id from tasks t where t.task_status='complete');"""
+
+        self._sqlite(sql_delete)
+
+        self._sqlite_maintanance()
+
         return True
+
+    def _sqlite_maintanance(self, basename='merge3.db3'):
+        base_name = os.path.join(self.path, basename)
+        con = sqlite3.connect(base_name, isolation_level=None)
+        try:
+            con.execute('vacuum')
+        except:
+            err = traceback.format_exc()
+            self.log(f"SQLite_MAINTANANCE_Error: \n{err}")
+        finally:
+            try:
+                con.close()
+            except:
+                err = traceback.format_exc()
+                self.log(f"SQLite_CONN_CLOSE_Error: \n{err}")
+        con = sqlite3.connect(base_name, isolation_level=None)
+        cur = con.cursor()
+        try:
+            res = cur.execute("select count(*) from tasks_complete;")
+            res = res.fetchall()[0][0]
+            if int(res) == 0:
+                cur.execute("drop table tasks_complete;")
+        except:
+            pass
+        finally:
+            try:
+                cur.execute('create table if not exists tasks_complete (task_id String, task_params String PRIMARY KEY);')
+            except:
+                pass
+            try:
+                cur.close()
+                con.close()
+            except:
+                pass                
+
+        return True
+
 
     def _sqlite(self, sql, basename='merge3.db3'):
         base_name = os.path.join(self.path, basename)
@@ -163,8 +209,10 @@ class API:
                 payload = row[1]
                 payload = payload.replace('True', '"True"')
                 pl = json.loads(payload)
-                inns = pl.get('inn')
+                inns = pl.get('inn', -1)
                 vnd = pl.get('scode')
+                if inns == -1:
+                    continue
                 for i in inns:
                     ii.add(i)
                 vn.append(vnd)
@@ -464,7 +512,365 @@ where us."USER" = %s;"""
             ret = {"result": False, "reason": "user_must_be_specified"}
         return json.dumps(ret)
 
+    def _sqlite_many(self, sql, opt, basename='merge3.db3'):
+        base_name = os.path.join(self.path, basename)
+        #autocommit
+        answer = None
+        con = sqlite3.connect(base_name, isolation_level=None)
+        cur = con.cursor()
+        #print(f'SQL:\n{sql}')
+        for i in range(5):
+            try:
+                answer = cur.executemany(sql, opt)
+                break
+            except:
+                err = traceback.format_exc()
+                self.log(f"SQLite_SQL_Error_Many: \n{err}")
+                time.sleep(0.1* (1 + i))
+            finally:
+                try:
+                    cur.close()
+                    con.close()
+                except:
+                    err = traceback.format_exc()
+                    self.log(f"SQLite_con_close_Error: \n{err}")
+        return answer
+
+    def _plx_execute(self, params):
+        sql = params.get('sql')
+        options = params.get('options')
+        alias = params.get('alias', 'plx')
+        rpc = ms71lib.ServerProxy(f"https://sklad71.org/apps/fdbsrv@plx-db/uri/RPC2", api_key=self.key)
+        if options:
+            ret = rpc.fdb.execute(alias, sql, (options,))
+        else:
+            ret = rpc.fdb.execute(alias, sql)
+        rpc('close')()
+        return ret
+
+    def _plx_execute_many(self, params):
+        sql = params.get('sql')
+        options = params.get('options')
+        alias = params.get('alias', 'plx')
+        ret = True
+        rpc = ms71lib.ServerProxy(f"https://sklad71.org/apps/fdbsrv@plx-db/uri/RPC2", api_key=self.key)
+        ret = rpc.fdb.executemany(alias, sql, options)
+        rpc('close')()
+        # if self.c == 3:
+        #     print('writing')
+        #     with open('options.txt', 'w') as f_:
+        #         f_.write('\n'.join([str(q) for q in options]))
+        #     with open('sql.txt', 'w') as f_:
+        #         f_.write(sql)
+        return ret
+
+    def _get_suppl_id(self, vnd):
+        vnds = None
+        if not isinstance(vnd, list):
+            vnd = [vnd, ]
+        vnd_id = []
+        for i in range(len(vnd)):
+            vnd[i] = str(vnd[i])
+        if len(vnd) == 1:
+            sql = f"""select code, id from app_supplier where code = '{vnd[0]}'"""
+        else:
+            sql_select_suppl = """select code, id from app_supplier where code in %s"""
+            sql = sql_select_suppl % str(tuple(vnd))
+        for i in range(5):
+            try:
+                vnds = self._plx_execute({"alias": "plx", "sql": sql})
+            except:
+                sl = 0.25*(i+1)
+                self.log(f"""CON_ERROR_IN_SUPPL_ORG_ID_TEXT:\n{traceback.format_exc()}""")
+                self.log(f"""CON_ERROR_IN_GET_SUPPL_ID_SLEEP_FOR: {sl} secs.""")
+                time.sleep(sl)
+            else:
+                break
+        if not vnds:
+            vnds = [["-1", -1]]
+        vnds_dict = {}
+        for row in vnds:
+            vnds_dict[row[0]] = row[1]
+        for v in vnd:
+            c_id = vnds_dict.get(v, -1)
+            vnd_id.append(c_id)
+        return vnd_id
+
+    def _get_org_id(self, inn):
+        inns = None
+        if not isinstance(inn, list):
+            inn = [inn, ]
+        inn_id = []
+        for i in range(len(inn)):
+            inn[i] = str(inn[i])
+        if len(inn) == 1:
+            sql = f"""select inn, id from app_org where inn = '{inn[0]}';"""
+        else:
+            sql_select_orgs = """select inn, id from app_org where inn in %s;"""
+            sql = sql_select_orgs % str(tuple(inn))
+        for i in range(5):
+            try:
+                inns = self._plx_execute({"alias": "plx", "sql": sql})
+            except:
+                sl = 0.25*(i+1)
+                self.log(f"""CON_ERROR_IN_GET_ORG_ID_TEXT:\n{traceback.format_exc()}""")
+                self.log(f"""CON_ERROR_IN_GET_ORG_ID_SLEEP_FOR: {sl} secs.""")
+                time.sleep(sl)
+            else:
+                break
+        if not inns:
+            inns = [["-1", -1]]
+        inns_dict = {}
+        for row in inns:
+            inns_dict[row[0]] = row[1]
+        for v in inn:
+            c_id = inns_dict.get(v, -1)
+            inn_id.append(c_id)
+        return inn_id
+
+
+    def _getHash(self, string):
+        md = hashlib.md5()
+        md.update(string.encode())
+        return md.hexdigest()
+
+    def _form_remove(self, vnds, inns, id_sprs, test=False):
+        sql_3 = """delete from app_referencelink where org_id = %s and supplier_id = %s and ref_id = %s;"""
+        sql_2 = """delete from app_referencelink where org_id = %s and ref_id = %s;"""
+        inns = self._get_org_id(inns)
+        if isinstance(id_sprs, list):
+            for i in range(len(id_sprs)):
+                id_sprs[i] = str(id_sprs[i])
+        else:
+            id_sprs = [str(id_sprs), ]
+        task_datas = []
+        if vnds:
+            vnds = self._get_suppl_id(vnds)
+            for v in vnds:
+                for i in inns:
+                    for s in id_sprs:
+                        if v != -1 and i != -1  and s !=-1:
+                            task_datas.append({"s": sql_3, "o": (i, v, s)})
+        else:
+            for i in inns:
+                for s in id_sprs:
+                    if i != -1  and s !=-1:
+                        task_datas.append({"s": sql_2, "o": (i, s)})
+        return task_datas
+
+    def _form_insert(self, vnds, inns, id_sprs, expires, hard, user, test=False):
+        if not vnds:
+            vnds = -1
+        sql_ins_e = """insert into app_referencelink (created, updated, org_id, supplier_id, ref_id, expires, abso) values
+(current_timestamp, current_timestamp, %s, %s, %s, %s, %s)
+on conflict (org_id, supplier_id, ref_id) do update
+set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, %s, %s, %s, %s, %s);"""
+        sql_ins = """insert into app_referencelink (created, updated, org_id, supplier_id, ref_id, abso) values
+(current_timestamp, current_timestamp, %s, %s, %s, %s)
+on conflict (org_id, supplier_id, ref_id) do update
+set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, %s, %s, %s, %s);"""
+        inns = self._get_org_id(inns)
+        if isinstance(id_sprs, list):
+            for i in range(len(id_sprs)):
+                id_sprs[i] = str(id_sprs[i])
+        else:
+            id_sprs = [str(id_sprs), ]
+        task_datas = []
+        vnds = self._get_suppl_id(vnds)
+        if str(hard) == '1' or hard == True:
+            hard = True
+        else:
+            hard = False
+        if expires:            
+            for v in vnds:
+                for i in inns:
+                    for s in id_sprs:
+                        if v != -1 and i != -1 and s !=-1:
+                            opt = (i, v, s, expires, hard)
+                            task_datas.append({"s": sql_ins_e, "o": opt + opt})
+        else:
+            for v in vnds:
+                for i in inns:
+                    for s in id_sprs:
+                        if v != -1 and i != -1 and s !=-1:
+                            opt = (i, v, s, hard)
+                            task_datas.append({"s": sql_ins, "o": opt + opt})
+        return task_datas
+
     def _taskProcess(self):
+
+        sql_check = """update tasks set task_status='incomplete' where task_status='processing';"""
+        self._sqlite(sql_check)
+        sql_delete = """delete from tasks_complete where task_id in (select t.task_id from tasks t where t.task_status='complete');"""
+        self._sqlite(sql_delete)
+
+        sql_task_upd_status = """update tasks set task_status = '%s', task_reason = '%s' where task_id = '%s';"""
+        sql_tasks = """select task_id from tasks where task_status = 'incomplete';"""
+        #########################
+        # sql_tasks = """select task_id from tasks where task_id = 'd27f836f4e6142f99afb75f45683ebfa';"""
+        sql_get_task = "select task_text from tasks_history where task_id = '%s';"
+        answer = self._sqlite(sql_tasks)
+        if answer:
+            tasks = []
+            for a in answer:
+                tasks.append(str(a[0]))
+            if len(tasks) > 0:
+                # if len(tasks) == 1:
+                #     tasks_ins = f"('{tasks[0]}')"
+                # else:
+                #     tasks_ins = str(tuple(tasks))
+                # sql_tasks_upd = f"""update tasks set task_status = 'processing' where task_id in {tasks_ins};"""
+                # self._sqlite(sql_tasks_upd)
+                for task in tasks: 
+                    c = 0
+                    sql_tasks_upd = f"""update tasks set task_status = 'processing' where task_id = '{task}';"""
+                    self._sqlite(sql_tasks_upd)
+                    params = self._sqlite(sql_get_task % task)
+                    if params:
+                        try:
+                            params = json.loads(params[0][0])
+                        except:
+                            self.log(f"""TASK_TEXT_CONVERT_ERROR: task_id: {task}\n{traceback.format_exc()}""")
+                            self._sqlite(sql_task_upd_status % ('incomplete', 'cannot_convert_task_text', task))
+                            continue
+                    else:
+                        self.log(f"""TASK_TEXT_READ_ERROR: task_id: {task}\n{traceback.format_exc()}""")
+                        self._sqlite(sql_task_upd_status % ('incomplete', 'cannot_read_task_text', task))
+                        continue
+                    vnds = params.get('vnds')#[0]###########
+                    inns = params.get('inn')
+                    if not inns:
+                        inns = -1
+                    id_sprs = params.get('id_spr')#[0]###########
+                    if not id_sprs:
+                        id_sprs = -1
+                    remove = params.get('remove')
+                    expires = params.get('expires')
+                    hard = params.get('hard', False)
+                    user = params.get('user')
+                    test = params.get('test', False)
+                    if remove:
+                        task_datas = self._form_remove(vnds, inns, id_sprs, test)
+                    else:
+                        task_datas = self._form_insert(vnds, inns, id_sprs, expires, hard, user, test)
+
+                    results_task = []
+                    params_log = []
+                    #выполняем задачи последовательно пулами и execute_many по 1000 запросов, в пуле не больше 4 задач
+                    br = False
+                    while task_datas:
+                        #пул из 4 тредов
+                        pr = []
+                        for j in range(4):
+                            sql = None
+                            pr_i = []
+                            #1000 подзапросов
+                            for i in range(1000):
+                                try:
+                                    p = task_datas.pop(0)
+                                except:
+                                    break
+                                else:
+                                    c += 1
+                                    if c % 1000 == 0:
+                                        self.log(f"PROCESSING:{task}, DONE: {c}")
+                                    # проверяем в базе есть ли этот параметр, если есть - берем следующий, если нет - добавляем
+                                    check_str = self._getHash(json.dumps(p))
+                                    #sql_check = f"""select count(*) from tasks_complete where task_id ='{task}' and task_params='{check_str}' """
+                                    sql_check = f"""select exists (select task_id from tasks_complete where task_id ='{task}' and task_params='{check_str}')"""
+                                    count = self._sqlite(sql_check)
+                                    count = count[0][0]
+                                    if int(count) == 1:
+                                        continue
+                                    ppp = p.get('o')
+                                    if not ppp:
+                                        continue
+                                    pr_i.append(ppp)
+                                    sql = p.get('s')
+                            if len(pr_i) < 1:
+                                continue
+                            pr_ins = {"sql": sql, "options": pr_i}
+                            ############
+                            # check_str = self._getHash(json.dumps(pr_ins))
+                            # #sql_check = f"""select count(*) from tasks_complete where task_id ='{task}' and task_params='{check_str}' """
+                            # sql_check = f"""select exists (select task_id from tasks_complete where task_id ='{task}' and task_params='{check_str}')"""
+                            # count = self._sqlite(sql_check)
+                            # count = count[0][0]
+                            # if int(count) == 1:
+                            #     continue
+                            #############
+                            pr.append(pr_ins)
+                        if len(pr) < 1:
+                            continue
+                        ok = False
+
+                        #5 попыток
+                        for t in range(5):
+                            try:
+                                # выполняем задачи в пуле
+                                pool = ThreadPool(len(pr))
+                                results = pool.map(self._plx_execute_many, pr)
+                                pool.close()
+                                pool.join()
+                            except:
+                                sl = 0.25*(t+1)
+                                self.log(f"""TASK_INCOMPLETED_IN_POOL_ERROR_TEXT:\n{traceback.format_exc()}""")
+                                self.log(f"""TASK_INCOMPLETED_IN_POOL_SLEEP_FOR: {sl} secs.""")
+                                time.sleep(sl)
+                            else:
+                                ok = True
+                                break
+                            finally:
+                                try: pool.close()
+                                except: pass
+                                try: pool.join()
+                                except: pass
+                        if not ok:
+                            self.log(f"""TASK_INCOMPLETED_IN_POOL: {task} after 5 attepts""")
+                            self._sqlite(sql_task_upd_status % ('incomplete', 'server_error', task))
+                            br=True
+                            break
+                        for i, result in enumerate(results):
+                            # chs = self._getHash(json.dumps(pr[i]))
+                            # opts = [task, chs]
+
+                            sql_i = pr[i].get('sql')
+                            opt_i = pr[i].get('options')
+                            opts = []
+                            for j in opt_i:
+                                r = {'s': sql_i, 'o':j}
+                                chs = self._getHash(json.dumps(r))
+                                opts.append((task, chs))
+                                results_task.append([r, result])
+                                # print(r, chs, sep='\t')
+                            if len(opts) > 0:
+                                self._sqlite_many("insert into tasks_complete (task_id, task_params) values (?, ?)", opts)
+                            # for j in opt_i:
+                            #     r = {'s': sql_i, 'o':j}
+                            #     results_task.append([r, result])
+                    if br:
+                        continue
+                    complete = True
+                    for r in results_task:
+                        if str(r[1]) != 'True' and str(r[1]) != 'None':
+                            complete = False
+                        else:
+                            params_log.append(r[0])
+                    self._make_msg(user, params_log)
+                    if complete:
+                        #задача выполнена
+                        self.log(f"""TASK_DONE: {task}""")
+                        self._sqlite(sql_task_upd_status % ('done', 'task_success', task))
+                        self._sqlite(f"""delete from tasks_complete where task_id = '{task}';""")
+                        self._sqlite_maintanance()
+                    else:
+                        #задача не выполнена
+                        self.log(f"""TASK_INCOMPLETED: {task}""")
+                        self._sqlite(sql_task_upd_status % ('incomplete', 'server_error', task))
+
+
+
+    def _taskProcess_old(self):
         sql_task_upd_status = """update tasks set task_status = '%s', task_reason = '%s' where task_id = '%s';"""
         sql_tasks = """select task_id from tasks where task_status = 'incomplete';"""
         sql_get_task = "select task_text from tasks_history where task_id = '%s';"
@@ -495,11 +901,12 @@ where us."USER" = %s;"""
                         continue
                     vnds = params.get('vnds')
                     inns = params.get('inn')
-                    id_spr = params.get('id_spr')
+                    id_sprs = params.get('id_spr')
                     remove = params.get('remove')
                     expires = params.get('expires')
                     hard = params.get('hard', False)
                     user = params.get('user')
+                    test = params.get('test', False)
                     #формируем задачи разбивая ее на группы по поставщику
                     if isinstance(inns, list):
                         for i in range(len(inns)):
@@ -508,40 +915,83 @@ where us."USER" = %s;"""
                         inns = str(inns)
                     if not isinstance(vnds, list):
                         vnds = [str(vnds), ]
+                    if isinstance(id_sprs, list):
+                        for i in range(len(id_sprs)):
+                            id_sprs[i] = str(id_sprs[i])
+                    else:
+                        id_sprs = [str(id_sprs), ]
                     task_datas = []
                     results_task = []
                     params_log = []
-                    for vnd in vnds:
-                        r = {'inn': inns, 'ref_id': str(id_spr), 'scode': str(vnd)}
-                        if str(remove) == '1':
-                            r['remove'] = 1
-                        if expires and not remove: 
-                            r['expires'] = expires
-                        if str(hard) == '1' and not remove:
-                            r['abso'] = True    
-                        task_datas.append(r)
+
+                    for id_spr in id_sprs:
+                        for vnd in vnds:
+                            r = {'inn': inns, 'ref_id': id_spr, 'scode': str(vnd)}
+                            if str(remove) == '1':
+                                r['remove'] = 1
+                            if expires and not remove: 
+                                r['expires'] = expires
+                            if str(hard) == '1' and not remove:
+                                r['abso'] = True    
+                            task_datas.append(r)
                         
-                        #выполняем задачи последовательно пулами, в пуле не больше 4 задач
-                        while task_datas:
-                            pr = []
-                            for i in range(4):
-                                try:
-                                    p = task_datas.pop(0)
-                                except:
-                                    break
+                    #выполняем задачи последовательно пулами, в пуле не больше 4 задач
+                    br = False
+                    while task_datas:
+                        pr = []
+                        for i in range(10):
+                            try:
+                                p = task_datas.pop(0)
+                            except:
+                                break
+                            else:
+                                #проверяем в базе есть ли этот параметр, если есть - берем следующий, если нет - добавляем
+                                check_str = json.dumps(p)
+                                sql_check = f"""select count(*) from tasks_complete  where task_id ='{task}' and task_params='{check_str}' """
+                                count = self._sqlite(sql_check)
+                                # self.log(f"""COU_ANSWER: {count}.""")
+                                count = count[0][0]
+                                if int(count) == 1:
+                                    continue
+                                if test:    
+                                    pr.append((p, str(p)))
                                 else:
                                     pr.append(p)
+                        if len(pr) < 1:
+                            continue
+                        ok = False
+                        for t in range(5):
                             try:
                                 pool = ThreadPool(len(pr))
                                 results = pool.map(self._set_vnd, pr)
                                 pool.close()
                                 pool.join()
                             except:
-                                self.log(f"""TASK_INCOMPLETED: {task}""")
-                                self._sqlite(sql_task_upd_status % ('incomplete', 'server_error', task))
-                            for i, result in enumerate(results):
-                                results_task.append([pr[i], result])
-                                self.log(f"\nQ: {pr[i]}\nA: {result}")
+                                sl = 0.3*(t+1)
+                                self.log(f"""TASK_INCOMPLETED_IN_POOL_ERROR_TEXT:\n{traceback.format_exc()}""")
+                                self.log(f"""TASK_INCOMPLETED_IN_POOL_SLEEP_FOR: {sl} secs.""")
+                                time.sleep(sl)
+                            else:
+                                ok = True
+                                break
+                            finally:
+                                try: pool.close()
+                                except: pass
+                                try: pool.join()
+                                except: pass
+                        if not ok:
+                            self.log(f"""TASK_INCOMPLETED_IN_POOL: {task} after 5 attepts""")
+                            self._sqlite(sql_task_upd_status % ('incomplete', 'server_error', task))
+                            br=True
+                            break
+
+                        for i, result in enumerate(results):
+                            results_task.append([pr[i], result])
+                            self.log(f"\nQ: {pr[i]}\nA: {result}")
+                            sql_compl = f"""insert into tasks_complete (task_id, task_params) values ('{task}', '{json.dumps(pr[i])}');"""
+                            self._sqlite(sql_compl)
+                    if br:
+                        continue
                     complete = True
                     for r in results_task:
                         if str(r[1]) != 'True' and str(r[1]) != 'None':
@@ -553,6 +1003,7 @@ where us."USER" = %s;"""
                         #задача выполнена
                         self.log(f"""TASK_DONE: {task}""")
                         self._sqlite(sql_task_upd_status % ('done', 'task_success', task))
+                        self._sqlite(f"""delete from tasks_complete where task_id = '{task}';""")
                     else:
                         #задача не выполнена
                         self.log(f"""TASK_INCOMPLETED: {task}""")
@@ -653,7 +1104,8 @@ END;"""
         return json.dumps(ret, ensure_ascii=False)
 
     def _set_vnd(self, params):
-        if not self.production:
+        if not self.production or isinstance(params, tuple):
+            time.sleep(0.25)
             return True #enable for test
         rpc = ms71lib.ServerProxy("https://sklad71.org/apps/mrksrv/uri/RPC2", api_key=self.key)
         ret = rpc.plx("reference_links_change", **params)[0]
@@ -894,3 +1346,139 @@ WHERE ({stri}) ORDER by {field} {direction}"""
         else:
             rrr = f""" ROWS {start_p} to {end_p}"""
         return rrr
+
+
+    def _make_sql_plx(self, params):
+        sql_template = """select o.inn, o.title, 
+s.code, s.title,
+r.ref_id, r.expires, r.abso
+from app_referencelink r 
+join app_org o on o.id = r.org_id and o.inn %s
+join app_supplier s on s.id = r.supplier_id
+where  r.expires is null or r.expires >= current_timestamp
+order by r.ref_id, s.code, o.inn;"""
+        sql = params.get('sql')
+        inn = params.get('inn')
+        if len(inn) == 1:
+            inn = f"= '{str(inn[0])}'\n"
+        elif len(inn) > 1:
+            inn = f"in {str(tuple(inn))}\n"
+        sql = sql_template % inn
+        ret = []
+        #5 попыток
+        for t in range(5):
+            try:
+                plx = ms71lib.ServerProxy(f"https://sklad71.org/apps/fdbsrv@plx-db/uri/RPC2", api_key=self.key)
+                ret = plx.fdb.execute('plx', sql)
+            except:
+                sl = 0.3*(t+1)
+                self.log(f"""PLX_ERROR_TEXT:\n{traceback.format_exc()}""")
+                self.log(f"""PLX_ERROR_SLEEP_FOR: {sl} secs.; ATTEMPT: {t+1}""")
+                time.sleep(sl)
+            else:
+                break
+            finally:
+                try:
+                    plx('close')()
+                except: pass
+        if ret:
+            for row in ret:
+                yield row
+
+
+    def _genCsv(self, output_data, sep='\t'):
+        out_data = []
+        if len(output_data) > 0:    
+            for row in output_data:
+                out_data.append(sep.join([str(i) for i in row]))
+            out_data = '\n'.join(out_data)
+        return out_data.encode()
+
+
+    def _genXlsx(self, data):
+        ret_object = io.BytesIO()
+        ret_data = None
+        properties = {
+            'title':    'report',
+            'category': 'Utility',
+        }
+        x = 6.5
+        workbook = xlsx.Workbook(ret_object, {'in_memory': True})
+        workbook.set_properties(properties)
+        cell_format = {}
+        cell_format['header'] = workbook.add_format({'font_size': '8', 'bold': True, 'align': 'center', 'bottom': 1})
+        cell_format['row'] = workbook.add_format({'font_size': '8', 'align': 'left'})
+        if len(data) > 0:
+            x = len(data[0])
+            y = len(data)
+            worksheet = workbook.add_worksheet('report')
+            worksheet.set_print_scale(100)
+            j = 0
+            max_widths = {}
+            while data:
+                row = data.pop(0)
+                for i in range(len(row)):
+                    d1 = row[i]
+                    l = len(str(d1))
+                    if j == 0:
+                        max_widths[i] = l
+                    if max_widths[i] < l:
+                        max_widths[i] = l
+                worksheet.write_row(j, 0, row, cell_format['header' if j==0 else 'row'])
+                j += 1
+            for i in max_widths:
+                worksheet.set_column(i, i, max_widths[i]*(x if max_widths[i] > 10 else 9))
+            worksheet.set_paper(9) #размер А4
+            worksheet.set_portrait() #портретная ориентация
+            worksheet.set_margins(left=1, right=0.5, top=0.5, bottom=0.5)
+
+            worksheet.autofilter(0, 0, y-1, x-1)
+
+            workbook.close()
+            ret_data = ret_object.getvalue()
+            ret_object.close()
+        return ret_data
+
+    def makeReport(self, params=None, x_hash=None):
+        sql_spr = """select s.id_spr, s.c_tovar, c.c_strana, z.c_zavod
+from spr s
+left join spr_strana c on s.id_strana = c.id_spr
+left join spr_zavod z on s.id_zavod = z.id_spr;"""
+        if self._check(x_hash):
+            inns = params.get('inn')
+            if not isinstance(inns, list):
+                inns = [inns, ]
+            if inns:
+                spr = {}
+                ret = self._make_sql({"sql": sql_spr, "opt": ()})
+                for row in ret:
+                    spr[row[0]] = list(row[1:])
+                c = 0
+                output_data = [["ИНН", "Организация", "Код поставщика", "Поставщик", "Код товара", "Название товара", "Страна", "Производитель", "Срок действия", "Жесткость"], ]
+                for row in self._make_sql_plx({"sql": '', 'inn': inns}):
+                    row_new = []
+                    row_new = row[0:5]
+                    spr_info = spr.get(row[4], -1)
+                    if spr_info == -1:
+                        c += 1
+                        continue
+                    row_new.extend(spr_info)
+                    if not row[5]:
+                        row[5] = 'Не установленно'
+                    row[6] = 'Жестко' if row[6] else ''
+                    row_new.extend(row[5:])
+                    output_data.append(row_new)
+                if output_data:
+                    output_data = self._genXlsx(output_data)
+                    # output_data = self._genCsv(output_data)
+                    if output_data:
+                        ret = {"result": True, "ret_val": {'type': 'xlsx', 'data': output_data}}
+                    else:
+                        ret = {"result": False, "ret_val": "file can not created"}    
+                else:
+                    ret = {"result": False, "ret_val": "no data generated"}
+            else:
+                ret = {"result": False, "ret_val": "no_inn"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return ret
