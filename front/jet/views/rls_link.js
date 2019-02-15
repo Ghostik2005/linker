@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
 import {compareTrue} from "../views/globals";
-import {request, checkVal} from "../views/globals";
+import {request, checkVal, recalcRows} from "../views/globals";
 import PagerView from "../views/pager_view";
 
 export default class RlsLinkFormView extends JetView{
@@ -66,6 +66,16 @@ export default class RlsLinkFormView extends JetView{
                         ],
                     headermenu:false,
                     },
+                { id: "c_zavod", sort: "server", hidden: !true, headermenu: !false,
+                    width: 200,
+                    header: [{text: "Производитель"},
+                        {content: "cFilt",
+                            inputConfig : {
+                                    pager: 2
+                                },
+                        },
+                    ]
+                },
                 { id: "c_vnd", sort: "server",
                     width: 200, hidden: true, headermenu: false,
                     header: [{text: "Поставщик"},
@@ -78,7 +88,7 @@ export default class RlsLinkFormView extends JetView{
                             }
                         ]
                     },
-                { id: "c_user", sort: "server", hidden: !true, headermenu:false,
+                { id: "c_user", sort: "server", hidden: true, headermenu:!false,
                     width: 160,
                     header: [{text: "Группа пользователей"},
                         {content: "richFilt", compare: compareTrue,
@@ -125,6 +135,13 @@ export default class RlsLinkFormView extends JetView{
                     },
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.$scope.$$("_sb").callEvent("onKeyPress", [13,])    
+                    }, 150)
+                },
+
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
@@ -235,7 +252,8 @@ export default class RlsLinkFormView extends JetView{
     show_w(new_head, item, parent){
         if (parent) this.parent = parent;
         if (item) {
-            this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + item.c_tovar);
+            let tovar_name = item.c_tovar + ", " + item.id_zavod + ", " + item.id_strana;
+            this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + tovar_name);
             this.id_spr = item.id_spr;
             this.d_id = item.id;
             //this.$$("__reset").callEvent("onItemClick");
@@ -243,7 +261,8 @@ export default class RlsLinkFormView extends JetView{
             this.$$("__table").config.searchBar.setValue(s)
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
+        this.getRoot().show();
+        recalcRows(this.$$("__table"));
         this.$$("_sb").callEvent("onKeyPress", [13,]);
         this.$$("_sb").focus();
         }
@@ -252,10 +271,12 @@ export default class RlsLinkFormView extends JetView{
         }
 
     ready() {
+
         this.$$("__table").config.searchBar = this.$$("_sb")
         }
         
     init() {
+
         let th = this.$$("__table").getParentView();
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {

@@ -74,6 +74,21 @@ export default class IssueView extends JetView{
                             });
                         }
                     },
+                onAfterRender: function(data) {
+                    // let butts =  Array.from(document.getElementsByClassName("delete_button"));
+                    let butts =  Array.prototype.slice.call(document.getElementsByClassName("delete_button"));
+                    butts.forEach((butt) => {
+                        butt.onmousedown =  (event) => {
+                            this.$scope.$$("_del").blockEvent();
+                            butt.onmouseup = () => {
+                                clearInterval(this.interval);
+                            };
+                            this.interval = setTimeout ( () => {
+                                this.$scope.$$("_del").unblockEvent();
+                            }, app.config.popDelay);
+                        }
+                    });
+                },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
                     let params = {'text': item.c_issue, 'id': item.id, 'type': 'Issue', 'callback': updIssue, 'mode': 'upd', 'source': this};

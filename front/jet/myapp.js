@@ -8,15 +8,18 @@ import "./locales/ru";
 
 webix.ready( () => {
 
+    //console.log('PROD', PRODUCTION);
+
     var app = new JetApp({
         id:             "mainApp",
         name:           "linker",
-        version:        "19.024.1625",
+        // version:        "19.031.1635",
+        version:        VERSION,
         start:          "/login",
         user:           "",
         role:           "0",
         eventS:         undefined,
-        r_url:          (location.hostname === 'localhost') ? "http://saas.local/linker_logic" : "../linker_logic",
+        r_url:          (!PRODUCTION) ? "http://saas.local/linker_logic" : "../linker_logic",
         router:         EmptyRouter,
         x_api:          "x_login",
         debug:          !true,

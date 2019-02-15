@@ -388,14 +388,6 @@ export function refLoad(app, type) {
 
 }
 
-export function itemsSet(items) {
-    let ids = []
-    items.forEach(function(item){
-        ids.push(item.id_spr);
-    });
-    return ids;
-}
-
 export function refReload(url, params, async) {
     if (async) {
         request(url, params).then(function(data) {
@@ -516,15 +508,32 @@ export function gen_params(inp_params) {
     }
 
 export function str_join(obj) {
-    let ret = ''
-    for (var k in obj) {
-        let val = obj[k];
-        if (typeof(val) === 'object') {
-            val = str_join(val)
-        } else {
-            ret += val.toString()
+    let ret = '';
+    if (typeof(obj) === 'string') {
+        ret = obj;
+    } else {
+        for (var k in obj) {
+            let val = obj[k];
+            if (val && typeof(val) === 'object' && val.__proto__.hasOwnProperty('getDate')) {
+                let y = val.getFullYear();
+                let m = val.getMonth() + 1;
+                if (m < 10) m = '0' + m;
+                let d = val.getDate();
+                if (d < 10) d = '0' + d;
+                let h = val.getHours();
+                if (h < 10) h = '0' + h;
+                let mi = val.getMinutes()
+                if (mi < 10) mi = '0' + mi;
+                let q = y.toString() + "-" + m.toString() + "-" + d.toString() + " " + h.toString() + ":" + mi.toString();
+                ret += q.toString();
+            } else if (typeof(val) === 'object') {
+                // val = str_join(val);
+                ret += str_join(val);
+            } else {
+                ret += val.toString()
             }
         }
+    }
     return ret
     }
 
@@ -544,12 +553,34 @@ export function get_data_test(inp_params) {
             type: "icon",
             icon: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>'
             });
+        var selected = webix.storage.session.get(view.config.name+"sel") || {};
+        let old_p = selected.s_pars;
+        // let n_p = Object.assign({}, params);
+        let n_p = JSON.parse(JSON.stringify(params));
+        delete(n_p.start);
+        let reset = false;
+        if (str_join(n_p) === str_join(old_p)) {
+            // reset = false;
+        } else {
+            selected = {"s_pars": n_p};
+            webix.storage.session.put(view.config.name+"sel", selected);
+            reset = true;
+        }
+        if (view.bState && view.bState === 1) {
+            let localStorage = webix.storage.session.get(view.config.name+"sel");
+            params['id_sprs'] = [];
+            Object.keys(localStorage).forEach((item)=>{
+                if (localStorage[item]) params['id_sprs'].push(item);
+            });
+        };
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
                 if (data.params) {
+                    let d_params = JSON.parse(JSON.stringify(data['params']))
+                    delete d_params.id_sprs;
                     let c_params = str_join(gen_params(inp_params));
-                    let r_params = str_join(data['params']);
+                    let r_params = str_join(d_params);
                     if (r_params !== c_params) { 
                         view.hideProgress();
                         return
@@ -562,6 +593,22 @@ export function get_data_test(inp_params) {
                 let c_page = (total_page !== 0) ? Math.ceil(view.config.startPos / view.config.posPpage) : 1;
                 let pa = nav.getChildViews()[2]
                 let co = nav.getChildViews()[6]
+                webix.storage.session.put(view.config.name+'_pages', total_page);
+
+                if (reset === true) {
+                    if (view.$scope.scroll) {
+                        setTimeout( function() {
+                            let tp = +webix.storage.session.get(view.config.name+'_pages');
+                            let h = +view.$scope.scroll.config.container.clientHeight;
+                            let p = tp*h;
+                            view.$scope.scroll.pageNumber = 1;
+                            view.$scope.scroll.define("scrollHeight", p);
+                            // view.$scope.scroll.scrollTo(0);
+                            view.$scope.scroll.reset();
+                        }, 0)
+                    }
+                }
+
                 co.define('label', "Всего записей: " + view.config.totalPos);
                 co.refresh();
                 let old_p = nav.$scope.$$("__page").getValue()
@@ -813,7 +860,6 @@ export function init_first(app) {
 
     webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
     webix.ui.datafilter.richFilt.refresh = function(master, node, value){
-        //console.log('value', value);
         if (master.$destructed) return;
         var select = webix.$$(value.richselect);
         node._comp_id = master.config.id;
@@ -824,13 +870,6 @@ export function init_first(app) {
         master.registerFilter(node, value, this);
         var addEmpty = (value.inputConfig) ? value.inputConfig.emptyRow : undefined;
         var data = value.inputConfig.options;
-        // if (addEmpty) {
-        //     let ins = true;
-        //     data.data.forEach( function(item) {
-        //         if (item.id==='-100') ins = false;
-        //     })
-        //     if (ins) data.data.unshift({"id": "-100", "value": addEmpty});
-        // };
         var options = value.options;
         var list = select.getPopup().getList();
         var optview = webix.$$(options);
@@ -847,10 +886,6 @@ export function init_first(app) {
                 list.add(emptyOption,0);
                 }
             };
-        // if (value.columnId==="id_strana")  {
-        //     console.log('value.val', value.value);
-        //     console.log('this', this);
-        // }
         if (value.value) this.setValue(node, value.value);
         select.render();
         webix.delay(select.resize, select);
@@ -869,14 +904,8 @@ export function init_first(app) {
             webix.extend(richconfig, inputConfig, true);
             if (config.separator) richconfig.separator = config.separator;
             if (config.suggest) richconfig.suggest = config.suggest;
-            // var addEmpty = (config.inputConfig) ? config.inputConfig.emptyRow : undefined;
-            // if (addEmpty) {
-            //     console.log('asas', richconfig)
-            //     richconfig.options.data.unshift({"id": "-100", "value": addEmpty});
-            // }
             var richselect = webix.ui(richconfig);
             var pager_num = config.inputConfig.pager || 2; //номер элемента на вкладке, где находится пейджер
-            
             richselect.attachEvent("onChange", function(){
                 let cols = master.config.columns;
                 cols.forEach(function(col){
@@ -885,8 +914,8 @@ export function init_first(app) {
                         master.refreshColumns();
                         }
                     })
-
-                let pager_view = master.getParentView().getChildViews()[pager_num].$scope.$$("__page");
+                let pager_view = (config.inputConfig.scrollView) ? master.getParentView().getParentView().getChildViews()[pager_num].$scope.$$("__page")
+                                                                 : master.getParentView().getChildViews()[pager_num].$scope.$$("__page");
                 if (this._filter_timer) window.clearTimeout(this._filter_timer);
                 this._filter_timer=window.setTimeout( () => {
                     let old_v = pager_view.getValue();
@@ -909,8 +938,13 @@ export function init_first(app) {
             if (!checkKey(e.keyCode)) return;
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             var pager_num = this._pager || 1; //номер элемента на вкладке, где находится пейджер
+            var scrollView = this._scrollView;
             this._filter_timer=window.setTimeout(function(){
-                let pager_view = vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
+                //let pager_view = vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
+                let pager_view = (scrollView) ? vi.getParentView().getParentView().getChildViews()[pager_num].$scope.$$("__page")
+                                                              : vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
+                // let pager_view = (config.inputConfig.pagerView) ? config.inputConfig.pagerView
+                //                                                 : vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
                 let old_v = pager_view.getValue();
                 pager_view.setValue((+old_v ===0) ? '1' : "0");
                 pager_view.refresh();
@@ -922,7 +956,9 @@ export function init_first(app) {
         node._comp_id = master.config.id;
         if (value.inputConfig) {
             node._pager = value.inputConfig.pager;
+            node._scrollView = value.inputConfig.scrollView;
             }
+        // node._scrollView = (value.inputConfig && value.inputConfig.scrollView) ? value.inputConfig.scrollView : undefined;
         if (value.value && this.getValue(node) != value.value) this.setValue(node, value.value);
         node.onclick = webix.html.preventEvent;
         cEvent(node, "keydown", this.on_key_down);
@@ -933,9 +969,126 @@ export function init_first(app) {
         return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
         };
 
+    webix.ui.datafilter.threeStCh = {
+        getValue:function(){},
+        setValue:function(){},
+        getHelper:function(node, config){
+            return {
+                check:function(){ config.checked = true; config.indeter = false; node.repaint(); },
+                checkInder: function(){ config.checked = false; config.indeter = true; node.repaint(); },
+                uncheck:function(){ config.checked = false; config.indeter = false; node.repaint(); node.recount(0); },
+                recount: function(new_value){node.recount(new_value); },
+                getState: function() { return node.bState; },
+            };
+        },
+
+        refresh:function(master, node, config){
+            if (master.bState && master.bState ===1) node.button = "<button class='header-button header-button-highlited fa-" + config.inputConfig.buttonIcon + "' title='Показать выделенные'></button>";
+            else node.button = "<button class='header-button fa-" + config.inputConfig.buttonIcon + "' title='Показать выделенные'></button>";
+            node.counter = master.getHeaderNode(config.inputConfig.counter);
+            node.storageName = master.config.name + "sel";
+            node.repaint = function () {
+
+                if (config.indeter) {
+                    node.children[0].children[0].innerHTML = "<span class='threeSt-indeterminate'></span>" + node.button;
+                } else {
+                    node.children[0].children[0].innerHTML = "<input class='header-checkbox' type='checkbox' "+(config.checked?"checked='1'":"")+">" + node.button;
+                }
+            };
+
+            node.recount = function(value){
+                if (node.counter) node.counter.innerHTML= (value > 0) ? value : '';
+            };
+
+            node.onclick = function(e){
+                if (node.disabled === 1) return false;
+                if (e.target.className === "header-checkbox" || e.target.className === "threeSt-indeterminate") {
+                    if (master.count() === 0) return false;
+                    let child = node.children[0].children[0];
+                    let params = webix.storage.session.get(node.storageName).s_pars
+                    if (config.indeter || config.checked) {
+                        config.checked = false;
+                        config.indeter = false;
+                        child.innerHTML = "<input class='header-checkbox' type='checkbox'>" + node.button;
+                        // удаляем все позиции из хранилища
+                        webix.storage.session.put(node.storageName, {"s_pars": params})
+                    } else {
+                        config.checked = true;
+                        config.indeter = false;
+                        child.innerHTML = "<input class='header-checkbox' type='checkbox' checked='1'>" + node.button;
+                        // загружаем с сервера весь список id_spr'ов
+                        // устанавливаем опцию all для хранилища
+                        let url = (config.inputConfig.getIdMethod) ? master.$scope.app.config.r_url + "?" + config.inputConfig.getIdMethod : undefined;
+                        if (url) {
+                            node.disabled = 1;
+                            request(url, params).then(function(data) {
+                                node.disabled = 0;
+                                data = checkVal(data, 'a');
+                                if (data) {
+                                    if (data.length > (config.inputConfig.maxCount || 2500)) {
+                                        webix.message({'text': "Слишком много выделяем, давайте так не делать.", 'type': 'error', 'expire': 3000});
+                                        config.checked = false; 
+                                        config.indeter = true; 
+                                        node.repaint();
+                                    } else {
+                                        var selected = webix.storage.session.get(node.storageName) || {};
+                                        data.forEach((id_spr)=>{
+                                            selected[id_spr] = true;
+                                        })
+                                        webix.storage.session.put(node.storageName, selected);
+                                        node.recount(data.length);
+                                        };
+                                    }
+                                }, 
+                                function() {
+                                    node.disabled = 0;
+                                })
+                        }
+                    }
+                    
+                    var column = master.getColumnConfig(config.columnId);
+                    var checked = config.checked ? column.checkValue : column.uncheckValue;
+                    master.data.each(function(obj){
+                        obj[config.columnId] = checked;
+                        master.callEvent("onCheck", [obj.id, config.columnId, checked, true]);
+                        this.callEvent("onStoreUpdated", [obj.id, obj, "save"]);
+                    });
+                    master.refresh();
+                } else if (e.target.className.search("header-button") != -1) {
+                    if (e.target.className.search("header-button-highlited") != -1) {
+                        e.target.classList.remove('header-button-highlited')
+                        e.target.title = "Показать выделенные";
+                        node.bState = 0;
+                        master.bState = 0;
+                    } else {
+                        e.target.classList.add('header-button-highlited');
+                        e.target.title = "Показать все";
+                        node.bState = 1;
+                        master.bState = 1;
+                    }
+                    node.button = e.target.outerHTML;
+
+                    let pager = master.$scope.getRoot().getChildViews()[2].$scope.$$("__page");
+                    let old_v = pager.getValue();
+                    pager.setValue((+old_v ===0) ? '1' : "0");
+                    pager.refresh()
+
+                    
+
+                }
+            };
+        },
+        render:function(master, config){
+            let b = "<button class='header-button fa-" + config.inputConfig.buttonIcon + "' title='Показать выделенные'></button>";
+            return  "<div style='width: 100%; height: 100%; display: flex; flex-direction: row; '>" +
+            "<input class='header-checkbox' type='checkbox'>" +
+            b + 
+            "</div";
+        }
+    }
+
     let delay = app.config.searchDelay;
     setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
-
     getRefs(app);
     
     }
@@ -964,8 +1117,6 @@ export function getRefs(app) {
             $$("allIs_dc").parse(data.issue);
             };
         })
-
-
 }
 
 export function clear_names_bar(th, on_error_text) {
@@ -989,8 +1140,7 @@ export function clear_names_bar(th, on_error_text) {
     pager.$scope.$$("__page").refresh();
     pager.getChildViews()[2].getChildViews()[2].define('label', '1'); //total_page
     pager.getChildViews()[2].getChildViews()[2].refresh();
-
-    }
+}
 
 export function get_prcs(th, id_vnd) {
     let user = th.app.config.user;
@@ -1005,12 +1155,12 @@ export function get_prcs(th, id_vnd) {
                 $$("prcs_dc").parse(data);
             } else {
                 clear_names_bar(th, "Товары у кого-то на сведении");
-                }
+            }
         } else {
             webix.message('error');
-            };
-        })
-    }
+        };
+    })
+}
 
 export function get_prcs_source(th, source) {
     let user = th.app.config.user;
@@ -1226,7 +1376,7 @@ export function setButtons(app, buttons) {
 export function DelEdIcons (can_delete) {
     let del_img = "<div class='webix_image image20x20', style='background-image:url(./addons/img/delete_20x20.svg);'</div>";
     let edit_img = "<div class='webix_image image20x20', style='background-image:url(./addons/img/edit_20x20.svg);'</div>";
-    let del_but = "<div class='webix_el_button posi'><button class='webix_img_btn_abs delete_button'>" + del_img + "</button> </div>";
+    let del_but = "<div title='Удерживайте для удаления', class='webix_el_button posi'><button class='webix_img_btn_abs delete_button'>" + del_img + "</button> </div>";
     let edit_but = "<div class='webix_el_button posi'><button class='webix_img_btn_abs edit_button'>" + edit_img + "</button> </div>";
     return (can_delete) ? del_but + edit_but : edit_but;
 }
@@ -1235,4 +1385,160 @@ export function refTemplate(obj, common, value) {
     let colSize = (obj.delete===false) ? "_1" : "_2";
     let col = "<div class='right_col"+ colSize + "'>" + value + "</div>";
     return "<div class = 'dt_hover'>" + common.itemIcon((obj.delete===false)?false:true) + col + "</div>";
+}
+
+export function recalcRows(table) {
+    let totalHeight = table.$view.children[1].clientHeight;
+    let rows = Math.floor(totalHeight/table.config.rowHeight);
+    table.config.posPpage = rows;
+}
+
+export function fillFilterOptions(app) {
+    var options = {"sezonList": [], "tgList": [], "ndsList": [], "hranList": [], "stranaList": [], "dvList":[], "vList": []};
+    let tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
+    var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [];
+    tList.forEach(function(it, i, tList) {
+        let tt = {'id': it.id, 'value': it.sezon};
+        options.sezonList.push(tt);
+        });
+    tList = $$("hran_dc").data.getRange($$("hran_dc").data.getFirstId(), $$("hran_dc").data.getLastId());
+    tList.forEach(function(it, i, tList) {
+        let tt = {'id': it.id, 'value': it.usloviya};
+        options.hranList.push(tt);
+        });
+    tList = $$("nds_dc").data.getRange($$("nds_dc").data.getFirstId(), $$("nds_dc").data.getLastId());
+    tList.forEach(function(it, i, tList) {
+        let tt = {'id': it.id, 'value': it.nds};
+        options.ndsList.push(tt);
+        });
+    tList = $$("group_dc").data.getRange($$("group_dc").data.getFirstId(), $$("group_dc").data.getLastId());
+    tList.forEach(function(it, i, tList) {
+        let tt = {'id': it.id, 'value': it.group};
+        options.tgList.push(tt);
+        });
+    tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
+    tList.forEach(function(it, i, tList) {
+        let tt = {'id': it.id, 'value': it.c_strana};
+        options.stranaList.push(tt);
+        });
+    tList = $$("dv_dc").data.getRange($$("dv_dc").data.getFirstId(), $$("dv_dc").data.getLastId());
+    tList.forEach(function(it, i, tList) {
+        let tt = {'id': it.id, 'value': it.act_ingr};
+        options.dvList.push(tt);
+        });
+    tList = $$("vendor_dc").data.getRange($$("vendor_dc").data.getFirstId(), $$("vendor_dc").data.getLastId());
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.c_zavod};
+            options.vList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getVendorAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+        };
+    return options
+}
+
+export function addScrollTooltip(view){
+    var tooltip = document.createElement('div');
+    tooltip.classList.add('scroll-tooltip');
+    document.body.appendChild(tooltip);
+
+    var thisView = view;
+    var w = view.scroll.config.container;
+    thisView.scroll.mouseIsDown = false;
+    thisView.scroll.displayed = false;
+    w.addEventListener('mousedown', function() {
+        thisView.scroll.mouseIsDown = true;
+
+        tooltip.style.top = w.scrollTop*(w.clientHeight-w.offsetTop+5)/w.scrollHeight + w.getBoundingClientRect().top + 5 + 'px';
+        tooltip.textContent = getPNumber(thisView.scroll.config); //pos + '%';
+        if (!thisView.scroll.displayed) {
+            tooltip.style.display = 'block';
+            thisView.scroll.displayed = true;
+        }
+
+
+    });
+    w.addEventListener('mouseup', function() {
+        thisView.scroll.mouseIsDown = false;
+        if (thisView.scroll.displayed) {
+            thisView.scroll.displayed = false;
+            tooltip.style.display = 'none';
+            thisView.scroll.callEvent('onScroll'); //////////////////
+        }
+    });
+    w.addEventListener('scroll', function(e) {
+        if (thisView.scroll.mouseIsDown) {
+            tooltip.style.top = w.scrollTop*(w.clientHeight-w.offsetTop+5)/w.scrollHeight + w.getBoundingClientRect().top + 5 + 'px';
+            tooltip.textContent = getPNumber(thisView.scroll.config); //pos + '%';
+            if (!thisView.scroll.displayed) {
+                tooltip.style.display = 'block';
+                thisView.scroll.displayed = true;
+            }
+        }
+    });
+}
+
+export function getPNumber(thisViewC) {
+    let h = thisViewC.container.clientHeight;
+    let sc = thisViewC.scrollPos;
+    let pos = thisViewC.zoom * (sc + h * (sc/(1+sc)));
+    let pageNumber = Math.ceil(pos/h - sc/(h+sc));
+    if (pageNumber===0) pageNumber=1;
+    return pageNumber;
+}
+
+export function setApplyButton (view, pagerNumber) {
+    let applyButtion = $$(view.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1];
+    applyButtion.setValue('Применить');
+    applyButtion.define('click', function() {
+        if (view._filter_timer) window.clearTimeout(view._filter_timer);
+        view._filter_timer=window.setTimeout(function(){
+            let pager = view.getRoot().getChildViews()[pagerNumber].$scope.$$("__page");
+            let old_v = pager.getValue();
+            pager.setValue((+old_v ===0) ? '1' : "0");
+            pager.refresh();
+        },webix.ui.datafilter.textWaitDelay);
+        this.getParentView().getParentView().hide();
+    });
+}
+
+
+export function save_storage (table, id_spr) {
+    var selected = webix.storage.session.get(table.config.name+"sel") || {};
+    selected[id_spr] = true;
+    webix.storage.session.put(table.config.name+"sel", selected);
+}
+
+export function del_storage(table, id_spr) {
+    var selected = webix.storage.session.get(table.config.name+"sel");
+    // selected[id_spr] = false;
+    delete(selected[id_spr]);
+    webix.storage.session.put(table.config.name+"sel", selected);
+}
+
+export function toolTipAssign(view, prop_button) {
+    let vi = view;
+    let localStorage =  webix.storage.session.get(vi.$$("__table").config.name+"sel");
+    delete(localStorage.s_pars);
+    let count = 0;// = Object.keys(localStorage).length;
+    Object.keys(localStorage).forEach((item)=>{
+        if (localStorage[item]) count++;
+    });
+    if (count > 0) {
+        prop_button.define({"tooltip": "Назначить свойства эталону. Выделенно " + count + " товаров."});
+        prop_button.show();
+    } else {
+        prop_button.define({"tooltip": "Назначить свойства эталону"});
+        prop_button.hide();
+    }
+    prop_button.refresh();
 }

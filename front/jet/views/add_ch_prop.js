@@ -65,8 +65,9 @@ export default class addCGView extends JetView{
                                 on: {
                                     onItemClick: () => {
                                         let tgs = this.$$("e_list").getSelectedItem();
-                                        if (this.callback) this.callback(this.id_spr, this.type, tgs);
                                         this.hideW();
+                                        if (this.callback) this.callback(this.type, tgs);
+
                                         }
                                     }
                                 }
@@ -77,8 +78,8 @@ export default class addCGView extends JetView{
             }
         }
         
-    showW(new_head, id_spr, type, callback){
-        this.id_spr = id_spr;
+    showW(new_head, type, callback){
+        //this.id_spr = id_spr;
         this.type = type;
         this.callback = callback;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);

@@ -7,7 +7,7 @@ import NewDvView from "../views/new_dv";
 
 export default class DvView extends JetView{
     config(){
-
+        let app = this.app;
         var sprv = {view: "datatable",
             name: "_dv",
             localId: "__table",
@@ -88,6 +88,21 @@ export default class DvView extends JetView{
                             });
                         }
                     },
+                onAfterRender: function(data) {
+                    // let butts =  Array.from(document.getElementsByClassName("delete_button"));
+                    let butts =  Array.prototype.slice.call(document.getElementsByClassName("delete_button"));
+                    butts.forEach((butt) => {
+                        butt.onmousedown =  (event) => {
+                            this.$scope.$$("_del").blockEvent();
+                            butt.onmouseup = () => {
+                                clearInterval(this.interval);
+                            };
+                            this.interval = setTimeout ( () => {
+                                this.$scope.$$("_del").unblockEvent();
+                            }, app.config.popDelay);
+                        }
+                    });
+                },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
                     let params = {'text': item.act_ingr, 'id': item.id, "oa": item.oa,'type': 'Dv', 'callback': updDv, 'mode': 'upd', 'source': this};

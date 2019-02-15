@@ -13,24 +13,28 @@ export default class PagerView extends JetView{
             css: "custom_tool_bar",
             parent: undefined,
             cols: [
-                {view: "button", type: 'htmlbutton',
+                {view: "button", type: 'htmlbutton', localId: "_firstPB",
                     label: "<span class='webix_icon fa-angle-double-left'></span>", width: 50,
-                    click: () => {
-                        this.$$("__page").setValue('1');
-                        this.$$("__page").refresh();
-                        }
-                    },
-                {view: "button", type: 'htmlbutton',
-                    label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
-                    click: () => {
-                        let c_page = this.$$("__page").getValue();
-                        let new_page = +c_page - 1;
-                        if (new_page > 0 ) {
-                            this.$$("__page").setValue(new_page);
+                    on: {
+                        onItemClick: () => {
+                            this.$$("__page").setValue('1');
                             this.$$("__page").refresh();
+                        }
+                    }
+                },
+                {view: "button", type: 'htmlbutton', localId: "_prevPB",
+                    label: "<span class='webix_icon fa-angle-left'></span>", width: 50,
+                    on: {
+                        onItemClick: () => {
+                            let c_page = this.$$("__page").getValue();
+                            let new_page = +c_page - 1;
+                            if (new_page > 0 ) {
+                                this.$$("__page").setValue(new_page);
+                                this.$$("__page").refresh();
                             }
                         }
-                    },
+                    }
+                },
                 {width: 250, type: "wide", css: 'lay_pg', cols: [
                     {view: "text", label: "Страница", localId: "__page", labelWidth: 70, width: 150, value: "1", css: "raw_page", manual: true,
                         on: {
@@ -82,27 +86,31 @@ export default class PagerView extends JetView{
                             },
                         },
                     {view: "label", label: "из", width:30},
-                    {view: "label", label: "1", width: 50, css: "p_center_p"},
+                    {view: "label", label: "1", width: 50, css: "p_center_p", localId: "__totalPages"},
                     ]},
-                {view: "button", type: 'htmlbutton',
+                {view: "button", type: 'htmlbutton', localId: "_nextPB",
                     label: "<span class='webix_icon fa-angle-right'></span>", width: 50,
-                    click: () => {
-                        let c_page = this.$$("__page").getValue();
-                        let new_page = +c_page + 1;
-                        if (new_page <= Math.ceil(this.getRoot().config.parent.config.totalPos/this.getRoot().config.parent.config.posPpage)) {
-                            this.$$("__page").setValue(new_page);
-                            this.$$("__page").refresh();
+                    on: {
+                        onItemClick: () => {
+                            let c_page = this.$$("__page").getValue();
+                            let new_page = +c_page + 1;
+                            if (new_page <= Math.ceil(this.getRoot().config.parent.config.totalPos/this.getRoot().config.parent.config.posPpage)) {
+                                this.$$("__page").setValue(new_page);
+                                this.$$("__page").refresh();
                             }
                         }
-                    },
-                {view: "button", type: 'htmlbutton',
+                    }
+                },
+                {view: "button", type: 'htmlbutton', localId: "_lastPB",
                     label: "<span class='webix_icon fa-angle-double-right'></span>", width: 50,
-                    click: () => {
-                        let total_pages = Math.ceil(this.getRoot().config.parent.config.totalPos/this.getRoot().config.parent.config.posPpage)
-                        this.$$("__page").setValue(total_pages);
-                        this.$$("__page").refresh();
+                    on: {
+                        onItemClick: () => {
+                            let total_pages = Math.ceil(this.getRoot().config.parent.config.totalPos/this.getRoot().config.parent.config.posPpage)
+                            this.$$("__page").setValue(total_pages);
+                            this.$$("__page").refresh();
                         }
                     },
+                },
                 //{view: "label", label: "Число записей на странице: " + app.config.posPpage, width: 240},
                 {},
                 {view: "label", label: "Всего записей: 0", width: 180},

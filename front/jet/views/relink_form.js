@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
+import {checkKey, dt_formating_sec, dt_formating, recalcRows} from "../views/globals";
 import {compareTrue} from "../views/globals";
 import {request, checkVal} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -233,17 +233,24 @@ export default class RelinkFormView extends JetView{
                     ]},
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.$scope.$$("_sb").callEvent("onKeyPress", [13,])
+                    }, 50)
+                },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
                 onBeforeSort: (field, direction) => {
-                    var vi = this.$$("__table").getParentView();
-                    this.$$("__table").config.fi = field;
-                    this.$$("__table").config.di = direction;
-                    let old_v = vi.getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getChildViews()[2].$scope.$$("__page").refresh();
-                    },
+                    setTimeout( () => {
+                        this.$$("__table").config.fi = field;
+                        this.$$("__table").config.di = direction;
+                        let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+                        vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                        vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                    }, app.config.searchDelay)                 
+                },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     },
@@ -335,6 +342,7 @@ export default class RelinkFormView extends JetView{
             on: {
                 onHide: function() {
                     //this.$scope.$$("__reset").callEvent("onItemClick");
+
                     this.$scope.$$("__table").clearAll();
                     }
                 },
@@ -342,6 +350,8 @@ export default class RelinkFormView extends JetView{
             }
         }
     show(new_head, item, parent){
+        this.getRoot().show();
+        recalcRows(this.$$("__table"));
         if (parent) this.$$("__table").config.parent = parent;
         if (item) {
             this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + item.c_tovar);
@@ -349,11 +359,11 @@ export default class RelinkFormView extends JetView{
             this.$$("__table").config.old_id = item.id;
             let s = item.c_tovar.replace(/^\s+|\s+$/g, '').split(' ')[0];
             this.$$("__table").config.searchBar.setValue(s)
-            this.$$("__reset").callEvent("onItemClick");
-
+            this.$$("__table").config.searchBar.callEvent("onKeyPress", [13,]);
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
+        
+        this.$$("__table").config.searchBar.focus();
         //this.$$("_sb").callEvent("onKeyPress", [13,]);
         }
     hide(){

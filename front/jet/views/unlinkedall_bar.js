@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {setButtons,request, checkVal} from "../views/globals";
-import {parseToLink} from "../views/globals";
+import {parseToLink, recalcRows} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
 
@@ -142,6 +142,12 @@ export default class AllUnlinkedBarView extends JetView{
                     },
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.callEvent("onBeforeSort")
+                    }, 50)
+                },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
@@ -157,12 +163,14 @@ export default class AllUnlinkedBarView extends JetView{
                     
                     },
                 onBeforeSort: (field, direction) => {
-                    this.$$("__table").config.fi = field;
-                    this.$$("__table").config.di = direction;
-                    let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
-                    },
+                    setTimeout( () => {
+                        this.$$("__table").config.fi = field;
+                        this.$$("__table").config.di = direction;
+                        let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+                        vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                        vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                    }, app.config.searchDelay)                 
+                },
                 onItemDblClick: (clickItem) => {
                     let item = this.$$("__table").getSelectedItem();
                     if (!item) return;
@@ -256,7 +264,7 @@ export default class AllUnlinkedBarView extends JetView{
             ]}
         
         var _view = {
-            view: "layout", type: "clean",
+            view: "layout", //type: "clean",
             rows: [
                 top_menu,
                 sprv,
@@ -268,9 +276,6 @@ export default class AllUnlinkedBarView extends JetView{
     ready() {
         let r_but = [this.$$("_renew"), this.$$("_unfilt")]
         setButtons(this.app, r_but);
-        let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-        this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
         let app = this.app;
         let th = this;
         if (this.$$("__table").isColumnVisible('c_user')) {
@@ -293,6 +298,8 @@ export default class AllUnlinkedBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             });
+
+        this.$$("__table").callEvent("onBeforeSort");
 
         this.$$("__table").getFilter("c_tovar").focus();
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);

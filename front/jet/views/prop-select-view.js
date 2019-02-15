@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, itemsSet} from "../views/globals";
+import {request, checkVal} from "../views/globals";
 import NewtgView from "../views/new_tg";
 import addCGView from "../views/add_ch_prop";
 
@@ -11,34 +11,18 @@ export default class PropSelectView extends JetView{
         let th = this;
         let app = th.app;
 
-        var setTg = function(items, tgs, tgs_id) {
-            // console.log('items', items);
-            // console.log('gr', tgs_id);
+        var setProp = function(type, prop_id) {
             let user = app.config.user;
-            let url = app.config.r_url + "?setTGrMass";
-            let params = {"user": user, "items": itemsSet(items), "prop_id": tgs_id};
+            let url = app.config.r_url + ((type==="tgr") ? "?setTGrMass" : "?setPropMass");
+            let params = {"user": user, "method": type, "items": th.id_sprs, "prop_id": prop_id, "s_pars": th.s_pars};
             let res = request(url, params, !0).response;
             res = checkVal(res, 's');
             if (res) {
-                webix.message({"type": "success", "text": "Свойство установленно", "expire": 2000})
+                webix.message({"type": "success", "text": "Свойство установленно", "expire": 2000});
+                th.pTable.$scope.$$("_sb").callEvent("onKeyPress", [13,]);
+                webix.storage.session.put("__dt_as"+"sel", {"s_pars": undefined})
             } else {
-                webix.message({"type": "error", "text": "Свойство НЕ установленно", "expire": 2000})
-            };
-        }
-
-        var setProp = function(items, type, prop_id) {
-            // console.log('items', items);
-            // console.log('id', prop_id);
-            // console.log('type', type);
-            let user = app.config.user;
-            let url = app.config.r_url + "?setPropMass";
-            let params = {"user": user, "method": type, "items": itemsSet(items), "prop_id": prop_id};
-            let res = request(url, params, !0).response;
-            res = checkVal(res, 's');
-            if (res) {
-                webix.message({"type": "success", "text": "Свойство установленно", "expire": 2000})
-            } else {
-                webix.message({"type": "error", "text": "Свойство НЕ установленно", "expire": 2000})
+                webix.message({"type": "error", "text": "Свойство НЕ установленно", "expire": 2000});
             };
         }
 
@@ -53,7 +37,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.poptgnew.show("Добавление товарных групп", id_spr, undefined, setTg);
+                            this.$scope.poptgnew.show("Добавление товарных групп", undefined, undefined, setProp);
                         }
                     }
                 }, 
@@ -64,7 +48,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение группы товара", id_spr, "gr", setProp);
+                            this.$scope.popprop.showW("Изменение группы товара", "gr", setProp);
                         }
                     }
                 }, 
@@ -75,7 +59,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение действующего вещества", id_spr, "dv", setProp);
+                            this.$scope.popprop.showW("Изменение действующего вещества", "dv", setProp);
                         }
                     }
                 },
@@ -86,7 +70,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение рецептурности", id_spr, "recipt", setProp);
+                            this.$scope.popprop.showW("Изменение рецептурности", "recipt", setProp);
                         }
                     }
                 }, 
@@ -97,7 +81,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение обязательного ассортимента", id_spr, "mandat", setProp);
+                            this.$scope.popprop.showW("Изменение обязательного ассортимента", "mandat", setProp);
                         }
                     }
                 }, 
@@ -108,7 +92,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение сезона", id_spr, "sezon", setProp);
+                            this.$scope.popprop.showW("Изменение сезона", "sezon", setProp);
                         }
                     }
                 }, 
@@ -119,7 +103,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение условий хранения", id_spr, "hran", setProp);
+                            this.$scope.popprop.showW("Изменение условий хранения", "hran", setProp);
                         }
                     }
                 }, 
@@ -130,7 +114,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение формы выпуска", id_spr, "issue", setProp);
+                            this.$scope.popprop.showW("Изменение формы выпуска", "issue", setProp);
                         }
                     }
                 }, 
@@ -141,7 +125,7 @@ export default class PropSelectView extends JetView{
                         onItemClick: function() {
                             this.$scope.hideM();
                             let id_spr = this.$scope.pTable.getSelectedItem();
-                            this.$scope.popprop.showW("Изменение НДС", id_spr, "nds", setProp);
+                            this.$scope.popprop.showW("Изменение НДС", "nds", setProp);
                         }
                     }
                 }, 
@@ -167,6 +151,18 @@ export default class PropSelectView extends JetView{
     showM(pNode, pTable){
         this.pTable = pTable;
         this.getRoot().show(pNode);
+        let localStorage =  webix.storage.session.get(pTable.config.name + "sel");
+        this.s_pars = localStorage.s_pars;
+        delete(localStorage.s_pars);
+        this.id_sprs = [];
+        if (localStorage.all) {
+            this.id_sprs = ["all", ];
+        } else {
+            Object.keys(localStorage).forEach( (i) => {
+                if (i !== "all" && localStorage[i]) this.id_sprs.push(i);
+            })
+        }
+
     }
     hideM(){
         this.getRoot().hide()

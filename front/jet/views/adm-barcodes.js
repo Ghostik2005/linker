@@ -107,6 +107,7 @@ export default class BarcodesView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
+                    tooltip: "Отчет по дублирующимся штрихкодам",
                     extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отчет по дублям</span>",
                     oldLabel: "<span class='webix_icon fa-file'></span>",
                     on: {

@@ -121,7 +121,13 @@ export default class NewtgView extends JetView{
                                     if (th) {th.$$("_c_tgroup").setValue(p);
                                         th.$$("_c_tgroup").refresh();
                                         };
-                                    if (callback) callback(id_spr, p, tgs_id);
+                                    if (callback) {
+                                        if (id_spr) {
+                                        callback(id_spr, p, tgs_id);
+                                        } else {
+                                            callback("tgr", tgs_id);
+                                        }
+                                    } 
                                     this.hide();
                                     }
                                 }

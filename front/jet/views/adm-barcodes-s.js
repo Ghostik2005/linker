@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, dt_formating_sec} from "../views/globals";
+import {request, checkVal, dt_formating_sec, recalcRows} from "../views/globals";
 import NewbarView from "../views/new_bar.js";
 import ConfirmBarView from "../views/bar-yes-no.js";
 import PagerView from "../views/pager_view";
@@ -96,6 +96,12 @@ export default class BarcodesSView extends JetView{
                 {id: "owner", header: "Изменил", width: 120, hidden: true,}
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.$scope._search.callEvent("onKeyPress", [13,])
+                    }, 150)
+                },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },

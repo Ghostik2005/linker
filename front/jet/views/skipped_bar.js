@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkVal, setButtons, request} from "../views/globals";
+import {checkVal, setButtons, request, recalcRows} from "../views/globals";
 import ConfirmView from "../views/yes-no";
 import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -130,6 +130,12 @@ export default class SkippedBarView extends JetView{
                     },
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.callEvent("onBeforeSort");
+                    }, 50)
+                },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
@@ -137,12 +143,14 @@ export default class SkippedBarView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onBeforeSort: (field, direction) => {
-                    this.$$("__table").config.fi = field;
-                    this.$$("__table").config.di = direction;
-                    let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
-                    },
+                    setTimeout( () => {
+                        this.$$("__table").config.fi = field;
+                        this.$$("__table").config.di = direction;
+                        let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+                        vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+                        vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                    }, app.config.searchDelay)                 
+                },
                 onItemDblClick: function(item) {
                     let user = this.$scope.app.config.user
                     let app = this.$scope.app;
@@ -234,9 +242,9 @@ export default class SkippedBarView extends JetView{
     ready() {
         let r_but = [this.$$("_renew"), this.$$("_unfilt")]
         setButtons(this.app, r_but);
-        let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-        this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+        // let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+        // this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+        // this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
         let th = this;
         let u = webix.$$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id)
         u.getChildViews()[1].getChildViews()[1].setValue('Применить');
@@ -249,7 +257,8 @@ export default class SkippedBarView extends JetView{
                 thh.$$("__page").refresh();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
-            })
+            });
+        this.$$("__table").callEvent("onBeforeSort");
         this.$$("__table").getFilter("c_tovar").focus();
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         }

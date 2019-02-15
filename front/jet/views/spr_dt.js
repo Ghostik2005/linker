@@ -49,7 +49,7 @@ webix.ui({
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr, compareTrue, checkVal, request} from "../views/globals";
+import {get_spr, compareTrue, checkVal, request, recalcRows} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SubRow from "../views/sub_row";
 
@@ -208,6 +208,12 @@ export default class SprView extends JetView{
                     },
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        $$(this.config.searchBar).callEvent("onKeyPress", [13,])    
+                    }, 150)
+                },
                 "data->onParse":function(i, data){
                     let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
                     if (side_but.config.formOpen) {

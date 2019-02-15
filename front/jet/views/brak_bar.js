@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import {checkKey, unFilter} from "../views/globals";
-import {setButtons, checkVal} from "../views/globals";
+import {setButtons, checkVal, recalcRows} from "../views/globals";
 import {request} from "../views/globals";
 import {dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -311,6 +311,12 @@ export default class BrakBarView extends JetView{
                     },
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.$scope._search.callEvent("onKeyPress", [13,])    
+                    }, 150)
+                },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },

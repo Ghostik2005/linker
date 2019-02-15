@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, recalcRows} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
 
@@ -130,6 +130,12 @@ export default class LinksViewLnk extends JetView{
                     },
                 ],
             on: {
+                'onresize': function() {
+                    setTimeout( () => {
+                        recalcRows(this);
+                        this.$scope._search.callEvent("onKeyPress", [13,])    
+                    }, 150)
+                },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },

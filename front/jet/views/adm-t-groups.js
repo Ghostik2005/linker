@@ -104,6 +104,21 @@ export default class TGroupsView extends JetView{
                             });
                         }
                     },
+                onAfterRender: function(data) {
+                    // let butts =  Array.from(document.getElementsByClassName("delete_button"));
+                    let butts =  Array.prototype.slice.call(document.getElementsByClassName("delete_button"));
+                    butts.forEach((butt) => {
+                        butt.onmousedown =  (event) => {
+                            this.$scope.$$("_del").blockEvent();
+                            butt.onmouseup = () => {
+                                clearInterval(this.interval);
+                            };
+                            this.interval = setTimeout ( () => {
+                                this.$scope.$$("_del").unblockEvent();
+                            }, app.config.popDelay);
+                        }
+                    });
+                },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
                     let params = {'text': item.c_tgroup, 'id': item.id, 'type': 'Gr', 'callback': updTGr, 'mode': 'upd', 'source': this};

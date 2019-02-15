@@ -104,10 +104,14 @@ button {
     }
 
 .webix_el_button button {
-    border-width: 2px !important;
+    /* border-width: 2px; */
+    border-width: 0px;
 /*    border-color: #3498db !important;*/
     }
 
+button:hover {
+    border-width: 2px;
+}
 
 .webix_input_icon.fa-angle-down {
     background-color: #e6e6e6 !important;
@@ -429,4 +433,82 @@ div.webix_item_tab {
 .image20x20 {
     width:20px;
     height:20px
+}
+
+.adm-spr > .webix_ss_vscroll.webix_vscroll_y, .webix_ss_vscroll_header, .webix_ss_vscroll_footer {
+    width: 0px !important;
+    /* overflow-y: auto;
+    overflow-x: auto; */
+}
+
+.vscroll {
+    margin-left: -3px !important;
+}
+
+.adm-spr{
+    color: black;
+}
+
+.scroll-tooltip {
+    position:fixed;
+    right:18px;
+    top:0;
+    display:none;
+    width:4em;
+    height:1.2em;
+    background:black;
+    font-size:18px;
+    color:white;
+    text-align:center;
+}
+
+.threeSt-indeterminate {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gcCCSwfRyGesAAAAAxpVFh0Q29tbWVudAAAAAAAvK6ymQAAAExJREFUKM9jLCgo+M9AAmBhYGBgaGtrY+Tk5MSrsLCwkIGBgeE/EwOJgGQNLMgcJSUlBgYGBnQ/Md67d498G+jsB6hbGQfWSYykJg0AUMsPVoNrFX0AAAAASUVORK5CYII=);
+    background-repeat: no-repeat;
+    background-position: center center;
+    height: 100%;
+    width: 13px;
+    /* display: inline-block; */
+    /* overflow: hidden; */
+    
+    /* vertical-align: middle; */
+    /* margin-top: 0 !important; */
+  }
+
+.header-button {
+    margin-left: 4px;
+    margin-top: 2px;
+    width:25px;
+    height:75%;
+    display: inline-block;
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translate(0, 0);
+    padding-left: 4px;
+    color: lightgray;
+}
+
+.header-button-highlited {
+    color: red;
+}
+
+
+.header-checkbox {
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 9px;
+}
+
+.counter-dt {
+    text-align: center;
+    color: #15c15d;
+}
+
+.cell-highlighted {
+    /* opacity: 0.5; */
+    background-color: #d4efdf;
 }
