@@ -461,7 +461,69 @@ where us."USER" = %s;"""
                 params.append(r)
         return params
 
+
     def delVndAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            user = params.get('user')
+            inns = params.get('inn')
+            if inns and not isinstance(inns, list):
+                inns = [inns, ]
+            for i in range(len(inns)):
+                inns[i] = str(inns[i])
+            id_spr = params.get('id_spr', [])
+            if id_spr and not isinstance(id_spr, list):
+                id_spr = [id_spr, ]
+            for i in range(len(id_spr)):
+                id_spr[i] = str(id_spr[i])
+            #делаем запросы: для каждого инн в списке если есть id_spr'ы, то отдельный запрос для каждлго id_spr,
+            #если нет - то удаляем все для этого инн
+            sql_spr = """delete from app_referencelink where org_id = (select id from app_org where inn = %s) and ref_id = %s;"""
+            sql_inn = """delete from app_referencelink where org_id = (select id from app_org where inn = %s);"""
+            params = []
+            p_log = []
+            no_spr = False
+            if id_spr:
+                sql = sql_spr
+                for inn in inns:
+                    for s in id_spr:
+                        params.append((inn, s))
+                        p_log.append({'inn': str(inn), 'ref_id': str(s), "remove": 1})
+            else:
+                return json.dumps({"result": False, "ret_val": "NO SPRS!!!!"}, ensure_ascii=False)
+                # sql = sql_inn
+                # for inn in inns:
+                #     params.append((inn,))
+                #     p_log.append({'inn': str(inn), "remove": 1})
+
+            p = {"sql": sql, "options": params}
+
+            #удаляем напрямую из базы минуя прокладки mrksrv
+            result = None
+            try:
+                if not self.production:
+                    print(p)
+                    result = True
+                else:
+                    result = self._plx_execute_many(p) or True
+            except:
+                self.log(f'DEL_VND_ERROR_Text: {traceback.format_exc()}')
+            else:
+                try:
+                    if not self.production:
+                        pass
+                    else:
+                        self._make_msg(user, p_log)
+                except:
+                    self.log(f'DEL_VND_LOG_ERROR_Text: {traceback.format_exc()}')
+            if result:
+                ret = {"result": True, "ret_val": "OK"}
+            else:
+                ret = {"result": False, "ret_val": "delete error"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def delVndAll_old(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
             inns = params.get('inn')

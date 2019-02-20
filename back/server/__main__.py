@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '19.031.1630' #пофиксены некоторые багги
+__version__ = '19.51.1045' #возвращается код 204 если ответ пустой
+# __version__ = '19.031.1630' #пофиксены некоторые багги
 #__version__ = '19.024.1625' #добавленны колонки в ШК
 #__version__ = '19.022.1530' #добавлен отчет по дублирующимся штрихкодам
 #__version__ = '19.021.1400' #добавлен отбор по отсутсвующим свойствам
@@ -215,19 +216,23 @@ def application(env):
             ret_v = content.get('ret_val')
             f_type = ret_v.get('type')
             ret_value = ret_v.get('data')
-            header = libs.f_head(len(ret_value), f_type)
+            content_length = len(ret_value)
+            header = libs.f_head(content_length, f_type)
             fileReturn = True
         #else:
             #ret_value = json.dumps(ret, ensure_ascii=False)
     if not fileReturn:
         ret_value = content.encode()
+        content_length = len(ret_value)
         if arg == 'login':
-            header = libs.authHead(content, len(ret_value))
+            header = libs.authHead(content, content_length)
         else:
-            header = libs.head(len(ret_value), False, True)
+            header = libs.head(content_length, False, True)
     tt = time.time() - tt
     env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE in %s secs" % (msg, tt))
     # передаем: статус, заголовки, содержание
+    if content_length == 0:
+        ret_code = u'204 No Content'
     yield ret_code
     yield header
     yield ret_value

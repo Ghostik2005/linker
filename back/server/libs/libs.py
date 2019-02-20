@@ -94,6 +94,7 @@ class SCGIServer:
         self.appname = appname
         self.profile = profile
         self.index = index
+        self.config = sys.APPCONF
 
     def serve_forever(self, addr, handle_request, on_exit=None):
         sock = None
@@ -154,7 +155,7 @@ class SCGIServer:
                 else:
                     wfile.write(data)
                     wfile.flush()
-        except BrokenPipeError as e:
+        except BrokenPipeError:
             pass
         except:
             self.log(conn)
@@ -219,9 +220,9 @@ class SCGIServer:
     def _init(self, sock):
         addr = sock.getsockname()[:2]
         sock.listen(100)
-        sys.APPCONF["addr"] = addr
+        self.config["addr"] = addr
         fileupstream = self._getfilename("upstream")
-        sys.APPCONF["fileupstream"] = fileupstream
+        self.config["fileupstream"] = fileupstream
         data = """
 
         location /linker_logic {
@@ -297,7 +298,7 @@ class SCGIServer:
         _filelocation = os.path.join(dn, bs.split('.', 1)[0].split('-', 1)[0])  # общий файл для всех экземпляров приложения
         with open(_filelocation, "wb") as f:
             f.write(data.encode())
-        sys.APPCONF["filelocation"] = _filelocation
+        self.config["filelocation"] = _filelocation
         dn = os.path.dirname(fileupstream)
         bs = os.path.basename(fileupstream)
         _fileupstream = os.path.join(dn, bs.split('.', 1)[0].split('-', 1)[0])  # общий файл для всех экземпляров приложения
@@ -341,20 +342,21 @@ class SCGIServer:
 
     def _getfilename(self, name):
         filename = ""
+        
         if self.index > -1:
             if self.profile:
-                filename = os.path.join(sys.APPCONF["nginx"][name], "%s-%s.%s" % (self.appname, self.index, self.profile))
+                filename = os.path.join(self.config["nginx"][name], "%s-%s.%s" % (self.appname, self.index, self.profile))
             else:
-                filename = os.path.join(sys.APPCONF["nginx"][name], "%s-%s" % (self.appname, self.index))
+                filename = os.path.join(self.config["nginx"][name], "%s-%s" % (self.appname, self.index))
         else:
             if self.profile:
-                filename = os.path.join(sys.APPCONF["nginx"][name], "%s.%s" % (self.appname, self.profile))
+                filename = os.path.join(self.config["nginx"][name], "%s.%s" % (self.appname, self.profile))
             else:
-                filename = os.path.join(sys.APPCONF["nginx"][name], self.appname)
+                filename = os.path.join(self.config["nginx"][name], self.appname)
         return filename
 
 def f_head(aContentLength, fType='csv'):
-    aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
+    # aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
     r = []
     file_datetime = time.strftime('%Y%m%d-%H%M%S')
     r.append(("Content-Length", "%i" % aContentLength))
@@ -404,9 +406,10 @@ def shutdown(log):
     """
     function, runs when exiting
     """
-    fileupstream = sys.APPCONF.get("fileupstream")
+    config = sys.APPCONF
+    fileupstream = config.get("fileupstream")
     if fileupstream is None:
-        log("%s:%s critical" % sys.APPCONF["addr"], begin='')
+        log("%s:%s critical" % config["addr"], begin='')
         return
     try:
         os.remove(fileupstream)
@@ -430,7 +433,7 @@ def shutdown(log):
             fg_noapp = 0 == len(src[2:-1])
         if fg_noapp:  # нет запущенных приложений, удаляем общую локацию и апстрим
             try:
-                os.remove(sys.APPCONF["filelocation"])
+                os.remove(config["filelocation"])
             except: pass
             try:
                 os.remove(_fileupstream)
@@ -441,7 +444,7 @@ def shutdown(log):
                 f.write(src.encode())
 
     subprocess.call(['sudo', 'nginx', '-s', 'reload', '-c', '/ms71/saas.conf', '-p', '/ms71/'])
-    log("%s:%s shutdown" % sys.APPCONF["addr"], begin='')
+    log("%s:%s shutdown" % config["addr"], begin='')
 
 def _int(x):
     try:
