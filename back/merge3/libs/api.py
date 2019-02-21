@@ -13,6 +13,7 @@ import requests
 import subprocess
 import traceback
 import sqlite3
+import threading
 import io
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -28,8 +29,8 @@ class API:
     """
 
     def __init__(self, log, w_path = '/ms71/data/merge3', p_path='/ms71/data/merge3/api-k', pg=False, production=False):
+        self.RLock = threading.RLock()
         self.production = production
-        print('production', production)
         self.udp = sys.APPCONF["udpsock"]
         self.methods = []
         self.path = w_path
@@ -59,29 +60,43 @@ class API:
         self.start = 1
         self.count = 20
 
+        threading.Thread(target=self._tasks_process_thread, args=(), name='processing',daemon=True).start()
+        time.sleep(1)
+
+
+
     def _create_sqlite(self):
         sql_req = [
             'PRAGMA synchronous = OFF;',
             'PRAGMA journal_mode = OFF;',
             'PRAGMA page_size = 8192;',
-            'create table if not exists tasks (task_id String Primary key, task_status String, task_reason String, dt Datetime DEFAULT CURRENT_TIMESTAMP);',
-            'create table if not exists tasks_history (task_id String Primary key, task_text String);', 
-            'create table if not exists tasks_complete (task_id String, task_params String PRIMARY KEY);'
+            'create table if not exists tasks (md5 String Primary key, options String, status String, dt Datetime DEFAULT CURRENT_TIMESTAMP);',
             ]
         for sql in sql_req:
             self._sqlite(sql)
-        #сделать проверку, может задачи уже выполнились из нашей базы
-        sql_check = """update tasks set task_status='incomplete' where task_status='processing';"""
+        sql_check = """update tasks set status='incomplete' where status != 'done';"""
         self._sqlite(sql_check)
-        sql_delete = """delete from tasks_complete where task_id in (select t.task_id from tasks t where t.task_status='complete');"""
-
+        sql_delete = """delete from tasks where status='done';"""
         self._sqlite(sql_delete)
-
         self._sqlite_maintanance()
-
         return True
 
     def _sqlite_maintanance(self, basename='merge3.db3'):
+        base_name = os.path.join(self.path, basename)
+        con = sqlite3.connect(base_name, isolation_level=None)
+        try:
+            con.execute('vacuum')
+        except:
+            pass
+        finally:
+            try:
+                con.close()
+            except:
+                pass
+        return True
+
+
+    def _sqlite_maintanance_old(self, basename='merge3.db3'):
         base_name = os.path.join(self.path, basename)
         con = sqlite3.connect(base_name, isolation_level=None)
         try:
@@ -117,29 +132,26 @@ class API:
 
         return True
 
-
     def _sqlite(self, sql, basename='merge3.db3'):
         base_name = os.path.join(self.path, basename)
         #autocommit
         answer = None
-        con = sqlite3.connect(base_name, isolation_level=None)
-        cur = con.cursor()
-        #print(f'SQL:\n{sql}')
-        try:
-            answer = cur.execute(sql) 
-        except:
-            err = traceback.format_exc()
-            self.log(f"SQLite SQL Error: \n{err}")
-        else:
-            answer = answer.fetchall()
-        finally:
+        with self.RLock:
+            con = sqlite3.connect(base_name, isolation_level=None)
+            cur = con.cursor()
             try:
-                cur.close()
-                con.close()
+                answer = cur.execute(sql) 
             except:
-                err = traceback.format_exc()
-                self.log(f"SQLite conn close Error: \n{err}")
-        #print(f'ANSWER:\n{answer}')
+                self.log(f"""SQLITE_SCRIPT_ERROR_TEXT:\n{traceback.format_exc()}""")
+                self.log(f"""SQLITE_SCRIPT_ERROR_SQL: {sql}""")
+            else:
+                answer = answer.fetchall()
+            finally:
+                try:
+                    cur.close()
+                    con.close()
+                except:
+                    pass
         return answer
 
     def _print(self, user=None, msg=None):
@@ -478,10 +490,10 @@ where us."USER" = %s;"""
             #делаем запросы: для каждого инн в списке если есть id_spr'ы, то отдельный запрос для каждлго id_spr,
             #если нет - то удаляем все для этого инн
             sql_spr = """delete from app_referencelink where org_id = (select id from app_org where inn = %s) and ref_id = %s;"""
-            sql_inn = """delete from app_referencelink where org_id = (select id from app_org where inn = %s);"""
+            # sql_inn = """delete from app_referencelink where org_id = (select id from app_org where inn = %s);"""
             params = []
             p_log = []
-            no_spr = False
+            # no_spr = False
             if id_spr:
                 sql = sql_spr
                 for inn in inns:
@@ -1386,6 +1398,7 @@ WHERE ({stri}) ORDER by {field} {direction}"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+
     def _make_sql(self, params):
         sql = params.get('sql')
         opt = params.get('opt')
@@ -1544,3 +1557,289 @@ left join spr_zavod z on s.id_zavod = z.id_spr;"""
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return ret
+
+    def _make_replace(self, result, p_list):
+        replaced_list = []
+        rep_dict = {}
+        for row in result:
+            rep_dict[row[0]] = row[1]
+        for i in p_list:
+            replaced_list.append(rep_dict.get(i, -1))
+        return replaced_list
+
+    def _make_params_list(self, params):
+        if not isinstance(params, list):
+            params = [params,]
+        for i in range(len(params)):
+            params[i] = str(params[i])
+        return params        
+
+
+    def _plx_execute_many_ref(self, params):
+        sql = params.get('sql')
+        options = params.get('options')
+        test = params.get('test')
+        alias = params.get('alias', 'plx')
+        ret = False
+        if test:
+            self.log('------------test mode--------------')
+            self.log('sql')
+            self.log('------------test mode--------------')
+            return True
+        else:
+            rpc = ms71lib.ServerProxy(f"https://sklad71.org/apps/fdbsrv@plx-db/uri/RPC2", api_key=self.key)
+            for i in range(5):
+                try:
+                    ret = rpc.fdb.executemany(alias, sql, options)
+                except:
+                    msg = traceback.format_exc()
+                    sl = 0.2*(i+1)
+                    self.log(f"""CON_ERROR_IN_EXECUTE_MANY_TEXT:\n{msg}""")
+                    self.log(f"""CON_ERROR_IN_EXECUTE_MANY_SLEEP_FOR: {sl} secs.""")
+                    time.sleep(sl)
+                else:
+                    break
+                finally:
+                    try:
+                        rpc('close')()
+                    except: pass
+            if ret==None or ret==True:
+                return True
+            else:
+                return False
+
+
+
+    def _Process(self, md5_x):
+
+        sql_get = f"select options from tasks where md5 = '{md5_x}'"
+        sql_upd = f"update tasks set status = 'process' where md5 = '{md5_x}'"
+        options = self._sqlite(sql_get)
+        self._sqlite(sql_upd)
+        if options:
+            options = json.loads(options[0][0])        
+            rett = self._plx_execute_many_ref(options)
+            if rett:
+                sql_done = f"delete from tasks where md5 = '{md5_x}'"
+            else:
+                sql_done = f"update tasks set status = 'incomplete' where md5 = '{md5_x}'"
+            self._sqlite(sql_done)
+
+        return True
+
+
+    def _tasks_process_thread(self):
+        while True:
+            try:
+                sql = "select md5 from tasks where status='incomplete' order by dt desc"
+                ret = self._sqlite(sql)
+                if ret:
+                    while ret:
+                        p = []
+                        for i in range(4):
+                            try:
+                                md5_x = ret.pop(0)[0]
+                            except:
+                                break
+                            else:
+                                p.append(md5_x)
+                        try:
+                            pool = ThreadPool(len(p))
+                            # results = pool.map(self._Process, p)
+                            pool.map(self._Process, p)
+                            pool.close()
+                            pool.join()
+                        except:
+                            self.log(f'ERROR_TASK_PROCESS_POOL_TEXT: \n{traceback.format_exc()}\n')
+                            for md5_x in p:
+                                self._sqlite(f"update tasks set status='incomplete' where md5='{md5_x}'")
+                    # for r in ret:
+                    #     md5_x = r[0]
+                    #     try:
+                    #         self._Process(md5_x)
+                    #     except:
+                    #         self._sqlite(f"update tasks set status='incomplete' where md5='{md5_x}'")
+                    #         traceback.print_exc()
+                else:
+                    time.sleep(1/20)
+            except:
+                self.log(f'ERROR_TASK_PROCESS_THREAD_TEXT: \n{traceback.format_exc()}\n')
+
+
+    def _fillInns(self, inns):
+        inns = self._make_params_list(inns)
+        if len(inns) == 1:
+            sql = f"""select inn, id from app_org where inn = '{str(inns[0])}';"""
+        else:
+            sql = f"""select inn, id from app_org where inn in {str(tuple(inns))};"""
+        ret = self._make_sql_ref({"sql": sql, "count": 1})
+        inns = self._make_replace(ret, inns)
+        return inns
+
+
+    def _fillVnds(self, vnds):
+        if not vnds:
+            return []
+        vnds = self._make_params_list(vnds)
+        if len(vnds) == 1:
+            sql = f"""select code, id from app_supplier where code = '{str(vnds[0])}';"""
+        else:
+            sql = f"""select code, id from app_supplier where code in {str(tuple(vnds))};"""
+        ret = self._make_sql_ref({"sql": sql, "count": 2})
+        vnds = self._make_replace(ret, vnds)
+        return vnds
+
+    def _genHash(self, string):
+        md = hashlib.md5()
+        md.update(string.encode())
+        return md.hexdigest()
+
+    def _create_removes(self, inns, sprs, vnds, test):
+        for inn in inns:
+            options = []
+            # фомируем options и sql
+            if vnds:
+                sql = """delete from app_referencelink where org_id = %s and supplier_id = %s and ref_id = %s;"""
+                for v in vnds:
+                    for s in sprs:
+                        if v != -1 and inn != -1  and s !=-1:
+                            opt = inn, v, s
+                            options.append(opt)
+            else: 
+                sql = """delete from app_referencelink where org_id = %s and ref_id = %s;"""
+                for s in sprs:
+                    if inn != -1  and s !=-1:
+                        opt = inn, s
+                        options.append(opt)
+            params = json.dumps({"sql": sql, "options": options, "test": test})
+            t_md5 = self._genHash(params)
+            yield t_md5, params
+
+    def _create_inserts(self, inns, sprs, vnds, expires, hard, test):
+        if str(hard) == '1' or hard == True:
+            hard = True
+        else:
+            hard = False
+        for inn in inns:
+            options = []
+            # фомируем options и sql
+            if expires:
+                sql = """insert into app_referencelink (created, updated, org_id, supplier_id, ref_id, expires, abso) values
+(current_timestamp, current_timestamp, %s, %s, %s, %s, %s)
+on conflict (org_id, supplier_id, ref_id) do update
+set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, %s, %s, %s, %s, %s);"""
+                for v in vnds:
+                    for s in sprs:
+                        if v != -1 and inn != -1 and s !=-1:
+                            opt = (inn, v, s, expires, hard)
+                            opt += opt
+                            options.append(opt)
+                params = json.dumps({"sql": sql, "options": options, "test": test})
+                t_md5 = self._genHash(params)
+                yield t_md5, params
+            else:
+                sql = """insert into app_referencelink (created, updated, org_id, supplier_id, ref_id, abso) values
+(current_timestamp, current_timestamp, %s, %s, %s, %s)
+on conflict (org_id, supplier_id, ref_id) do update
+set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, %s, %s, %s, %s);"""
+                for v in vnds:
+                    for s in sprs:
+                        if v != -1 and inn != -1 and s !=-1:
+                            opt = (inn, v, s, hard)
+                            opt += opt
+                            options.append(opt)
+                params = json.dumps({"sql": sql, "options": options, "test": test})
+                t_md5 = self._genHash(params)
+                yield t_md5, params
+
+    def _make_sql_ref(self, params):
+        sql = params.get('sql')
+        # count = params.get('count')
+        t = time.time()
+        ret = None
+        plx = ms71lib.ServerProxy(f"https://sklad71.org/apps/fdbsrv@plx-db/uri/RPC2", api_key=self.key)
+        for i in range(5):
+            try:
+                ret = plx.fdb.execute('plx', sql)
+            except:
+                sl = 0.2*(i+1)
+                self.log(f"""CON_ERROR_IN_EXECUTE_TEXT:\n{traceback.format_exc()}""")
+                self.log(f"""CON_ERROR_IN_EXECUTE_SLEEP_FOR: {sl} secs.""")
+                time.sleep(sl)
+            else:
+                break
+            finally:
+                try:
+                    plx('close')()
+                except: pass
+        self.log(f'INFO_MAKE_SQL_PLX_SQL: \n{sql}')
+        self.log(f'INFO_MAKE_SQL_PLX_TIME: {time.time()-t}')
+        return ret
+
+
+    def setReferenceLinks(self, params=None, x_hash=None):
+        # if not self._check(x_hash): #пока не проверяем, но это должно измениться!!!
+        #     return json.dumps({"result": False, "reason": "x_api_key_incorrect", "code": 403})
+        user = params.get('user')
+        if not user:
+            return json.dumps({"result": False, "reason": "user_must_be_specified", "code": 403})
+        inns = params.get('inn')
+        if not inns:
+            return json.dumps({"result": False, "reason": "inn_must_be_specified", "code": 400})
+        sprs = params.get("spr")
+        if not sprs:
+            return json.dumps({"result": False, "reason": "sprs_must_be_specified", "code": 400})
+        ret = {"result": False, "reason": "set_links_error", "code": 500}
+        remove = params.get("remove")
+        vnds = params.get("vnd")
+        if not remove and not vnds:
+            return json.dumps({"result": False, "reason": "suppliers_must_be_specified", "code": 400})
+        #получаем справочные данные с сервера (id организаций по ИНН и id поставщиков по кодам)
+        #и заменяем их в параметрах
+        inns = self._fillInns(inns)
+        vnds = self._fillVnds(vnds)
+        expires = params.get('expires')
+        hard = params.get('hard', False)
+        test = params.get('test', False)
+        #разбиваем ЗАДАЧУ на отдельные подзадачи по ИНН, подставляя сразу id организаций и id поставщиков и стаим их в очередь (заносим в базу).
+        #логируем параметры подзадачи вместе с ее хэшем md5 и статусом
+        task_hashes = []
+        if remove:
+            #формируем на удаление
+            for task_md5, task_param in self._create_removes(inns, sprs, vnds, test):
+                task_hashes.append(task_md5)
+                #insert task to db
+                sql_ins = f"insert into tasks (md5, options, status) values ('{task_md5}', '{task_param}', 'incomplete') on conflict do nothing;"
+                self._sqlite(sql_ins)
+                pass
+        else:
+            #делаем insert or update
+            for task_md5, task_param in self._create_inserts(inns, sprs, vnds, expires, hard, test):
+                task_hashes.append(task_md5)
+                #insert task to db
+                sql_ins = f"insert into tasks (md5, options, status) values ('{task_md5}', '{task_param}', 'incomplete') on conflict do nothing;"
+                self._sqlite(sql_ins)
+                pass
+        #после постановки задач запускаем ожидание выполнения всех подзадач. как только все выполнились - отправляем результат
+        complete = False
+        breaked = False
+        if len(task_hashes) == 1:
+            sql_res = f"""select 1 where not exists 
+(select md5 from tasks where md5 = '{str(task_hashes[0])}');"""
+        elif len(task_hashes) > 1:
+            sql_res = f"""select 1 where not exists 
+(select md5 from tasks where md5 in {str(tuple(task_hashes))});"""
+        else:
+            return json.dumps({"result": True, "reason": "request_done", "code": 200})    
+        t_started = time.time()
+        while not complete:
+            time.sleep(1/100)
+            if time.time() - t_started > 55: #время, после которого возвращается ошибка таймаута, но задания продолжают выполняться. 
+                breaked = True
+                break
+            ret = self._sqlite(sql_res)
+            if ret:
+                complete = True
+        if breaked:
+            return json.dumps({"result": False, "reason": "timeout_occured_request_still_processing", "code": 524})
+        return json.dumps({"result": True, "reason": "request_done", "code": 200})        

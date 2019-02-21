@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'merge3'
-__version__ = '19.049.1505' #метод удаления связок удаляет напрямую в базе, без mrksrv
+__version__ = '19.052.2130' #добавлен метод setReferenceLinks, работает через fdbsrv
+# __version__ = '19.049.1505' #метод удаления связок удаляет напрямую в базе, без mrksrv
 #__version__ = '19.045.1030' #добавлен отчет по связкам
 # __version__ = '19.037.1330' #сделанна прямая вставка данных в plx
 #__version__ = '19.035.1330' #удаляем выполненные задачи из базы
@@ -133,10 +134,6 @@ def application(env):
             header = libs.authHead(content, len(ret_value))
         else:
             header = libs.head(len(ret_value), False, True)
-
-
-
-
     # ret_value = content.encode()
     # if arg == 'login':
     #     header = libs.authHead(content, len(ret_value))
@@ -166,7 +163,7 @@ def prepare_server(api = None):
 
     #threads.append(threading.Thread(target=_insert_function_for_thread_here, args=(_insert_args_here,), daemon=True))
     threads.append(threading.Thread(target=libs.udp_send, args=(__appname__, __version__, sys.APPCONF["udp"]), name='udp_sending', daemon=True))
-    threads.append(threading.Thread(target=libs.tasks_process_thread, args=(api, ), name='processing',daemon=True))
+    # threads.append(threading.Thread(target=libs.tasks_process_thread, args=(api, ), name='processing',daemon=True))
 
 
     for th in threads:
