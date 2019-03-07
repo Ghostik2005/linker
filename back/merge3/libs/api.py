@@ -56,7 +56,7 @@ class API:
             self._pg = True
             self.port = 5432
         self.log("POSTGRES STARTING on %s port" % self.port)
-        self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"], port = self.port, production=production)
+        self.db = pg_local(self.log, udp=self.udp, port = self.port, production=production)
         self.start = 1
         self.count = 20
 
@@ -132,7 +132,7 @@ class API:
 
         return True
 
-    def _sqlite(self, sql, basename='merge3.db3'):
+    def _sqlite(self, sql, basename='merge3.db3'):        
         base_name = os.path.join(self.path, basename)
         #autocommit
         answer = None
@@ -164,37 +164,46 @@ class API:
             self._print(user, i)
 
     def login(self, params=None, x_hash=None):
-        from_sklad = params.get('from_sklad', False)
+        ret = {"result": False, "ret_val": "something wrong happend"}
+        if not self._check(x_hash):
+            return json.dumps({"result": False, "ret_val": "access denied"}, ensure_ascii=False)
         user = params.get('user')
         p_hash = params.get('pass')
-        ret = {"result": False, "ret_val": "access denied"}
-        if self._check(x_hash):
-            if not from_sklad:
-                sql = f"""select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where lower(r."USER") = lower(%s)"""
-                opt = (user,)
-                res = self.db.request({"sql": sql, "options": opt})
-                if len(res) > 0:
-                    md = hashlib.md5()
-                    md.update(res[0][1].encode())
-                    if md.hexdigest() == p_hash:
-                        # k_list = glob.glob(os.path.join(self.p_path, '*'))
-                        # for f_name in k_list:
-                        #     with open(f_name, 'rb') as f_obj:
-                        #         fuser = f_obj.read().decode().strip()
-                        #     if fuser.lower() == user.lower():
-                        #         os.remove(f_name)
-                        #         #break
-                        a_key = uuid.uuid4().hex
-                        f_name = os.path.join(self.p_path, a_key)
-                        with open(f_name, 'wb') as f_obj:
-                            f_obj.write(res[0][0].encode())
-                        ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
-            else:
-                a_key = uuid.uuid4().hex
-                f_name = os.path.join(self.p_path, a_key)
-                with open(f_name, 'wb') as f_obj:
-                    f_obj.write(user.encode())
-                ret = {"result": True, "ret_val": {"key": a_key, "user":user}}
+        test_sklad = params.get('sklad')
+        if test_sklad:
+            sql_sklad = """insert into users_merge (username, ip) values (%s, %s) 
+on conflict (username) do update set ip = %s, firsttime=false, lastenter = current_timestamp
+returning id, firsttime"""
+            opt_sklad = (user, "192.168.0.1", "192.168.0.1")
+            res_sklad = self.db.execute({"sql": sql_sklad, "options": opt_sklad})
+            #временно пишем по старому для теста, в продакшене со складом рулить будет superapp
+            a_key = uuid.uuid4().hex
+            f_name = os.path.join(self.p_path, a_key)
+            with open(f_name, 'wb') as f_obj:
+                f_obj.write(user.encode())
+            rr = {'id': res_sklad[0][0], 'ft': res_sklad[0][1], "key": a_key, "user": user}
+            return json.dumps({"result": True, "ret_val": rr})
+        else:
+            sql = f"""select r."USER", r.PASSWD, r.ID_ROLE, r.EXPERT FROM USERS r where lower(r."USER") = lower(%s)"""
+            opt = (user,)
+            res = self.db.request({"sql": sql, "options": opt})
+            if len(res) > 0:
+                md = hashlib.md5()
+                md.update(res[0][1].encode())
+                if md.hexdigest() == p_hash:
+                    # k_list = glob.glob(os.path.join(self.p_path, '*'))
+                    # for f_name in k_list:
+                    #     with open(f_name, 'rb') as f_obj:
+                    #         fuser = f_obj.read().decode().strip()
+                    #     if fuser.lower() == user.lower():
+                    #         os.remove(f_name)
+                    #         #break
+                    a_key = uuid.uuid4().hex
+                    f_name = os.path.join(self.p_path, a_key)
+                    with open(f_name, 'wb') as f_obj:
+                        f_obj.write(res[0][0].encode())
+                    # ret = {"result": True, "ret_val": {"key": a_key, "role": str(res[0][2]), "expert": str(res[0][3]), "user":str(res[0][0])}}
+                    return json.dumps({"result": True, "ret_val": {"key": a_key, "user":str(res[0][0])}}, ensure_ascii=False)
         return json.dumps(ret, ensure_ascii=False)
 
     def getHistory(self, params=None, x_hash=None):
@@ -267,6 +276,27 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def setAdm(self, params=None, x_hash=None):
+        ret = {"result": True, "ret_val": "setted adm"}
+        user = params.get('user')
+        value = params.get('admin')
+        sklad_test = params.get('sklad')
+        if sklad_test:
+            if value == 1 or value == True or value == '1':
+                value = True
+            else:
+                value = False
+            sql_set_adm = """update users_merge set admin = %s where username = %s;"""
+            opt = (value, user)
+            print(opt)
+            res = self.db.execute({"sql": sql_set_adm, "options": opt})
+            print('result of set adm: \t', res)
+        return json.dumps(ret, ensure_ascii=False)
+
+
+
+
+
     def setExit(self, params=None, x_hash=None):
         #user = params.get('user')
         ret = {"result": False, "ret_val": "access denied"}
@@ -280,16 +310,23 @@ class API:
                 ret = {"result": True, "ret_val": "logout"}
         return json.dumps(ret, ensure_ascii=False)
 
+
     def getVersion(self, params=None, x_hash=None):
         if self._check(x_hash):
+            adm = False
             user = params.get('user')
-            sql = f"""select r.ID_ROLE FROM USERS r where lower(r."USER") = lower(%s)"""
+            sklad_test = params.get('sklad')
+            sql_sklad = """select admin from users_merge where username = %s;"""
+            sql =  sql_sklad if sklad_test else f"""select r.ID_ROLE FROM USERS r where lower(r."USER") = lower(%s)"""
             opt = (user,)
             res = self.db.request({"sql": sql, "options": opt})
-            adm = False
-            if res[0][0] in (10, 34):
-                adm = True
-
+            print('res\t', res)
+            if sklad_test:
+                if res:
+                    adm = res[0][0]
+            else:
+                if res[0][0] in (10, 34):
+                    adm = True
             prod = {'version': self.log.version, 'prod': self.db.production, 'adm': adm}
             ret = {"result": True, "ret_val": prod}
         else:
@@ -316,6 +353,7 @@ class API:
         return json.dumps(ret, ensure_ascii=False)
 
     def setUsersInn(self, params=None, x_hash=None):
+        #сохраняет по кнопке OK
         if self._check(x_hash):
             #user = params.get('user')
             inn_user = params.get("inn_user")
@@ -334,17 +372,138 @@ class API:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getUsersFromNew(self, params=None, x_hash=None):
+        #сохраняет каждый раз
+        if self._check(x_hash):
+            edit_user = params.get("edit_user")
+            sql = """select um.id, um.username, s.inn, c.c_inn
+from users_merge um
+join spr_merge3_org s on um.id = s.user_id
+join companies c on s.inn = c.inn
+where um.id != %s
+order by um.id, c.c_inn"""
+            opt = (edit_user,)
+            # opt = (0,) #test mode
+            rows = self.db.request({"sql": sql, "options": opt})
+            ret = []
+            for row in rows:
+                r = {
+                    'uid':  row[0],
+                    'uname': row[1],
+                    'inn': row[2],
+                    'c_inn': row[3]
+                }
+                ret.append(r)
+            ret = {"result": True, "ret_val": ret}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getUsersFromOld(self, params=None, x_hash=None):
+        #сохраняет каждый раз
+        if self._check(x_hash):
+            sql = """select u.id, u."USER", ui.inn, c.c_inn from users u
+join users_inn ui on u.id = ui.user_id
+join companies c on cast(ui.inn as text) = c.inn
+order by u."USER", c.c_inn"""
+            rows = self.db.request({"sql": sql, "options": ()})
+            ret = []
+            for row in rows:
+                r = {
+                    'uid':  row[0],
+                    'uname': row[1],
+                    'inn': row[2],
+                    'c_inn': row[3]
+                }
+                ret.append(r)
+            ret = {"result": True, "ret_val": ret}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def unsetUserInn(self, params=None, x_hash=None):
+        #сохраняет каждый раз
+        if self._check(x_hash):
+            #user = params.get('user')
+            test_sklad = params.get("sklad")
+            set_user = params.get("set_user")
+            inn = params.get("inn")
+            if inn:
+                if not isinstance(inn, list):
+                    inn = [inn,]
+                for i in range(len(inn)):
+                    inn[i] = str(inn[i]) if test_sklad else int(inn[i])
+                if test_sklad:
+                    sql_ins = f"""delete from spr_merge3_org where user_id = {set_user} and %s;"""
+                else:
+                    sql_ins = f"""delete from users_inn where user_id = {set_user} and %s; """
+                if len(inn) > 1:
+                    tail = f"inn in {str(tuple(inn))}"
+                else:
+                    tail = f"inn = '{inn[0]}'" if test_sklad else f"inn = {inn[0]}"
+                self.db.execute({"sql": sql_ins % tail, "options": ()})
+                ret = {"result": True, "ret_val": "OK"}
+            else:
+                ret = {"result": False, "ret_val": "inn absent"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setUserInn(self, params=None, x_hash=None):
+        #сохраняет каждый раз
+        if self._check(x_hash):
+            #user = params.get('user')
+            test_sklad = params.get("sklad")
+            set_user = params.get("set_user")
+            inn = params.get("inn")
+            if inn:
+                if not isinstance(inn, list):
+                    inn = [inn,]
+                for i in range(len(inn)):
+                    inn[i] = (str(inn[i]),)
+                print(inn)
+                if test_sklad:
+                    sql_ins = f"""insert into spr_merge3_org (user_id, inn) values ({set_user}, %s);"""
+                else:
+                    sql_ins = f"""insert into users_inn (user_id, inn) values ({set_user}, %s);"""
+                if len(inn) > 1:
+                    self.db.executemany({"sql": sql_ins, "options": inn})
+                else:
+                    self.db.execute({"sql": sql_ins, "options": inn[0]})
+                ret = {"result": True, "ret_val": "OK"}
+            else:
+                ret = {"result": False, "ret_val": "inn absent"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+
     def getUserInn(self, params=None, x_hash=None):
         if self._check(x_hash):
             #user = params.get('user')
+            sklad_test = params.get('sklad')
             user_id = params.get("user_id")
             inn_all = []
             inn_user = []
+            admin = False
             if user_id:
+                if sklad_test:
+                    sql_adm = """select u.admin from users_merge u where u.id = %s"""
+                    res = self.db.request({"sql": sql_adm, "options": (user_id,)})
+                    if len(res[0]) > 0:
+                        admin = res[0][0]
+                sql_sklad = """select  s.inn, c.c_inn, u.admin
+from spr_merge3_org s
+join users_merge u on u.id = s.user_id
+join companies c on c.inn = s.inn
+where u.id =  %s"""
                 sql_user = """select uui.inn, cc.c_inn from users uu
     join users_inn uui on uui.user_id = uu.id
     join companies cc on cast(uui.inn as text) = cc.inn
     where uu.id = %s order by cc.c_inn;"""
+                sql_user = sql_sklad if sklad_test else sql_user
                 opt = (user_id, )
                 sql_all = """select inn, c_inn from companies order by c_inn; """
                 opt_all = ()
@@ -358,6 +517,7 @@ class API:
                         "inn": row[0],
                         "c_inn": row[1]
                     }
+                    # admin = row[2] if len(row)==3 else False
                     inn_user.append(r)
                 for row in result_all:
                     r = {
@@ -365,15 +525,18 @@ class API:
                         "c_inn": row[1]
                     }
                     inn_all.append(r)
-            ret = {"result": True, "ret_val": {'all': inn_all, 'user': inn_user}}
+            ret = {"result": True, "ret_val": {'all': inn_all, 'user': inn_user, "admin": admin}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
     def getUsers(self, params=None, x_hash=None):
         if self._check(x_hash):
+            sklad_test = params.get('sklad')
+            sql_sklad = "select id, username from users_merge order by username;"
             #user = params.get('user')
-            sql = """select id, "USER" from users order by "USER";"""
+            sql_sa = """select id, "USER" from users order by "USER";"""
+            sql = sql_sklad if sklad_test else sql_sa
             opt = ()
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -432,10 +595,22 @@ class API:
     def getInn(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            sql = """select ui.inn, co.c_inn from users us
+            sklad_test = params.get('sklad')
+            # if sklad_test:
+                # user = 'test_user'
+
+            
+            sql_sklad = """select  s.inn, c.c_inn
+from spr_merge3_org s
+join users_merge u on u.id = s.user_id
+join companies c on c.inn = s.inn
+where u.username = %s"""
+
+            sql_sa = """select ui.inn, co.c_inn from users us
 join users_inn ui on us.id = ui.user_id
 join companies co on co.inn = cast(ui.inn as text)
 where us."USER" = %s;"""
+            sql = sql_sklad if sklad_test else sql_sa
             opt = (user,)
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
@@ -1408,12 +1583,13 @@ WHERE ({stri}) ORDER by {field} {direction}"""
 
     def _check(self, x_hash):
         #проверка валидности ключа
-        ret = False
-        if x_hash:
-            f_name = os.path.join(self.p_path, x_hash)
-            if os.path.exists(f_name):
-                ret = True
-        return ret
+        #ключ не проверяем, запросы идут через superapp
+        # ret = False
+        # if x_hash:
+        #     f_name = os.path.join(self.p_path, x_hash)
+        #     if os.path.exists(f_name):
+        #         ret = True
+        return True
 
     def _insLimit(self, start_p, end_p):
         if self._pg:
@@ -1578,6 +1754,7 @@ left join spr_zavod z on s.id_zavod = z.id_spr;"""
     def _plx_execute_many_ref(self, params):
         sql = params.get('sql')
         options = params.get('options')
+        self.log(f"INFO_EXECUTE_MANY_PLX_OPTIONS_LENGTH:{len(options)}")
         test = params.get('test')
         alias = params.get('alias', 'plx')
         ret = False
@@ -1636,7 +1813,7 @@ left join spr_zavod z on s.id_zavod = z.id_spr;"""
                 if ret:
                     while ret:
                         p = []
-                        for i in range(4):
+                        for _ in range(4):
                             try:
                                 md5_x = ret.pop(0)[0]
                             except:
@@ -1699,6 +1876,7 @@ left join spr_zavod z on s.id_zavod = z.id_spr;"""
             options = []
             # фомируем options и sql
             if vnds:
+                self.log("INFO_CREATE_REMOVES_WITH_VND")
                 sql = """delete from app_referencelink where org_id = %s and supplier_id = %s and ref_id = %s;"""
                 for v in vnds:
                     for s in sprs:
@@ -1706,6 +1884,7 @@ left join spr_zavod z on s.id_zavod = z.id_spr;"""
                             opt = inn, v, s
                             options.append(opt)
             else: 
+                self.log("INFO_CREATE_REMOVES_WITHOUT_VND")
                 sql = """delete from app_referencelink where org_id = %s and ref_id = %s;"""
                 for s in sprs:
                     if inn != -1  and s !=-1:
@@ -1781,24 +1960,32 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
         # if not self._check(x_hash): #пока не проверяем, но это должно измениться!!!
         #     return json.dumps({"result": False, "reason": "x_api_key_incorrect", "code": 403})
         user = params.get('user')
+        self.log(f"INFO_USER:{user}")
         if not user:
+            self.log("ERROR_USER_ABSENT")
             return json.dumps({"result": False, "reason": "user_must_be_specified", "code": 403})
         inns = params.get('inn')
+        self.log(f"INFO_INNS:{inns}")
         if not inns:
+            self.log("ERROR_INN_ABSENT")
             return json.dumps({"result": False, "reason": "inn_must_be_specified", "code": 400})
         sprs = params.get("spr")
         if not sprs:
+            self.log("ERROR_SPR_ABSENT")
             return json.dumps({"result": False, "reason": "sprs_must_be_specified", "code": 400})
         ret = {"result": False, "reason": "set_links_error", "code": 500}
-        remove = params.get("remove")
+        remove = params.get("delete")
+        self.log(f"INFO_REMOVE:{remove}")
         vnds = params.get("vnd")
         if not remove and not vnds:
+            self.log("ERROR_ADDING_WITHOUT_VND_ABSENT")
             return json.dumps({"result": False, "reason": "suppliers_must_be_specified", "code": 400})
         #получаем справочные данные с сервера (id организаций по ИНН и id поставщиков по кодам)
         #и заменяем их в параметрах
         inns = self._fillInns(inns)
         vnds = self._fillVnds(vnds)
         expires = params.get('expires')
+        self.log(f"INFO_EXPIRES:{expires}")
         hard = params.get('hard', False)
         test = params.get('test', False)
         #разбиваем ЗАДАЧУ на отдельные подзадачи по ИНН, подставляя сразу id организаций и id поставщиков и стаим их в очередь (заносим в базу).
@@ -1806,6 +1993,7 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
         task_hashes = []
         if remove:
             #формируем на удаление
+            self.log("INFO_CREATE_REMOVES")
             for task_md5, task_param in self._create_removes(inns, sprs, vnds, test):
                 task_hashes.append(task_md5)
                 #insert task to db
@@ -1814,6 +2002,7 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
                 pass
         else:
             #делаем insert or update
+            self.log("INFO_CREATE_INSERTS")
             for task_md5, task_param in self._create_inserts(inns, sprs, vnds, expires, hard, test):
                 task_hashes.append(task_md5)
                 #insert task to db
@@ -1830,6 +2019,7 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
             sql_res = f"""select 1 where not exists 
 (select md5 from tasks where md5 in {str(tuple(task_hashes))});"""
         else:
+            self.log("ERROR_NO_HASHES")
             return json.dumps({"result": True, "reason": "request_done", "code": 200})    
         t_started = time.time()
         while not complete:

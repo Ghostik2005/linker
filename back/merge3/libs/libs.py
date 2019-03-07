@@ -218,47 +218,52 @@ class SCGIServer:
         return env
 
     def _init(self, sock):
+        appconf = sys.APPCONF
         addr = sock.getsockname()[:2]
         sock.listen(100)
-        sys.APPCONF["addr"] = addr
+        appconf["addr"] = addr
         fileupstream = self._getfilename("upstream")
-        sys.APPCONF["fileupstream"] = fileupstream
-        if self.production:
-            location = "merge3_logicnew"
-        else:
-            location = "merge3_logic"
+        appconf["fileupstream"] = fileupstream
+        location = "merge3_logicnew" if self.production else "merge3_logic"
         data = """
         location /%s {
+
          if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
-            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,b_size';
-            add_header 'Access-Control-Max-Age' 1728000;
+            # add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' '*';
+            # add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,b_size,Set-Cookie';
+            # add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
             add_header 'Content-Length' 0;
             return 204;
          }
          if ($request_method = 'POST') {
+            # add_header 'Vi' 'sss1';
+            add_header 'Set-Cookie' 'manu=eewrewrwer; Path=/';
             add_header 'Access-Control-Allow-Origin' '*';
-            #add_header 'Access-Control-Allow-Credentials' 'true';
-            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
+            # add_header 'Access-Control-Allow-Credentials' 'true';
+            #add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            #add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size,Set-Cookie';
+            # add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size,Set-Cookie';
+            # add_header 'Access-Control-Allow-Headers' '*';
+            add_header 'Access-Control-Expose-Headers' '*';
          }
          
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
-            #add_header 'Access-Control-Allow-Credentials' 'true';
-            add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
-            add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
+            # add_header 'Access-Control-Allow-Credentials' 'true';
+            #add_header 'Access-Control-Allow-Methods' 'HEAD, GET, POST, OPTIONS';
+            # add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size,Set-Cookie';
+            # add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size,Set-Cookie';
+            # add_header 'Access-Control-Allow-Headers' '*';
          }
 
         if (!-f /ms71/data/merge3/api-k/$http_x_api_key) {
         return 403;
         }
 
-        limit_except POST HEAD OPTIONS GET{
+        limit_except POST HEAD OPTIONS {
             deny all;
         }
         include scgi_params;
@@ -266,22 +271,12 @@ class SCGIServer:
         scgi_pass                 merge3_ups;
         #client_body_buffer_size 32M;
         client_max_body_size 0;
-        #client_max_body_size 300M;
-        #scgi_max_temp_file_size   64M;
-        #scgi_temp_path /ms71/temp/nginx;
-        #proxy_read_timeout        240s;
-        #scgi_buffer_size          16000k;
-        #scgi_buffers              8 32000k;
         scgi_buffering            off;
         scgi_cache                off;
-        #send_timeout              240s;
-        #sendfile                  on;
         gzip                      on;
         gzip_min_length           1024;
         gzip_proxied              any;
         gzip_comp_level 5;
-        #tcp_nopush on;
-        #tcp_nodelay on;
     }
     """ % location
         filelocation = self._getfilename("location")
@@ -290,7 +285,7 @@ class SCGIServer:
         _filelocation = os.path.join(dn, bs.split('.', 1)[0].split('-', 1)[0])  # общий файл для всех экземпляров приложения
         with open(_filelocation, "wb") as f:
             f.write(data.encode())
-        sys.APPCONF["filelocation"] = _filelocation
+        appconf["filelocation"] = _filelocation
         dn = os.path.dirname(fileupstream)
         bs = os.path.basename(fileupstream)
         _fileupstream = os.path.join(dn, bs.split('.', 1)[0].split('-', 1)[0])  # общий файл для всех экземпляров приложения
@@ -347,14 +342,14 @@ class SCGIServer:
                 filename = os.path.join(nginx[name], self.appname)
         return filename
 
-def f_head(aContentLength, fType='csv'):
-    #aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
-    r = []
-    r.append(("Content-Length", "%i" % aContentLength))
-    r.append(("X-Accel-Buffering", "no"))
-    r.append(("Content-Type", "application/octet-stream"))
-    r.append(("Content-Disposition", f"attachment; filename=report.{fType}"))
-    return r
+# def f_head(aContentLength, fType='csv'):
+#     #aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
+#     r = []
+#     r.append(("Content-Length", "%i" % aContentLength))
+#     r.append(("X-Accel-Buffering", "no"))
+#     r.append(("Content-Type", "application/octet-stream"))
+#     r.append(("Content-Disposition", f"attachment; filename=report.{fType}"))
+#     return r
 
 def authHead(content, aContentLength):
     """
@@ -363,6 +358,8 @@ def authHead(content, aContentLength):
     c = json.loads(content)
     aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
     r = []
+    # r.append(('Set-Cookie', 'manuscriptsid_test=adminbmalywkfwi6sxlwcqre6mjp1asfkupl7; Path=/'))
+    # r.append(("Vvvv", 'asasasas'))
     r.append(("Last-Modified", "%s" % aLastModified))
     r.append(("Content-Length", "%i" % aContentLength))
     r.append(("X-Accel-Buffering", "no"))
@@ -380,6 +377,7 @@ def head(aContentLength, fgDeflate=True, fg_head=True):
 
     aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
     r = []
+    # r.append(("Cookie", "manuscriptsid_test_1=adminbmalywkfwi6sxlwcqre6mjp1asfkupl7; path=\\"))
     r.append(("Last-Modified", "%s" % aLastModified))
     r.append(("Content-Length", "%i" % aContentLength))
     r.append(("X-Accel-Buffering", "no"))
@@ -393,7 +391,7 @@ def head(aContentLength, fgDeflate=True, fg_head=True):
     return r
 
 def f_head(aContentLength, fType='xlsx'):
-    aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
+    # aLastModified = time.strftime('%a, %d %b %Y %X GMT', time.gmtime())
     r = []
     file_datetime = time.strftime('%Y%m%d-%H%M%S')
     r.append(("Content-Length", "%i" % aContentLength))
@@ -407,9 +405,10 @@ def shutdown(log):
     """
     function, runs when exiting
     """
-    fileupstream = sys.APPCONF.get("fileupstream")
+    appconf = sys.APPCONF
+    fileupstream = appconf.get("fileupstream")
     if fileupstream is None:
-        log("%s:%s critical" % sys.APPCONF["addr"], begin='')
+        log("%s:%s critical" % appconf["addr"], begin='')
         return
     try:
         os.remove(fileupstream)
@@ -433,7 +432,7 @@ def shutdown(log):
             fg_noapp = 0 == len(src[2:-1])
         if fg_noapp:  # нет запущенных приложений, удаляем общую локацию и апстрим
             try:
-                os.remove(sys.APPCONF["filelocation"])
+                os.remove(appconf["filelocation"])
             except: pass
             try:
                 os.remove(_fileupstream)
@@ -444,7 +443,7 @@ def shutdown(log):
                 f.write(src.encode())
 
     subprocess.call(['sudo', 'nginx', '-s', 'reload', '-c', '/ms71/saas.conf', '-p', '/ms71/'])
-    log("%s:%s shutdown" % sys.APPCONF["addr"], begin='')
+    log("%s:%s shutdown" % appconf["addr"], begin='')
 
 def _int(x):
     try:
