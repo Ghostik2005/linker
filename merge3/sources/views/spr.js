@@ -198,10 +198,12 @@ export default class SprView extends JetView{
             view: "layout",
             //width: document.documentElement.clientWidth*.3,
             gravity: 3,
-            css: {'border-top': "1px solid #dadee0 !important", "background": "#f4f5f9"},
+            // css: {'border-top': "1px solid #dadee0 !important", "background": "#f4f5f9"},
+            css: "spr_header",
             rows: [
-                {view: "label", label: "Эталоны", align:"center",
-                css: {'border-left': "1px solid #dadee0 !important", 'border-right': "1px solid #dadee0 !important",}
+                {view: "label", label: "Эталоны", 
+                    align:"center",
+                    css: {'border-left': "1px solid #dadee0 !important", 'border-right': "1px solid #dadee0 !important",}
                 },
                 header,
                 sprv,

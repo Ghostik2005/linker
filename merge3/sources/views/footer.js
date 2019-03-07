@@ -5,7 +5,7 @@ import {request, checkVal} from "../views/globals";
 export default class FooterView extends JetView{
     config(){
         let url = this.app.config.r_url + "?getVersion";
-        let params = {"user": this.app.config.user};
+        let params = {"user": this.app.config.user, "sklad": this.app.config.sklad};
         let res = request(url, params, !0).response;
         res = checkVal(res, 's');
 
@@ -14,6 +14,7 @@ export default class FooterView extends JetView{
         this.app.config.adm = res.adm;
 
         var prod = (res.prod) ? "Production" : "test";
+
 
         var view = {view: 'toolbar',
             css: 'realy-header',

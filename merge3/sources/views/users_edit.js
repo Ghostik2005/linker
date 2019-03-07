@@ -1,7 +1,9 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import { request, checkVal, checkKey } from "./globals";
+import { request, checkVal, checkKey } from "../views/globals";
+import ExportOptView from "../views/export_options";
+import ExportView from "../views/export_window";
 //import {insert_inns} from "../views/globals";
 
 export default class UsersView extends JetView{
@@ -35,15 +37,19 @@ export default class UsersView extends JetView{
                     on: {
                         onItemClick: () => {
                             let rows = this.$$("_lTable").getSelectedItem();
+                            let inn = []
                             if (!rows.length) {
                                 rows = [rows,];
                             };
                             rows.forEach( 
                                 (item) => {
+                                    inn.push(item.inn);
+                                    // выполняем запрос на сервер сразу и переносим пользователей
                                     this.$$("_rTable").add(item, 0);
                                     this.$$("_lTable").remove(item.id);
                                 }
                             );
+                            this.unsetInn(inn);
                         },
                     },
                 },
@@ -53,17 +59,22 @@ export default class UsersView extends JetView{
                     //label: "<span class='webix_icon fas fa-angle-double-right'></span>",
                     type:"imageButton", image: './library/img/double-right-arrows.svg',
                     click: () => {
+                        // выполняем запрос на сервер сразу и переносим пользователей
                         let rows = this.$$("_lTable").serialize();
                         this.$$("_lTable").clearAll();
+                        let inn = []
                         rows.forEach( 
                             (item) => {
+                                inn.push(item.inn);
                                 this.$$("_rTable").add(item);
                             }
                         );
+                        this.unsetInn(inn);
+
                     }
                 },
             ]},
-            {view: "label", label: "ИНН для пользователя", align:"center",
+            {view: "label", label: "Организации для пользователя", align:"center",
                 css: {"border-bottom": "solid 1px #ccd7e6 !important", "background": "#f4f5f9"},
             },
             {view: "datatable",
@@ -112,8 +123,10 @@ export default class UsersView extends JetView{
                         let item = this.getItem(clicked_item);
                         let item_id = item.id;
                         //delete item.id;
+                        // выполняем запрос на сервер сразу и переносим пользователей
                         this.remove(item_id);
                         this.$scope.$$("_rTable").add(item);
+                        this.$scope.unsetInn(item.inn);
 
                     },
                     onKeyPress: function(code, e){
@@ -137,12 +150,16 @@ export default class UsersView extends JetView{
                     type:"imageButton", image: './library/img/double-left-arrows.svg',
                     click: () => {
                         let rows = this.$$("_rTable").serialize();
+                        let inn = []
                         this.$$("_rTable").clearAll();
                         rows.forEach( 
                             (item) => {
+                                inn.push(item.inn);
+                                // выполняем запрос на сервер сразу и переносим пользователей
                                 this.$$("_lTable").add(item);
                             }
                         );
+                        this.setInn(inn);
                     },
                 },
                 {view: "button", //type: 'htmlbutton',  
@@ -153,16 +170,34 @@ export default class UsersView extends JetView{
                     type:"imageButton", image: './library/img/left-arrow.svg',
                     click: () => {
                         let rows = this.$$("_rTable").getSelectedItem();
+                        let inn = [];
                         if (!rows.length) {
                             rows = [rows,];
                         };
                         rows.forEach( (item) => {
+                            inn.push(item.inn)
+                            // выполняем запрос на сервер сразу и переносим пользователей
                             this.$$("_lTable").add(item, 0);
                             this.$$("_rTable").remove(item.id);
                         });
+                        this.setInn(inn);
                     },
                 },
-                {}
+                {},
+                {view: "checkbox", label: "Администратор",
+                    localId: "_admChBox",
+                    // attributes:{"line-height":"26px"},
+                    value: 0, width: 150, labelWidth: 120,
+                    hidden: true,
+                    on: {
+                        onChange: function() {
+                            let url = app.config.r_url + "?setAdm";
+                            let params = {"user": app.config.user, "admin": this.getValue(), "sklad": app.config.sklad}
+                            request(url, params).then((data) => {
+                                })
+                        }
+                    }
+                },
             ]},
             {view: "label", label: "Доступные ИНН", align:"center",
                 css: {"border-bottom": "solid 1px #ccd7e6 !important", "background": "#f4f5f9"},
@@ -210,10 +245,12 @@ export default class UsersView extends JetView{
                         if (!check) this.$scope.$$("_to_left").hide();
                     },
                     onItemDblClick: function (clicked_item) {
+                        // выполняем запрос на сервер сразу и переносим пользователей
                         let item = this.getItem(clicked_item);
                         let item_id = item.id;
                         this.remove(item_id);
                         this.$scope.$$("_lTable").add(item);
+                        this.$scope.setInn(item.inn);
                     },
                     onKeyPress: function(code, e){
                         if (13 === code) {
@@ -270,17 +307,31 @@ export default class UsersView extends JetView{
                             },
                             on: {
                                 onChange: (new_value, old_value) => {
+                                    // console.log('new_value', new_value);
+                                    // console.log('old_value', old_value);
+                                    if (new_value) {
+                                        this.$$("_export").show();
+                                        if (app.config.sklad) {
+                                            this.$$("_admChBox").show();
+                                        }
+                                    } else {
+                                        this.$$("_export").hide();
+                                        this.$$("_admChBox").hide();
+                                    }
                                     let url = app.config.r_url + "?getUserInn";
-                                    let params = {user: app.config.user, user_id: new_value};
+                                    let params = {user: app.config.user, user_id: new_value, sklad: app.config.sklad};
                                     request(url, params).then((data) => {
                                         data = checkVal(data, 'a');
                                         if (data) {
+                                            this.$$("_admChBox").blockEvent();
+                                            this.$$("_admChBox").setValue(data.admin)
+                                            this.$$("_admChBox").unblockEvent();
                                             this.$$("_lTable").parse(data.user);
                                             this.$$("_rTable").parse(data.all);
                                             let removed = [];
                                             this.$$("_rTable").data.each( (item)=> {
                                                 this.$$("_lTable").data.each( (user_item) => {
-                                                    if (user_item.inn === +item.inn) {
+                                                    if (+user_item.inn === +item.inn) {
                                                         removed.push(item.id);
                                                     }
                                                 })
@@ -301,39 +352,27 @@ export default class UsersView extends JetView{
                     {padding: 5, localId: "_bottom", //height: 40,
                         cols: [
                         {width: 10},
-                        {view: "button", type: "htmlbutton", localId: "_cancel", hidden: true,
-                            tooltip: "Отменить",
-                            label: "<span style='line-height: 18px; font-size: smaller'>Отменить</span>", 
+                        {view: "button", type: "htmlbutton", localId: "_export", hidden: true,
+                            tooltip: "Экспорт организаций  для пользователя из старой базы или из настроек другого пользователя",
+                            label: "<span style='line-height: 18px; font-size: smaller'>Экспорт</span>", 
                             width: 120, height: 36,
-                            click: () => {
-                                this.hide_w();
+                            on: {
+                                onItemClick: (id) => {
+                                    if (this.app.config.sklad) {
+                                        (this.popexport.isVisible()) ? this.popexport.hide() : this.popexport.show($$(id), this);
+                                    } else {
+                                        this.popexport.show_w('old', this);
+                                    };
                                 }
-                            },
+                            }
+                        },
                         {},
                         {view: "button", type: "htmlbutton", localId: "_save",
                             tooltip: "Сохранить",
                             label: "<span style='line-height: 18px; font-size: smaller'>OK</span>",
                             width: 80, height: 36,
                             click: () => {
-                                let inn_user = [];
-                                let inn_data = this.$$("_lTable").data.pull;
-                                for (var key in inn_data) {
-                                    let item = inn_data[key];
-                                    delete item.id;
-                                    inn_user.push(item);              
-                                };
-                                let url = app.config.r_url + "?setUsersInn";
-                                let params = {"user": app.config.user, "inn_user": inn_user, "edit_user": this.$$("_users").getValue()};
-                                request(url, params).then((data) => {
-                                    data = checkVal(data, 'a');
-                                    if (data) {
-                                        
-                                        this.hide_w();
-                                    } else {
-                                        webix.message('error');
-                                        };
-                                    })
-                                
+                                this.hide_w();
                             }
                         },
                         {width: 10},
@@ -355,22 +394,42 @@ export default class UsersView extends JetView{
                     this.$$("_lTable").clearAll();
                     this.$$("_local_search").setValue();
                     //this.$$("_users").getList().clearAll();
+                    // перечитываем настройки для пользователя
+                    $$("_main_layout").$scope.ready();
+                    // console.log('v', this.getTopParentView())
+                    // main_tab.ready()
                 },
             },       
         }
 
         return view
         }
+    
+    setInn(inn) {
+        let user_id = this.$$("_users").getValue();
+        let url = this.app.config.r_url + "?setUserInn";
+        let params = {'user': this.app.config.user, "set_user": user_id, "inn": inn, "sklad": this.app.config.sklad};
+        request(url, params).then((data) => {
+        })
+    }
+
+    unsetInn(inn){
+        let user_id = this.$$("_users").getValue();
+        let url = this.app.config.r_url + "?unsetUserInn";
+        let params = {'user': this.app.config.user, "set_user": user_id, "inn": inn, "sklad": this.app.config.sklad};
+        request(url, params).then((data) => {
+        })
+    }
 
     ready() {
         }
 
     show_w(){
         let app = this.app;
-        this.getRoot().getHead().getChildViews()[0].setValue("Выбор ИНН для пользователя");
+        this.getRoot().getHead().getChildViews()[0].setValue("Настройка пользователя");
         this.getRoot().show();
         let url = app.config.r_url + "?getUsers";
-        let params = {"user": app.config.user};
+        let params = {"user": app.config.user, "sklad": app.config.sklad};
         request(url, params).then((data) => {
             data = checkVal(data, 'a');
             if (data) {
@@ -386,6 +445,11 @@ export default class UsersView extends JetView{
     }
 
     init() {
+        if (this.app.config.sklad) {
+            this.popexport = this.ui(ExportOptView);
+        } else {
+            this.popexport = this.ui(ExportView);
+        }
     }
 }
 

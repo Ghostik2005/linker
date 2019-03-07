@@ -1,6 +1,7 @@
 import "./styles/app.css";
 import {JetApp, EmptyRouter, HashRouter } from "webix-jet";
 import "./locales/ru";
+import {getCookie} from "./views/globals"
 
 export default class app extends JetApp{
 	constructor(config){
@@ -17,6 +18,8 @@ export default class app extends JetApp{
 			posPpage:       20,
 			start	: "/login",
 			adm: false,
+			// sklad: !PRODUCTION, // пока только для тестов, для продакшена будем назначать в зависимости от режима
+			sklad: !false,
 			//sklad_cook: 'sklad_auth_coockie'
 			sklad_cook: "manuscriptsid"
 		};
@@ -26,8 +29,18 @@ export default class app extends JetApp{
 		})
 		var app = this;
 		var search = location.search;
-		app.config.testmode = (search.search('enabletestmode') == 1) ? true : false;
-		app.config.testmode = true;
+		if (search.search('enabletestmode') == 1) {
+			app.config.testmode = true;
+		} else {
+			var c = getCookie(app.config.sklad_cook);
+			app.config.testmode = (c) ? false : true; // в настоящем продакшене оставляем только false
+			// app.config.testmode = false;
+		}
+		app.config.sklad = !app.config.testmode;
+
+
+		////// пока не включена авторизация из склада
+		// app.config.testmode = true;
 
 		let index = search.indexOf(app.config.sklad_cook);
 		if (index != -1) {

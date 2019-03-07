@@ -380,9 +380,9 @@ export default class RView extends JetView{
         var view = {
             view: "layout",
             gravity: 4,
-            css: {'border-top': "1px solid #dadee0 !important", "background": "lightgreen"},
+            css: "restricted_header",
             rows: [
-                {view: "label", label: "Активные", align:"center"},
+                {view: "label", label: "<span style='color: white'>Активные</span>", align:"center"},
                 header,
                 sprv,
             ]

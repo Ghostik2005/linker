@@ -11,6 +11,7 @@ export default class MainTabView extends JetView{
     config(){
         
         let tab = {view: "layout",
+            id: "_main_layout",
             rows: [
                 {css: {"border": "1px solid #dadee0",}, cols: [
                     {view: "label", 
@@ -48,7 +49,7 @@ export default class MainTabView extends JetView{
         this.w = [];
         this.u = [];
         let url = this.app.config.r_url + "?getInn";
-        let params = {"user": this.app.config.user};
+        let params = {"user": this.app.config.user, "sklad": this.app.config.sklad};
         this.spr_table = this.getRoot().getChildViews()[1].getChildViews()[0].getChildViews()[0].$scope.$$("__table");
         this.inactive_table = this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].$scope.$$("__table");
         this.active_table = this.getRoot().getChildViews()[1].getChildViews()[4].getChildViews()[0].$scope.$$("__table");

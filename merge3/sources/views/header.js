@@ -24,11 +24,18 @@ export default class HeaderView extends JetView{
                     width: 106,
                     on: {
                         onItemClick: () => {
-                            onExit(app);
+                            // по нажатию кнопки должны возвращаться  склад откуда пришли (при входе запоминаем местоположение)
+                            // onExit(app);
                             deleteCookie("merge3-app");
+                            //deleteCookie(app.config.sklad_cook); // наверное не удаляем?
                             th.app.config.user = '';
                             th.app.config.x_api = 'x_login';
-                            location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/merge3/";
+                            // console.log('tm', app.config.testmode)
+                            if (!app.config.testmode) {
+                                location.href = "https://sklad71.org/logout";
+                            } else {
+                                location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/merge3/";
+                            }
                         }
                     },
                 },

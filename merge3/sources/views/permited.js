@@ -201,9 +201,8 @@ export default class PView extends JetView{
         }
         var view = {
             view: "layout",
-            //width: document.documentElement.clientWidth*.3,
             gravity: 3,
-            css: {'border-top': "1px solid #dadee0 !important", "background": "orange"},
+            css: 'permited_header',
             rows: [
                 {cols: [
                     {view: "label", 
@@ -211,7 +210,8 @@ export default class PView extends JetView{
                         align: "center",
                         css: {'border-left': "1px solid #dadee0 !important", 'border-right': "1px solid #dadee0 !important",
                             },
-                        label: "<span class='custom_image', style='background-image:url(./library/img/options_permited.svg); width: 30px; height: 30px;'></span>",
+                        // label: "<span class='custom_image', style='background-image:url(./library/img/options_permited_white.svg); width: 30px; height: 30px;'></span>",
+                        label: "<span class='custom_image', style='background-image:url(./library/img/options_supplies_white.svg); width: 30px; height: 30px;'></span>",
                         on: {
                             onItemClick: () => {
                                 this.popvnd.show_w(this.getParentView());
@@ -219,12 +219,11 @@ export default class PView extends JetView{
                         }
                     },
                     {view: "label", 
-                        label: "<div style='text-align: center'>Неактивные</div>", 
+                        label: "<div style='text-align: center; color: white'>Неактивные</div>", 
                         css: {'border-left': "1px solid #dadee0 !important", 'border-right': "1px solid #dadee0 !important"},
                         on: {
                             onItemClick: () => {
                                 this.popvnd.show_w(this.getParentView());
-                                //console.log("click")
                             },
                         }
                     },

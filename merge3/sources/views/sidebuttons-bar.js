@@ -4,6 +4,7 @@ import {JetView} from "webix-jet";
 import PropView from "../views/prop_window";
 import InnView from "../views/inn_window";
 import crReportView from "../views/report_create";
+import {request, checkVal} from "../views/globals";
 
 
 export default class SideButtonsBar extends JetView{
@@ -16,6 +17,37 @@ export default class SideButtonsBar extends JetView{
             borderless: true, 
             width: 44,
             rows: [
+                {view:"button", //type: 'htmlbutton',
+                    hidden: !app.config.debug,
+                    tooltip: "Настройки", localId: "_test",
+                    height: 40, 
+                    type:"imageButton", image: './library/img/options_main.svg',
+                    width: 40,
+                    on: {
+                        onItemClick: (id, event) => {
+
+                            let url = app.config.r_url + "?login";
+                            let params = {'user': app.config.user, 'sklad': this.app.config.sklad};
+
+                            console.log('config', this.app.config);
+
+                            request(url, params).then( (data) => {
+                                data = checkVal(data, 'a');
+                                if (data.ft) {
+                                    webix.alert({
+                                        type:"alert-warning",
+                                        width: 450,
+                                        title:"ВНИМАНИЕ!",
+                                        text: "<span style='line-height: 24px'>Похоже, вы здесь впервые.</span><br><span> Свяжитесь с администратором для настройки организаций.</span>"}
+                                        )
+                                }
+                                console.log('data', data)
+                            });
+                            console.log('test');
+                            
+                        },
+                    }
+                },
                 {view:"button", //type: 'htmlbutton', 
                     tooltip: "Настройки", localId: "_options",
                     height: 40, 

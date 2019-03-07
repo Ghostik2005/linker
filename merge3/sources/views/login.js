@@ -72,59 +72,110 @@ export default class login extends JetView{
     }
         
     init() {
+        // запрещаем доступ через прямоую сслыку online365.pro
         //deleteCookie("merge3-app");
-        window.addEventListener('beforeunload', () => {onExit(this.app)});
-        this.testmode = this.app.config.testmode;
-        this.sklad_c = this.app.config.skladcookie;
+        let app = this.app;
+        window.addEventListener('beforeunload', () => {onExit(app)});
+        this.testmode = app.config.testmode;
+        this.sklad_c = app.config.skladcookie;
+
+        let sklad_c = getCookie(app.config.sklad_cook);
+
         if (this.testmode) {
-            window.addEventListener('beforeunload', () => {onExit(this.app)}, false);
+            window.addEventListener('beforeunload', () => {onExit(app)}, false);
             let u, x;
             try {
                 [u, x] = getCookie('merge3-app').split('::');
             } catch (e){
                 };
             if (u && x) {
-                this.app.config.user = u;
-                this.app.config.x_api = x;
+                app.config.user = u;
+                app.config.x_api = x;
                 this.show("/start/body");
             } else {
                 deleteCookie("merge3-app");
-                };
-        }  else {
-            let sklad_c = getCookie(this.app.config.sklad_cook);
-            deleteCookie(this.app.config.sklad_cook);
-            if (this.sklad_c && !sklad_c) {
-                setCookie(this.app.config.sklad_cook, this.sklad_c)
-                location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/merge3/";
-            } else if (sklad_c && sklad_c.length>1) {
-                window.addEventListener('beforeunload', () => {onExit(this.app)}, false);
+             };
+        } else {
+
+            if (sklad_c && sklad_c.length>1) {
+                deleteCookie("merge3-app");
+                window.addEventListener('beforeunload', () => {onExit(app)}, false);
                 //берем cookie склада, делаем запрос на сервер, и если все в порядке - переходим на /start/body
                 //webix.message({"text": "перешли", "expire": -1})
                 let user_name = sklad_c.substring(0, sklad_c.length-32);
                 user_name = decodeURI(user_name);
                 console.log('name', user_name);
-                if (this.validate_user({"user": user_name, "pass": "66291526", "from_sklad": true})) {
-                    //webix.message({'text': 'OK', "type" : "success"});
+                if (this.validate_user({"user": user_name, "pass": "", "sklad": true})) {
+                    // webix.message({'text': 'OK', "type" : "success"});
                     this.show("/start/body");
-
                 }
-            }
+            } 
         }
+        // else {
+        //     if (this.testmode) {
+        //         window.addEventListener('beforeunload', () => {onExit(app)}, false);
+        //         let u, x;
+        //         try {
+        //             [u, x] = getCookie('merge3-app').split('::');
+        //         } catch (e){
+        //             };
+        //         if (u && x) {
+        //             app.config.user = u;
+        //             app.config.x_api = x;
+        //             this.show("/start/body");
+        //         } else {
+        //             deleteCookie("merge3-app");
+        //          };
+
+        //     }  // else {
+                // let sklad_c = getCookie(app.config.sklad_cook);
+                // deleteCookie(app.config.sklad_cook);
+                // if (this.sklad_c && !sklad_c) {
+                    // setCookie(app.config.sklad_cook, this.sklad_c)
+                    // location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/merge3/";
+                //} else if (sklad_c && sklad_c.length>1) {
+                    //window.addEventListener('beforeunload', () => {onExit(app)}, false);
+                    //берем cookie склада, делаем запрос на сервер, и если все в порядке - переходим на /start/body
+                    //webix.message({"text": "перешли", "expire": -1})
+                    //let user_name = sklad_c.substring(0, sklad_c.length-32);
+                    //user_name = decodeURI(user_name);
+                    //console.log('name', user_name);
+                    // if (this.validate_user({"user": user_name, "pass": "66291526", "sklad": true})) {
+                        //webix.message({'text': 'OK', "type" : "success"});
+                        // this.show("/start/body");
+                    // }
+                // }
+            // }
+        // }
     }
 
     validate_user(item) {
+
         let app = this.app;
         item.pass = md5(item.pass);
+        item.sklad = app.config.sklad;
         var ret = false;
         let url = app.config.r_url + "?login"
         let res = request(url, item, !0).response;
         res = checkVal(res, 's');
         if (res) {
+            if (res.ft) {
+                webix.alert({
+                    type:"alert-warning",
+                    width: 450,
+                    title:"ВНИМАНИЕ!",
+                    text: "<span style='line-height: 24px'>Похоже, Вы впервые перешли из склада.</span><br><span> Свяжитесь с администратором для настройки организаций.</span>"
+                })
+            };
+            // let a = getCookie('manuscriptsid_test');
+            // console.log('ss', a);
             ret = true;
             app.config.user = res.user;
-            app.config.x_api = res.key;
             var opt = {'path': '/', 'expires': 0};
-            setCookie('merge3-app', [app.config.user, app.config.x_api].join('::'), opt)
+            if (app.config.testmode) {
+                app.config.x_api = res.key;
+                setCookie('merge3-app', [app.config.user, app.config.x_api].join('::'), opt)
+                }
             };
         return ret;
         }

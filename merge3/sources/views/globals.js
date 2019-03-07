@@ -187,16 +187,20 @@ export function init_first(app) {
 }
 
 export function after_call(text, data, XmlHttpRequest) {
-    if (XmlHttpRequest.status == 403) {
+    var status = XmlHttpRequest.status;
+    if (status == 403) {
         deleteCookie("merge3-app");
         location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/merge3/";
-        };
+    };
+}
 
+export function after_call_s(text, data, XmlHttpRequest) {
+    // console.log('headers', XmlHttpRequest.getAllResponseHeaders());
     }
 
 export function request (url, params, mode) {
-    var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
-                        : webix.ajax().timeout(90000).headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
+    var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {success: after_call_s, error: after_call})
+                        : webix.ajax().timeout(90000).headers({'Content-type': 'application/json'}).post(url, params, {success: after_call_s, error: after_call})
     return req
     }
 
@@ -272,14 +276,16 @@ export function insert_inns(active_label, insert) {
 export var onExit = function (app) {
     let x;
     let user = getCookie('merge3-app');
-    //deleteCookie(app.config.sklad_cook);
+    // deleteCookie(app.config.sklad_cook);
     //включить когда все будет готово
     // deleteCookie("merge3-app");
     if (user) {
         [user, x] = user.split('::');
         let url = app.config.r_url + "?setExit";
         let params = {"user":user};
-        request(url, params);
+        if (app.debug) {
+            request(url, params);
+        }
     }
 
 }
