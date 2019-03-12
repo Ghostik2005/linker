@@ -104,11 +104,11 @@ export default class UsersView extends JetView{
                     //label: "<span class='webix_icon fa-user-plus'></span><span style='line-height: 20px;'> Добавить</span>", width: 140,
                     localId: "_add",
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 132,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить</span>",
+                    extLabel: "<span class='button_label'>Добавить</span>",
                     oldLabel: "<span class='webix_icon fa-user-plus'></span>",
                     click: () => {
                         this.popnewuser.show('Добавление пользователя');
@@ -116,8 +116,8 @@ export default class UsersView extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', localId: "_del", hidden: true,
                     //label: "<span class='webix_icon fa-user-times'></span><span style='line-height: 20px;'> Удалить</span>", width: 140,
-                    resizable: true, sWidth: 200, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить</span>",
+                    resizable: true, sWidth: 132, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span class='button_label'>Удалить</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-user-times'></span>",
                     click: () => {
                         webix.message({
@@ -130,11 +130,11 @@ export default class UsersView extends JetView{
                     localId: "_aroles",
                     //label: "<span class='webix_icon fa-user-secret'></span><span style='line-height: 20px;'> Роли</span>", width: 140,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 132,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить</span>",
+                    extLabel: "<span class='button_label'>Добавить</span>",
                     oldLabel: "<span class='webix_icon fa-user-secret'></span>",
                     click: () => {
                         this.poproles.show("Админка ролей")

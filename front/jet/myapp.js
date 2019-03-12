@@ -11,6 +11,7 @@ webix.ready( () => {
     //console.log('PROD', PRODUCTION);
 
     var app = new JetApp({
+        production:     PRODUCTION,
         id:             "mainApp",
         name:           "linker",
         // version:        "19.031.1635",

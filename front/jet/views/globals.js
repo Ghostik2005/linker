@@ -555,17 +555,10 @@ export function get_data_test(inp_params) {
             });
         var selected = webix.storage.session.get(view.config.name+"sel") || {};
         let old_p = selected.s_pars;
-        // let n_p = Object.assign({}, params);
-        let n_p = JSON.parse(JSON.stringify(params));
-        delete(n_p.start);
+
         let reset = false;
-        if (str_join(n_p) === str_join(old_p)) {
-            // reset = false;
-        } else {
-            selected = {"s_pars": n_p};
-            webix.storage.session.put(view.config.name+"sel", selected);
-            reset = true;
-        }
+
+
         if (view.bState && view.bState === 1) {
             let localStorage = webix.storage.session.get(view.config.name+"sel");
             params['id_sprs'] = [];
@@ -573,12 +566,36 @@ export function get_data_test(inp_params) {
                 if (localStorage[item]) params['id_sprs'].push(item);
             });
         };
+
+        let n_p = JSON.parse(JSON.stringify(params));
+        delete(n_p.start);
+        // console.log('new', n_p);
+        // console.log('old', old_p);
+        if (str_join(n_p) === str_join(old_p)) {
+            if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
+            } else {
+                reset = true;
+            };
+            // reset = false;
+        } else {
+            if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
+            } else {
+                selected = {"s_pars": n_p};
+                webix.storage.session.put(view.config.name+"sel", selected);
+            }
+            reset = true;
+        };
+        // console.log('reset pager', reset);
+
+
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
                 if (data.params) {
                     let d_params = JSON.parse(JSON.stringify(data['params']))
+
                     delete d_params.id_sprs;
+
                     let c_params = str_join(gen_params(inp_params));
                     let r_params = str_join(d_params);
                     if (r_params !== c_params) { 
@@ -728,7 +745,7 @@ export function getDtParams(ui) {
         c_filter = {
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
-            'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
+            // 'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
             };
     } else if (ui.config.name === "__dt_a") {
@@ -1071,6 +1088,7 @@ export function init_first(app) {
                     let pager = master.$scope.getRoot().getChildViews()[2].$scope.$$("__page");
                     let old_v = pager.getValue();
                     pager.setValue((+old_v ===0) ? '1' : "0");
+                    // console.log('refreshing_page')
                     pager.refresh()
 
                     
@@ -1365,9 +1383,19 @@ export function spinIconDisable(view) {
     }
 
 export function setButtons(app, buttons) {
-    buttons.forEach( (item, i, buttons) => {
+    buttons.forEach( (item) => {
+        // console.log('item_but', item.getNode());
+        let butt;
+        if (app.config.expert) {
+            butt = item.config.oldLabel
+        } else {
+            butt = "<span style='float: left; width:" + item.config.eWidth +"px'>" + item.config.oldLabel + "</span><span stile='width:" + (item.config.sWidth-item.config.eWidth) +"px'>" + item.config.extLabel + "</span>";
+            // sign = "<span stile=>'width:" + (item.config.sWidth-item.config.eWidth) +"px'>" + item.config.extLabel + "</div>";
+            // sign = "<div>" + item.config.extLabel + "</div>"
+            // butt = butt + sign
+        }
         item.define({width: (app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                     label: (app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+                     label: butt});
         item.refresh();
         item.resize();
         })
@@ -1385,6 +1413,13 @@ export function refTemplate(obj, common, value) {
     let colSize = (obj.delete===false) ? "_1" : "_2";
     let col = "<div class='right_col"+ colSize + "'>" + value + "</div>";
     return "<div class = 'dt_hover'>" + common.itemIcon((obj.delete===false)?false:true) + col + "</div>";
+}
+
+export function recalcRowsRet(table) {
+    let totalHeight = table.$view.children[1].clientHeight;
+    let rows = Math.floor(totalHeight/table.config.rowHeight);
+    if (rows === table.config.posPpage) return false;
+    return rows
 }
 
 export function recalcRows(table) {
@@ -1541,4 +1576,17 @@ export function toolTipAssign(view, prop_button) {
         prop_button.hide();
     }
     prop_button.refresh();
+}
+
+export function getHeaderLength(header) {
+    var testDiv = document.createElement("div");
+    testDiv.innerHTML = header;
+    // var el = document.getElementsByClassName('ms-logo-text')[0]
+    document.body.insertBefore(testDiv, document.body.firstChild);
+    // el.appendChild(testDiv);
+    // console.dir(el);
+    let h_length = testDiv.childNodes[1].offsetWidth;
+    h_length += 75;
+    testDiv.remove()
+    return h_length
 }

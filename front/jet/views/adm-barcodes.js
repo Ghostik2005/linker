@@ -46,7 +46,7 @@ export default class BarcodesView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                    extLabel: "<span class='button_label'>История</span>",
                     oldLabel: "<span class='webix_icon fa-history'></span>",
                     click: () => {
                         let v = this.getRoot().getChildViews()[1].getChildViews()[0];
@@ -103,12 +103,12 @@ export default class BarcodesView extends JetView{
                 {view: "button", type: 'htmlbutton', width: 35,
                     localId: "_rep",
                     resizable: true,
-                    sWidth: 160,
+                    sWidth: 180,
                     eWidth: 40,
                     label: "",
                     width: 40,
                     tooltip: "Отчет по дублирующимся штрихкодам",
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отчет по дублям</span>",
+                    extLabel: "<span class='button_label'>Отчет по дублям</span>",
                     oldLabel: "<span class='webix_icon fa-file'></span>",
                     on: {
                         onItemClick: () => {

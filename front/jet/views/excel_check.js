@@ -25,7 +25,7 @@ export default class CheckView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Убрать/показать</span>",
+                    extLabel: "<span class='button_label'>Убрать/показать</span>",
                     oldLabel: "<span class='webix_icon fa-eye'></span>",
                     filter: false,
                     click: function() {
@@ -48,7 +48,7 @@ export default class CheckView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Загрузить файл</span>",
+                extLabel: "<span class='button_label'>Загрузить файл</span>",
                 oldLabel: "<span class='webix_icon fa-upload'></span>",
                 click: () => {
                     this.upload.show_window(this);

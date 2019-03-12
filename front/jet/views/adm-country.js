@@ -133,7 +133,7 @@ export default class CountryView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить страну</span>",
+                    extLabel: "<span class='button_label'>Добавить страну</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Strana', 'callback': addStrana, 'mode': 'new', 'source': this.$$("__table")};
@@ -143,7 +143,7 @@ export default class CountryView extends JetView{
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить страну",
                     //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить страну</span>",
+                    extLabel: "<span class='button_label'>Удалить страну</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {

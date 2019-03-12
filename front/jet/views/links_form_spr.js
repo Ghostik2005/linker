@@ -69,7 +69,7 @@ export default class LinksViewSpr extends JetView{
                     },
                 {id: "id_tovar", width: 100, hidden: true, sort: 'server',
                     header: [{text: "Код"},
-                        {content: "cFilt"},
+                        // {content: "cFilt"},
                         ]
                     },
                 {id: "dt", width: 200,

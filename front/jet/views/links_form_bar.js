@@ -58,7 +58,7 @@ export default class LinksBarView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                extLabel: "<span class='button_label'>История</span>",
                 oldLabel: "<span class='webix_icon fa-history'></span>",
                 click: () => {
                     let hist = webix.storage.session.get(getActDt().config.name);
@@ -102,7 +102,7 @@ export default class LinksBarView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                extLabel: "<span class='button_label', style='line-height: 34px'>Сбросить фильтры</span>",
                 oldLabel: "",
                 click: () => {
                     this.$$("_br").hide();
@@ -131,7 +131,7 @@ export default class LinksBarView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Разорвать</span>",
+                extLabel: "<span class='button_label'>Разорвать</span>",
                 oldLabel: "<span style='color: red', class='webix_icon fa-unlink'></span>",
                 click: () => {
                     getActDt().callEvent("onItemDblClick");

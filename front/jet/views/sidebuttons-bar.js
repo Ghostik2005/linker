@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, setButtons, checkVal} from "../views/globals";
+import {request, setButtons, checkVal, getHeaderLength} from "../views/globals";
 import {checkSSE, spinIconEnable, spinIconDisable} from "../views/globals";
 import SkippedBarView from "../views/skipped_bar";
 import AllUnlinkedBarView from  "../views/unlinkedall_bar";
@@ -11,6 +11,8 @@ import NewReportView from "../views/new_report";
 import PropView from "../views/prop_window";
 import BrakBarView from "../views/brak_bar";
 import RefView from "../views/adm-references";
+import RefPopView from "../views/references_pop";
+import {screens} from "../models/variables";
 
 
 export default class SideButtonsBar extends JetView{
@@ -20,19 +22,18 @@ export default class SideButtonsBar extends JetView{
 
         function add_bar(parent, view) {
             var tab_view = parent.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-            //console.log('s', view.name);
-            let header = (view === SkippedBarView) ? "<span class='webix_icon fa-archive'></span><span style='line-height: 20px;'>Пропущенные</span>" :
-                         (view === AllUnlinkedBarView) ? "<span class='webix_icon fa-unlink'></span><span style='line-height: 20px;'>Несвязанные</span>" :
-                         (view === LinksBarView) ? "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 20px;'>Связки</span>" :
-                         //(view === AdmBarView) ? "<span class='webix_icon fa-blind'></span><span style='line-height: 20px;'>Админка</span>" :
-                         (view === AdmBarView) ? "<span class='webix_icon fa-magic'></span><span style='line-height: 20px;'>Админка</span>" :
-                         (view === BrakBarView) ? "<span class='webix_icon fa-ban'></span><span style='line-height: 20px;'>Забраковка</span>" :
-                         (view === RefView) ? "<span class='webix_icon fa-stream'></span><span style='line-height: 20px;'>Справочники</span>" :
-                         ""
+            let header = (view === SkippedBarView) ? screens.SkippedBarView :
+                         (view === AllUnlinkedBarView) ? screens.AllUnlinkedBarView :
+                         (view === LinksBarView) ? screens.LinksBarView :
+                         (view === AdmBarView) ? screens.AdmBarView :
+                         (view === BrakBarView) ? screens.BrakBarView :
+                         (view === RefView) ? screens.RefView :
+                         undefined
+            if (!header) return;
             let uid = webix.uid();
             var tabConfig = {
                 id: uid,
-                value: header, width: 172, close: true
+                value: header, width: getHeaderLength(header), close: true
                 };
             let formConfig = {
                 $scope: parent.$scope,
@@ -78,7 +79,7 @@ export default class SideButtonsBar extends JetView{
             }
 
         var side_bar = {view: 'toolbar', localId: "sideMenu", css: 'side_tool_bar', borderless: true,
-            width: (app.config.expert) ? 44 : 140,
+            width: (app.config.expert) ? 44 : 152,
             rows: [
                 {view:"button", type: 'htmlbutton', tooltip: "Широкая/узкая панель", height: 30, align: 'left', localId: "_rbut",
                     label: "<span class='side_icon webix_icon fa-bars'></span>", width: 40,
@@ -86,7 +87,7 @@ export default class SideButtonsBar extends JetView{
                         {
                         onItemClick: function() {
                             app.config.expert = !app.config.expert;
-                            this.$scope.$$("sideMenu").define({width: (app.config.expert) ? 44 : 140});
+                            this.$scope.$$("sideMenu").define({width: (app.config.expert) ? 44 : 152});
                             this.$scope.$$("sideMenu").resize();
                             this.$scope.ready();
                             let url = app.config.r_url + "?setExpert";
@@ -97,11 +98,11 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "", width: 40,
                     oldLabel: "<span class='side_icon webix_icon fa-cogs'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Настройки</span>",
+                    extLabel: "<span class='side_icon button_label'>Настройки</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -124,37 +125,80 @@ export default class SideButtonsBar extends JetView{
                             },
                         }
                     },
-                {view:"button", type: 'htmlbutton', tooltip: "Пишем выловленные баги сюда", height: 40, b_id: undefined, longPress: false,
+                    {view:"button", type: 'htmlbutton', tooltip: "Справочники", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 144,
                     eWidth: 40,
-                    label: "",
-                    width: 40,
-                    hidden: !false,
-                    oldLabel: "<span class='side_icon webix_icon fa-bug'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Жуки</span>",
+                    label: "", width: 40,
+                    hidden: !app.config.roles[app.config.role].skipped,
+                    oldLabel: "<span class='side_icon webix_icon fa-list-alt'></span>",
+                    extLabel: "<span class='side_icon button_label'>Справочники</span>",
                     on: {
                         onAfterRender: function() {
                             },
                         onItemClick: function () {
-                            if (this.$scope.admMenu.isVisible()) {
-                                this.$scope.admMenu.hide();
-                            } else {
-                                this.$scope.admMenu.show(this.getNode());
-                                };
-                            webix.message("Пока недоступно");
-                            return
+                            (this.$scope.popref.isVisible()) ? this.$scope.popref.hide() : this.$scope.popref.show(this) 
+                            }
+                        }
+
+                    // on: {
+                    //     onAfterRender: function() {
+                    //         let node = this.getNode();
+                    //         node.onmousedown =  () => {
+                    //             this.interval = setInterval( () => {
+                    //                 this.config.longPress = true;
+                    //                 add_bar(this, RefView);
+                    //                 clearInterval(this.interval);
+                    //             }, app.config.popDelay);
+                    //             node.onmouseup = () => {
+                    //                 clearInterval(this.interval);
+                    //                 }
+                    //             }
+                    //         },
+                    //     onItemClick: function () {
+                    //         var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+                    //         let ui = $$(this.config.b_id);
+                    //         if (this.config.longPress) {
+                    //         } else {
+                    //             if (ui) {
+                    //                 webix.html.addCss(this.$view, "bounceIn animated");
+                    //                 setTimeout(() => {
+                    //                     webix.html.removeCss(this.$view, "bounceIn animated");
+                    //                   },900)
+                    //                 tab_view.getChildViews()[1].setValue(this.config.b_id);
+                    //             } else {
+                    //                 add_bar(this, RefView);
+                    //                 };
+                    //             };
+                    //         this.config.longPress = false;
+                    //         }
+                    //     }
+                    },
+                {view:"button", type: 'htmlbutton', tooltip: "Тестовая кнопка, только для разработчиков", height: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 140,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    hidden: app.config.production,
+                    oldLabel: "<span class='side_icon webix_icon fa-bug'></span>",
+                    extLabel: "<span class='side_icon button_label'>Тесты</span>",
+                    on: {
+                        onAfterRender: function() {
+                            },
+                        onItemClick: function () {
+                            (this.$scope.popref.isVisible()) ? this.$scope.popref.hide() : this.$scope.popref.show(this) 
                             }
                         }
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Админка", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].adm,
                     oldLabel: "<span class='side_icon webix_icon fa-magic'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Админка</span>",
+                    extLabel: "<span class='side_icon button_label'>Админка</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -182,47 +226,6 @@ export default class SideButtonsBar extends JetView{
                                     tab_view.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, AdmBarView);
-                                    };
-                                };
-                            this.config.longPress = false;
-                            }
-                        }
-                    },
-                {view:"button", type: 'htmlbutton', tooltip: "Справочники", height: 40, b_id: undefined, longPress: false,
-                    resizable: true,
-                    sWidth: 136,
-                    eWidth: 40,
-                    label: "", width: 40,
-                    hidden: !app.config.roles[app.config.role].skipped,
-                    oldLabel: "<span class='side_icon webix_icon fa-list-alt'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Справочники</span>",
-                    on: {
-                        onAfterRender: function() {
-                            let node = this.getNode();
-                            node.onmousedown =  () => {
-                                this.interval = setInterval( () => {
-                                    this.config.longPress = true;
-                                    add_bar(this, RefView);
-                                    clearInterval(this.interval);
-                                }, app.config.popDelay);
-                                node.onmouseup = () => {
-                                    clearInterval(this.interval);
-                                    }
-                                }
-                            },
-                        onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                            let ui = $$(this.config.b_id);
-                            if (this.config.longPress) {
-                            } else {
-                                if (ui) {
-                                    webix.html.addCss(this.$view, "bounceIn animated");
-                                    setTimeout(() => {
-                                        webix.html.removeCss(this.$view, "bounceIn animated");
-                                      },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                } else {
-                                    add_bar(this, RefView);
                                     };
                                 };
                             this.config.longPress = false;
@@ -231,12 +234,12 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !(app.config.roles[app.config.role].skipped),
                     oldLabel: "<span class='side_icon webix_icon fa-ban'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Забраковка</span>",
+                    extLabel: "<span class='side_icon button_label'>Забраковка</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -272,13 +275,13 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 148,
                     eWidth: 40,
                     label: "", width: 40,
                     //oldLabel: "<span class='side_icon webix_icon fa-archive'></span>",
                     oldLabel: "<span class='side_icon webix_icon fa-archive'></span>",
                     hidden: !(app.config.roles[app.config.role].skipped),
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 2px'>Пропущенные</span>",
+                    extLabel: "<span class='side_icon button_label'>Пропущенные</span>",
                     on: {
                         onAfterRender: function() {
                             let node = this.getNode();
@@ -314,10 +317,10 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 144,
                     eWidth: 40,
                     label: "", width: 40,
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Несвязанные</span>",
+                    extLabel: "<span class='side_icon button_label'>Несвязанные</span>",
                     oldLabel: "<span class='side_icon webix_icon fa-unlink'></span>",
                     on: {
                         onAfterRender: function() {
@@ -354,10 +357,10 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "", width: 40,
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Связки</span>",
+                    extLabel: "<span class='side_icon button_label'>Связки</span>",
                     oldLabel: "<span class='side_icon webix_icon fa-stumbleupon'></span>",
                     on: {
                         onAfterRender: function() {
@@ -395,12 +398,10 @@ export default class SideButtonsBar extends JetView{
                 {view:"button", type:"htmlbutton", width: 40, hidden: !true, tooltip: "Создание отчета по текущей таблице",
                     id: "_rep_button",
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Отчеты</span>",
-                    //oldLabel: "<span class='webix_icon fa-save', style='color: #3498db'></span>",
-                    //oldLabel: "<span class='side_icon webix_icon fa-save'></span>",
+                    extLabel: "<span class='side_icon button_label'>Отчеты</span>",
                     oldLabel: "<span class='side_icon webix_icon fa-file'></span>",
                     height: 40,
                     on: {
@@ -414,12 +415,12 @@ export default class SideButtonsBar extends JetView{
                 {view:"button", type: 'htmlbutton', height: 40, b_id: undefined, longPress: false, localId: '_spr',
                     id: "_spr_button",
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].skipped,
                     oldLabel: "<span class='side_icon webix_icon fa-database', style='color: green !important'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr.db3</span>",
+                    extLabel: "<span class='side_icon button_label'>spr.db3</span>",
                     lastModified: undefined,
                     lastUser: undefined,
                     tooltip: "Выгрузка spr.db3", 
@@ -455,12 +456,12 @@ export default class SideButtonsBar extends JetView{
                     tooltip: "Выгрузка spr-roz.db3",
                     tooltipTemplate: "Выгрузка spr-roz.db3",
                     resizable: true,
-                    sWidth: 136,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].skipped,
                     oldLabel: "<span class='side_icon webix_icon fa-database', style='color: blue !important'></span>",
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>spr-roz.db3</span>",
+                    extLabel: "<span class='side_icon button_label'>spr-roz.db3</span>",
                     on: {
                         onItemClick: function () {
                             if (!checkSSE(this)) { //нет sse соединения, ставим задержку 10 минут
@@ -492,13 +493,14 @@ export default class SideButtonsBar extends JetView{
         }
 
     ready() {
-        let r_but = this.app.config.getButt(this.$$("sideMenu").getTopParentView());
+        let r_but = this.app.config.getButt(this.getRoot().getTopParentView());
         setButtons(this.app, r_but);
         }
 
     init() {
         this.popreport = this.ui(NewReportView);
         this.popprop = this.ui(PropView);
+        this.popref = this.ui(RefPopView);
 
         this.admMenu = this.ui({
             view:"popup",

@@ -146,11 +146,11 @@ export default class LinkSupplView extends JetView{
                     tooltip: "Добавить исключение",
                     localId: "_add",
                     resizable: true,
-                    sWidth: 130,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>исключение</span>",
+                    extLabel: "<span class='button_label'>исключение</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.newcode.show("Добавление нового поставщика", this.$$("_rTable"));
@@ -161,11 +161,11 @@ export default class LinkSupplView extends JetView{
                     tooltip: "Удалить исключение",
                     localId: "_del",
                     resizable: true,
-                    sWidth: 130,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>исключение</span>",
+                    extLabel: "<span class='button_label'>исключение</span>",
                     oldLabel: "<span class='webix_icon fa-minus', style='color: red'></span>",
                     click: () => {
                         webix.message({"text": "Удаление поставщика", "type": "debug", width: "400px", delay: "5"});
@@ -316,7 +316,7 @@ export default class LinkSupplView extends JetView{
                     label: "",
                     width: 40,
                     tooltip: "Обновить таблицу",
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                    extLabel: "<span class='button_label'>Обновить</span>",
                     oldLabel: "<span class='webix_icon fa-refresh'></span>",
                     click: () => {
                         this.ready();
@@ -328,7 +328,7 @@ export default class LinkSupplView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Применить</span>",
+                    extLabel: "<span class='button_label'>Применить</span>",
                     oldLabel: "<span class='webix_icon fa-check'></span>",
                     click: () => {
                         let data = {}
@@ -350,7 +350,7 @@ export default class LinkSupplView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отменить</span>",
+                    extLabel: "<span class='button_label'>Отменить</span>",
                     oldLabel: "<span class='webix_icon fa-times'></span>",
                     click: () => {
                         this.ready();
@@ -387,7 +387,7 @@ export default class LinkSupplView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>код</span>",
+                    extLabel: "<span class='button_label'>код</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.newcode.show("Добавление нового кода", this.$$("__table"));
@@ -400,7 +400,7 @@ export default class LinkSupplView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>код</span>",
+                    extLabel: "<span class='button_label'>код</span>",
                     oldLabel: "<span class='webix_icon fa-minus'></span>",
                     click: () => {
                         let id = this.$$("__table").getSelectedId();
@@ -422,7 +422,7 @@ export default class LinkSupplView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Применить</span>",
+                    extLabel: "<span class='button_label'>Применить</span>",
                     oldLabel: "<span class='webix_icon fa-check'></span>",
                     click: () => {
                         let data = [];
@@ -458,7 +458,7 @@ export default class LinkSupplView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отменить</span>",
+                    extLabel: "<span class='button_label'>Отменить</span>",
                     oldLabel: "<span class='webix_icon fa-times'></span>",
                     click: () => {
                         let user = app.config.user;

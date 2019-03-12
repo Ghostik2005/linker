@@ -4310,9 +4310,10 @@ order by r.{1} {2}
     END as ch_date
 FROM LNK r 
 LEFT JOIN VND v on (r.ID_VND = v.ID_VND)
-WHERE r.ID_SPR = {self._wildcardIns()}"""
+WHERE r.ID_SPR = {row[0]}"""
                 sql += """ {0} {1}""".format(stri_1, orderby)
                 opt = (row[0],)
+                opt = None
                 res = self.db.request({"sql": sql, "options": opt})
                 for rrr in res:
                     rr = {

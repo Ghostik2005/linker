@@ -129,11 +129,11 @@ export default class NdsView extends JetView{
                     //label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     localId: "_add",
                     resizable: true,
-                    sWidth: 180,
+                    sWidth: 160,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить НДС</span>",
+                    extLabel: "<span class='button_label'>Добавить НДС</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Nds', 'callback': addNds, 'mode': 'new', 'source': this.$$("__table")};
@@ -143,7 +143,7 @@ export default class NdsView extends JetView{
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить НДС",
                     //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить НДС</span>",
+                    extLabel: "<span class='button_label'>Удалить НДС</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {

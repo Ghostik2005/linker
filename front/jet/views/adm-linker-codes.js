@@ -186,7 +186,7 @@ export default class LinkCodesView extends JetView{
                     label: "",
                     width: 40,
                     tooltip: "Обновить таблицу",
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                    extLabel: "<span class='button_label'>Обновить</span>",
                     oldLabel: "<span class='webix_icon fa-refresh'></span>",
                     click: () => {
                         this.ready();
@@ -198,7 +198,7 @@ export default class LinkCodesView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Применить</span>",
+                    extLabel: "<span class='button_label'>Применить</span>",
                     oldLabel: "<span class='webix_icon fa-check'></span>",
                     click: () => {
                         let data = {}
@@ -220,7 +220,7 @@ export default class LinkCodesView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отменить</span>",
+                    extLabel: "<span class='button_label'>Отменить</span>",
                     oldLabel: "<span class='webix_icon fa-times'></span>",
                     click: () => {
                         this.ready();

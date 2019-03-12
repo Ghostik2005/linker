@@ -71,6 +71,14 @@
     color: #e77816 !important;
     }
 
+.button_label {
+    line-height: 20px; 
+    padding-left: 5px;
+    margin-left: -5px;
+    float: left;
+
+}
+
 .custom_tool_bar {
     margin-left: -1px !important;
     }
@@ -511,4 +519,16 @@ div.webix_item_tab {
 .cell-highlighted {
     /* opacity: 0.5; */
     background-color: #d4efdf;
+}
+
+.pop-up-menu {
+    background: #f4f5f9 /*!important*/;
+    opacity: 0.9;
+    border: 1px solid #0e86fe;
+    border-radius: 10px;
+}
+
+.multiview-header {
+    line-height: 20px;
+    padding-left: 3px;
 }

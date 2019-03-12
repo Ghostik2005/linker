@@ -136,7 +136,7 @@ export default class SeasonsView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить сезон</span>",
+                    extLabel: "<span class='button_label'>Добавить сезон</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Sez', 'callback': addSez, 'mode': 'new', 'source': this.$$("__table")};
@@ -146,7 +146,7 @@ export default class SeasonsView extends JetView{
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить сезон",
                     //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить сезон</span>",
+                    extLabel: "<span class='button_label'>Удалить сезон</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {

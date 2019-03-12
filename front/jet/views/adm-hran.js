@@ -134,7 +134,7 @@ export default class HranView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить условия</span>",
+                    extLabel: "<span class='button_label'>Добавить условия</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Hran', 'callback': addHran, 'mode': 'new', 'source': this.$$("__table")};
@@ -144,7 +144,7 @@ export default class HranView extends JetView{
                 {view:"button", type: 'htmlbutton', localId: "_del", hidden: true, tooltip: "Удалить условия хранения",
                     //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить условия</span>",
+                    extLabel: "<span class='button_label'>Удалить условия</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {

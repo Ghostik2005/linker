@@ -189,7 +189,7 @@ export default class SkippedBarView extends JetView{
                         eWidth: 40,
                         label: "",
                         width: 40,
-                        extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                        extLabel: "<span class='button_label'>Обновить</span>",
                         oldLabel: "<span class='webix_icon fa-refresh'></span>",
                         click: () => {
                             this.$$("__table").callEvent("onBeforeSort");
@@ -203,7 +203,7 @@ export default class SkippedBarView extends JetView{
                         eWidth: 40,
                         label: "",
                         width: 40,
-                        extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                        extLabel: "<span class='button_label', style='line-height: 28px'>Сбросить фильтры</span>",
                         oldLabel: "",
                         click: () => {
                             var cv = this.$$("__table");

@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import History from "../views/history";
-import {get_spr, recalcRows, fillFilterOptions, addScrollTooltip, getPNumber} from "../views/globals";
+import {get_spr, recalcRowsRet, fillFilterOptions, addScrollTooltip, getPNumber} from "../views/globals";
 import {DelEdIcons, checkKey, setButtons, dt_formating_sec, dt_formating, setApplyButton} from "../views/globals";
 import {refTemplate, toolTipAssign} from "../views/globals";
 import {compareTrue, save_storage, del_storage} from "../views/globals";
@@ -274,15 +274,20 @@ export default class SprView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope.$$("_sb").callEvent("onKeyPress", [13,])    
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.$$("_sb").callEvent("onKeyPress", [13,])    
+                        }, 150)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     let localStorage =  webix.storage.session.get(this.config.name+"sel");
                     //delete(localStorage.s_pars);
+                    // console.log('ls', localStorage);
                     localStorage = Object.keys(localStorage);
                     this.$scope.$$("_del").hide();
                     if (localStorage.length > 1) {
@@ -490,7 +495,7 @@ export default class SprView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                    extLabel: "<span class='button_label'>История</span>",
                     oldLabel: "<span class='webix_icon fa-history'></span>",
                     click: () => {
                         let hist = webix.storage.session.get(this.$$("__table").config.name);
@@ -506,7 +511,7 @@ export default class SprView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                    extLabel: "<span class='button_label', style='line-height: 28px'>Сбросить фильтры</span>",
                     oldLabel: "",
                     on: {
                         onItemClick: () => {
@@ -534,7 +539,7 @@ export default class SprView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить эталон</span>",
+                    extLabel: "<span class='button_label'>Добавить эталон</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.popnew.show("Новый эталон", this.$$("_sb"));
@@ -543,7 +548,7 @@ export default class SprView extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить эталон",
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить эталон</span>",
+                    extLabel: "<span class='button_label'>Удалить эталон</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {
@@ -554,7 +559,7 @@ export default class SprView extends JetView{
                 },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_prop", tooltip: "Назначить свойства эталону",
                     resizable: true, sWidth: 200, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Назначить свойства</span>",
+                    extLabel: "<span class='button_label'>Назначить свойства</span>",
                     oldLabel: "<span class='webix_icon fa-copy'></span>",
                     on: {
                         onItemClick: function() {
@@ -655,19 +660,19 @@ export default class SprView extends JetView{
                ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
             ) {
                 ev.target.classList.add('cell-highlighted');
-                clearInterval(this.timerId);
+                // clearInterval(this.timerId);
                 let row = ev.target.getAttribute('aria-rowindex');
                 let item_id = this.$$("__table").data.order[row-1];
                 let item = this.$$("__table").getItem(item_id);
-                this.timerId = setInterval(() => {
-                    clearInterval(this.timerId);
+                // this.timerId = setInterval(() => {
+                //     clearInterval(this.timerId);
                     if (this.checked_id !== item.id) {
                         this.checked_id = item.id;
                         item.checkbox = (!item.checkbox) ? 1 : 0;
                         this.$$("__table").updateItem(item.id, item); 
                         this.$$("__table").callEvent('onCheck', [item.id, undefined, item.checkbox]);
                     };
-                }, 100);
+                // }, 100);
             }
         };
 

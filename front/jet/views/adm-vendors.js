@@ -146,11 +146,11 @@ export default class VendorsView extends JetView{
                     //label: "<span class='webix_icon fa-plus'></span>", width: 40,
                     localId: "_add",
                     resizable: true,
-                    sWidth: 200,
+                    sWidth: 240,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить производителя</span>",
+                    extLabel: "<span class='button_label'>Добавить производителя</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Vendor', 'callback': addVendor, 'mode': 'new', 'source': this.$$("__table")};
@@ -159,8 +159,8 @@ export default class VendorsView extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить производителя",
                     //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
-                    resizable: true, sWidth: 200, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить производителя</span>",
+                    resizable: true, sWidth: 240, eWidth: 40, label: "", width: 40,
+                    extLabel: "<span class='button_label'>Удалить производителя</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {

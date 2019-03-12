@@ -127,6 +127,25 @@ export default class BrakSideInfoView extends JetView{
             borderless: true,
             cols: [
                 {},
+                {view: 'button', value: "Отменить", width: 120, localId: "_cancel", hidden: true,
+                    on: {
+                        onItemClick: function() {
+                            if (this.$scope.parent.config.$new) {
+                                this.$scope.reopen()
+                            } else {
+                                if (this.$scope.$$("_dHead").config.oldData) {
+                                    this.$scope.load_data(this.$scope.$$("_dHead").config.oldData, this.$scope.parent, this.$scope.topParent);
+                                    this.$scope.hide_b()
+                                    let value = this.$scope.$$("_dHead").getValues().n_doc;
+                                    this.$scope.parent.getSelectedItem().n_doc = value;
+                                    this.$scope.parent.refresh(this.$scope.parent.getSelectedId());
+                                } else {
+                                    this.$scope.clear_info()
+                                    };
+                                };
+                            },
+                        },
+                    },
                 {view: 'button', value: "Сохранить", width: 120, localId: "_save", hidden: true,
                     on: {
                         onItemClick: function() {
@@ -151,25 +170,6 @@ export default class BrakSideInfoView extends JetView{
                             } else {
                                 webix.message({type: "error", text: "Ошибка сохранения", expire: 2000});
                                 this.$scope.$$("_cancel").callEvent('onItemClick');
-                                };
-                            },
-                        },
-                    },
-                {view: 'button', value: "Отменить", width: 120, localId: "_cancel", hidden: true,
-                    on: {
-                        onItemClick: function() {
-                            if (this.$scope.parent.config.$new) {
-                                this.$scope.reopen()
-                            } else {
-                                if (this.$scope.$$("_dHead").config.oldData) {
-                                    this.$scope.load_data(this.$scope.$$("_dHead").config.oldData, this.$scope.parent, this.$scope.topParent);
-                                    this.$scope.hide_b()
-                                    let value = this.$scope.$$("_dHead").getValues().n_doc;
-                                    this.$scope.parent.getSelectedItem().n_doc = value;
-                                    this.$scope.parent.refresh(this.$scope.parent.getSelectedId());
-                                } else {
-                                    this.$scope.clear_info()
-                                    };
                                 };
                             },
                         },

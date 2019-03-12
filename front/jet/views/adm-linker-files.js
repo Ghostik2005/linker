@@ -18,11 +18,11 @@ export default class LinkFilesView extends JetView{
                     //label: "<span class='webix_icon fa-plus'></span><span style='line-height: 20px;'> файл</span>", width: 75,
                     localId: "_add",
                     resizable: true,
-                    sWidth: 75,
+                    sWidth: 83,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>файл</span>",
+                    extLabel: "<span class='button_label'>файл</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.pop_upl.show_window("Загрузка файла");
@@ -36,7 +36,7 @@ export default class LinkFilesView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                    extLabel: "<span class='button_label'>Обновить</span>",
                     oldLabel: "<span class='webix_icon fa-refresh'></span>",
                     click: () => {
                         let user = this.app.config.user;

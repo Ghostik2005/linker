@@ -82,7 +82,7 @@ export default class BrakBarView extends JetView{
                 label: "",
                 width: 40,
                 tooltip: "История поиска",
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>История</span>",
+                extLabel: "<span class='button_label'>История</span>",
                 oldLabel: "<span class='webix_icon fa-history'></span>",
                 click: () => {
                     let hist = webix.storage.session.get(this.$$("__table").config.name);
@@ -92,12 +92,12 @@ export default class BrakBarView extends JetView{
             {view: "button", type: "htmlbutton",
                 localId: "_renew",
                 resizable: true,
-                sWidth: 116,
+                sWidth: 124,
                 eWidth: 40,
                 label: "",
                 width: 40,
                 tooltip: "Обновить таблицу",
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                extLabel: "<span class='button_label'>Обновить</span>",
                 oldLabel: "<span class='webix_icon fa-refresh'></span>",
                 click: () => {
                     let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
@@ -114,7 +114,7 @@ export default class BrakBarView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сбросить фильтры</span>",
+                extLabel: "<span class='button_label', style='line-height: 32px'>Сбросить фильтры</span>",
                 oldLabel: "",
                 click: () => {
                     this.$$("_ls").setValue("");
@@ -130,11 +130,11 @@ export default class BrakBarView extends JetView{
                 tooltip: "Загрузить брак",
                 localId: "_fileload",
                 resizable: true,
-                sWidth: 155,
+                sWidth: 160,
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Загрузить брак</span>",
+                extLabel: "<span class='button_label'>Загрузить брак</span>",
                 oldLabel: "<span class='webix_icon fa-upload'></span>",
                 click: () => {
                     this.pop_upl.show_window("Загрузка файла");
@@ -148,7 +148,7 @@ export default class BrakBarView extends JetView{
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Сверить брак</span>",
+                extLabel: "<span class='button_label'>Сверить брак</span>",
                 oldLabel: "<span class='webix_icon fa-check'></span>",
                 click: () => {
                     this.pop_check.show_w();
@@ -159,11 +159,11 @@ export default class BrakBarView extends JetView{
                 tooltip: "Удалить письмо",
                 localId: "_delletter",
                 resizable: true,
-                sWidth: 155,
+                sWidth: 162,
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span style='line-height: 20px;padding-left: 5px'>Удалить письмо</span>",
+                extLabel: "<span class='button_label'>Удалить письмо</span>",
                 oldLabel: "<span class='webix_icon fa-trash'></span>",
                 click: () => {
                     let tableSelectedId = this.$$("__table").getSelectedId();

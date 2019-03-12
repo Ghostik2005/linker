@@ -162,11 +162,11 @@ export default class LinkExclView extends JetView{
                     tooltip: "Добавить исключение",
                     localId: "_add",
                     resizable: true,
-                    sWidth: 130,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>исключение</span>",
+                    extLabel: "<span class='button_label'>исключение</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         this.newexclude.show("Добавление нового исключения", this.$$("_rTable"));
@@ -177,11 +177,11 @@ export default class LinkExclView extends JetView{
                     tooltip: "Удалить исключение",
                     localId: "_del",
                     resizable: true,
-                    sWidth: 130,
+                    sWidth: 140,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>исключение</span>",
+                    extLabel: "<span class='button_label'>исключение</span>",
                     oldLabel: "<span class='webix_icon fa-minus', style='color: red'></span>",
                     click: () => {
                         webix.message({"text": "Удаление исключения", "type": "debug", width: "400px", delay: "5"});
@@ -346,7 +346,7 @@ export default class LinkExclView extends JetView{
                     label: "",
                     width: 40,
                     tooltip: "Обновить таблицу",
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                    extLabel: "<span class='button_label'>Обновить</span>",
                     oldLabel: "<span class='webix_icon fa-refresh'></span>",
                     click: () => {
                         this.ready();
@@ -358,7 +358,7 @@ export default class LinkExclView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Применить</span>",
+                    extLabel: "<span class='button_label'>Применить</span>",
                     oldLabel: "<span class='webix_icon fa-check'></span>",
                     click: () => {
                         let data = {}
@@ -379,7 +379,7 @@ export default class LinkExclView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Отменить</span>",
+                    extLabel: "<span class='button_label'>Отменить</span>",
                     oldLabel: "<span class='webix_icon fa-times'></span>",
                     click: () => {
                         this.ready();

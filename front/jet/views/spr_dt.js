@@ -1,55 +1,8 @@
 "use strict";
 
-/*
-сниппет
-webix.ui({ 
-  view:"datatable",
-  subview:{
-    borderless:true,
-    view:"form",
-    elements:[
-      { view:"text", name:"title", label:"Title"},
-      { view:"text", name:"year", label:"Year"},
-      { cols:[
-        { }, { view:"button", value:"Save", click:function(){
-          var form = this.getFormView();
-          var values = form.getValues();
-          var changed = form.getDirtyValues();
-          var master = form.getMasterView();
-          
-          master.updateItem(values.id, changed);
-          master.closeSub(values.id)
-        }}
-      ]}
-    ]
-  },
-  on:{
-    onItemDblClick: function(id) {
-        this.openSub(id);
-        },
-    onSubViewCreate:function(view, item){
-      view.setValues(item);
-    }
-  },
-  columns:[
-    { id:"title",   header:"Title", sort:"string",
-     template:"{common.subrow()} #title#", fillspace:true },
-    { id:"year",    header:"Year",      width:100, sort:"int"},
-    { id:"votes",   header:"Votes",     width:100,  sort:"int"}
-  ],
-  autoheight:true,
-  data:[
-    { id:1, title:"The Shawshank Redemption", year:1994, votes:678790 },
-    { id:2, title:"The Godfather", year:1972, votes:511495 },
-    { id:3, title:"The Godfather: Part II", year:1974, votes:319352 }
-  ]
-});
-*/
-
-
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr, compareTrue, checkVal, request, recalcRows} from "../views/globals";
+import {get_spr, compareTrue, recalcRowsRet} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SubRow from "../views/sub_row";
 
@@ -57,12 +10,6 @@ export default class SprView extends JetView{
     config(){
         var app = this.app;
         
-        var filtFunc = () => {
-            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
-            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
-            }
-
         // let url = app.config.r_url + "?getDvAll";
         // let params = {"user": app.config.user};
         // let res = checkVal(request(url, params, !0).response, 's');
@@ -133,11 +80,6 @@ export default class SprView extends JetView{
                     headermenu:false,
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
-                    // template: function(obj, master, item) {
-                    //     console.log('obj', obj);
-                    //     console.log('sss', obj.search)
-                    //     return "<span style='color: red'>" + "---" + "</span>" + "<span style='color: black'>" + obj.c_tovar + "</span>";
-                    //     },
                     header: [{text: "Название"},
                         ],
                     headermenu:false,
@@ -209,10 +151,14 @@ export default class SprView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        $$(this.config.searchBar).callEvent("onKeyPress", [13,])    
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            $$(this.config.searchBar).callEvent("onKeyPress", [13,]);
+                        }, 150)
+                    }
                 },
                 "data->onParse":function(i, data){
                     let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
@@ -226,7 +172,6 @@ export default class SprView extends JetView{
                         }
                     this.clearAll();
                     $$("_link").hide();
-                    
                     },
                 onAfterColumnShow: function (id) {
                     if (id==='c_dv') {
@@ -248,7 +193,6 @@ export default class SprView extends JetView{
                     let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
                     this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
                     this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
-                    //filtFunc();
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
@@ -300,6 +244,7 @@ export default class SprView extends JetView{
                     },
                 }
             }
+
         var dt = {
             view: "layout",
             css: {'border-bottom': "0px solid #dddddd !important"},
@@ -307,12 +252,12 @@ export default class SprView extends JetView{
                 sprv,
                 {$subview: PagerView},
                 ]}
-
         return dt
         }
 
     ready() {
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
+        this.$$("__table").callEvent('onResize');
         }
 
     init() {

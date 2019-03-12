@@ -116,11 +116,11 @@ export default class HeaderView extends JetView{
                 {},
                 {view:"button", type: 'htmlbutton', tooltip: "Выход",
                     resizable: true,
-                    sWidth: 106,
+                    sWidth: 102,
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span class='side_icon', style='line-height: 20px; padding-left: 5px'>Выйти</span>",
+                    extLabel: "<span class='side_icon button_label'>Выйти</span>",
                     oldLabel: "<span class='side_icon webix_icon fa-sign-out'></span>",
                     on: {
                         onItemClick: () => {

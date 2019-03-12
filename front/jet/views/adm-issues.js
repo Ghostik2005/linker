@@ -129,7 +129,7 @@ export default class IssueView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить форму</span>",
+                    extLabel: "<span class='button_label'>Добавить форму</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         // let url = app.config.r_url + "?getIsId"
@@ -146,7 +146,7 @@ export default class IssueView extends JetView{
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить форму выпуска",
                     //label: "<span style='color: red', class='webix_icon fa-times'></span>", width: 40,
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить форму</span>",
+                    extLabel: "<span class='button_label'>Удалить форму</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {

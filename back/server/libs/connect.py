@@ -133,8 +133,8 @@ class pg_local(Connect):
             cur = con.cursor()
             sql = params.get('sql')
             options = params.get('options', ())
-            #print("%"*20)
-            #print(options)
+            # print("%"*20)
+            # print(options)
             try:
                 cur.execute(sql, options) if options else cur.execute(sql)
                 if not self.production:

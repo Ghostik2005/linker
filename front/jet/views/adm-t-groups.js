@@ -160,7 +160,7 @@ export default class TGroupsView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px'>Добавить группу</span>",
+                    extLabel: "<span class='button_label'>Добавить группу</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
                         let params = {'type': 'Gr', 'callback': addTGr, 'mode': 'new', 'source': this.$$("__table"), 'index': 7};
@@ -169,7 +169,7 @@ export default class TGroupsView extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', hidden: true, localId: "_del", tooltip: "Удалить группу",
                     resizable: true, sWidth: 180, eWidth: 40, label: "", width: 40,
-                    extLabel: "<span style='line-height: 20px;padding-left: 5px;'>Удалить гпуппу</span>",
+                    extLabel: "<span class='button_label'>Удалить гпуппу</span>",
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: delete_gr,

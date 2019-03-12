@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
-import {parse_unlinked_item, get_data_test} from "../views/globals";
+import {parse_unlinked_item, get_data_test, getHeaderLength} from "../views/globals";
 import {prcs, delPrc, checkKey, get_spr, getDtParams, clear_names_bar} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import History from "../views/history";
@@ -12,6 +12,8 @@ import SprView from "../views/spr_dt";
 import SideFormView from "../views/side_form";
 import FooterView from "../views/footer";
 import SideButtonsBar from "../views/sidebuttons-bar";
+import {screens} from "../models/variables";
+
 
 
 export default class TopmenuView extends JetView{
@@ -92,11 +94,11 @@ export default class TopmenuView extends JetView{
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
                             hidden: app.config.link,
                             resizable: true,
-                            sWidth: 136,
+                            sWidth: 132,
                             eWidth: 38,
                             label: "",
                             width: 38,
-                            extLabel: "<span style='line-height: 20px;padding-left: 5px'>Обновить</span>",
+                            extLabel: "<span class = 'button_label'>Обновить</span>",
                             oldLabel: "<span class='webix_icon fa-refresh'></span>",
                             click: () => {
                                 (+$$("_link_by").getValue() === 2) ? get_suppl("_suppl", this, "?getDatesUnlnk") :
@@ -258,7 +260,7 @@ export default class TopmenuView extends JetView{
                             sWidth: 136,
                             eWidth: 38,
                             width: 38,
-                            extLabel: "<span style='line-height: 20px;padding-left: 5px'>О товаре</span>",
+                            extLabel: "<span class='button_label'>О товаре</span>",
                             oldLabel: "<span class='webix_icon fa-caret-left'></span>",
                             formOpen: false,
                             on: {
@@ -293,9 +295,12 @@ export default class TopmenuView extends JetView{
                 ]
             }
 
+        var header = screens.LinkerView;
+
         var tabbar = {
             //css: {"border-width": "0px !important"},
             view: "tabbar",
+            localId: "_tabbar",
             //borderless: true,
             popupWidth:170,
             tabMinWidth:170,
@@ -308,9 +313,10 @@ export default class TopmenuView extends JetView{
                     }
                 },
             options: [
-                {value: "<span style='line-height: 20px;'> Линкер</span>", id: 'app-nav', close: false, width: 172}
+                {value: header, id: 'app-nav', close: false, width: getHeaderLength(header)},
                 ]
             };
+
 
         var tabmain = {
             view: "multiview",
@@ -352,14 +358,14 @@ export default class TopmenuView extends JetView{
         }
 
     ready() {
-        let buttons = this.app.config.getButt(this.$$("sideMenu").getTopParentView());
+        let buttons = this.app.config.getButt(this.getRoot().getTopParentView());
         buttons.forEach( (item, i, buttons) => {
-                item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                             label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
-                item.refresh();
-                item.resize();
-            })
-        }
+            item.define({width: (this.app.config.expert) ? item.config.eWidth : item.config.sWidth,
+                            label: (this.app.config.expert) ? item.config.oldLabel  : item.config.oldLabel + item.config.extLabel});
+            item.refresh();
+            item.resize();
+        });
+    }
 
     init() {
         if (!this.app.config.link) {
