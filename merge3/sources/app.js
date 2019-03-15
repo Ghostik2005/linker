@@ -12,7 +12,7 @@ export default class app extends JetApp{
 			debug 	: !PRODUCTION,
 
 			user:           "",
-			r_url:          (location.hostname === 'localhost') ? "http://saas.local/merge3_logic" : "../merge3_logic",
+			r_url:          (location.hostname === 'localhost') ? "http://saas.local/merge3_logic" : "merge3_logic",
 			x_api:          "x_login",
 			searchDelay:    1000,
 			posPpage:       20,
@@ -33,19 +33,20 @@ export default class app extends JetApp{
 			app.config.testmode = true;
 		} else {
 			var c = getCookie(app.config.sklad_cook);
-			app.config.testmode = (c) ? false : true; // в настоящем продакшене оставляем только false
+			app.config.testmode = (c) ? false : true; // в настоящем продакшене оставляем только false 
 			// app.config.testmode = false;
+
 		}
 		app.config.sklad = !app.config.testmode;
 
 
 		////// пока не включена авторизация из склада
 		// app.config.testmode = true;
-
-		let index = search.indexOf(app.config.sklad_cook);
-		if (index != -1) {
-			app.config.skladcookie = search.split(app.config.sklad_cook+'=')[1];
-		};
+		// 	то что ниже в комментариях - не нужно!
+		// let index = search.indexOf(app.config.sklad_cook);
+		// if (index != -1) {
+		// 	app.config.skladcookie = search.split(app.config.sklad_cook+'=')[1];
+		// };
 		webix.attachEvent("onBeforeAjax", function(mode, url, data, request, headers, files, promise){
 			headers["x-api-key"] = app.config.x_api;
 		});

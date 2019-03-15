@@ -61,7 +61,7 @@
 }
 .side_icon {
   /*color: var(--sides-color) !important;*/
-  color: #e77816 !important;
+  color: #e77816;
 }
 .button_label {
   line-height: 20px;

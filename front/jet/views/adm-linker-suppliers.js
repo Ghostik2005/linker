@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import {request, setButtons, checkVal, checkKey} from "../views/globals";
 import NewCodeView from "../views/new_code";
+import {buttons} from "../models/variables";
 
 export default class LinkSupplView extends JetView{
     config(){
@@ -51,7 +52,7 @@ export default class LinkSupplView extends JetView{
                         }
                     },
                 {view:"button", 
-                    tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                    tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt_p",
                     resizable: false,
                     label: "",
@@ -210,7 +211,7 @@ export default class LinkSupplView extends JetView{
                         }
                     },
                 {view:"button", 
-                    tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                    tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt_r",
                     resizable: false,
                     label: "",
@@ -337,7 +338,7 @@ export default class LinkSupplView extends JetView{
                         let user = app.config.user;
                         let url = app.config.r_url + "?setLinkSuppl";
                         let params = {"user": user, 'data': data};
-                        console.log('data', params);
+                        // console.log('data', params);
                         request(url, params).then( (data) => {
                             data = checkVal(data, 'a');
                             if (data) this.hide_b();
@@ -431,8 +432,8 @@ export default class LinkSupplView extends JetView{
                                 let item = this.$$("__table").getItem(id) 
                                 if (item.change > 0) {
                                     data.push(item);
-                                    console.log('item', item);
-                                    console.log('pr', item.process);
+                                    // console.log('item', item);
+                                    // console.log('pr', item.process);
                                     }
                             }, true);
                         this.$$("del").hide();

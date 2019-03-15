@@ -1,7 +1,11 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '19.070.1650' #minors stability update
+__version__ = '19.074.1235' #fix sql requests for inprice. again
+# __version__ = '19.073.1820' #fix sql requests for inprice
+# __version__ = '19.073.1820' #added table with actual items in price
+#__version__ = '19.073.1650' #fix sql request for admspr with epty group
+# __version__ = '19.070.1650' #minors stability update
 # __version__ = '19.051.1045' #возвращается код 204 если ответ пустой
 # __version__ = '19.031.1630' #пофиксены некоторые багги
 #__version__ = '19.024.1625' #добавленны колонки в ШК

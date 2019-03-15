@@ -68,7 +68,7 @@ export default class BrakAddMassView extends JetView{
                                         webix.message({type: "error", text: "Ошибка сохранения", expire: 2500});
                                     };
 
-                                    console.log('datas', params);
+                                    // console.log('datas', params);
                                 }
                                 this.hide_w();
 

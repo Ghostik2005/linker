@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import {request, checkVal, unFilter, setButtons} from "../views/globals";
 import NewExcludeView from "../views/new_exclude";
+import {buttons} from "../models/variables";
 
 export default class LinkExclView extends JetView{
 
@@ -52,7 +53,7 @@ export default class LinkExclView extends JetView{
                         }
                     },
                 {view:"button", 
-                    tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                    tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt_p",
                     resizable: false,
                     label: "",
@@ -226,7 +227,7 @@ export default class LinkExclView extends JetView{
                         }
                     },
                 {view:"button", 
-                    tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                    tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt_r",
                     resizable: false,
                     label: "",

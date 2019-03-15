@@ -77,12 +77,14 @@ export var cEvent = function(a,b,c,d){
 export var unFilter = function(cv) {
     var columns = cv.config.columns;
     columns.forEach(function(item){
-        if (cv.isColumnVisible(item.id)) {
+        if (item.id && (item.id!=='checkbox') && cv.isColumnVisible(item.id)) {
             if (item.header[1]) {
                 if (item.header[1].content) {
                     let filt = cv.getFilter(item.id);
                     if (typeof(filt.setValue) === 'function') {
-                        cv.getFilter(item.id).setValue('');
+                        filt.blockEvent();
+                        filt.setValue('');
+                        filt.unblockEvent();
                     } else {
                         if (!filt.readOnly) filt.value = '';
                         };
@@ -556,9 +558,6 @@ export function get_data_test(inp_params) {
         var selected = webix.storage.session.get(view.config.name+"sel") || {};
         let old_p = selected.s_pars;
 
-        let reset = false;
-
-
         if (view.bState && view.bState === 1) {
             let localStorage = webix.storage.session.get(view.config.name+"sel");
             params['id_sprs'] = [];
@@ -569,21 +568,25 @@ export function get_data_test(inp_params) {
 
         let n_p = JSON.parse(JSON.stringify(params));
         delete(n_p.start);
-        // console.log('new', n_p);
-        // console.log('old', old_p);
+        
+        // if (view.config.name === "__dt_as") {
+        //     console.log('new', n_p);
+        //     console.log('old', old_p);
+        // };
+        let reset = false;
         if (str_join(n_p) === str_join(old_p)) {
-            if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
-            } else {
-                reset = true;
-            };
-            // reset = false;
+            // if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
+            // } else {
+            //     reset = true;
+            // };
         } else {
             if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
             } else {
                 selected = {"s_pars": n_p};
                 webix.storage.session.put(view.config.name+"sel", selected);
+                reset = true;
             }
-            reset = true;
+
         };
         // console.log('reset pager', reset);
 
@@ -773,6 +776,7 @@ export function getDtParams(ui) {
             };
     } else if (ui.config.name === "__dt_as") {
         c_filter = {
+            "price"     : ($$(ui).isColumnVisible('price')) ? $$(ui).getFilter('price').getValue() : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             'id_spr'    : ($$(ui).isColumnVisible('id_spr')) ? $$(ui).getFilter('id_spr').value : undefined,
             'id_zavod'  : ($$(ui).isColumnVisible('id_zavod')) ? $$(ui).getFilter('id_zavod').getValue() : undefined,
@@ -1382,24 +1386,25 @@ export function spinIconDisable(view) {
     clearTimeout(view.config.qw);
     }
 
-export function setButtons(app, buttons) {
-    buttons.forEach( (item) => {
-        // console.log('item_but', item.getNode());
+export function setButtons(app, buttons_list) {
+    buttons_list.forEach( (item) => {
         let butt;
+        let width;
         if (app.config.expert) {
+            width = item.config.eWidth;
             butt = item.config.oldLabel
+
         } else {
-            butt = "<span style='float: left; width:" + item.config.eWidth +"px'>" + item.config.oldLabel + "</span><span stile='width:" + (item.config.sWidth-item.config.eWidth) +"px'>" + item.config.extLabel + "</span>";
-            // sign = "<span stile=>'width:" + (item.config.sWidth-item.config.eWidth) +"px'>" + item.config.extLabel + "</div>";
-            // sign = "<div>" + item.config.extLabel + "</div>"
-            // butt = butt + sign
+            width = item.config.sWidth;
+            butt = "<span style='float: left; width:" + item.config.eWidth +"px'>" + item.config.oldLabel + "</span><span stile='width:";
+            butt +=  + (item.config.sWidth-item.config.eWidth) +"px'>" + item.config.extLabel + "</span>";
+            // console.log('b', butt);
         }
-        item.define({width: (app.config.expert) ? item.config.eWidth : item.config.sWidth,
-                     label: butt});
-        item.refresh();
+        item.define({width: width, label: butt});
         item.resize();
-        })
-    }
+        item.refresh();
+    })
+}
 
 export function DelEdIcons (can_delete) {
     let del_img = "<div class='webix_image image20x20', style='background-image:url(./addons/img/delete_20x20.svg);'</div>";
@@ -1416,22 +1421,35 @@ export function refTemplate(obj, common, value) {
 }
 
 export function recalcRowsRet(table) {
-    let totalHeight = table.$view.children[1].clientHeight;
+    let q = table.$view.getElementsByClassName('webix_ss_body')[0];
+    // let totalHeight = table.$view.children[1].clientHeight;
+    let totalHeight = q.clientHeight;
     let rows = Math.floor(totalHeight/table.config.rowHeight);
+    if (table.config.name === "1__dt_as") {
+        console.log('ppos', table.config.posPpage);
+        console.log('th', totalHeight);
+        console.log('r', rows);
+        console.log('q', q.clientHeight);
+        console.dir(q);
+    }
     if (rows === table.config.posPpage) return false;
     return rows
 }
 
-export function recalcRows(table) {
-    let totalHeight = table.$view.children[1].clientHeight;
+export function setRows(view){
+    let table = view.$$("__table");
+    let q = table.$view.getElementsByClassName('webix_ss_body')[0];
+    let totalHeight = q.clientHeight;
     let rows = Math.floor(totalHeight/table.config.rowHeight);
+    // console.log('rows', rows)
     table.config.posPpage = rows;
 }
+
 
 export function fillFilterOptions(app) {
     var options = {"sezonList": [], "tgList": [], "ndsList": [], "hranList": [], "stranaList": [], "dvList":[], "vList": []};
     let tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
-    var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [];
+    // var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [];
     tList.forEach(function(it, i, tList) {
         let tt = {'id': it.id, 'value': it.sezon};
         options.sezonList.push(tt);

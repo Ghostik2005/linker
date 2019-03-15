@@ -3,24 +3,13 @@
 import {JetView} from "webix-jet";
 import {checkKey, dt_formating_sec, dt_formating} from "../views/globals";
 import {compareTrue} from "../views/globals";
-import {request, checkVal, recalcRows} from "../views/globals";
+import {request, checkVal, recalcRowsRet, unFilter} from "../views/globals";
 import PagerView from "../views/pager_view";
+import {buttons, options} from "../models/variables";
 
 export default class RlsLinkFormView extends JetView{
     config(){
         let app = this.app;
-
-        var vi = this;
-
-        var rList = [{id: 0, value: "Пользователь"}, {id: 9, value: "Сводильщик"}, {id: 10, value: "Админ"}, {id: 34, value: "Суперадмин"}, {id: 100, value: "Не назначен"}];
-
-        let url = app.config.r_url + "?getSupplAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        var rList1 = []
-        if (res) {
-            rList1 = res;
-            };
 
         var sprv = {view: "datatable",
             name: "rlslink",
@@ -93,7 +82,7 @@ export default class RlsLinkFormView extends JetView{
                     header: [{text: "Группа пользователей"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
-                                options: rList
+                                options: options.users
                                 },
                             }
                         ]
@@ -114,7 +103,7 @@ export default class RlsLinkFormView extends JetView{
                     header: [{text: "Источник"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
-                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}, {id: '4', value: "edocs"}]
+                                options: options.sources,
                                 },
                             }
                         ]
@@ -136,22 +125,22 @@ export default class RlsLinkFormView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope.$$("_sb").callEvent("onKeyPress", [13,])    
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 150)
+                    }
                 },
-
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
                 onBeforeSort: (field, direction) => {
-                    var vi = this.$$("__table").getParentView();
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    let old_v = vi.getChildViews()[2].$scope.$$("__page").getValue();
-                    vi.getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getChildViews()[2].$scope.$$("__page").refresh();
+                    this.startSearch();;
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
@@ -171,7 +160,6 @@ export default class RlsLinkFormView extends JetView{
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-
                 onKeyPress: function(code, e){
                     if (13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
@@ -183,7 +171,7 @@ export default class RlsLinkFormView extends JetView{
         var top = { view: "toolbar",
             rows: [
                 {view: "label", label: "наименование связываемого эталона", localId: "old_tovar",
-                    },
+                },
                 {height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", localId: "_sb", hidden: !true,
@@ -192,42 +180,28 @@ export default class RlsLinkFormView extends JetView{
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(() => {
-                                            var vi = this.$scope.$$("__table").getParentView();
-                                            let old_v = vi.getChildViews()[2].$scope.$$("__page").getValue();
-                                            vi.getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                                            vi.getChildViews()[2].$scope.$$("__page").refresh();
-                                            }, this.$scope.app.config.searchDelay);
-                                        }
+                                            this.$scope.startSearch();
+                                        }, this.$scope.app.config.searchDelay);
                                     }
-                                },
+                                }
                             },
+                        },
                         {view:"button", localId: "__reset",
                             tooltip: "Сбросить фильтры",
-                            type:"imageButton", image: './addons/img/unfilter.svg',
+                            type:"imageButton", image: buttons.unFilter.icon,
                             width: 38,
                             on: {
                                 onItemClick: () => {
                                     let cv = this.$$("__table");
-                                    let columns = cv.config.columns;
-                                    columns.forEach(function(item){
-                                        if (cv.isColumnVisible(item.id)) {
-                                            if (item.header[1]) {
-                                                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                                    cv.getFilter(item.id).setValue('');
-                                                } else {
-                                                    cv.getFilter(item.id).value = '';
-                                                    };
-                                                }
-                                            }
-                                        });
-                                    this.$$("_sb").callEvent("onKeyPress", [13,]);
-                                    },
+                                    unFilter(cv);
+                                    this.startSearch();
                                 },
                             },
-                        ]
-                    },
-                ]
-            }
+                        },
+                    ]
+                },
+            ]
+        }
 
         var dt = {
             view: "layout",
@@ -241,6 +215,7 @@ export default class RlsLinkFormView extends JetView{
             width: document.documentElement.clientWidth * 0.95,
             height: document.documentElement.clientHeight * 0.95,
             modal: true,
+            resize: false,
             on: {
                 onHide: function() {
                     this.$scope.$$("__table").clearAll();
@@ -249,6 +224,7 @@ export default class RlsLinkFormView extends JetView{
             body: dt
             }
         }
+
     show_w(new_head, item, parent){
         if (parent) this.parent = parent;
         if (item) {
@@ -256,40 +232,45 @@ export default class RlsLinkFormView extends JetView{
             this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + tovar_name);
             this.id_spr = item.id_spr;
             this.d_id = item.id;
-            //this.$$("__reset").callEvent("onItemClick");
             let s = item.c_tovar.split(' ')[0];
             this.$$("__table").config.searchBar.setValue(s)
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
-        recalcRows(this.$$("__table"));
-        this.$$("_sb").callEvent("onKeyPress", [13,]);
+        this.$$("__table").callEvent("onresize");
         this.$$("_sb").focus();
         }
+
     hide_w(){
         this.getRoot().hide()
         }
 
+    startSearch() {
+        var pager = this.$$("__table").getParentView().getChildViews()[2].$scope.$$("__page")
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
+
     ready() {
-
         this.$$("__table").config.searchBar = this.$$("_sb")
-        }
-        
-    init() {
-
-        let th = this.$$("__table").getParentView();
+        // let th = this.$$("__table").getParentView();
+        let th = this;
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
         $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let thh = th.getChildViews()[2].$scope;
-                let old_v = thh.$$("__page").getValue();
-                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                thh.$$("__page").refresh();
+                th.startSearch();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
         })
-        this.$$("__table").config.searchBar = this.$$("_sb");
+
+
+
+    }
+        
+    init() {
+
+
+        // this.$$("__table").config.searchBar = this.$$("_sb");
     }
 }
 

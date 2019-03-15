@@ -34,7 +34,7 @@ export default class uplMenuView extends JetView{
                         datatype:"json",
                         on: {
                             onUploadComplete: (obj) => {
-                                console.log('ok', obj);
+                                // console.log('ok', obj);
                                 this.hide_window();
                                 },
                             },

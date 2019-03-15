@@ -6,6 +6,7 @@ export const screens = {
     SkippedBarView: "<span class='webix_icon fa-archive'></span><span class='multiview-header'>Пропущенные</span>",
     AllUnlinkedBarView: "<span class='webix_icon fa-unlink'></span><span class='multiview-header'>Несвязанные</span>",
     LinksBarView: "<span class='webix_icon fa-stumbleupon'></span><span class='multiview-header'>Связки</span>",
+    LinksSprBarView: "<span class='webix_icon fa-stumbleupon'></span><span style='line-height: 16px; font-size: 80%'>Связки:Эталоны</span>",
     AdmBarView: "<span class='webix_icon fa-magic'></span><span class='multiview-header'>Админка</span>",
     BrakBarView: "<span class='webix_icon fa-ban'></span><span class='multiview-header'>Забраковка</span>",
     RefView: "<span class='webix_icon fa-stream'></span><span class='multiview-header'>Справочники</span>",
@@ -20,4 +21,27 @@ export const screens = {
     NdsView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>НДС</span>",
     IssueView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>Формы выпуска</span>",
     TGroupsView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>Товарные группы</span>"
+}
+
+
+export const buttons = {
+    unFilter: {icon: "./addons/img/unfilter.svg",
+               label: "<span class='button_label', style='line-height: 34px'>Сбросить фильтры</span>"},
+
+}
+
+export const options = { 
+    sources: [
+        {id: '0', value: 'Без источника'}, 
+        {id: '1', value: 'PLExpert'}, 
+        {id: '2', value: 'Склад'}, 
+        {id: '3', value: "Агент"}, 
+        {id: '4', value: "edocs"}
+    ],
+    users: [
+        {id: 0, value: "Пользователь"}, 
+        {id: 9, value: "Сводильщик"}, 
+        {id: 10, value: "Админ"}, 
+        {id: 34, value: "Суперадмин"}, 
+        {id: 100, value: "Не назначен"}]
 }

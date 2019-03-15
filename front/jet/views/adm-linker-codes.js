@@ -2,6 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, unFilter, setButtons} from "../views/globals";
+import {buttons} from "../models/variables";
 //import NewCodeView from "../views/new_code";
 
 export default class LinkCodesView extends JetView{
@@ -30,7 +31,7 @@ export default class LinkCodesView extends JetView{
                         }
                     },
                 {view:"button", 
-                    tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                    tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt_p",
                     resizable: false,
                     label: "",
@@ -112,7 +113,7 @@ export default class LinkCodesView extends JetView{
                         }
                     },
                 {view:"button", 
-                    tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                    tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt_r",
                     resizable: false,
                     label: "",
@@ -210,7 +211,7 @@ export default class LinkCodesView extends JetView{
                         let params = {"user": user, 'data': data};
                         request(url, params).then( (data) => {
                             data = checkVal(data, 'a');
-                            console.log('ret', data);
+                            // console.log('ret', data);
                             });
                         }
                     },

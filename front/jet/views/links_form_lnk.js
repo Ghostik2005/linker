@@ -1,16 +1,15 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, recalcRows} from "../views/globals";
+import {request, checkVal, recalcRowsRet, setRows} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
+import {options} from "../models/variables";
 
 export default class LinksViewLnk extends JetView{
     config(){
         let app = this.app;
-        let vi = this;
-
         let url = app.config.r_url + "?getSupplAll";
         let params = {"user": app.config.user};
         let res = checkVal(request(url, params, !0).response, 's');
@@ -123,7 +122,7 @@ export default class LinksViewLnk extends JetView{
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 pager: 1,
-                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}, {id: '4', value: "edocs"}]
+                                options: options.users,
                                 },
                             }
                         ]
@@ -131,10 +130,14 @@ export default class LinksViewLnk extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope._search.callEvent("onKeyPress", [13,])    
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 150)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -142,14 +145,12 @@ export default class LinksViewLnk extends JetView{
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
                     },
-                onBeforeSort: (field, direction) => {
-                    this.$$("__table").config.fi = field;
-                    this.$$("__table").config.di = direction;
-                    let old_v =vi.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
-                    vi.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
+                onBeforeSort: function(field, direction) {
+                    this.config.fi = field;
+                    this.config.di = direction;
+                    this.$scope.startSearch();
                     },
-                onItemDblClick: (item, ii, iii) => {
+                onItemDblClick: (item) => {
                     let sh_prc = this.$$("__table").getSelectedItem().id;
                     let params = {};
                     params["command"] = "?delLnk";
@@ -157,18 +158,18 @@ export default class LinksViewLnk extends JetView{
                     params["type"] = "async";
                     params["callback"] = delLnk;
                     params["parent"] = this;
-                    if (+$$("_link_by").getValue() === 1) {
-                        this.popunlink.show("Причина разрыва связки?", params, this._break);
-                    } else {
-                        webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
+                    if ($$("_link_by")) {
+                        if (+$$("_link_by").getValue() === 1) {
+                            this.popunlink.show("Причина разрыва связки?", params, this._break);
+                        } else {
+                            webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
                         }
-                    },
+                    }
+                },
                 onKeyPress: function(code, e){
                     if (13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                         }
-                    },
-                onBeforeSelect: function (item) {
                     },
                 onAfterSelect: function (item) {
                     this.$scope._break.show();
@@ -177,7 +178,6 @@ export default class LinksViewLnk extends JetView{
                     let filter = this.getFilter('c_vnd');
                     let filtering_value = filter.$getValue()
                     $$(filter.config.popup).getList().filter("#value#", filtering_value);
-                    //console.log('filter', filter);
                     },
                 },
             } 
@@ -191,44 +191,53 @@ export default class LinksViewLnk extends JetView{
             }
         }
 
+    startSearch() {
+        var pager = this.getRoot().getChildViews()[1].$scope.$$("__page")
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
+
     ready() {
         let app = this.app;
         let th = this;
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        let table = this.$$("__table");
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(() => {
-                let thh = th.getRoot().getChildViews()[1].$scope;
-                let old_v = thh.$$("__page").getValue();
-                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                thh.$$("__page").setValue('0');
-                thh.$$("__page").refresh();
+                th.startSearch();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
-        if (this.$$("__table").isColumnVisible('dt')) {
-            //this.$$("__table").getFilter('dt').setValue({'start':new Date()});
-            }
-        if (this.$$("__table").isColumnVisible('owner')) {
+        if (table.isColumnVisible('owner')) {
             if  (!app.config.roles[app.config.role].lnkdel) {
-                this.$$("__table").getFilter('owner').value = this.app.config.user;;
-                this.$$("__table").getFilter('owner').readOnly = true;
+                table.getFilter('owner').value = this.app.config.user;;
+                table.getFilter('owner').readOnly = true;
             } else {
-                this.$$("__table").getFilter('owner').readOnly = false;
+                table.getFilter('owner').readOnly = false;
                 }
             }
         this._break = this.getRoot().getParentView().$scope.$$("_br")
         this._search = this.getRoot().getParentView().$scope.$$("_ls")
-        this.$$("__table").config.searchBar = this._search.config.id;
-        $$(this.$$("__table").config.searchBar).focus();
+        table.config.searchBar = this._search.config.id;
         this._break.hide();
-        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
-        }
+        table.getFilter('dt').setValue(new Date());
+
+        table.callEvent('onresize');
+
+        table.getFilter('dt').blockEvent();
+        setTimeout( () => {
+            table.getFilter('dt').setValue(null);
+            table.getFilter('dt').unblockEvent();
+        }, 150);
+        table.markSorting(table.config.fi,table.config.di);
+        $$(table.config.searchBar).focus();
+    }
 
     init() {
+        setRows(this);
         this.popunlink = this.ui(UnlinkView);
-        }
-
     }
+
+}
 
 

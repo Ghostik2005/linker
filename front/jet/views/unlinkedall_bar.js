@@ -2,26 +2,21 @@
 
 import {JetView} from "webix-jet";
 import {setButtons,request, checkVal} from "../views/globals";
-import {parseToLink, recalcRows} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
+import {parseToLink, recalcRowsRet} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter} from "../views/globals";
 import PagerView from "../views/pager_view";
+import {buttons, options} from "../models/variables";
 
 export default class AllUnlinkedBarView extends JetView{
     config(){
         let app = this.app;
-
-        var vi = this;
-
-        var rList = [{id: 0, value: "Пользователь"}, {id: 9, value: "Сводильщик"}, {id: 10, value: "Админ"}, {id: 34, value: "Суперадмин"}, {id: 100, value: "Не назначен"}];
-
         let url = app.config.r_url + "?getSupplAll";
         let params = {"user": app.config.user};
         let res = checkVal(request(url, params, !0).response, 's');
-        var rList1 = []
+        var rList = []
         if (res) {
-            rList1 = res;
+            rList = res;
             };
-
         var sprv = {view: "datatable",
             name: "__dt_a",
             localId: "__table",
@@ -79,7 +74,7 @@ export default class AllUnlinkedBarView extends JetView{
                                 //pager: 2,
                                 options: {
                                     filter: mcf_filter,
-                                    data: rList1,
+                                    data: rList,
                                     },
                                 },
                             }
@@ -100,7 +95,7 @@ export default class AllUnlinkedBarView extends JetView{
                     header: [{text: "Группа пользователей"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
-                                options: rList
+                                options: options.users
                                 },
                             }
                         ]
@@ -121,7 +116,7 @@ export default class AllUnlinkedBarView extends JetView{
                     header: [{text: "Источник"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
-                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}, {id: '4', value: "edocs"}]
+                                options: options.sources,
                                 },
                             }
                         ]
@@ -143,32 +138,34 @@ export default class AllUnlinkedBarView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.callEvent("onBeforeSort")
-                    }, 50)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 150)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
                 onBeforeRender: function(table) {
-                    webix.extend(this, webix.ProgressBar);
+                    // webix.extend(this, webix.ProgressBar);
                     let data = table.order;
                     data.forEach(function(item, i, data) {
                         let obj = table.getItem(item);
                         if (obj.in_work !== '-1') {
                             obj.$css = "table_row_light";
-                            };
-                        });
-                    
-                    },
+                        };
+                    });
+                },
                 onBeforeSort: (field, direction) => {
                     setTimeout( () => {
                         this.$$("__table").config.fi = field;
                         this.$$("__table").config.di = direction;
-                        let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-                        vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                        vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                        this.startSearch();
+
                     }, app.config.searchDelay)                 
                 },
                 onItemDblClick: (clickItem) => {
@@ -183,9 +180,7 @@ export default class AllUnlinkedBarView extends JetView{
                                 this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('app-nav');
                                 }, 300);
                             setTimeout(()=> {
-                                let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-                                vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                                vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                                this.startSearch()
                                 }, 800);
                                 
                         } else {
@@ -204,10 +199,6 @@ export default class AllUnlinkedBarView extends JetView{
                 onAfterLoad: function() {
                     this.hideProgress();
                     },
-                onBeforeSelect: function(selected) {
-                    //let item = this.getItem(selected.id)
-                    //if (item.in_work !== '-1') return false;
-                    }
                 }
             }
 
@@ -216,7 +207,8 @@ export default class AllUnlinkedBarView extends JetView{
                 css: {"border-top": "0px"},
                 height: 40,
                 cols: [
-                    {view: "label", template: "Для ускорения ограничивайте поиск названием"},
+                    {},
+                    // {view: "label", template: "Для ускорения ограничивайте поиск названием"},
                     {view: "button", type: "htmlbutton", tooltip: "Обновить", 
                         localId: "_renew",
                         resizable: true,
@@ -227,10 +219,10 @@ export default class AllUnlinkedBarView extends JetView{
                         extLabel: "<span class='button_label'>Обновить</span>",
                         oldLabel: "<span class='webix_icon fa-refresh'></span>",
                         click: () => {
-                            this.$$("__table").callEvent("onBeforeSort");
+                            this.startSearch();
                             }
                         },
-                    {view:"button",  tooltip: "Сбросить фильтры",type:"imageButton", image: './addons/img/unfilter.svg',
+                    {view:"button",  tooltip: "Сбросить фильтры",type:"imageButton", image: buttons.unFilter.icon,
                         width: 40,
                         localId: "_unfilt",
                         resizable: true,
@@ -238,24 +230,12 @@ export default class AllUnlinkedBarView extends JetView{
                         eWidth: 40,
                         label: "",
                         width: 40,
-                        extLabel: "<span class='button_label', style='line-height: 28px'>Сбросить фильтры</span>",
+                        extLabel: buttons.unFilter.label,
                         oldLabel: "",
                         click: () => {
                             var cv = this.$$("__table");
-                            var columns = cv.config.columns;
-                            columns.forEach(function(item){
-                                if (cv.isColumnVisible(item.id)) {
-                                    if (item.header[1]) {
-                                        if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                            cv.getFilter(item.id).setValue('');
-                                        } else {
-                                            let qq = cv.getFilter(item.id);
-                                            if (!qq.readOnly) qq.value = '';
-                                            };
-                                        }
-                                    }
-                                });
-                            this.$$("__table").callEvent("onBeforeSort");
+                            unFilter(cv);
+                            this.startSearch()
                             }
                         },
                     ]
@@ -273,36 +253,48 @@ export default class AllUnlinkedBarView extends JetView{
         return _view
         }
 
+    startSearch() {
+        let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+    }
+
+    init() {
+        webix.extend(this.$$("__table"), webix.ProgressBar);
+    }
+
     ready() {
-        let r_but = [this.$$("_renew"), this.$$("_unfilt")]
-        setButtons(this.app, r_but);
+        setButtons(this.app, this.app.config.getButt(this.getRoot()));
         let app = this.app;
         let th = this;
-        if (this.$$("__table").isColumnVisible('c_user')) {
+        var table = this.$$("__table");
+        if (table.isColumnVisible('c_user')) {
             if  (!app.config.roles[app.config.role].lnkdel) {
-                this.$$("__table").getFilter('c_user').value = this.app.config.role;
-                this.$$("__table").getFilter('c_user').readOnly = true;
+                table.getFilter('c_user').value = this.app.config.role;
+                table.getFilter('c_user').readOnly = true;
             } else {
-                this.$$("__table").getFilter('c_user').readOnly = false;
+                table.getFilter('c_user').readOnly = false;
                 }
             }
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let thh = th.getRoot().getChildViews()[2];
-                thh = thh.$scope;
-                let old_v = thh.$$("__page").getValue();
-                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                thh.$$("__page").refresh();
+                th.startSearch();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             });
 
-        this.$$("__table").callEvent("onBeforeSort");
+        table.getFilter('dt').setValue(new Date());
+        table.callEvent('onresize');
 
-        this.$$("__table").getFilter("c_tovar").focus();
-        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
-        }
+        table.getFilter('dt').blockEvent();
+        setTimeout( () => {
+            table.getFilter('dt').setValue(null);
+            table.getFilter('dt').unblockEvent();
+        }, 150);
+        table.getFilter("c_tovar").focus();
+        table.markSorting(table.config.fi,table.config.di);
 
     }
+
+}

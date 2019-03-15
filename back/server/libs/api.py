@@ -3345,6 +3345,10 @@ WHERE {stri} ORDER by {field} {direction}
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'c_tovar')
+            if field == "c_group":
+                field = 'gr'
+            else:
+                field = "r." + field
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
@@ -3377,6 +3381,7 @@ WHERE {stri} ORDER by {field} {direction}
                 pars['c_hran'] = filt.get('c_hran')
                 pars['c_sezon'] = filt.get('c_sezon')
                 pars['mandat'] = filt.get('mandat')
+                pars['price'] = filt.get('price')
                 pars['prescr'] = filt.get('prescr')
                 pars['dt_ins'] = filt.get('dt_ins')
                 dt = filt.get('dt')
@@ -3400,6 +3405,12 @@ WHERE {stri} ORDER by {field} {direction}
                         ssss.append(s.format(pars['start_dt'], pars['end_dt']))
                 if pars['id_spr']:
                     s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
+                    ssss.append(s)
+                if str(pars['price']) == '0':
+                    s = """and r.inprice is null or r.inprice = false"""
+                    ssss.append(s)
+                elif str(pars['price']) == '1':
+                    s = """and r.inprice = true"""
                     ssss.append(s)
                 if pars['id_zavod']:
                     s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
@@ -3583,8 +3594,9 @@ WHERE {stri} ORDER by {field} {direction}
                     group by s.id_spr
                     ) as qw on r.id_spr = idd"""
                     in_st.append(s)
-
-                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa 
+                # s_ = """left join spr_inprice inp on inp.id_spr = r.id_spr"""
+                # in_st.append(s_)
+                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa, r.inprice 
 FROM SPR r
 join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
 and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078) """)
@@ -3595,7 +3607,7 @@ and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and l
                 sql_c = '\n'.join(in_c)
                 stri += ' ' + ' '.join(ssss)
             else:
-                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa
+                sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, aa, r.inprice
                 FROM SPR r
 join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
 and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078)
@@ -3643,7 +3655,7 @@ and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and l
                 sql_c = """SELECT count(*) FROM SPR r"""
 
             sql += """\nWHERE {0}
-ORDER by r.{1} {2}
+ORDER by {1} {2}
 """
             sql = sql + self._insLimit(start_p, end_p)
             stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
@@ -3680,7 +3692,8 @@ ORDER by r.{1} {2}
                     "c_mandat"      : row[10],
                     "c_prescr"      : row[11],
                     "dt"            : str(row[12]),
-                    "dt_ins"        : str(row[13])
+                    "dt_ins"        : str(row[13]),
+                    "price"         : row[14]
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
@@ -3696,6 +3709,10 @@ ORDER by r.{1} {2}
         start_p = 1 if start_p < 1 else start_p
         end_p = int(params.get('count', self.count)) + start_p - 1
         field = params.get('field', 'c_tovar')
+        if field == "c_group":
+            field = 'gr'
+        else:
+            field = "r." + field
         direction = params.get('direction', 'asc')
         search_re = params.get('search', '')
         search_re = search_re.replace("'", "").replace('"', "")
@@ -3740,6 +3757,7 @@ ORDER by r.{1} {2}
             pars['c_hran'] = filt.get('c_hran')
             pars['c_sezon'] = filt.get('c_sezon')
             pars['mandat'] = filt.get('mandat')
+            pars['price'] = filt.get('price')
             pars['prescr'] = filt.get('prescr')
             pars['dt_ins'] = filt.get('dt_ins')
             dt = filt.get('dt')
@@ -3763,6 +3781,12 @@ ORDER by r.{1} {2}
                     ssss.append(s.format(pars['start_dt'], pars['end_dt']))
             if pars['id_spr']:
                 s = "and cast(r.id_spr as varchar(32)) like ('" + pars['id_spr'] + "%')"
+                ssss.append(s)
+            if str(pars['price']) == '2':
+                s = """and r.inprice is null or r.inprice = false"""
+                ssss.append(s)
+            elif str(pars['price']) == '1':
+                s = """and r.inprice = true"""
                 ssss.append(s)
             if pars['id_zavod']:
                 s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
@@ -3874,14 +3898,15 @@ ORDER by r.{1} {2}
                 ) as eee8 on (cc = r.ID_SPR)""" % pars['c_group']
                     in_c.insert(0, s)
                 else: 
-                    s = """LEFT join 
+                    s = """left join 
                 (select g.CD_CODE cc, c.NM_GROUP gr
                 from GROUPS g
                 inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
                 ) as eee9 on (cc = r.ID_SPR)"""
                     in_c.insert(0, s)
                     in_c_w.append(" gr is null")
-                    s += " and gr is null"
+                    # s += " and gr is null"
+                    ssss.append(" and gr is null")
                 in_st.insert(0, s)
             else:
                 s = """LEFT join 
@@ -3940,14 +3965,16 @@ ORDER by r.{1} {2}
                 inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
                 ) as eee13 on (cc3 = r.ID_SPR)"""
                 in_st.append(s)
-
-            in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT FROM SPR r""")
+            # s_ = """left join spr_inprice inp on inp.id_spr = r.id_spr"""
+            # in_st.append(s_)
+            in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
+FROM SPR r""")
             sql = '\n'.join(in_st)
             in_c.insert(0, """select count(*) from spr r""")
             sql_c = '\n'.join(in_c)
             stri += ' ' + ' '.join(ssss)
         else:
-            sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT
+            sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
             FROM SPR r
             LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
             LEFT join 
@@ -3986,7 +4013,7 @@ ORDER by r.{1} {2}
                 """
             sql_c = """SELECT count(*) FROM SPR r"""
         sql += """\nWHERE {0}
-ORDER by r.{1} {2}"""
+ORDER by {1} {2}"""
         sql = sql + self._insLimit(start_p, end_p)
         stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
         sql_c += """ WHERE {0}""".format(stri)
@@ -4026,6 +4053,7 @@ ORDER by r.{1} {2}"""
             _return = []
             st_t = time.time()
             p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            # print(sql)
             pool = ThreadPool(2)
             results = pool.map(self._make_sql, p_list)
             pool.close()
@@ -4048,7 +4076,8 @@ ORDER by r.{1} {2}"""
                     "c_mandat"      : row[10],
                     "c_prescr"      : row[11],
                     "dt"            : str(row[12]),
-                    "dt_ins"        : ""#str(row[13])
+                    "dt_ins"        : "",#str(row[13])
+                    "price"         : row[13]
                 }
                 _return.append(r)
             _return = self._getInsDt(_return)

@@ -91,12 +91,12 @@ export default class BarcodesView extends JetView{
                                 this.$scope.$$("_chbar").show();
                                 this.$scope.show('adm-barcodes-s')
                             } else if (this.getValue() === 0) {
-                                this.$scope.$$("_sb").define('placeholder', "Начните набирать баркод");
+                                // this.$scope.$$("_sb").define('placeholder', "Начните набирать штрих-код");
                                 this.$scope.$$("_bnum").hide();
                                 this.$scope.$$("_chbar").hide();
                                 this.$scope.show('adm-barcodes-b')
                                 }
-                            this.$scope.$$("_sb").refresh();
+                            // this.$scope.$$("_sb").refresh();
                             },
                         }
                     },

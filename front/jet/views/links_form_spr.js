@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
 import {get_spr, request, checkVal, compareTrue} from "../views/globals";
 import UnlinkView from "../views/unlink";
-import {dt_formating_sec, dt_formating, mcf_filter, recalcRows} from "../views/globals";
+import {dt_formating_sec, mcf_filter, recalcRowsRet} from "../views/globals";
 import PagerView from "../views/pager_view";
 
 export default class LinksViewSpr extends JetView{
@@ -42,7 +42,7 @@ export default class LinksViewSpr extends JetView{
             searchBar: undefined,
             searchMethod: "getSprLnks",
             columns: [
-                {id: "c_tovar", fillspace: true, 
+                {id: "c_tovar", fillspace: true, sort: 'server',
                     template:"<span>{common.treetable()} #c_tovar#</span><span style='color: red'> #count#</span>",
                     header: [{text: "Наименование"},
                     ],
@@ -69,7 +69,6 @@ export default class LinksViewSpr extends JetView{
                     },
                 {id: "id_tovar", width: 100, hidden: true, sort: 'server',
                     header: [{text: "Код"},
-                        // {content: "cFilt"},
                         ]
                     },
                 {id: "dt", width: 200,
@@ -86,10 +85,14 @@ export default class LinksViewSpr extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope._search.callEvent("onKeyPress", [13,])    
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 150)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -100,9 +103,7 @@ export default class LinksViewSpr extends JetView{
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    let old_v = vi.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
-                    vi.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    vi.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
+                    this.startSearch();
                     },
                 onItemDblClick: function (item, ii, iii) {
                     let level = this.getSelectedItem().$level;
@@ -158,18 +159,28 @@ export default class LinksViewSpr extends JetView{
             }
         }
 
+    startSearch() {
+        var pager = this.getRoot().getChildViews()[1].$scope.$$("__page")
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
+
     init() {
+
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
         }
 
     ready() {
+        let table = this.$$("__table");
         this._break = this.getRoot().getParentView().$scope.$$("_br");
         this._search = this.getRoot().getParentView().$scope.$$("_ls");
-        this.$$("__table").config.searchBar = this._search.config.id;
+        table.config.searchBar = this._search.config.id;
         this._break.hide();
-        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
+
+        table.callEvent('onresize');
+        table.markSorting(table.config.fi,table.config.di);
         
+
         }
     }
 

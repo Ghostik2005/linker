@@ -25,6 +25,9 @@ export default class StartView extends JetView{
         res = checkVal(res, 's');
         app.config.roles = res.cfg;
         app.config.expert = (+res.expert === 5) ? false : true;
+        let info = res.info;
+        app.config.b_ver = info.version;
+        app.config.b_prod = info.prod;
         let pars = res.params;
         if (pars) {
             //console.log('pp present', pars);
@@ -34,11 +37,9 @@ export default class StartView extends JetView{
             app.config.nDelay = ("nDelay" in pars) ? pars.nDelay: app.config.nDelay;
             app.config.save = ("save" in pars) ? pars.save: app.config.save;
             app.config.dtParams = ("dtParams" in pars) ? pars.dtParams: app.config.dtParams;
-            //console.log('pars', pars);
             app.config.link = ("link" in pars) ? pars.link: app.config.link;
             
         } else {
-            //console.log('pp no', pars)
             };
         init_first(app);
         }

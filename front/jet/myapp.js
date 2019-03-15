@@ -14,7 +14,8 @@ webix.ready( () => {
         production:     PRODUCTION,
         id:             "mainApp",
         name:           "linker",
-        // version:        "19.031.1635",
+        b_prod:         "",
+        b_ver:          "",
         version:        VERSION,
         start:          "/login",
         user:           "",
@@ -29,6 +30,8 @@ webix.ready( () => {
         roles:          {},
         expert:         true,
         link:           false,
+        defaultView:    "LinkerView",
+        // defaultView:    "AdmBarView",
         getButt:        (view, buttonsList) => {
                             let bList = [];
                             let views = view.getChildViews()

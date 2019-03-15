@@ -121,7 +121,7 @@ export default class BrakSideInfoView extends JetView{
                 },
             };
 
-        var buttons = {view: 'toolbar',
+        var tool_buttons = {view: 'toolbar',
             height: 35,
             css: {"margin-top": "-1px !important"},
             borderless: true,
@@ -185,7 +185,7 @@ export default class BrakSideInfoView extends JetView{
                     body: dHead
                     },
                 tiny,
-                buttons,
+                tool_buttons,
                 ],
             }
                 

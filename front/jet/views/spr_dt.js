@@ -156,7 +156,7 @@ export default class SprView extends JetView{
                     if (rows) {
                         this.delayResize = setTimeout( () => {
                             this.config.posPpage = rows;
-                            $$(this.config.searchBar).callEvent("onKeyPress", [13,]);
+                            this.$scope.startSearch();
                         }, 150)
                     }
                 },
@@ -190,9 +190,7 @@ export default class SprView extends JetView{
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
-                    this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
+                    this.startSearch();
                     },
                 onBeforeRender: function() {
                     webix.extend(this, webix.ProgressBar);
@@ -220,7 +218,7 @@ export default class SprView extends JetView{
                     },
                 onAfterLoad: function() {
                     this.hideProgress();
-                    },
+                },
                 onAfterSelect: function() {
                     let side_but = this.$scope.getRoot().getParentView().$scope.$$("sideButton");
                     if (side_but.config.formOpen) {
@@ -232,18 +230,18 @@ export default class SprView extends JetView{
                         item["v_name"] = "Производитель: " + item.c_zavod;
                         item["dv_name"] = "Д. вещество: " + item.c_dv;
                         this.$scope.getParentView().sideForm.parse_f("Просмотр записи <span style='color: red'>" + item.id_spr + "</span>.  Изменения не будут сохранены", $$("_spr_search"), item);
-                        }
+                    }
                     if ($$("prcs_dc").count() > 0) {
                         $$("_link").show();
-                        }
-                    },
+                    }
+                },
                 onKeyPress: function(code, e){
                     if (13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
-                        }
-                    },
-                }
+                    }
+                },
             }
+        }
 
         var dt = {
             view: "layout",
@@ -251,16 +249,21 @@ export default class SprView extends JetView{
             rows: [
                 sprv,
                 {$subview: PagerView},
-                ]}
+            ]}
         return dt
-        }
+    }
+
+    startSearch() {
+        var pager = this.getRoot().getChildViews()[1].$scope.$$("__page")
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
 
     ready() {
-        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         this.$$("__table").callEvent('onResize');
-        }
+        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
+    }
 
     init() {
         this.popnew = this.ui(NewformView);
-        }
     }
+}

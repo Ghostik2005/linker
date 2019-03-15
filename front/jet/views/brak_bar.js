@@ -3,30 +3,26 @@
 import {JetView} from "webix-jet";
 import History from "../views/history";
 import {checkKey, unFilter} from "../views/globals";
-import {setButtons, checkVal, recalcRows} from "../views/globals";
+import {setButtons, checkVal, recalcRowsRet} from "../views/globals";
 import {request} from "../views/globals";
 import {dt_formating, compareTrue} from "../views/globals";
 import PagerView from "../views/pager_view";
 import BrakSideInfoView from "../views/brak_side_info";
 import uplBrakMenuView from "../views/brak_upl";
 import CheckView from "../views/excel_check";
+import {buttons} from "../models/variables";
 
 export default class BrakBarView extends JetView{
     config(){
         let app = this.app;
-        let vi = this;
-        
         var st_formating = function (d) {
-            //var format = webix.Date.strToDate("%d-%m-%Y");
             var data = d.order;
             data.forEach(function(item, i, data) {
                 let obj = d.getItem(item);
-                //obj.dt = format(obj.dt)
                 obj.$css = (+obj.m_count === 0) ? "highlighted":
                            "nothing";
                 });
             }
-
 
         let sprv = {view: "toolbar",
             css: {"border-top": "0px"},
@@ -37,10 +33,7 @@ export default class BrakBarView extends JetView{
                         clearTimeout(this.config._keytimed);
                         if (checkKey(code)) {
                             this.config._keytimed = setTimeout( () => {
-                                let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
-                                let old_v = pager.$scope.$$("__page").getValue();
-                                pager.$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                                pager.$scope.$$("__page").refresh();
+                                this.$scope.startSearch()
                                 }, this.$scope.app.config.searchDelay);
                             }
                         }
@@ -100,30 +93,24 @@ export default class BrakBarView extends JetView{
                 extLabel: "<span class='button_label'>Обновить</span>",
                 oldLabel: "<span class='webix_icon fa-refresh'></span>",
                 click: () => {
-                    let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
-                    let old_v = pager.$scope.$$("__page").getValue();
-                    pager.$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    pager.$scope.$$("__page").refresh();
+                    this.startSearch();
                     }
                 },
             {view:"button", width: 40,
-                tooltip: "Сбросить фильтры", type:"imageButton", image: './addons/img/unfilter.svg',
+                tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
                 localId: "_unfilt",
                 resizable: true,
                 sWidth: 180,
                 eWidth: 40,
                 label: "",
                 width: 40,
-                extLabel: "<span class='button_label', style='line-height: 32px'>Сбросить фильтры</span>",
+                extLabel: buttons.unFilter.label,
                 oldLabel: "",
                 click: () => {
                     this.$$("_ls").setValue("");
                     var cv = this.$$("__table");
                     unFilter(cv);
-                    let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
-                    let old_v = pager.$scope.$$("__page").getValue();
-                    pager.$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    pager.$scope.$$("__page").refresh();
+                    this.startSearch()
                     }
                 },
             {view: "button", type: 'htmlbutton',
@@ -312,10 +299,14 @@ export default class BrakBarView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope._search.callEvent("onKeyPress", [13,])    
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 250)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -336,15 +327,10 @@ export default class BrakBarView extends JetView{
                     delete this.getItem(id)["$subHeight"];
                     delete this.getItem(id)["$subOpen"];
                     },
-                onItemClick: function (item) {
-                    },
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    let pager = vi.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1];
-                    let old_v = pager.$scope.$$("__page").getValue();
-                    pager.$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                    pager.$scope.$$("__page").refresh();
+                    this.startSearch()
                     },
                 onItemDblClick: (item) => {
                     },
@@ -392,29 +378,28 @@ export default class BrakBarView extends JetView{
         return _view
         }
 
-    ready() {
+    startSearch() {
+        var pager = this.getRoot().getChildViews()[2].getChildViews()[0].getChildViews()[1].$scope.$$("__page")
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
 
-        let r_but = [this.$$("_history"), this.$$("_unfilt"), this.$$("_fileload"), this.$$("_delletter"), this.$$("_renew"),
-                     this.$$("_filecheck")];
-        setButtons(this.app, r_but);
+    ready() {
+        let table = this.$$("__table");
+        setButtons(this.app, this.app.config.getButt(this.getRoot()));
         let th = this;
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(() => {
-                let thh = th.getRoot().getChildViews()[2].getChildViews()[0];
-                thh = thh.getChildViews()[1].$scope;
-                let old_v = thh.$$("__page").getValue();
-                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                thh.$$("__page").setValue('0');
-                thh.$$("__page").refresh();
+                th.startSearch();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             })
         this._search = this.$$("_ls");
-        this.$$("__table").config.searchBar = this._search.config.id;
+        table.config.searchBar = this._search.config.id;
         this.sideView = this.getRoot().getChildViews()[2].getChildViews()[1]
-        this._search.callEvent("onKeyPress", [13,]);
+
+        this.$$("__table").callEvent('onresize');
         this._search.focus()
         }
 

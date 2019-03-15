@@ -1,10 +1,11 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkKey, dt_formating_sec, dt_formating, recalcRows} from "../views/globals";
+import {checkKey, dt_formating_sec, dt_formating, unFilter, recalcRowsRet} from "../views/globals";
 import {compareTrue} from "../views/globals";
 import {request, checkVal} from "../views/globals";
 import PagerView from "../views/pager_view";
+import {buttons} from "../models/variables";
 
 export default class RelinkFormView extends JetView{
     config(){
@@ -234,10 +235,14 @@ export default class RelinkFormView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope.$$("_sb").callEvent("onKeyPress", [13,])
-                    }, 50)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 150)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -246,9 +251,7 @@ export default class RelinkFormView extends JetView{
                     setTimeout( () => {
                         this.$$("__table").config.fi = field;
                         this.$$("__table").config.di = direction;
-                        let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-                        vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                        vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                        this.startSearch()
                     }, app.config.searchDelay)                 
                 },
                 onBeforeRender: function() {
@@ -285,7 +288,7 @@ export default class RelinkFormView extends JetView{
         var top = { view: "toolbar",
             rows: [
                 {view: "label", label: "наименование удаляемого товара", localId: "old_tovar",
-                    },
+                },
                 {height: 40,
                     cols: [
                         {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите наименование", localId: "_sb", hidden: !true,
@@ -294,42 +297,28 @@ export default class RelinkFormView extends JetView{
                                     clearTimeout(this.config._keytimed);
                                     if (checkKey(code)) {
                                         this.config._keytimed = setTimeout(() => {
-                                            var vi = this.$scope.$$("__table").getParentView();
-                                            let old_v = vi.getChildViews()[2].$scope.$$("__page").getValue();
-                                            vi.getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                                            vi.getChildViews()[2].$scope.$$("__page").refresh();
-                                            }, this.$scope.app.config.searchDelay);
-                                        }
+                                            this.$scope.startSearch();
+                                        }, this.$scope.app.config.searchDelay);
                                     }
-                                },
+                                }
                             },
+                        },
                         {view:"button", localId: "__reset",
                             tooltip: "Сбросить фильтры",
-                            type:"imageButton", image: './addons/img/unfilter.svg',
+                            type:"imageButton", image: buttons.unFilter.icon,
                             width: 38,
                             on: {
                                 onItemClick: () => {
                                     let cv = this.$$("__table");
-                                    let columns = cv.config.columns;
-                                    columns.forEach(function(item){
-                                        if (cv.isColumnVisible(item.id)) {
-                                            if (item.header[1]) {
-                                                if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                                    cv.getFilter(item.id).setValue('');
-                                                } else {
-                                                    cv.getFilter(item.id).value = '';
-                                                    };
-                                                }
-                                            }
-                                        });
-                                    this.$$("_sb").callEvent("onKeyPress", [13,]);
-                                    },
+                                    unFilter(cv)
+                                    this.startSearch()
                                 },
                             },
-                        ]
-                    },
-                ]
-            }
+                        },
+                    ]
+                },
+            ]
+        }
 
         var dt = {
             view: "layout",
@@ -343,55 +332,57 @@ export default class RelinkFormView extends JetView{
             width: document.documentElement.clientWidth * 0.95,
             height: document.documentElement.clientHeight * 0.95,
             modal: true,
+            resize: false,
             on: {
                 onHide: function() {
-                    //this.$scope.$$("__reset").callEvent("onItemClick");
-
                     this.$scope.$$("__table").clearAll();
                     }
                 },
             body: dt
             }
         }
+
     show(new_head, item, parent){
+        let table = this.$$("__table");
         this.getRoot().show();
-        recalcRows(this.$$("__table"));
-        if (parent) this.$$("__table").config.parent = parent;
+        if (parent) table.config.parent = parent;
+        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         if (item) {
             this.$$("old_tovar").setValue("<span style='color:red'>" + item.id_spr + " </span>" + item.c_tovar);
-            this.$$("__table").config.old_spr = item.id_spr;
-            this.$$("__table").config.old_id = item.id;
+            table.config.old_spr = item.id_spr;
+            table.config.old_id = item.id;
             let s = item.c_tovar.replace(/^\s+|\s+$/g, '').split(' ')[0];
-            this.$$("__table").config.searchBar.setValue(s)
-            this.$$("__table").config.searchBar.callEvent("onKeyPress", [13,]);
+            table.config.searchBar.setValue(s);
+            table.callEvent("onresize");
             }
-        this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        
-        this.$$("__table").config.searchBar.focus();
-        //this.$$("_sb").callEvent("onKeyPress", [13,]);
+        table.config.searchBar.focus();
         }
+
     hide(){
         this.getRoot().hide()
         }
 
+    startSearch() {
+        var pager = this.$$("__table").getParentView().getChildViews()[2].$scope.$$("__page");
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
+
     ready() {
-        this.$$("__table").config.searchBar = this.$$("_sb")
-        }
-        
-    init() {
-        let th = this.$$("__table").getParentView();
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        let table = this.$$("__table");
+        table.config.searchBar = this.$$("_sb");
+        let th = this;
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let thh = th.getChildViews()[2].$scope;
-                let old_v = thh.$$("__page").getValue();
-                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                thh.$$("__page").refresh();
-                },webix.ui.datafilter.textWaitDelay);
+                th.startSearch()
+            },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
-            })
-        }
+        })
     }
+        
+    init() {
+    }
+}
 
 

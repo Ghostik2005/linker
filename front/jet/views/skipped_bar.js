@@ -1,18 +1,18 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkVal, setButtons, request, recalcRows} from "../views/globals";
+import {checkVal, setButtons, request, recalcRowsRet} from "../views/globals";
 import ConfirmView from "../views/yes-no";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
+import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter} from "../views/globals";
 import PagerView from "../views/pager_view";
+import {buttons} from "../models/variables";
+import {options} from "../models/variables";
 
 
 export default class SkippedBarView extends JetView{
     config(){
 
         let app = this.app;
-        var vi = this;
-
         var delSkip = () => {
             let item_id = this.$$("__table").getSelectedId()
             this.$$("__table").remove(item_id)
@@ -114,7 +114,7 @@ export default class SkippedBarView extends JetView{
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 pager: 2,
-                                options: [{id: '0', value: 'Без источника'}, {id: '1', value: 'PLExpert'}, {id: '2', value: 'Склад'}, {id: '3', value: "Агент"}, {id: '4', value: "edocs"}]
+                                options: options.sources,
                                 },
                             }
                         ]
@@ -131,10 +131,14 @@ export default class SkippedBarView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.callEvent("onBeforeSort");
-                    }, 50)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 150)
+                    };
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -146,9 +150,7 @@ export default class SkippedBarView extends JetView{
                     setTimeout( () => {
                         this.$$("__table").config.fi = field;
                         this.$$("__table").config.di = direction;
-                        let old_v = vi.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-                        vi.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                        vi.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+                        this.startSearch();
                     }, app.config.searchDelay)                 
                 },
                 onItemDblClick: function(item) {
@@ -183,7 +185,6 @@ export default class SkippedBarView extends JetView{
                 cols: [
                     {},
                     {view: "button", type: "htmlbutton", tooltip: "Обновить", localId: "_renew",
-                        //label: "<span class='webix_icon fa-refresh'></span>", width: 40,
                         resizable: true,
                         sWidth: 136,
                         eWidth: 40,
@@ -196,31 +197,20 @@ export default class SkippedBarView extends JetView{
                             }
                         },
                     {view:"button",  tooltip: "Сбросить фильтры", 
-                        type:"imageButton", image: './addons/img/unfilter.svg', width: 40,
+                        type:"imageButton", image: buttons.unFilter.icon, 
+                        width: 40,
                         localId: "_unfilt",
                         resizable: true,
                         sWidth: 180,
                         eWidth: 40,
                         label: "",
                         width: 40,
-                        extLabel: "<span class='button_label', style='line-height: 28px'>Сбросить фильтры</span>",
+                        extLabel: buttons.unFilter.label,
                         oldLabel: "",
                         click: () => {
                             var cv = this.$$("__table");
-                            var columns = cv.config.columns;
-                            columns.forEach(function(item){
-                                if (cv.isColumnVisible(item.id)) {
-                                    if (item.header[1]) {
-                                        if (typeof(cv.getFilter(item.id).setValue) === 'function') {
-                                            cv.getFilter(item.id).setValue('');
-                                        } else {
-                                            let qq = cv.getFilter(item.id);
-                                            if (!qq.readOnly) qq.value = '';
-                                            };
-                                        }
-                                    }
-                                });
-                            this.$$("__table").callEvent("onBeforeSort");
+                            unFilter(cv);
+                            this.startSearch()
                             }
                         },
                     ]
@@ -230,37 +220,41 @@ export default class SkippedBarView extends JetView{
 
         var _view = {
             view: "layout", type: "clean",
-            //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 top_menu,
                 sprv,
                 {$subview: PagerView},
-                ]}
+            ]}
         return _view
-        }
+    }
+
+    startSearch() {
+        let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
+        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+    }
 
     ready() {
-        let r_but = [this.$$("_renew"), this.$$("_unfilt")]
-        setButtons(this.app, r_but);
-        // let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-        // this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-        // this.getRoot().getChildViews()[2].$scope.$$("__page").refresh();
+        setButtons(this.app, this.app.config.getButt(this.getRoot()));
+        var table = this.$$("__table");
         let th = this;
-        let u = webix.$$(this.$$("__table").getColumnConfig('dt').header[1].suggest.body.id)
+        let u = webix.$$(table.getColumnConfig('dt').header[1].suggest.body.id)
         u.getChildViews()[1].getChildViews()[1].setValue('Применить');
         u.getChildViews()[1].getChildViews()[1].define('click', function() {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
             this._filter_timer=window.setTimeout(function(){
-                let thh = th.getRoot().getChildViews()[2].$scope;
-                let old_v = thh.$$("__page").getValue();
-                thh.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-                thh.$$("__page").refresh();
+                th.startSearch();
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             });
-        this.$$("__table").callEvent("onBeforeSort");
-        this.$$("__table").getFilter("c_tovar").focus();
-        this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
+        table.getFilter('dt').setValue(new Date());
+        table.callEvent('onresize');
+        table.getFilter('dt').blockEvent();
+        setTimeout( () => {
+            table.getFilter('dt').setValue(null);
+            table.getFilter('dt').unblockEvent();
+        }, 150);
+        table.getFilter("c_tovar").focus();
+        table.markSorting(table.config.fi,table.config.di);
         }
     init() {
         this.popconfirm = this.ui(ConfirmView);

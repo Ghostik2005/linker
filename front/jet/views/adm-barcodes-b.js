@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {request, checkVal, recalcRows} from "../views/globals";
+import {request, checkVal, recalcRowsRet} from "../views/globals";
 import ConfirmBarView from "../views/bar-yes-no.js";
 import PagerView from "../views/pager_view";
 
@@ -9,12 +9,6 @@ export default class BarcodesBView extends JetView{
     config(){
 
         let app = this.app;
-        
-        var filtFunc = () => {
-            let old_v = this.getRoot().getChildViews()[1].$scope.$$("__page").getValue();
-            this.getRoot().getChildViews()[1].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
-            this.getRoot().getChildViews()[1].$scope.$$("__page").refresh();
-            }
 
         function delB (pars) {
             let level = pars.item.$level;
@@ -95,10 +89,14 @@ export default class BarcodesBView extends JetView{
                 ],
             on: {
                 'onresize': function() {
-                    setTimeout( () => {
-                        recalcRows(this);
-                        this.$scope._search.callEvent("onKeyPress", [13,])
-                    }, 150)
+                    clearTimeout(this.delayResize);
+                    let rows = recalcRowsRet(this);
+                    if (rows) {
+                        this.delayResize = setTimeout( () => {
+                            this.config.posPpage = rows;
+                            this.$scope.startSearch();
+                        }, 250)
+                    }
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -109,7 +107,7 @@ export default class BarcodesBView extends JetView{
                 onBeforeSort: (field, direction) => {
                     this.$$("__table").config.fi = field;
                     this.$$("__table").config.di = direction;
-                    filtFunc();
+                    this.startSearch();
                     },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
@@ -121,8 +119,6 @@ export default class BarcodesBView extends JetView{
                     } else if (level === 1) {
                         this.$scope.popconfirm.show('Удалить ШК со всеми товарами?', params)
                         };
-                    },
-                onAfterLoad: function() {
                     },
                 onKeyPress: function(code, e){
                     if (13 === code) {
@@ -142,13 +138,21 @@ export default class BarcodesBView extends JetView{
             }
         }
         
+    startSearch() {
+        var pager = this.getRoot().getChildViews()[1].$scope.$$("__page")
+        pager.setValue((+pager.getValue() === 0) ? '1' : "0");
+    }
+
     init() {
+        this.$$("__table").blockEvent();
         this.popconfirm = this.ui(ConfirmBarView);
         }
         
     ready() {
         this._search = this.getRoot().getParentView().$scope.$$("_sb");
         this.$$("__table").config.searchBar = this._search.config.id;
+        this.$$("__table").unblockEvent();
+        this.$$("__table").callEvent('onresize');
         this._search.focus();
         }
     }
