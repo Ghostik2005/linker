@@ -1972,12 +1972,18 @@ on conflict do nothing;"""
         # opt = (idx,)
         # res = self.db.execute({"sql": sql_get_prop_id, "options": opt})[0][0]
         
+        if len(sprs) == 1:
+            insert = f" = {int(sprs[0])}"
+        else:
+             insert = f"in {str(tuple(sprs))}"
+
+
         sql_del = f"""delete FROM GROUPS as g
 WHERE g.CD_GROUP in 
     (SELECT c.CD_GROUP
     FROM CLASSIFIER as c
     WHERE c.IDX_GROUP  = %s)
-and g.CD_CODE in {str(tuple(sprs))}"""
+and g.CD_CODE {insert}"""
         opt = (idx,)
 
 #         sql_del = f"""delete FROM GROUPS as g

@@ -42,7 +42,27 @@ export default class login extends JetView{
             label:"Аутентификация",
             elements:[
                 {height: 20},
-                {view:"label", label:"Перейдите в merge3 из склада", 
+                {view:"label", 
+                    label: "Для входа в Связки товаров с поставщиками перейдите",
+                    // label:"Перейдите в merge3 из склада", 
+                    width: 400,
+                    align: "center"
+                },
+                {view:"label", 
+                    label: " по ссылке " + "<a href='https://sklad71.org'>https://sklad71.org</a>" + ", войдите в программу, выберите:",
+                    // label:"Перейдите в merge3 из склада", 
+                    width: 450,
+                    align: "center"
+                },
+                {view:"label", 
+                    label: "Справочники->Сегменты->Связки.",
+                    // label:"Перейдите в merge3 из склада", 
+                    width: 400,
+                    align: "center"
+                },
+                {view:"label", 
+                    label: "Помощь по тел. 8(920)755-8393 Краснов Евгений",
+                    // label:"Перейдите в merge3 из склада", 
                     width: 400,
                     align: "center"
                 },

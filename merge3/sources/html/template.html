@@ -1,0 +1,5 @@
+
+<% var data = {
+    ver: new Date().toISOString().replace(/-/g, "").replace(/:/g, "").replace(/\./g, ""),
+  }; %>
+<%= _.template(require('./include/index_main.html'))(data) %>
