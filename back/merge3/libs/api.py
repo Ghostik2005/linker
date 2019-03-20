@@ -1985,6 +1985,8 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
         inns = self._fillInns(inns)
         vnds = self._fillVnds(vnds)
         expires = params.get('expires')
+        if 'null' == expires:
+            expires = None
         self.log(f"INFO_EXPIRES:{expires}")
         hard = params.get('hard', False)
         test = params.get('test', False)

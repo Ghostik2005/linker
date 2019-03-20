@@ -37,7 +37,8 @@ export default class StartView extends JetView{
             app.config.nDelay = ("nDelay" in pars) ? pars.nDelay: app.config.nDelay;
             app.config.save = ("save" in pars) ? pars.save: app.config.save;
             app.config.dtParams = ("dtParams" in pars) ? pars.dtParams: app.config.dtParams;
-            app.config.link = ("link" in pars) ? pars.link: app.config.link;
+            // app.config.link = ("link" in pars) ? pars.link: app.config.link;
+            app.config.defaultView = ("default" in pars) ? pars.default: 'LinkerView';
             
         } else {
             };

@@ -112,13 +112,12 @@ button {
     }
 
 .webix_el_button button {
-    /* border-width: 2px; */
-    border-width: 0px;
-/*    border-color: #3498db !important;*/
+    border-width: 2px; 
+    border-color: transparent !important;
     }
 
 button:hover {
-    border-width: 2px;
+    border-color: #dddddd !important;
 }
 
 .webix_input_icon.fa-angle-down {
@@ -134,8 +133,6 @@ button:hover {
 
 .webix_layout_toolbar {
     border: 1px solid transparent !important;
-    /*border-top: 0px !important;
-    border-bottom: 0px !important;*/
     }
 
 .right {

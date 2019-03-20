@@ -158,12 +158,15 @@ export default class LinksViewLnk extends JetView{
                     params["type"] = "async";
                     params["callback"] = delLnk;
                     params["parent"] = this;
-                    if ($$("_link_by")) {
-                        if (+$$("_link_by").getValue() === 1) {
-                            this.popunlink.show("Причина разрыва связки?", params, this._break);
-                        } else {
-                            webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
-                        }
+                    let linkBy = $$("_link_by");
+                    if (!linkBy) {
+                        webix.message({text: "Для работы со связками откройте вкладку Линкер вначале.", type: "debug", expire: 4000});
+                        return false;
+                    }
+                    if (+linkBy.getValue() === 1) {
+                        this.popunlink.show("Причина разрыва связки?", params, this._break);
+                    } else {
+                        webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
                     }
                 },
                 onKeyPress: function(code, e){

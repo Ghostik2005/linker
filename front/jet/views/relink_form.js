@@ -258,10 +258,10 @@ export default class RelinkFormView extends JetView{
                     webix.extend(this, webix.ProgressBar);
                     },
                 onItemDblClick: function(item) {
+                    item = this.getItem(item.row);
                     if (this.$scope.$$("__table").config.old_spr === item.id_spr) {
-                        webix.message({type: 'error', text: "Нельзя заменять эталон на самого себя", expire: 3000})
+                        webix.message({type: 'error', text: "Нельзя заменять эталон на самого себя", expire: 5000})
                     } else {
-                        item = this.getItem(item.row);
                         let url = app.config.r_url + "?delSpr";
                         let params = {"user": app.config.user, "old_spr": this.$scope.$$("__table").config.old_spr, "new_spr": item.id_spr};
                         let res = request(url, params, !0).response;
@@ -272,7 +272,7 @@ export default class RelinkFormView extends JetView{
                             this.$scope.hide();
                         };
                     }
-                    },
+                },
                 onAfterLoad: function() {
                     this.hideProgress();
                     },

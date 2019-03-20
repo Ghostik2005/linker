@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr, compareTrue, recalcRowsRet} from "../views/globals";
+import {get_spr, compareTrue, recalcRowsRet, setRows} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SubRow from "../views/sub_row";
 
@@ -59,10 +59,13 @@ export default class SprView extends JetView{
                     item: item,
                     header: "<span style='color: red; text-transform: uppercase;'>Редактирование записи </span>" + item.id_spr,
                     search_bar: $$("_spr_search")
-                    });
+                });
                 this.ui(sub, { container: target });
                 return sub.getRoot();
-                },
+            },
+            tooltip:function(obj, common){
+                return "<i>" + obj.c_tovar + "</i>";
+            },
             columns: [
                 {id: "id_mnn", width: 75,
                     template: function (obj) {
@@ -260,10 +263,12 @@ export default class SprView extends JetView{
 
     ready() {
         this.$$("__table").callEvent('onResize');
+        // setRows(this);
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
     }
 
     init() {
         this.popnew = this.ui(NewformView);
+        setRows(this);
     }
 }

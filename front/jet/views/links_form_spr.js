@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import NewformView from "../views/new_form";
-import {get_spr, request, checkVal, compareTrue} from "../views/globals";
+import {get_spr, request, checkVal, compareTrue, setRows} from "../views/globals";
 import UnlinkView from "../views/unlink";
 import {dt_formating_sec, mcf_filter, recalcRowsRet} from "../views/globals";
 import PagerView from "../views/pager_view";
@@ -165,9 +165,9 @@ export default class LinksViewSpr extends JetView{
     }
 
     init() {
-
         this.popnew = this.ui(NewformView);
         this.popunlink = this.ui(UnlinkView);
+        setRows(this);
         }
 
     ready() {
@@ -176,11 +176,13 @@ export default class LinksViewSpr extends JetView{
         this._search = this.getRoot().getParentView().$scope.$$("_ls");
         table.config.searchBar = this._search.config.id;
         this._break.hide();
-
-        table.callEvent('onresize');
         table.markSorting(table.config.fi,table.config.di);
-        
-
+        // table.callEvent('onresize');
+        // console.log(table.config.searchBar);
+        setRows(this);
+        setTimeout( () => {
+            $$(table.config.searchBar).focus();
+        }, 50)
         }
     }
 

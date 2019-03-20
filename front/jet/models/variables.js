@@ -45,3 +45,12 @@ export const options = {
         {id: 34, value: "Суперадмин"}, 
         {id: 100, value: "Не назначен"}]
 }
+
+export const defaultScreens = [
+    {id: 1, value1: "LinkerView", value: "Линкер"},
+    {id: 2, value1: "SkippedBarView", value: "Пропущенные"},
+    {id: 3, value1: "AllUnlinkedBarView", value: "Несвязанные"},
+    {id: 4, value1: "LinksBarView", value: "Связки"},
+    {id: 5, value1: "BrakBarView", value: "Забраковка"},
+    {id: 6, value1: "SprView", value: "Эталоны"},
+]

@@ -1115,11 +1115,11 @@ export function init_first(app) {
     
     }
 
-export function getRefs(app) {
+export function getRefs(app, sync) {
     let url = app.config.r_url + "?getRefs"
     let params = {"user": app.config.user};
-    request(url, params).then(function(data) {
-        data = checkVal(data, 'a');
+    if (sync) {
+        let data = checkVal(request(url, params, !0).response, 's');
         if (data) {
             $$("strana_dc").clearAll();
             $$("strana_dc").parse(data.strana);
@@ -1137,8 +1137,30 @@ export function getRefs(app) {
             $$("group_dc").parse(data.group);
             $$("allIs_dc").clearAll();
             $$("allIs_dc").parse(data.issue);
+        };
+    } else {
+        request(url, params).then(function(data) {
+            data = checkVal(data, 'a');
+            if (data) {
+                $$("strana_dc").clearAll();
+                $$("strana_dc").parse(data.strana);
+                $$("vendor_dc").clearAll();
+                $$("vendor_dc").parse(data.vendor);
+                $$("dv_dc").clearAll();
+                $$("dv_dc").parse(data.dv);
+                $$("nds_dc").clearAll();
+                $$("nds_dc").parse(data.nds);
+                $$("hran_dc").clearAll();
+                $$("hran_dc").parse(data.hran);
+                $$("sezon_dc").clearAll();
+                $$("sezon_dc").parse(data.sezon);
+                $$("group_dc").clearAll();
+                $$("group_dc").parse(data.group);
+                $$("allIs_dc").clearAll();
+                $$("allIs_dc").parse(data.issue);
             };
         })
+    }
 }
 
 export function clear_names_bar(th, on_error_text) {
@@ -1447,38 +1469,117 @@ export function setRows(view){
 
 
 export function fillFilterOptions(app) {
+    getRefs(app, true);
     var options = {"sezonList": [], "tgList": [], "ndsList": [], "hranList": [], "stranaList": [], "dvList":[], "vList": []};
-    let tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
+    let tList;
+    tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
+    // tList = [];
     // var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [];
-    tList.forEach(function(it, i, tList) {
-        let tt = {'id': it.id, 'value': it.sezon};
-        options.sezonList.push(tt);
-        });
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.sezon};
+            options.sezonList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getSezonAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+    };
+    // tList = [];
     tList = $$("hran_dc").data.getRange($$("hran_dc").data.getFirstId(), $$("hran_dc").data.getLastId());
-    tList.forEach(function(it, i, tList) {
-        let tt = {'id': it.id, 'value': it.usloviya};
-        options.hranList.push(tt);
-        });
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.usloviya};
+            options.hranList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getHranAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+    };
+    // tList = [];
     tList = $$("nds_dc").data.getRange($$("nds_dc").data.getFirstId(), $$("nds_dc").data.getLastId());
-    tList.forEach(function(it, i, tList) {
-        let tt = {'id': it.id, 'value': it.nds};
-        options.ndsList.push(tt);
-        });
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.nds};
+            options.ndsList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getNdsAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+    };
+    // tList = [];
     tList = $$("group_dc").data.getRange($$("group_dc").data.getFirstId(), $$("group_dc").data.getLastId());
-    tList.forEach(function(it, i, tList) {
-        let tt = {'id': it.id, 'value': it.group};
-        options.tgList.push(tt);
-        });
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.group};
+            options.tgList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getGroupAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+    };
+    // tList = [];
     tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
-    tList.forEach(function(it, i, tList) {
-        let tt = {'id': it.id, 'value': it.c_strana};
-        options.stranaList.push(tt);
-        });
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.c_strana};
+            options.stranaList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getStranaAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+    };
     tList = $$("dv_dc").data.getRange($$("dv_dc").data.getFirstId(), $$("dv_dc").data.getLastId());
-    tList.forEach(function(it, i, tList) {
-        let tt = {'id': it.id, 'value': it.act_ingr};
-        options.dvList.push(tt);
-        });
+    if (tList.length > 1) {
+        tList.forEach(function(it, i, tList) {
+            let tt = {'id': it.id, 'value': it.act_ingr};
+            options.dvList.push(tt);
+            });
+    } else {
+        let url = app.config.r_url + "?getDvAll";
+        let params = {"user": app.config.user};
+        let res = checkVal(request(url, params, !0).response, 's');
+        if (res) {
+            res.forEach(function(it, i, res) {
+                let tt = {'id': it.id, 'value': it.c_zavod};
+                options.vList.push(tt);
+                });
+            };
+    };
     tList = $$("vendor_dc").data.getRange($$("vendor_dc").data.getFirstId(), $$("vendor_dc").data.getLastId());
     if (tList.length > 1) {
         tList.forEach(function(it, i, tList) {
@@ -1495,7 +1596,7 @@ export function fillFilterOptions(app) {
                 options.vList.push(tt);
                 });
             };
-        };
+    };
     return options
 }
 

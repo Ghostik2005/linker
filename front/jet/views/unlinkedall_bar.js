@@ -172,7 +172,12 @@ export default class AllUnlinkedBarView extends JetView{
                     let item = this.$$("__table").getSelectedItem();
                     if (!item) return;
                     if (clickItem && item.id !== clickItem.row) return;
-                    if (+$$("_link_by").getValue() === 1) {
+                    let linkBy = $$("_link_by");
+                    if (!linkBy) {
+                        webix.message({text: "Для работы со связками откройте вкладку Линкер вначале.", type: "debug", expire: 4000});
+                        return false;
+                    }
+                    if (+linkBy.getValue() === 1) {
                         if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
                             $$("_suppl").config.state = true;
                             parseToLink(item);

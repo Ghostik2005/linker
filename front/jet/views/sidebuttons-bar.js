@@ -14,6 +14,7 @@ import BrakBarView from "../views/brak_bar";
 import RefPopView from "../views/references_pop";
 import {screens} from "../models/variables";
 import LinkerView from "../views/linker_bar";
+import SprView from "../views/adm-spr";
 
 export default class SideButtonsBar extends JetView{
     config(){
@@ -88,7 +89,7 @@ export default class SideButtonsBar extends JetView{
                         {
                         onItemClick: () => {
                             app.config.expert = !app.config.expert;
-                            this.$$("sideMenu").define({width: (app.config.expert) ? 44 : 152});
+                            this.$$("sideMenu").define({width: (app.config.expert) ? 44 : 155});
                             this.$$("sideMenu").resize();
                             let pv = this.getRoot().getTopParentView();
                             // console.log('pv', pv);
@@ -102,7 +103,7 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Персональные настройки", height: 40, longPress: false,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     oldLabel: "<span class='side_icon webix_icon fa-cogs'></span>",
@@ -181,7 +182,7 @@ export default class SideButtonsBar extends JetView{
 
                 {view:"button", type: 'htmlbutton', tooltip: "Тестовая кнопка, только для разработчиков", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "",
                     width: 40,
@@ -197,33 +198,33 @@ export default class SideButtonsBar extends JetView{
                         }
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Линкер", height: 40, b_id: undefined, longPress: false,
-                    hidden: true,
+                    hidden: !true,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     // hidden: !app.config.roles[app.config.role].adm,
                     oldLabel: "<span class='side_icon webix_icon fa-link'></span>",
                     extLabel: "<span class='side_icon button_label'>Линкер</span>",
                     on: {
-                        onAfterRender: function() {
-                            let node = this.getNode();
-                            node.onmousedown =  () => {
-                                this.interval = setInterval( () => {
-                                    this.config.longPress = true;
-                                    add_bar(this, LinkerView);
-                                    clearInterval(this.interval);
-                            }, app.config.popDelay);
-                                node.onmouseup = () => {
-                                    clearInterval(this.interval);
-                                }
-                            }
-                        },
+                        // onAfterRender: function() {
+                        //     let node = this.getNode();
+                        //     node.onmousedown =  () => {
+                        //         this.interval = setInterval( () => {
+                        //             this.config.longPress = true;
+                        //             add_bar(this, LinkerView);
+                        //             clearInterval(this.interval);
+                        //     }, app.config.popDelay);
+                        //         node.onmouseup = () => {
+                        //             clearInterval(this.interval);
+                        //         }
+                        //     }
+                        // },
                         onItemClick: function () {
                             var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
-                            if (this.config.longPress) {
-                            } else {
+                            // if (this.config.longPress) {
+                            // } else {
                                 if (ui) {
                                     webix.html.addCss(this.$view, "bounceIn animated");
                                     setTimeout(() => {
@@ -233,14 +234,14 @@ export default class SideButtonsBar extends JetView{
                                 } else {
                                     add_bar(this, LinkerView);
                                 };
-                            };
-                            this.config.longPress = false;
+                            // };
+                            // this.config.longPress = false;
                         }
                     }
                 },
                 {view:"button", type: 'htmlbutton', tooltip: "Админка", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].adm,
@@ -281,7 +282,7 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Забраковка", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !(app.config.roles[app.config.role].skipped),
@@ -363,7 +364,7 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Несвязанные", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 144,
+                    sWidth: 148,
                     eWidth: 40,
                     label: "", width: 40,
                     extLabel: "<span class='side_icon button_label'>Несвязанные</span>",
@@ -403,7 +404,7 @@ export default class SideButtonsBar extends JetView{
                     },
                 {view:"button", type: 'htmlbutton', tooltip: "Связки", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     extLabel: "<span class='side_icon button_label'>Связки</span>",
@@ -444,7 +445,7 @@ export default class SideButtonsBar extends JetView{
                 {view:"button", type:"htmlbutton", width: 40, hidden: !true, tooltip: "Создание отчета по текущей таблице",
                     id: "_rep_button",
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "",
                     extLabel: "<span class='side_icon button_label'>Отчеты</span>",
@@ -461,7 +462,7 @@ export default class SideButtonsBar extends JetView{
                 {view:"button", type: 'htmlbutton', height: 40, b_id: undefined, longPress: false, localId: '_spr',
                     id: "_spr_button",
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].skipped,
@@ -502,7 +503,7 @@ export default class SideButtonsBar extends JetView{
                     tooltip: "Выгрузка spr-roz.db3",
                     tooltipTemplate: "Выгрузка spr-roz.db3",
                     resizable: true,
-                    sWidth: 140,
+                    sWidth: 143,
                     eWidth: 40,
                     label: "", width: 40,
                     hidden: !app.config.roles[app.config.role].skipped,
@@ -546,7 +547,8 @@ export default class SideButtonsBar extends JetView{
             LinksBarView: LinksBarView,
             AdmBarView: AdmBarView,
             BrakBarView: BrakBarView,
-            LinkerView: LinkerView
+            LinkerView: LinkerView,
+            SprView: SprView,
         }
         let r_but = this.app.config.getButt(this.getRoot().getTopParentView());
 

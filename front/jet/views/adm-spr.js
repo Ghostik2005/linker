@@ -86,6 +86,9 @@ export default class SprView extends JetView{
             searchMethod: "getSprSearchAdm",
             old_stri: "",
             css: 'adm-spr',
+            tooltip:function(obj, common){
+                return "<i>" + obj.c_tovar + "</i>";
+            },
             columns: [
                 {id: "checkbox", css: "center_p", 
                     width: 75,

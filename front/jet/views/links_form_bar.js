@@ -112,7 +112,7 @@ export default class LinksBarView extends JetView{
             //css: {'border-left': "1px solid #dddddd !important"},
             rows: [
                 sprv,
-                {height: 3},
+                {height: 1},
                 {$subview: true},
                 ]}
         return _view

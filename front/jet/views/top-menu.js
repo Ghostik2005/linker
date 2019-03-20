@@ -36,6 +36,8 @@ export default class TopmenuView extends JetView{
             on: {
                 onViewChange: function(old_id, new_id) {
                     // боковая кнопка просмотра эталона
+                    // console.log('new_id', new_id);
+                    
                     let v;
                     if (old_id === 'app-nav') {
                         v = $$("app-nav").$scope.$$("sideButton").config.formOpen;
