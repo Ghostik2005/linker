@@ -70,7 +70,7 @@ class API:
             'PRAGMA synchronous = OFF;',
             'PRAGMA journal_mode = OFF;',
             'PRAGMA page_size = 8192;',
-            'create table if not exists tasks (md5 String Primary key, options String, status String, dt Datetime DEFAULT CURRENT_TIMESTAMP);',
+            'create table if not exists tasks (md5 String Primary key, options String, status String, dt Datetime DEFAULT CURRENT_TIMESTAMP, check_this Integer default 0);',
             ]
         for sql in sql_req:
             self._sqlite(sql)
@@ -917,7 +917,7 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
         sql_ins = """insert into app_referencelink (created, updated, org_id, supplier_id, ref_id, abso) values
 (current_timestamp, current_timestamp, %s, %s, %s, %s)
 on conflict (org_id, supplier_id, ref_id) do update
-set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, %s, %s, %s, %s);"""
+set (updated, org_id, supplier_id, ref_id, abso) = (current_timestamp, %s, %s, %s, %s);"""
         inns = self._get_org_id(inns)
         if isinstance(id_sprs, list):
             for i in range(len(id_sprs)):
@@ -1920,7 +1920,7 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
                 sql = """insert into app_referencelink (created, updated, org_id, supplier_id, ref_id, abso) values
 (current_timestamp, current_timestamp, %s, %s, %s, %s)
 on conflict (org_id, supplier_id, ref_id) do update
-set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, %s, %s, %s, %s);"""
+set (updated, org_id, supplier_id, ref_id, abso) = (current_timestamp, %s, %s, %s, %s);"""
                 for v in vnds:
                     for s in sprs:
                         if v != -1 and inn != -1 and s !=-1:
