@@ -20,8 +20,17 @@ export default class TopmenuView extends JetView{
             on: {
                 onOptionRemove: (id) => {
                     $$(id).destructor();
-                    }
                 },
+                onChange: (i, ii) => {
+                    
+                    let v = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1];
+                    v = v.$view.childNodes[1].getElementsByClassName('webix_selected')[0];
+                    let t = $$(i).$scope.$$("__table");
+                    if (t) {
+                        v.title = "Всего позиций: " + t.config.totalPos;
+                    }
+                }
+            },
             options: [
                 {value: "template", id: "template", close: false, width: 100}
                 ]

@@ -15,6 +15,7 @@ import RefPopView from "../views/references_pop";
 import {screens} from "../models/variables";
 import LinkerView from "../views/linker_bar";
 import SprView from "../views/adm-spr";
+import SkladUnlinked from "../views/unlinked_from_sklad_bar";
 
 export default class SideButtonsBar extends JetView{
     config(){
@@ -22,13 +23,13 @@ export default class SideButtonsBar extends JetView{
         let c_th = this;
 
         function add_bar(parent, view) {
-            var tab_view = parent.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
             let header = (view === SkippedBarView) ? screens.SkippedBarView :
                          (view === AllUnlinkedBarView) ? screens.AllUnlinkedBarView :
                          (view === LinksBarView) ? screens.LinksBarView :
                          (view === AdmBarView) ? screens.AdmBarView :
                          (view === BrakBarView) ? screens.BrakBarView :
                          (view === LinkerView) ? screens.LinkerView :
+                         (view === SkladUnlinked) ? screens.SkladUnlinked :
                          undefined
             if (!header) return false;
             let uid = (view===LinkerView) ? 'app-nav' : webix.uid();
@@ -43,8 +44,8 @@ export default class SideButtonsBar extends JetView{
                 };
             // console.log('header', header);
             parent.config.b_id = uid;
-            tab_view.getChildViews()[2].addView(formConfig);
-            tab_view.getChildViews()[1].addOption(tabConfig, true);
+            parent.$scope.tabView.getChildViews()[2].addView(formConfig);
+            parent.$scope.tabView.getChildViews()[1].addOption(tabConfig, true);
             }
 
 
@@ -145,39 +146,6 @@ export default class SideButtonsBar extends JetView{
                             (this.$scope.popref.isVisible()) ? this.$scope.popref.hide() : this.$scope.popref.show(this) 
                             }
                         }
-
-                    // on: {
-                    //     onAfterRender: function() {
-                    //         let node = this.getNode();
-                    //         node.onmousedown =  () => {
-                    //             this.interval = setInterval( () => {
-                    //                 this.config.longPress = true;
-                    //                 add_bar(this, RefView);
-                    //                 clearInterval(this.interval);
-                    //             }, app.config.popDelay);
-                    //             node.onmouseup = () => {
-                    //                 clearInterval(this.interval);
-                    //                 }
-                    //             }
-                    //         },
-                    //     onItemClick: function () {
-                    //         var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
-                    //         let ui = $$(this.config.b_id);
-                    //         if (this.config.longPress) {
-                    //         } else {
-                    //             if (ui) {
-                    //                 webix.html.addCss(this.$view, "bounceIn animated");
-                    //                 setTimeout(() => {
-                    //                     webix.html.removeCss(this.$view, "bounceIn animated");
-                    //                   },900)
-                    //                 tab_view.getChildViews()[1].setValue(this.config.b_id);
-                    //             } else {
-                    //                 add_bar(this, RefView);
-                    //                 };
-                    //             };
-                    //         this.config.longPress = false;
-                    //         }
-                    //     }
                 },
 
                 {view:"button", type: 'htmlbutton', tooltip: "Тестовая кнопка, только для разработчиков", height: 40, b_id: undefined, longPress: false,
@@ -193,10 +161,19 @@ export default class SideButtonsBar extends JetView{
                         onAfterRender: function() {
                             },
                         onItemClick: function () {
-                            // (this.$scope.popref.isVisible()) ? this.$scope.popref.hide() : this.$scope.popref.show(this) 
-                            }
+                            let ui = $$(this.config.b_id);
+                            if (ui) {
+                                webix.html.addCss(this.$view, "bounceIn animated");
+                                setTimeout(() => {
+                                    webix.html.removeCss(this.$view, "bounceIn animated");
+                                    },900)
+                                    this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
+                            } else {
+                                add_bar(this, SkladUnlinked);
+                            };
                         }
-                    },
+                    }
+                },
                 {view:"button", type: 'htmlbutton', tooltip: "Линкер", height: 40, b_id: undefined, longPress: false,
                     hidden: !true,
                     resizable: true,
@@ -207,35 +184,17 @@ export default class SideButtonsBar extends JetView{
                     oldLabel: "<span class='side_icon webix_icon fa-link'></span>",
                     extLabel: "<span class='side_icon button_label'>Линкер</span>",
                     on: {
-                        // onAfterRender: function() {
-                        //     let node = this.getNode();
-                        //     node.onmousedown =  () => {
-                        //         this.interval = setInterval( () => {
-                        //             this.config.longPress = true;
-                        //             add_bar(this, LinkerView);
-                        //             clearInterval(this.interval);
-                        //     }, app.config.popDelay);
-                        //         node.onmouseup = () => {
-                        //             clearInterval(this.interval);
-                        //         }
-                        //     }
-                        // },
                         onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
-                            // if (this.config.longPress) {
-                            // } else {
-                                if (ui) {
-                                    webix.html.addCss(this.$view, "bounceIn animated");
-                                    setTimeout(() => {
-                                        webix.html.removeCss(this.$view, "bounceIn animated");
-                                      },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
-                                } else {
-                                    add_bar(this, LinkerView);
-                                };
-                            // };
-                            // this.config.longPress = false;
+                            if (ui) {
+                                webix.html.addCss(this.$view, "bounceIn animated");
+                                setTimeout(() => {
+                                    webix.html.removeCss(this.$view, "bounceIn animated");
+                                    },900)
+                                    this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
+                            } else {
+                                add_bar(this, LinkerView);
+                            };
                         }
                     }
                 },
@@ -262,7 +221,6 @@ export default class SideButtonsBar extends JetView{
                                 }
                             },
                         onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
                             if (this.config.longPress) {
                             } else {
@@ -271,7 +229,7 @@ export default class SideButtonsBar extends JetView{
                                     setTimeout(() => {
                                         webix.html.removeCss(this.$view, "bounceIn animated");
                                       },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                      this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, AdmBarView);
                                     };
@@ -303,7 +261,6 @@ export default class SideButtonsBar extends JetView{
                                 }
                             },
                         onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
                             if (this.config.longPress) {
                             } else {
@@ -312,7 +269,7 @@ export default class SideButtonsBar extends JetView{
                                     setTimeout(() => {
                                         webix.html.removeCss(this.$view, "bounceIn animated");
                                       },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                      this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, BrakBarView);
                                     };
@@ -344,7 +301,6 @@ export default class SideButtonsBar extends JetView{
                                 }
                             },
                         onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
                             if (this.config.longPress) {
                             } else {
@@ -353,7 +309,7 @@ export default class SideButtonsBar extends JetView{
                                     setTimeout(() => {
                                         webix.html.removeCss(this.$view, "bounceIn animated");
                                       },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                      this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, SkippedBarView);
                                     };
@@ -384,7 +340,6 @@ export default class SideButtonsBar extends JetView{
                                 }
                             },
                         onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
                             if (this.config.longPress) {
                             } else {
@@ -393,7 +348,7 @@ export default class SideButtonsBar extends JetView{
                                     setTimeout(() => {
                                         webix.html.removeCss(this.$view, "bounceIn animated");
                                       },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                      this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, AllUnlinkedBarView);
                                     };
@@ -424,7 +379,6 @@ export default class SideButtonsBar extends JetView{
                                 }
                             },
                         onItemClick: function () {
-                            var tab_view = this.$scope.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
                             let ui = $$(this.config.b_id);
                             if (this.config.longPress) {
                             } else {
@@ -433,7 +387,7 @@ export default class SideButtonsBar extends JetView{
                                     setTimeout(() => {
                                         webix.html.removeCss(this.$view, "bounceIn animated");
                                       },900)
-                                    tab_view.getChildViews()[1].setValue(this.config.b_id);
+                                      this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
                                 } else {
                                     add_bar(this, LinksBarView);
                                     };
@@ -563,7 +517,7 @@ export default class SideButtonsBar extends JetView{
             id: uid,
             $subview: views[app.config.defaultView]
             };
-        var tab_view = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
+        var tab_view = this.tabView;
         tab_view.getChildViews()[2].addView(formConfig);
         tab_view.getChildViews()[1].addOption(tabConfig, true);
         tab_view.getChildViews()[1].removeOption('template');
@@ -574,5 +528,6 @@ export default class SideButtonsBar extends JetView{
         this.popreport = this.ui(NewReportView);
         this.popprop = this.ui(PropView);
         this.popref = this.ui(RefPopView);
+        this.tabView = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
         }
     }

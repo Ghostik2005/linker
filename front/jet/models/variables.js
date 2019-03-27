@@ -20,7 +20,8 @@ export const screens = {
     HranView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>Условия хранения</span>",
     NdsView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>НДС</span>",
     IssueView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>Формы выпуска</span>",
-    TGroupsView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>Товарные группы</span>"
+    TGroupsView: "<span class='webix_icon fa-list-alt'></span><span class='multiview-header'>Товарные группы</span>",
+    SkladUnlinked: "<span class='webix_icon fa-unlink'></span><span class='multiview-header'>Из склада</span>"
 }
 
 

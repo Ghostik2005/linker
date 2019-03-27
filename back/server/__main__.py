@@ -1,7 +1,10 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '19.077.1500' #fix sql requests for mass set properties
+__version__ = '19.084.1500' #оптимизированы sql запросы для справочника эталонов
+# __version__ = '19.084.1300' #оптимизирован один sql запрос
+# __version__ = '19.081.1300' #убрано все от Firebird
+# __version__ = '19.077.1500' #fix sql requests for mass set properties
 # __version__ = '19.074.1235' #fix sql requests for inprice. again
 # __version__ = '19.073.1820' #fix sql requests for inprice
 # __version__ = '19.073.1820' #added table with actual items in price

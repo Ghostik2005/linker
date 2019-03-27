@@ -609,6 +609,9 @@ export function get_data_test(inp_params) {
                 view.parse(data.datas);
                 view.config.startPos = data.start;
                 view.config.totalPos = data.total;
+                let bar_view = view.getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1];
+                let bar_view_node = bar_view.$view.childNodes[1].getElementsByClassName('webix_selected')[0]
+                bar_view_node.title = "Всего позиций: " + view.config.totalPos;
                 let total_page = Math.ceil(view.config.totalPos / view.config.posPpage);
                 let c_page = (total_page !== 0) ? Math.ceil(view.config.startPos / view.config.posPpage) : 1;
                 let pa = nav.getChildViews()[2]
@@ -750,6 +753,17 @@ export function getDtParams(ui) {
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             // 'id_tovar'  : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'owner'     : ($$(ui).isColumnVisible('owner')) ? $$(ui).getFilter('owner').value :undefined,
+            };
+    } else if (ui.config.name === "__dt_sk") {
+        c_filter = {
+            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
+            'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            'id_org'    : ($$(ui).isColumnVisible('id_org')) ? $$(ui).getFilter('id_org').value : undefined,
+            'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
+            'sh_prc'   : ($$(ui).isColumnVisible('sh_prc')) ? $$(ui).getFilter('sh_prc').value : undefined,
+            'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').getText() : undefined,
+            'source'    : ($$(ui).isColumnVisible('source')) ? $$(ui).getFilter('source').getValue() : undefined,
+            'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt_a") {
         c_filter = {
