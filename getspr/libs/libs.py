@@ -434,7 +434,7 @@ def parse_args(arg, _param, x_hash, api):
     try:
         call = getattr(api, arg)
     except:
-        content = json.dumps({"result": False, "value": u'\'%s\' not implimented method' % arg})
+        content = {"result": False, "value": u'\'%s\' not implimented method' % arg}
     else:
         if x_hash:
             try:
@@ -444,9 +444,9 @@ def parse_args(arg, _param, x_hash, api):
                 res = {"result": False, "value": """in method \'%s\' error occured:
 %s""" % (arg, err)}
                 api.log(err)
-                content = json.dumps(res)
+                content = res
         else:
-            content = json.dumps({"result": False, "value": "login please"}, ensure_ascii=False)
+            content = {"result": False, "value": "login please"}
     return content
 
 def handle_commandline(profile, index):

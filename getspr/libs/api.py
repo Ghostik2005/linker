@@ -202,6 +202,34 @@ if req.status_code == '200':
         return ret
         
 
+    def _createLink(self, f_name):
+        folder_name = os.path.join("files", uuid.uuid4().hex)
+        os.makedirs(os.path.join(f"{self.prefix}/ms71/html/", folder_name), mode=0o777, exist_ok=True)
+        sym_name = os.path.join(folder_name, os.path.basename(f_name))
+        os.symlink(f_name, os.path.join(f"{self.prefix}/ms71/html/", sym_name), target_is_directory=False, dir_fd=None)
+        return f"http://{sys.extip}/{sym_name}"
+
+    def getZipSprRoz(self, params=None, x_hash=None):
+        #отдать ссылку на zip архив справочника для розницы
+        #будем отдавать ссылку вместо файла
+        spr_type = params.get("type", "spr-roz")
+        url = None
+        f_name = f"{self.prefix}/ms71/data/spr/{spr_type}.db3.zip"
+        if f_name:
+            #создаем папку с сгенерированным md5 именем, в папку кидаем симфолическую ссылку на запрашиваемый файл
+            #срок жизни папки  - до конца дня. в конце дня производим удаление папок по крону
+            url = self._createLink(f_name)
+            # url = 'link'
+        if url:
+            #добавляем контрольную сумму файла - сделаем позже, если нужно
+            ret = {"result": True, "value":  os.path.basename(f_name), 'url': url, "md5": "checksum will be here later"}
+        else:
+            ret = {"result": False, "value": "no data"}
+        return ret
+
+
+
+
     def getSpr(self, params=None, x_hash=None):
         #отдать ссылку на справочник
         if self._check(x_hash):
@@ -216,17 +244,7 @@ if req.status_code == '200':
             if f_name:
                 #создаем папку с сгенерированным md5 именем, в папку кидаем симфолическую ссылку на запрашиваемый файл
                 #срок жизни папки  - до конца дня. в конце дня производим удаление папок по крону
-                folder_name = os.path.join("files", uuid.uuid4().hex)
-                os.makedirs(os.path.join(f"{self.prefix}/ms71/html/", folder_name), mode=0o777, exist_ok=True)
-                sym_name = os.path.join(folder_name, os.path.basename(f_name))
-                os.symlink(f_name, os.path.join(f"{self.prefix}/ms71/html/", sym_name), target_is_directory=False, dir_fd=None)
-                url = f"http://{sys.extip}/{sym_name}"
-            # if f_name:
-            #     #print(f_name)
-            #     with open(f_name, "rb") as f_obj:
-            #         data =f_obj.read()
-            # else:
-            #     data = None
+                url = self._createLink(f_name)
             if url:
                 #добавляем контрольную сумму файла - сделаем позже, если нужно
                 ret = {"result": True, "value":  os.path.basename(f_name), 'url': url, "md5": "checksum will be here later"}

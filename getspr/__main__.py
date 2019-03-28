@@ -2,7 +2,8 @@
 
 __appname__ = 'getspr'
 
-__version__ = '19.085.1420' #помощь по GETу
+__version__ = '19.086.1600' #возсожность скачивать zip архив
+#__version__ = '19.085.1420' #помощь по GETу
 #__version__ = '19.085.1400' #возвращаем вместо данных ссылку на файл
 # __version__ = '19.085.1220' #чутка поправили скрипты
 # __version__ = '19.009.1400' #getData add
@@ -130,8 +131,30 @@ def application(env):
         env["scgi.defer"] = lambda: sys.APPCONF["log"]("%s DONE in %s secs" % (msg, tt))
 
     elif 'GET' == _rm:
-        ret_value = sys.APPCONF['api'].doc.encode()
-        header = libs.head(len(ret_value), False, True)
+        try:
+            arg = env.get('HTTP_PARAMS')[0]
+        except:
+            arg = None
+        if arg == "getZipSprRoz":
+            sys.APPCONF["log"](arg, kind='info:method:')
+            _param = {}
+            sys.APPCONF["log"](_param, kind='info:params:')
+            #send to UDP socket our message:
+            #appname, kind of message('info', 'error', etc), called method, method's params, timestamp 
+            udp_msg = [__appname__, 'info', arg, _param, time.strftime("%Y-%m-%d %H:%M:%S")]
+            print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
+            content = libs.parse_args(arg, _param, 'test', sys.APPCONF['api'])
+            if not content.get("result"):
+                ret_code = u"404"
+                ret_value = "Ups!".encode()
+                header = libs.head(len(ret_value), False, True)
+            else:            
+                content = content.get('url')
+                ret_value = content.encode()
+                header = libs.head(len(ret_value), False, True)
+        else:
+            ret_value = sys.APPCONF['api'].doc.encode()
+            header = libs.head(len(ret_value), False, True)
     else:
         ret_code = u"403"
         ret_value = "U-u-u-u! Forbidden".encode()
