@@ -21,7 +21,7 @@ export default class PropView extends JetView{
                     //{view: "label", label:"Пользователь:   " + app.config.user},
                     //{height: 10},
                     {view:"counter", label:"Количество отображаемых строк в таблице:", value: 20, labelWidth: 270, width: 370, step: 1, align: 'left', min: 1, max: 50,
-                        name: "posPpage", localId: "_ppage",
+                        name: "posPpage", localId: "_ppage", hidden: true
                         },
                     {height: 10},
                     {view: "checkbox", label:"Получать уведомления", value: 1, labelWidth: 270, width: 370, readonly: !true, localId: "notify",
@@ -37,7 +37,8 @@ export default class PropView extends JetView{
                             }
                         },
                     {height: 10},
-                    {view: "counter", label: "Время вывода уведомлений", value: 3, labelWidth: 270, width: 370, step: 1, align: 'left', min: 0, max: 30, readonly: !true, localId: "nTime",
+                    {view: "counter", label: "Время вывода уведомлений", value: 3, labelWidth: 270, 
+                        width: 370, step: 1, align: 'left', min: 0, max: 30, readonly: !true, localId: "nTime",
                         name: 'nDelay',
                         hidden: true,
                         },
@@ -112,11 +113,19 @@ export default class PropView extends JetView{
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.$$("_ppage").setValue(app.config.posPpage);
         this.$$("notify").setValue(app.config.notify);
-        this.$$("nTime").setValue(app.config.nDelay/1000);
+        this.$$("nTime").setValue(Math.ceil(app.config.nDelay/1000));
         this.$$("expert").setValue((app.config.expert===true) ? 1 : 0);
         this.$$("save").setValue(app.config.save);
         this.$$("link").setValue(app.config.link);
-        
+        if (!app.config.roles[app.config.role].skipped) {
+            let d_val = this.$$("_default").getList();
+            if (d_val.exists(5)){
+                d_val.remove(5);
+            };
+            if (d_val.exists(2)){
+                d_val.remove(2);
+            };
+        };
         this.getRoot().show()
         }
     hide_w(){

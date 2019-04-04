@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker_sse'
-__version__ = '2018.312.1100' #убраны некоторые ошибки
+__version__ = '2019.82.1130' #send sklad err updates
+# __version__ = '2018.312.1100' #убраны некоторые ошибки
 #__version__ = '2018.177.1220' #переделаны типы сообщений клиентам
 #__version__ = '2018.176.1330' #start project
 
@@ -84,6 +85,7 @@ def init():
         api = libs.API(sys._log)
         threading.Thread(target=api.send_data, args=(), daemon=True).start() #send info via SSE
         threading.Thread(target=api.send_busy, args=(), daemon=True).start() #send busy signal via SSE
+        threading.Thread(target=api.send_sklad_err, args=(), daemon=True).start() #send sklad err updates
         return app_conf
     raise SystemExit(rc)
 

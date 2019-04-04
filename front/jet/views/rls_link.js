@@ -237,7 +237,8 @@ export default class RlsLinkFormView extends JetView{
             }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
-        this.$$("__table").callEvent("onresize");
+        this.startSearch();
+        // this.$$("__table").callEvent("onresize");
         this.$$("_sb").focus();
         }
 

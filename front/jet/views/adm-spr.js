@@ -271,6 +271,7 @@ export default class SprView extends JetView{
                 {id: "dt", width: 200, sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
+                    hidden: !true,
                     header: [{text: "Дата изменения"}, 
                     {content: "dateRangeFilter", compare: compareTrue,
                         inputConfig:{format:dt_formating, width: 180,},
@@ -282,6 +283,7 @@ export default class SprView extends JetView{
                 {id: "dt_ins", width: 200, //sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
+                    hidden: true,
                     header: [{text: "Дата добавления"}, 
                     //{content: "dateRangeFilter", compare: compareTrue,
                       //  inputConfig:{format:dt_formating, width: 180,},
@@ -308,7 +310,9 @@ export default class SprView extends JetView{
                     localStorage = Object.keys(localStorage);
                     this.$scope.$$("_del").hide();
                     if (localStorage.length > 1) {
+                        if (app.config.roles[app.config.role].skipped) {
                         this.$scope.$$("_prop").show();
+                        }
                     } else {
                         this.$scope.$$("_prop").hide();
                         this.getHeaderContent("ch1").uncheck();
@@ -347,7 +351,11 @@ export default class SprView extends JetView{
                         let item = this.getSelectedItem();
                         this.$scope.popRls.show_w("Связка с РЛС. Выберите несвязанную позицию из справочника РЛС", item, this.$scope);
                     } else {
-                        this.openSub(this.getSelectedId());
+                        if (app.config.roles[app.config.role].skipped) {
+                            this.openSub(this.getSelectedId());
+                        } else {
+                            webix.message({type:"error", text: "Вам запрещено редактировать", expire: 3000})
+                        };
                     };
                 },
                 onAfterLoad: function() {
@@ -504,6 +512,7 @@ export default class SprView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     extLabel: "<span class='button_label'>Добавить эталон</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
@@ -517,8 +526,12 @@ export default class SprView extends JetView{
                     oldLabel: "<span style='color: red', class='webix_icon fa-times'></span>",
                     on: {
                         onItemClick: () => {
-                            let item = this.$$("__table").getSelectedItem();
-                            this.poprelink.show("Удаление эталона. Выберите товар, к которому будут привязаны связки и штрихкоды удаляемого", item, this);
+                            if (!(app.config.roles[app.config.role].skipped)) {
+                                webix.message({type:"error", text: "Вам запрещено удалять", expire: 3000})
+                            } else {
+                                let item = this.$$("__table").getSelectedItem();
+                                this.poprelink.show("Удаление эталона. Выберите товар, к которому будут привязаны связки и штрихкоды удаляемого", item, this);
+                            }
                         },
                     },
                 },
@@ -592,7 +605,6 @@ export default class SprView extends JetView{
         thisView.pager.hide();
         let table = this.$$("__table");
         table.config.searchBar = this.$$("_sb");
-
         this.scroll = new webix.ui.vscroll({
             container:this.$$("scroll_view").$view, 
             scroll:"y",
@@ -656,6 +668,7 @@ export default class SprView extends JetView{
         // this.$$("_unfilt").callEvent('onItemClick');
         // this.startSearch();
         table.callEvent('onresize');
+        table.markSorting(table.config.fi,table.config.di);
         this.$$("_sb").focus();
     }
     

@@ -44,7 +44,14 @@ export const options = {
         {id: 9, value: "Сводильщик"}, 
         {id: 10, value: "Админ"}, 
         {id: 34, value: "Суперадмин"}, 
-        {id: 100, value: "Не назначен"}]
+        {id: 100, value: "Не назначен"}
+    ],
+    sklad_err_lnk_status: [
+        {id: 10, value: "Удалено"},
+        {id: 1, value: "Принято"},
+        {id: 2, value: "Исправлено"},
+        {id: 3, value: "Отклонено"}
+    ]
 }
 
 export const defaultScreens = [

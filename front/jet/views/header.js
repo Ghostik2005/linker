@@ -15,8 +15,8 @@ export default class HeaderView extends JetView{
         } catch (e) {
             };
         let iid = uuid.v4() + "::" + app.config.user;
-        let sse_url = (location.hostname === 'localhost') ? "http://saas.local/events/SSE?" : "../events/SSE?";
-        sse_url += iid
+        let sse_url = (location.hostname === 'localhost') ? "http://saas.local/events_logic/SSE?" : "../events/SSE?";
+        sse_url += iid;
 
         function newSSE() {
             app.config.eventS = new EventSource(sse_url);
@@ -26,9 +26,27 @@ export default class HeaderView extends JetView{
                     };
                 };
 
+            app.config.eventS.addEventListener('error_badge', function(e) {
+                webix.message('qqq')
+
+            });
+
+            setTimeout( () => {
+                let b = th.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[0].$scope.$$("_errorbut");
+                app.config.eventS.addEventListener("badgeErr", function(e) {
+                    if (+e.data > 0) {
+                        b.define({badge: "*"});
+                        b.refresh();
+                    } else {
+                        b.define({badge: undefined});
+                        b.refresh();
+                    }
+                })
+            }, 200)
+
             app.config.eventS.addEventListener('update', function(e) {
                 webix.message({'type': 'event', 'text': e.data, 'expire': app.config.nDelay});
-                });
+            });
 
             app.config.eventS.addEventListener('enablespin', function(e) {
                 let n = e.data.split("::");
@@ -141,5 +159,6 @@ export default class HeaderView extends JetView{
             ]}
         }
     ready() {
+
         }
     }

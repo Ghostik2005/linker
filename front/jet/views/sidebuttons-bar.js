@@ -136,7 +136,7 @@ export default class SideButtonsBar extends JetView{
                     sWidth: 144,
                     eWidth: 40,
                     label: "", width: 40,
-                    hidden: !app.config.roles[app.config.role].skipped,
+                    // hidden: !app.config.roles[app.config.role].skipped,
                     oldLabel: "<span class='side_icon webix_icon fa-list-alt'></span>",
                     extLabel: "<span class='side_icon button_label'>Справочники</span>",
                     on: {
@@ -159,19 +159,9 @@ export default class SideButtonsBar extends JetView{
                     extLabel: "<span class='side_icon button_label'>Тесты</span>",
                     on: {
                         onAfterRender: function() {
-                            },
+                        },
                         onItemClick: function () {
-                            let ui = $$(this.config.b_id);
-                            if (ui) {
-                                webix.html.addCss(this.$view, "bounceIn animated");
-                                setTimeout(() => {
-                                    webix.html.removeCss(this.$view, "bounceIn animated");
-                                    },900)
-                                    this.$scope.tabView.getChildViews()[1].setValue(this.config.b_id);
-                            } else {
-                                add_bar(this, SkladUnlinked);
-                            };
-                        }
+                        },
                     }
                 },
                 {view:"button", type: 'htmlbutton', tooltip: "Линкер", height: 40, b_id: undefined, longPress: false,
@@ -278,6 +268,29 @@ export default class SideButtonsBar extends JetView{
                             }
                         }
                     },
+                {view:"button", type: 'htmlbutton', tooltip: "Неверные, по мнению клиентов, связки из склада", 
+                    localId: "_errorbut",
+                    height: 40, b_id: undefined, longPress: false,
+                    resizable: true,
+                    sWidth: 143,
+                    eWidth: 40,
+                    label: "",
+                    width: 40,
+                    badge: undefined,
+                    css: "c_badge",
+                    hidden: !app.config.roles[app.config.role].adm,
+                    oldLabel: "<span class='side_icon webix_icon fa-exclamation'></span>",
+                    extLabel: "<span class='side_icon button_label'>Ошибки</span>",
+                    on: {
+                        onAfterRender: function() {
+                            },
+                        onItemClick: function () {
+                            (this.$scope.skladErr.isVisible()) ? this.$scope.skladErr.hide_w() :
+                                                               this.$scope.skladErr.show_w('Неверные, по мнению клиентов, связки из склада. Режим тестирования.');
+                        }
+                    }
+                },
+
                 {view:"button", type: 'htmlbutton', tooltip: "Пропущенные", height: 40, b_id: undefined, longPress: false,
                     resizable: true,
                     sWidth: 148,
@@ -528,6 +541,7 @@ export default class SideButtonsBar extends JetView{
         this.popreport = this.ui(NewReportView);
         this.popprop = this.ui(PropView);
         this.popref = this.ui(RefPopView);
+        this.skladErr = this.ui(SkladUnlinked);
         this.tabView = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
         }
     }

@@ -197,6 +197,9 @@ export default class BrakBarView extends JetView{
             searchBar: undefined,
             searchMethod: "getBrakSearch",
             old_stri: "",
+            tooltip:function(obj, common){
+                return "<i>" + obj.series + "<br>" + obj.c_name + "<br>" + obj.c_zavod + "</i>";
+            },
             subview: (obj, target) => {
                 let tableSubviewItem = this.$$("__table").getItem(obj.id);
                 let url = app.config.r_url + "?getBrakMail";

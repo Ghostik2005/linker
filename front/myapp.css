@@ -440,6 +440,19 @@ div.webix_item_tab {
   line-height: 20px;
   padding-left: 3px;
 }
+.webix_badge {
+  color: red;
+  background-color: transparent;
+  top: 0% !important;
+  margin-top: 4px !important;
+  margin-right: 0px !important;
+}
+.lowlighted {
+  color: lightgrey;
+}
+.darklighted {
+  color: grey;
+}
 
 @charset "UTF-8";
 /*!

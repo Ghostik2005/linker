@@ -129,7 +129,8 @@ export default class PagerView extends JetView{
         }
 
     init(view) {
-        this.getRoot().config.parent = view.getParentView().$scope.$$("__table");
+        let parent = view.getParentView().$scope.$$("__table")
+        this.getRoot().config.parent = parent;
         }
 
     }

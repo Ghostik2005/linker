@@ -85,7 +85,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование товарных групп",
                     label: "<span class='side_icon'>Товарные группы</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -102,7 +102,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование форм выпуска",
                     label: "<span class='side_icon'>Формы выпуска</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -119,7 +119,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование стран",
                     label: "<span class='side_icon'>Страны</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -136,7 +136,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование производителей",
                     label: "<span class='side_icon'>Производители</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -153,7 +153,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование действующих веществ",
                     label: "<span class='side_icon'>ДВ</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -170,7 +170,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование штрих-кодов",
                     label: "<span class='side_icon'>Штрих-коды</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -187,7 +187,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование групп",
                     label: "<span class='side_icon'>Группы</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -204,7 +204,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование условий хранения",
                     label: "<span class='side_icon'>Условия хранения</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -221,7 +221,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование НДС",
                     label: "<span class='side_icon'>НДС</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -238,7 +238,7 @@ export default class RefPopView extends JetView{
                     type: 'htmlbutton',
                     tooltip: "Просмотр и редактирование сезонов",
                     label: "<span class='side_icon'>Сезоны</span>",
-                    hidden: !true,
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     height: 40,
                     on: {
                         onItemClick: function() {
@@ -257,6 +257,7 @@ export default class RefPopView extends JetView{
         return {view: "popup",
             head: "sub-menu",
             loclalId: "_pop",
+            height: (app.config.roles[app.config.role].skipped) ? 0 : 60,
             width: 180,
             css: "pop-up-menu",
             relative: true,

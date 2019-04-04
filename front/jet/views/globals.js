@@ -609,14 +609,18 @@ export function get_data_test(inp_params) {
                 view.parse(data.datas);
                 view.config.startPos = data.start;
                 view.config.totalPos = data.total;
+
                 let bar_view = view.getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1];
-                let bar_view_node = bar_view.$view.childNodes[1].getElementsByClassName('webix_selected')[0]
-                bar_view_node.title = "Всего позиций: " + view.config.totalPos;
+                if (bar_view) {
+                    let bar_view_node = bar_view.$view.childNodes[1].getElementsByClassName('webix_selected')[0]
+                    bar_view_node.title = "Всего позиций: " + view.config.totalPos;
+                };
                 let total_page = Math.ceil(view.config.totalPos / view.config.posPpage);
                 let c_page = (total_page !== 0) ? Math.ceil(view.config.startPos / view.config.posPpage) : 1;
                 let pa = nav.getChildViews()[2]
                 let co = nav.getChildViews()[6]
                 webix.storage.session.put(view.config.name+'_pages', total_page);
+
 
                 if (reset === true) {
                     if (view.$scope.scroll) {
@@ -631,7 +635,6 @@ export function get_data_test(inp_params) {
                         }, 0)
                     }
                 }
-
                 co.define('label', "Всего записей: " + view.config.totalPos);
                 co.refresh();
                 let old_p = nav.$scope.$$("__page").getValue()
@@ -756,13 +759,14 @@ export function getDtParams(ui) {
             };
     } else if (ui.config.name === "__dt_sk") {
         c_filter = {
-            'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
-            'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
-            'id_org'    : ($$(ui).isColumnVisible('id_org')) ? $$(ui).getFilter('id_org').value : undefined,
-            'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
-            'sh_prc'   : ($$(ui).isColumnVisible('sh_prc')) ? $$(ui).getFilter('sh_prc').value : undefined,
-            'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').getText() : undefined,
-            'source'    : ($$(ui).isColumnVisible('source')) ? $$(ui).getFilter('source').getValue() : undefined,
+            // 'id_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
+            'status'     : ($$(ui).isColumnVisible('status')) ? $$(ui).getFilter('status').getValue() : undefined,
+            // 'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
+            // 'id_org'    : ($$(ui).isColumnVisible('id_org')) ? $$(ui).getFilter('id_org').value : undefined,
+            // 'sklad_c_tovar'   : ($$(ui).isColumnVisible('sklad_c_tovar')) ? $$(ui).getFilter('sklad_c_tovar').value : undefined,
+            // 'sh_prc'   : ($$(ui).isColumnVisible('sh_prc')) ? $$(ui).getFilter('sh_prc').value : undefined,
+            // 'c_user'    : ($$(ui).isColumnVisible('c_user')) ? $$(ui).getFilter('c_user').getText() : undefined,
+            // 'source'    : ($$(ui).isColumnVisible('source')) ? $$(ui).getFilter('source').getValue() : undefined,
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt_a") {
@@ -883,9 +887,14 @@ export function init_first(app) {
                             css: "times",
                             height: 26,
                             width:26,
-                            click: function () {
-                                this.getTopParentView().hide();
-                                }
+                            on: {
+                                onItemClick: function () {
+                                    this.getTopParentView().hide();
+                                    },
+                            },
+                            // click: function () {
+                            //     this.getTopParentView().hide();
+                            //     }
                             }
                         ]
                     }
@@ -1702,8 +1711,10 @@ export function toolTipAssign(view, prop_button) {
         if (localStorage[item]) count++;
     });
     if (count > 0) {
-        prop_button.define({"tooltip": "Назначить свойства эталону. Выделенно " + count + " товаров."});
-        prop_button.show();
+        if (vi.app.config.roles[vi.app.config.role].skipped) {
+            prop_button.define({"tooltip": "Назначить свойства эталону. Выделенно " + count + " товаров."});
+            prop_button.show();
+        }
     } else {
         prop_button.define({"tooltip": "Назначить свойства эталону"});
         prop_button.hide();

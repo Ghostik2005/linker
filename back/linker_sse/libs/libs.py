@@ -28,6 +28,44 @@ class API:
         else:
             print("Production" if self.production else "Test", flush=True)
 
+    def send_sklad_err(self):
+        #data = None
+        c = 0
+        while True:
+            k = list(sys._SSE.keys())
+            while k:
+                cur = None
+                con = None
+                v = k.pop()
+                _q, dt_old = sys._SSE.get(v)
+                if _q:
+                    _, user = v.split('::')
+                    try:
+                        con = psycopg2.connect(**self.connect_params)
+                    except Exception:
+                        self.log(traceback.format_exc(), kind="error:connection")
+                    else:
+                        cur = con.cursor()
+                    if cur:
+                        sql = """SELECT count(*) from lnk_errors_from_sklad where status = 1;"""
+                        cur.execute(sql, ())
+                        try:
+                            cou = cur.fetchone()[0]
+                            dt = time.time()
+                        except:
+                            dt = 0
+                        c += 1
+                        if dt > dt_old:
+                            params = ['badgeErr', cou, c]
+                            sys._SSE[v] = [_q, dt]
+                        else:
+                            params = ['info', f'U->{user}, dt-> {dt}, c-> {c}', c]
+                        _q.put(params)
+                try:
+                    con.close()
+                except:
+                    pass
+            time.sleep(5)
 
     def send_busy(self):
         #data = None

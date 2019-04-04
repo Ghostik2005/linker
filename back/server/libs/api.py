@@ -18,10 +18,7 @@ import xlrd
 from libs.connect import pg_local
 import libs.xlsx as xlsx
 import libs.ods as ods
-try:
-    from libs.dbfread import DBF
-except ImportError:
-    print('eeee')
+from libs.dbfread import DBF
 
 
 class API:
@@ -341,15 +338,179 @@ WHERE r.SH_PRC = %s
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def setSkladErrorLnk(self, params=None, x_hash=None):
+        
+        try:
+            inserts = []
+            inserts.append(str(params.get("sh_prc", '-1')))
+            inserts.append(str(params.get("sklad_name", '-1')))
+            inserts.append(str(params.get("sklad_user", '-1')))
+            inserts.append(int(params.get("id_spr", '-1')))
+            inserts.append(str(params.get("sklad_c_tovar", '-1')))
+            inserts.append(str(params.get("sklad_id_tovar", '-1')))
+            inserts.append(str(params.get("sklad_c_zavod", '-1')))
+            inserts.append(str(params.get("sklad_c_strana", '-1')))
+            inserts.append(int(params.get("id_vnd", '-1')))
+            inserts.append(str(params.get("vnd_c_tovar", '-1')))
+            inserts.append(str(params.get("vnd_id_tovar", '-1')))
+            inserts.append(str(params.get("vnd_c_zavod", '-1')))
+            inserts.append(str(params.get("vnd_c_strana", '-1')))
+            inserts.append(int(params.get("id_user", -1)))
+            for i in inserts:
+                if str(i) == '-1':
+                    raise ValueError
+        except:
+            ret = {"result": False, "ret_val": "Non-correct data"}
+        else:
+#             sql = """insert into lnk_errors_from_sklad (sh_prc, sklad_name, sklad_user, id_spr,
+# sklad_c_tovar, sklad_id_tovar, sklad_c_zavod, sklad_c_strana, id_vnd, vnd_c_tovar, vnd_id_tovar, 
+# vnd_c_zavod, vnd_c_strana) values (%, %, %, %, %, %, %, %, %, %, %, %, %) returning id;"""
+            # print(inserts)
+            # print(len(inserts))
+            inserts = tuple(inserts)
+            sql = f"""insert into lnk_errors_from_sklad (sh_prc, sklad_name, sklad_user, id_spr,
+sklad_c_tovar, sklad_id_tovar, sklad_c_zavod, sklad_c_strana, id_vnd, vnd_c_tovar, vnd_id_tovar, 
+vnd_c_zavod, vnd_c_strana, user_id) values {str(inserts)} returning id; """
+            self._print(sql)
+            result = self.db.execute({"sql": sql, "options": None})
+            if result:
+                ret = {"result": True, "ret_val": "Inserted"}
+            else:
+                ret = {"result": False, "ret_val": "Not inserted"}
+        finally:
+            return json.dumps(ret, ensure_ascii=False)
+
+    def updErrorFromSkladStatus(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            item_id = params.get('id')
+            new_status = params.get('status')
+            if item_id and new_status:
+                sql = """update lnk_errors_from_sklad set status = %s, change_dt=current_timestamp where id = %s returning change_dt"""
+                opt = (new_status, item_id)
+                result = self.db.execute({"sql": sql, "options": opt})
+                if result:
+                    ret = {"result": True, "ret_val": str(result[0][0])}
+                else:
+                    ret = {"result": False, "ret_val": "update error"}
+            else:
+                ret = {"result": False, "ret_val": "no data"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def getErrorsFromSklad(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            start_p = int(params.get('start', self.start))
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
+            field = params.get('field', 'dt')
+            if field == 'c_vnd':
+                field = "v." + field
+            else:
+                field = "r." + field
+            direction = params.get('direction', 'desc')
+            search_re = params.get("search", '')
+            search_re = search_re.replace("'", "").replace('"', "")
+            sti = "(lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))"
+            search_re = search_re.split()
+            stri = [] if len(search_re) > 0 else [sti,]
+            for i in range(len(search_re)):
+                ts1 = "(lower(r.sklad_c_tovar) like lower('%" + search_re[i].strip() + "%') or lower(r.vnd_c_tovar) like lower('%" + search_re[i].strip() + "%'))"
+                if i == 0:
+                    stri.append(ts1)
+                else:
+                    stri.append('and %s' % ts1)
+            filt = params.get('c_filter')
+            status = filt.get('status')
+            dt = filt.get('dt')
+            if status:
+                stri.insert(0, f'r.status = {int(status)} and')
+            if dt:
+                start_dt = dt.get('start')
+                end_dt = dt.get('end')
+                if start_dt and not end_dt:
+                    start_dt = start_dt.split()[0]
+                    s = """(r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                    stri.insert(0, '%s and' % s.format(start_dt))
+                elif start_dt and end_dt:
+                    end_dt = end_dt.split()[0]
+                    s = """ (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                    stri.insert(0, '%s and' % s.format(start_dt, end_dt))
+            
+
+            sql = f"""select r.id, r.sh_prc, r.sklad_name, r.sklad_user, r.id_spr, r.sklad_c_tovar, r.sklad_id_tovar,
+r.sklad_c_zavod, r.sklad_c_strana, r.id_vnd, v.c_vnd,
+r.vnd_c_tovar, r.vnd_id_tovar, r.vnd_c_zavod,  r.vnd_c_strana,
+r.status, r.dt, r.change_dt 
+from lnk_errors_from_sklad r
+left join vnd v on v.id_vnd = r.id_vnd
+WHERE {' '.join(stri)}
+"""
+            sql_c = f"""select count(*) 
+from lnk_errors_from_sklad r 
+left join vnd v on v.id_vnd = r.id_vnd
+WHERE {' '.join(stri)}"""
+            sql += f"""order by {field} {direction}"""
+            sql += self._insLimit(start_p, end_p)
+            sql = sql.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%%%') or lower(r.vnd_c_tovar) like lower('%%%%'))", '')
+            if len(stri) > 0:
+                sql = sql.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))", '')
+                sql_c = sql_c.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))", '')
+            self._print(sql)
+            self._print(sql_c)
+            p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(2)
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            result = results[0]
+            count = results[1][0][0]
+            _return = []
+            for row in result:
+                r = {
+                    "id"  : row[0],
+                    "sh_prc"  : row[1],
+                    "sklad_name": row[2],
+                    "sklad_user"    : row[3],
+                    "id_spr"  : row[4],
+                    "sklad_c_tovar" : row[5],
+                    "sklad_id_tovar" : row[6],
+                    "sklad_c_zavod"  : row[7],
+                    "sklad_c_strana" : row[8],
+                    "id_vnd"  : row[9],
+                    "c_vnd"  : row[10],
+                    "vnd_c_tovar" : row[11],
+                    "vnd_id_tovar" : row[12],
+                    "vnd_c_zavod"  : row[13],
+                    "vnd_c_strana" : row[14],
+                    "status"  : row[15],
+                    "dt"   : str(row[16]),
+                    "change_dt"      : str(row[17])
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+
     def getPrcsAll(self, params=None, x_hash=None):
         if self._check(x_hash):
             filt = params.get('c_filter')
             stri = ""
             c_tov = params.get("search", '')
+            zavod = None
+            if '+' in c_tov:
+                s = c_tov.split('+')
+                c_tov = s[0]
+                zavod = s[1]
+            # self._print('zavod', zavod)
             if filt:
                 pars = {}
                 pars['c_vnd'] = filt.get('c_vnd')
-                pars['c_zavod'] = filt.get('c_zavod')
+                pars['c_zavod'] = zavod or filt.get('c_zavod')
                 pars['c_tovar'] = filt.get('c_tovar', c_tov)
                 pars['c_user'] = filt.get('c_user')
                 pars['source'] = filt.get('source')
@@ -434,46 +595,46 @@ WHERE r.SH_PRC = %s
             sql_2 = """left JOIN VND v on (r.ID_VND = v.ID_VND)""" if not v_s else """JOIN VND v on (r.ID_VND = v.ID_VND) %s""" % v_s
             sql_3 = """left join ROLES ru on uid = ru.ID"""
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
-    CASE
-        WHEN ru.NAME is NULL THEN 'не назначен'
-        ELSE ru.NAME
-    END ruu,
-    r.SOURCE,
-    r.in_work,
-    uu."USER"
-from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 {order if 'r.' in order else ''}) as sss1
-join prc r on r.SH_PRC = rsh
-{sql_2}
-{sql_1}
-{sql_3}
-left join users uu on uu.id = r.in_work
-{order if 'r.' not in order else ''}"""
+        CASE
+            WHEN ru.NAME is NULL THEN 'не назначен'
+            ELSE ru.NAME
+        END ruu,
+        r.SOURCE,
+        r.in_work,
+        uu."USER"
+    from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 {order if 'r.' in order else ''}) as sss1
+    join prc r on r.SH_PRC = rsh
+    {sql_2}
+    {sql_1}
+    {sql_3}
+    left join users uu on uu.id = r.in_work
+    {order if 'r.' not in order else ''}"""
             sql_ = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, 0, v.C_VND, r.dt ch_date,
-    CASE
-        WHEN ru.NAME is NULL THEN 'не назначен'
-        ELSE ru.NAME
-    END ruu,
-    r.SOURCE,
-    r.in_work,
-    uu."USER"
-from prc r
-{sql_2}
-{sql_1}
-{sql_3}
-left join users uu on uu.id = r.in_work
-WHERE r.n_fg <> 1 {stri} {us_stri} {us_s or ''}
-order by {field} {direction}"""
+        CASE
+            WHEN ru.NAME is NULL THEN 'не назначен'
+            ELSE ru.NAME
+        END ruu,
+        r.SOURCE,
+        r.in_work,
+        uu."USER"
+    from prc r
+    {sql_2}
+    {sql_1}
+    {sql_3}
+    left join users uu on uu.id = r.in_work
+    WHERE r.n_fg <> 1 {stri} {us_stri} {us_s or ''}
+    order by {field} {direction}"""
             sql = sql_ if (stri or us_stri or us_s) else sql
             sql_tt = sql
             sql_c = f"""select count(*) from ({sql_tt})"""
             sql = sql + self._insLimit(start_p, end_p)
             _return = []
             sql_c = f"""select count(r.SH_PRC) from  PRC r 
-{sql_2 if v_s else ''}
-{sql_1 if us_s else ''}
-{sql_3 if us_s else ''}
-left join users uu on uu.id = r.in_work
-WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
+    {sql_2 if v_s else ''}
+    {sql_1 if us_s else ''}
+    {sql_3 if us_s else ''}
+    left join users uu on uu.id = r.in_work
+    WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
             #self.log(sql)
             p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(2)
@@ -947,8 +1108,9 @@ order by cl.nm_group asc;""", 'opt': ()},
             re = {'strana': _return}
             _return = []
             for row in results[1]:
+                id_c = 999999999 if row[1] == 0 else row[1]
                 r = {
-                    "id"            : row[1],
+                    "id"            : id_c,
                     "c_zavod"       : row[0]
                 }
                 _return.append(r)
@@ -1308,8 +1470,9 @@ join SPR g on ii.id_spr = g.id_zavod and ii.id_spr=ss.id_spr) THEN 0
             _return = []
             result = self.db.request({"sql": sql, "options": opt})
             for row in result:
+                id_c = 999999999 if row[1] == 0 else row[1]
                 r = {
-                    "id": row[1],
+                    "id": id_c,
                     "c_zavod": row[0],
                     "delete": False,
                     "website": row[2] or "" 
@@ -1379,6 +1542,8 @@ values (%s, %s, 1, %s) returning ID_SPR"""
         if self._check(x_hash):
             c_id = params.get('id')
             if c_id:
+                if c_id == 999999999:
+                    c_id = 0
                 sql = f"""delete from SPR_ZAVOD where ID_SPR = %s returning ID_SPR"""
                 opt = (c_id,)
                 res = self.db.execute({"sql": sql, "options": opt})
@@ -1398,6 +1563,8 @@ values (%s, %s, 1, %s) returning ID_SPR"""
     def updVendor(self, params=None, x_hash=None):
         if self._check(x_hash):
             c_id = params.get('id')
+            if c_id == 999999999:
+                c_id = 0
             val = params.get('value')
             website = params.get('website', '')
             if c_id and val:
@@ -1931,8 +2098,11 @@ on conflict do nothing;"""
         return False
 
     def _updateSpr(self, column, id_sprs, prop_id):
-        sprs = tuple([int(i) for i in id_sprs])
-        sql = f"""update spr set {column} = %s where id_spr in {str(sprs)} returning id_spr;"""
+        if len(id_sprs)==1:
+            sql = f"""update spr set {column} = %s where id_spr  = {int(id_sprs[0])} returning id_spr;"""
+        else:
+            sprs = tuple([int(i) for i in id_sprs])
+            sql = f"""update spr set {column} = %s where id_spr in {str(sprs)} returning id_spr;"""
         ret = self.db.execute({"sql": sql, "options": (prop_id,)})
         if ret:
             return True
@@ -1988,7 +2158,7 @@ and g.CD_CODE {insert}"""
             method = params.get('method')
             id_sprs = params.get('items', [])
             prop_id = params.get('prop_id')
-            print(id_sprs)
+            self._print(id_sprs)
             if prop_id:
                 prop_id = prop_id.get('id')
             if id_sprs and prop_id and method:
@@ -3142,8 +3312,6 @@ WHERE {' '.join(stri)} {mail_condition}"""
                 sql = f"""select count(*) from brak_mail where SH_PRC = '{row[0]}' and SERIYA = '{ser}' and DELETED = 0"""
                 opt = ()
                 p_list.append({'sql': sql, 'opt': opt})
-                #ress = self.db.request({"sql": sql, "options": opt})
-                #r['m_count'] = ress[0][0]
                 _return.append(r)
             pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
@@ -3302,7 +3470,7 @@ WHERE {stri} ORDER by {field} {direction}
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-            filt = params.get('c_filter')
+            filt = params.get('c_filter', {})
             in_st = []
             in_c = []
             in_c_w = []
@@ -3321,86 +3489,43 @@ WHERE {stri} ORDER by {field} {direction}
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
             self._print(filt)
-            if filt:
-                pars = {}
-                pars['id_spr'] = filt.get('id_spr')
-                pars['id_zavod'] = filt.get('id_zavod')
-                pars['id_strana'] = filt.get('id_strana')
-                pars['c_dv'] = filt.get('c_dv')
-                pars['c_group'] = filt.get('c_group')
-                pars['c_nds'] = filt.get('c_nds')
-                pars['c_hran'] = filt.get('c_hran')
-                pars['c_sezon'] = filt.get('c_sezon')
-                pars['mandat'] = filt.get('mandat')
-                pars['price'] = filt.get('price')
-                pars['prescr'] = filt.get('prescr')
-                pars['dt_ins'] = filt.get('dt_ins')
-                dt = filt.get('dt')
-                ssss = []
-                if dt:
-                    pars['start_dt'] = dt.get('start')
-                    pars['end_dt'] = dt.get('end')
-                    if pars['start_dt'] and not pars['end_dt']:
-                        pars['start_dt'] = pars['start_dt'].split()[0]
-                        s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
-                        ssss.append(s.format(pars['start_dt']))
-                    elif pars['start_dt'] and pars['end_dt']:
-                        pars['end_dt'] = pars['end_dt'].split()[0]
-                        s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
-                        ssss.append(s.format(pars['start_dt'], pars['end_dt']))
-                in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
-                in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice 
+            pars = {}
+            pars['id_spr'] = filt.get('id_spr')
+            pars['id_zavod'] = filt.get('id_zavod')
+            pars['id_strana'] = filt.get('id_strana')
+            pars['c_dv'] = filt.get('c_dv')
+            pars['c_group'] = filt.get('c_group')
+            pars['c_nds'] = filt.get('c_nds')
+            pars['c_hran'] = filt.get('c_hran')
+            pars['c_sezon'] = filt.get('c_sezon')
+            pars['mandat'] = filt.get('mandat')
+            pars['price'] = filt.get('price')
+            pars['prescr'] = filt.get('prescr')
+            pars['dt_ins'] = filt.get('dt_ins')
+            dt = filt.get('dt')
+            ssss = []
+            if dt:
+                pars['start_dt'] = dt.get('start')
+                pars['end_dt'] = dt.get('end')
+                if pars['start_dt'] and not pars['end_dt']:
+                    pars['start_dt'] = pars['start_dt'].split()[0]
+                    s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                    ssss.append(s.format(pars['start_dt']))
+                elif pars['start_dt'] and pars['end_dt']:
+                    pars['end_dt'] = pars['end_dt'].split()[0]
+                    s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                    ssss.append(s.format(pars['start_dt'], pars['end_dt']))
+            in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
+            in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice 
 FROM SPR r
 join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
 and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078) """)
-                sql = '\n'.join(in_st)
-                in_c.insert(0, """select count(*) from spr r
-                join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
+            sql = '\n'.join(in_st)
+            in_c.insert(0, """select count(*) from spr r
+            join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
 and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078) """)
-                sql_c = '\n'.join(in_c)
-                stri += ' ' + ' '.join(ssss)
-            else:
-                pass
-
-#                 sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
-#                 FROM SPR r
-# join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
-# and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078)
-#                 LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
-#                 LEFT join 
-#                     (select g1.CD_CODE cc1, c1.NM_GROUP nds
-#                     from GROUPS g1
-#                     inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
-#                     ) as ttt2 on (cc1 = r.ID_SPR)
-#                 LEFT join 
-#                     (select g2.CD_CODE cc2, c2.NM_GROUP uhran
-#                     from GROUPS g2
-#                     inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
-#                     ) as ttt3 on (cc2 = r.ID_SPR)
-#                 LEFT join 
-#                     (select g3.CD_CODE cc3, c3.NM_GROUP sezon
-#                     from GROUPS g3
-#                     inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
-#                     ) as ttt4 on (cc3 = r.ID_SPR)
-#                 LEFT join 
-#                     (select g4.CD_CODE cc4, c4.NM_GROUP mandat
-#                     from GROUPS g4
-#                     inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
-#                     ) as ttt5 on (cc4 = r.ID_SPR)
-#                 LEFT join 
-#                     (select g5.CD_CODE cc5, c5.NM_GROUP presc
-#                     from GROUPS g5
-#                     inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-#                     ) as ttt6 on (cc5 = r.ID_SPR)
-#                 LEFT join 
-#                     (select g.CD_CODE cc, c.NM_GROUP gr
-#                     from GROUPS g
-#                     inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
-#                     ) as ttt1 on (cc = r.ID_SPR)
-#                 LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-#                 LEFT join dv d on (d.ID = r.ID_DV)
-#                     """
-#                 sql_c = """SELECT count(*) FROM SPR r"""
+            sql_c = '\n'.join(in_c)
+            stri += ' ' + ' '.join(ssss)
             sql += """\nWHERE {0}
 ORDER by {1} {2}
 """
@@ -3638,6 +3763,8 @@ ORDER by {1} {2}
             s = "LEFT join dv d on (d.ID = r.ID_DV)"
             in_st.append(s)
         if pars['id_zavod']:
+            if pars['id_zavod'] == 999999999 or pars['id_zavod'] == '999999999': 
+                pars['id_zavod'] = 0
             s = "join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD) and z.ID_SPR = {0}".format(pars['id_zavod'])
             in_c.insert(0, s)
             in_st.insert(0, s)
@@ -3654,14 +3781,19 @@ ORDER by {1} {2}
         start_p = 1 if start_p < 1 else start_p
         end_p = int(params.get('count', self.count)) + start_p - 1
         field = params.get('field', 'c_tovar')
+        self._print(field)
         if field == "c_group":
             field = 'gr'
+        elif field == 'id_zavod':
+            field = 'z.c_zavod'
+        elif field == 'id_strana':
+            field = 's.c_strana'            
         else:
             field = "r." + field
         direction = params.get('direction', 'asc')
         search_re = params.get('search', '')
         search_re = search_re.replace("'", "").replace('"', "")
-        filt = params.get('c_filter')
+        filt = params.get('c_filter', {})
         in_st = []
         in_c = []
         in_c_w = []
@@ -3691,82 +3823,42 @@ ORDER by {1} {2}
             stri.append(f'and r.id_spr in {str(id_sprs_tuple)}' if len(id_sprs_tuple) > 1 else f'and r.id_spr = {id_sprs_tuple[0]}')
 
         stri = ' '.join(stri)
-        if filt:
-            pars = {}
-            pars['id_spr'] = filt.get('id_spr')
-            pars['id_zavod'] = filt.get('id_zavod')
-            pars['id_strana'] = filt.get('id_strana')
-            pars['c_dv'] = filt.get('c_dv')
-            pars['c_group'] = filt.get('c_group')
-            pars['c_nds'] = filt.get('c_nds')
-            pars['c_hran'] = filt.get('c_hran')
-            pars['c_sezon'] = filt.get('c_sezon')
-            pars['mandat'] = filt.get('mandat')
-            pars['price'] = filt.get('price')
-            pars['prescr'] = filt.get('prescr')
-            pars['dt_ins'] = filt.get('dt_ins')
-            dt = filt.get('dt')
-            ssss = []
-            if dt:
-                pars['start_dt'] = dt.get('start')
-                pars['end_dt'] = dt.get('end')
-                if pars['start_dt'] and not pars['end_dt']:
-                    pars['start_dt'] = pars['start_dt'].split()[0]
-                    s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
-                    ssss.append(s.format(pars['start_dt']))
-                elif pars['start_dt'] and pars['end_dt']:
-                    pars['end_dt'] = pars['end_dt'].split()[0]
-                    s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
-                    ssss.append(s.format(pars['start_dt'], pars['end_dt']))
+        pars = {}
+        pars['id_spr'] = filt.get('id_spr')
+        pars['id_zavod'] = filt.get('id_zavod')
+        pars['id_strana'] = filt.get('id_strana')
+        pars['c_dv'] = filt.get('c_dv')
+        pars['c_group'] = filt.get('c_group')
+        pars['c_nds'] = filt.get('c_nds')
+        pars['c_hran'] = filt.get('c_hran')
+        pars['c_sezon'] = filt.get('c_sezon')
+        pars['mandat'] = filt.get('mandat')
+        pars['price'] = filt.get('price')
+        pars['prescr'] = filt.get('prescr')
+        pars['dt_ins'] = filt.get('dt_ins')
+        dt = filt.get('dt')
+        ssss = []
+        if dt:
+            pars['start_dt'] = dt.get('start')
+            pars['end_dt'] = dt.get('end')
+            if pars['start_dt'] and not pars['end_dt']:
+                pars['start_dt'] = pars['start_dt'].split()[0]
+                s = """and (r.DT > CAST('{0}' as TIMESTAMP) AND r.DT < cast((CAST('{0}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                ssss.append(s.format(pars['start_dt']))
+            elif pars['start_dt'] and pars['end_dt']:
+                pars['end_dt'] = pars['end_dt'].split()[0]
+                s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
+                ssss.append(s.format(pars['start_dt'], pars['end_dt']))
 
-            in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
+        in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
 
-            in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
+        in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
 FROM SPR r""")
-            sql = '\n'.join(in_st)
-            in_c.insert(0, """select count(*) from spr r""")
-            sql_c = '\n'.join(in_c)
-            stri += ' ' + ' '.join(ssss)
-        else:
-            pass
-            # sql = """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
-            # FROM SPR r
-            # LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)                
-            # LEFT join 
-            #     (select g1.CD_CODE cc1, c1.NM_GROUP nds
-            #     from GROUPS g1
-            #     inner join CLASSIFIER c1 on (c1.CD_GROUP = g1.CD_GROUP) where c1.IDX_GROUP = 2
-            #     ) as ttt2 on (cc1 = r.ID_SPR)
-            # LEFT join 
-            #     (select g2.CD_CODE cc2, c2.NM_GROUP uhran
-            #     from GROUPS g2
-            #     inner join CLASSIFIER c2 on (c2.CD_GROUP = g2.CD_GROUP) where c2.IDX_GROUP = 3
-            #     ) as ttt3 on (cc2 = r.ID_SPR)
-            # LEFT join 
-            #     (select g3.CD_CODE cc3, c3.NM_GROUP sezon
-            #     from GROUPS g3
-            #     inner join CLASSIFIER c3 on (c3.CD_GROUP = g3.CD_GROUP) where c3.IDX_GROUP = 6
-            #     ) as ttt4 on (cc3 = r.ID_SPR)
-            # LEFT join 
-            #     (select g4.CD_CODE cc4, c4.NM_GROUP mandat
-            #     from GROUPS g4
-            #     inner join CLASSIFIER c4 on (c4.CD_GROUP = g4.CD_GROUP) where c4.IDX_GROUP = 4
-            #     ) as ttt5 on (cc4 = r.ID_SPR)
-            # LEFT join 
-            #     (select g5.CD_CODE cc5, c5.NM_GROUP presc
-            #     from GROUPS g5
-            #     inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
-            #     ) as ttt6 on (cc5 = r.ID_SPR)
-            # LEFT join 
-            #     (select g.CD_CODE cc, c.NM_GROUP gr
-            #     from GROUPS g
-            #     inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 1
-            #     ) as ttt1 on (cc = r.ID_SPR)
+        sql = '\n'.join(in_st)
+        in_c.insert(0, """select count(*) from spr r""")
+        sql_c = '\n'.join(in_c)
+        stri += ' ' + ' '.join(ssss)
 
-            # LEFT join spr_zavod z on (z.ID_SPR = r.ID_ZAVOD)
-            # LEFT join dv d on (d.ID = r.ID_DV)
-            #     """
-            # sql_c = """SELECT count(*) FROM SPR r"""
         sql += """\nWHERE {0}
 ORDER by {1} {2}"""
         sql = sql + self._insLimit(start_p, end_p)
@@ -3804,9 +3896,7 @@ ORDER by {1} {2}"""
         if self._check(x_hash):
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
-
             sql, sql_c = self._createSqlGetSprSearchAdm(params)
-
             t1 = time.time() - st_t
             opt = ()
             _return = []
