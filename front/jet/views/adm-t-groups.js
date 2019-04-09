@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {tgReload, addTGr, setButtons, delTGr, updTGr, request, checkVal, DelEdIcons} from "../views/globals";
+import {singleRefReload, addTGr, setButtons, delTGr, updTGr, request, checkVal, DelEdIcons} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -190,7 +190,7 @@ export default class TGroupsView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        tgReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getTgAll", this.$$("__table"));
         }
         
     init() {

@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {issueReload, setButtons, addIssue, delIssue, updIssue, request, checkVal, DelEdIcons} from "../views/globals";
+import {singleRefReload, setButtons, addItem, delItem, updItem, request, DelEdIcons} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -91,7 +91,7 @@ export default class IssueView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.c_issue, 'id': item.id, 'type': 'Issue', 'callback': updIssue, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.c_issue, 'id': item.id, 'type': 'Issue', 'callback': updItem, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование формы выпуска', params);
                     },
                 onAfterLoad: function() {
@@ -135,7 +135,7 @@ export default class IssueView extends JetView{
                         // let url = app.config.r_url + "?getIsId"
                         // let params = {"user": app.config.user};
                         // let res = request(url, params, !0).response;
-                        let params = {'type': 'Issue', 'callback': addIssue, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Issue', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         // res = checkVal(res, 's');
                         // if (res) {
                         //     params['id_is'] = res;
@@ -157,7 +157,7 @@ export default class IssueView extends JetView{
                             let url = this.app.config.r_url + "?delIssue";
                             let res = JSON.parse(request(url, params, !0).response);
                             if (res.result) {
-                                delIssue(res.ret_val.id, this.$$("__table"));
+                                delItem('AllIs', res.ret_val.id, this.$$("__table"));
                                 this.$$("_del").hide()
                             } else {
                                 webix.message({'type': 'error', 'text': res.ret_val})
@@ -180,7 +180,7 @@ export default class IssueView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        issueReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getIssueAll", this.$$("__table"));
         //this.$$("__table").parse(issReload(this.app));
         }
 

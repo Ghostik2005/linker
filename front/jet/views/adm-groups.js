@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, grReload, addGr, setButtons, delGr, updGr, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, addItem, setButtons, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -95,7 +95,7 @@ export default class GroupsView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.group, 'id': item.id, 'type': 'Gr', 'callback': updGr, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.group, 'id': item.id, 'type': 'Gr', 'callback': updItem, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование группы', params);
                     },
                 onAfterLoad: function() {
@@ -136,7 +136,7 @@ export default class GroupsView extends JetView{
                     extLabel: "<span class='button_label'>Добавить группу</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Gr', 'callback': addGr, 'mode': 'new', 'source': this.$$("__table"), 'index': 1};
+                        let params = {'type': 'Gr', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table"), 'index': 1};
                         this.popnew.show('Добавление группы', params, true);
                         }
                     },
@@ -155,7 +155,7 @@ export default class GroupsView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delGr(res.id, this.$$("__table"));
+                                delItem('Group', res.id, this.$$("__table"));
                                 this.$$("_del").hide()
                                 };
                             },
@@ -176,7 +176,7 @@ export default class GroupsView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        grReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getGroupAll", this.$$("__table"));
         }
         
     init() {

@@ -19,7 +19,6 @@ export default class SprView extends JetView{
         let app = this.app;
         var vi = this;
         this.options = fillFilterOptions(app);
-
         var sprv = {view: "datatable",
             name: "__dt_as",
             localId: "__table",

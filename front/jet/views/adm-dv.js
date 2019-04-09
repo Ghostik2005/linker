@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, dvReload, setButtons, addDv, delDv, updDv, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, setButtons, addItem, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewDvView from "../views/new_dv";
 
@@ -105,7 +105,7 @@ export default class DvView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.act_ingr, 'id': item.id, "oa": item.oa,'type': 'Dv', 'callback': updDv, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.act_ingr, 'id': item.id, "oa": item.oa,'type': 'Dv', 'callback': updItem, 'mode': 'upd', 'source': this};
                     //console.log(params);
                     this.$scope.popnew.show('Редактирование действующего в-ва', params);
                     },
@@ -147,7 +147,7 @@ export default class DvView extends JetView{
                     extLabel: "<span class='button_label'>Добавить ДВ</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Dv', 'callback': addDv, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Dv', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление действующего в-ва', params);
                         }
                     },
@@ -166,7 +166,7 @@ export default class DvView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delDv(res.id, this.$$("__table"));
+                                delItem('Dv', res.id, this.$$("__table"));
                                 this.$$("_del").hide()
                                 };
                             },
@@ -187,7 +187,7 @@ export default class DvView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        dvReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getDvAll", this.$$("__table"));
         }
         
     init() {

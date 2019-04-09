@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, sezonReload, setButtons, addSez, delSez, updSez, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, setButtons, addItem, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -97,7 +97,7 @@ export default class SeasonsView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.sezon, 'id': item.id, 'type': 'Sez', 'callback': updSez, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.sezon, 'id': item.id, 'type': 'Sez', 'callback': updItem, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование сезонности', params);
                     },
                 onAfterLoad: function() {
@@ -139,7 +139,7 @@ export default class SeasonsView extends JetView{
                     extLabel: "<span class='button_label'>Добавить сезон</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Sez', 'callback': addSez, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Sez', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление сезонности', params);
                         }
                     },
@@ -158,7 +158,7 @@ export default class SeasonsView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delSez(res.id, this.$$("__table"));
+                                delItem('Sezon', res.id, this.$$("__table"));
                                 this.$$("_del").hide()
                                 };
                             },
@@ -179,7 +179,7 @@ export default class SeasonsView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        sezonReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getSezonAll", this.$$("__table"));
         }
         
     init() {

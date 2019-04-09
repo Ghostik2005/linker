@@ -1,7 +1,7 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {tgReload, get_tg} from "../views/globals";
+import {singleRefReload, get_tg} from "../views/globals";
 
 
 export default class NewtgView extends JetView{
@@ -23,7 +23,7 @@ export default class NewtgView extends JetView{
                     let id_spr = this.$$("_n_tg").config.id_spr
                     var qw = this.$$("e_list");
                     qw.clearAll(true);
-                    qw.parse(tgReload(app));
+                    qw.parse(singleRefReload(this.app, "getTgAll"));
                     if (typeof(id_spr) === 'number'){
                         let pp = this.$$("t_list");
                         pp.clearAll(true);

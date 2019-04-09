@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, ndsReload, addNds, setButtons, delNds, updNds, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, addItem, setButtons, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -95,7 +95,7 @@ export default class NdsView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.nds, 'id': item.id, 'type': 'Nds', 'callback': updNds, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.nds, 'id': item.id, 'type': 'Nds', 'callback': updItem, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование НДС', params);
                     },
                 onAfterLoad: function() {
@@ -136,7 +136,7 @@ export default class NdsView extends JetView{
                     extLabel: "<span class='button_label'>Добавить НДС</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Nds', 'callback': addNds, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Nds', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление НДС', params);
                         }
                     },
@@ -155,7 +155,7 @@ export default class NdsView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delNds(res.id, this.$$("__table"));
+                                delItem('Nds', res.id, this.$$("__table"));
                                 this.$$("_del").hide()
                                 };
                             },
@@ -176,7 +176,7 @@ export default class NdsView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        ndsReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getNdsAll", this.$$("__table"));
         }
         
     init() {

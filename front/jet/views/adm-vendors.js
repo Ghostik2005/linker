@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, vendorReload, setButtons, addVendor, delVendor, updVendor, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, setButtons, addItem, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -110,7 +110,7 @@ export default class VendorsView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.c_zavod, 'id': item.id, 'type': 'Vendor', 'callback': updVendor, 
+                    let params = {'text': item.c_zavod, 'id': item.id, 'type': 'Vendor', 'callback': updItem, 
                                   'mode': 'upd', 'source': this, 'website': item.website};
                     this.$scope.popnew.show('Редактирование поставщика', params);
                     },
@@ -153,7 +153,7 @@ export default class VendorsView extends JetView{
                     extLabel: "<span class='button_label'>Добавить производителя</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Vendor', 'callback': addVendor, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Vendor', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление производителя', params);
                         }
                     },
@@ -172,7 +172,7 @@ export default class VendorsView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delVendor(res.id, this.$$("__table"));
+                                delItem('Vendor', res.id, this.$$("__table"));
                                 this.$$("_del").hide();
                                 };
                             },
@@ -193,7 +193,7 @@ export default class VendorsView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")];
         setButtons(this.app, r_but);
-        vendorReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, 'getVendorAll', this.$$("__table"));
         }
         
     init() {

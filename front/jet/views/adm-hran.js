@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, hranReload, setButtons, addHran, delHran, updHran, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, setButtons, addItem, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -96,7 +96,7 @@ export default class HranView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.usloviya, 'id': item.id, 'type': 'Hran', 'callback': updHran, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.usloviya, 'id': item.id, 'type': 'Hran', 'callback': updItem, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование условия хранения', params);
                     },
                 onAfterLoad: function() {
@@ -137,7 +137,7 @@ export default class HranView extends JetView{
                     extLabel: "<span class='button_label'>Добавить условия</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Hran', 'callback': addHran, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Hran', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление условия хранения', params);
                         }
                     },
@@ -156,7 +156,7 @@ export default class HranView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delHran(res.id, this.$$("__table"));
+                                delItem('hran', res.id, this.$$("__table"));
                                 this.$$("_del").hide()
                                 };
                             },
@@ -177,7 +177,7 @@ export default class HranView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        hranReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getHranAll", this.$$("__table"));
         }
         
     init() {

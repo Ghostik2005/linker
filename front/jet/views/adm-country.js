@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {DelEdIcons, stranaReload, setButtons, addStrana, delStrana, updStrana, request, checkVal} from "../views/globals";
+import {DelEdIcons, singleRefReload, setButtons, addItem, delItem, updItem, request, checkVal} from "../views/globals";
 import {refTemplate} from "../views/globals";
 import NewPropView from "../views/new_prop";
 
@@ -95,7 +95,7 @@ export default class CountryView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     item = this.getSelectedItem();
-                    let params = {'text': item.c_strana, 'id': item.id, 'type': 'Strana', 'callback': updStrana, 'mode': 'upd', 'source': this};
+                    let params = {'text': item.c_strana, 'id': item.id, 'type': 'Strana', 'callback': updItem, 'mode': 'upd', 'source': this};
                     this.$scope.popnew.show('Редактирование страны', params);
                     },
                 onAfterLoad: function() {
@@ -136,7 +136,7 @@ export default class CountryView extends JetView{
                     extLabel: "<span class='button_label'>Добавить страну</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
-                        let params = {'type': 'Strana', 'callback': addStrana, 'mode': 'new', 'source': this.$$("__table")};
+                        let params = {'type': 'Strana', 'callback': addItem, 'mode': 'new', 'source': this.$$("__table")};
                         this.popnew.show('Добавление страны', params);
                         }
                     },
@@ -155,7 +155,7 @@ export default class CountryView extends JetView{
                             let res = request(url, params, !0).response;
                             res = checkVal(res, 's');
                             if (res) {
-                                delStrana(res.id, this.$$("__table"));
+                                delItem('Strana', res.id, this.$$("__table"));
                                 this.$$("_del").hide()
                                 };
                             },
@@ -176,7 +176,7 @@ export default class CountryView extends JetView{
     ready() {
         let r_but = [this.$$("_add"), this.$$("_del")]
         setButtons(this.app, r_but);
-        stranaReload(this.app, this.$$("__table"));
+        singleRefReload(this.app, "getStranaAll", this.$$("__table"));
         }
         
     init() {

@@ -3929,7 +3929,8 @@ ORDER by {1} {2}"""
                     "price"         : row[13]
                 }
                 _return.append(r)
-            _return = self._getInsDt(_return)
+            if params.get('count', 0) < 100000000:
+                _return = self._getInsDt(_return)
             ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}

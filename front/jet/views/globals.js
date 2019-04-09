@@ -1,12 +1,5 @@
 "use strict";
 
-import {JetApp, JetView} from "webix-jet";
-
-
-// export var adm_roles = new webix.DataCollection({
-//         id: "admroles_dc",
-//         });
-
 export var u_roles = new webix.DataCollection({
         id: "roles_dc",
         });
@@ -77,32 +70,25 @@ export var cEvent = function(a,b,c,d){
 export var unFilter = function(cv) {
     var columns = cv.config.columns;
     columns.forEach(function(item){
-        if (item.id && (item.id!=='checkbox') && cv.isColumnVisible(item.id)) {
-            if (item.header[1]) {
-                if (item.header[1].content) {
-                    let filt = cv.getFilter(item.id);
-                    if (typeof(filt.setValue) === 'function') {
-                        filt.blockEvent();
-                        filt.setValue('');
-                        filt.unblockEvent();
-                    } else {
-                        if (!filt.readOnly) filt.value = '';
-                        };
-                    }
-                }
+        if (item.id && (item.id!=='checkbox') && cv.isColumnVisible(item.id) && item.header[1] && item.header[1].content) {
+            let filt = cv.getFilter(item.id);
+            if (typeof(filt.setValue) === 'function') {
+                filt.blockEvent();
+                filt.setValue('');
+                filt.unblockEvent();
+            } else {
+                if (!filt.readOnly) filt.value = '';
+                };
             }
         });
     }
-    
+        
 export function checkKey(code) {
-    let ret = false;
-    if (code === 8 || code === 13 || code === 32 || code === 46 || (code > 47 && code < 91) || (code > 95 && code < 112) || (code > 185 && code < 193) || (code > 219 && code < 223)) ret = true;
-    return ret
+    return (code === 8 || code === 13 || code === 32 || code === 46 || (code > 47 && code < 91) || (code > 95 && code < 112) || (code > 185 && code < 193) || (code > 219 && code < 223)) ? true : false
     }
 
 export function checkVal(result, mode) {
     var ret_value;
-    var err;
     if (mode === 's') {
         ret_value = JSON.parse(result);
     } else if (mode === 'a') {
@@ -112,126 +98,48 @@ export function checkVal(result, mode) {
         ret_value = ret_value.ret_val;
     } else {
         ret_value = undefined;
-        err = 'error';
         }
     return ret_value;
     }
 
-export function addHran(item, source) {
-    source.add(item,0);
-    hran.add(item,0);
-    }
+export function getStorageFromName(name){
+    return $$(name[0].toLowerCase() + name.slice(1) + "_dc");
+}
 
-export function delHran(item_id, source) {
-    source.remove(item_id);
-    hran.remove(item_id);
-    }
-
-export function updHran(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.usloviya = item.value;
-    source.updateItem(cid, citem);
-    hran.updateItem(cid, citem);
-    source.refresh();
-    //hran.updateItem(item.id, item.value);
-    }
-
-export function addIssue(item, source) {
+export function addItem(storage, item, source) {
+    storage = getStorageFromName(storage);
     source.add(item, 0);
-    allIs.add(item, 0);
-    }
+    storage.add(item, 0);
+}
 
-export function delIssue(item_id, source) {
-    source.remove(item_id);
-    allIs.remove(item_id);
-    }
+export function delItem(storage, item, source) {
+    storage = getStorageFromName(storage);
+    source.remove(item, 0);
+    storage.remove(item, 0);
+}
 
-export function updIssue(item, source) {
-    var cid = item.id; 
+export function getFieldFromName(name){
+    return (name === 'Nds') ? 'nds' :
+            (name === 'Dv') ? 'act_ingr' :
+            (name === 'Group') ? 'group' :
+            (name === 'Hran') ? 'usloviya' :
+            (name === 'AllIs') ? 'c_issue' :
+            (name === 'Sezon') ? 'sezon' :
+            (name === 'Strana') ? 'c_strana' :
+            (name === 'Vendor') ? 'c_zavod' :
+            ""
+}
+
+export function updItem(storage, item, source) {
+    let field = getFieldFromName(storage)
+    storage = getStorageFromName(storage);
+    var cid = item.id;
     let citem = source.getItem(cid);
-    citem.c_issue = item.value;
-    allIs.updateItem(cid, citem);
+    citem[field] = item.value;
     source.updateItem(cid, citem);
+    storage.updateItem(cid, citem);
     source.refresh();
-    }
-
-export function addStrana(item, source) {
-    source.add(item, 0);
-    strana.add(item,0);
-    }
-
-export function delStrana(item_id, source) {
-    source.remove(item_id);
-    strana.remove(item_id);
-    }
-
-export function updStrana(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.c_strana = item.value;
-    strana.updateItem(cid, citem);
-    source.updateItem(cid, citem);
-    source.refresh();
-    }
-
-export function addDv(item, source) {
-    source.add(item, 0);
-    dv.add(item, 0);
-    }
-
-export function delDv(item_id, source) {
-    source.remove(item_id);
-    dv.remove(item_id);
-    }
-
-export function updDv(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.act_ingr = item.value;
-    citem.oa = item.oa;
-    dv.updateItem(cid, citem);
-    source.updateItem(cid, citem);
-    source.refresh();
-    }
-
-export function addNds(item, source) {
-    source.add(item,0);
-    nds.add(item,0);
-    }
-
-export function delNds(item_id, source) {
-    source.remove(item_id)
-    nds.remove(item_id);
-    }
-
-export function updNds(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.nds = item.value;
-    source.updateItem(cid, citem);
-    nds.updateItem(cid, citem);
-    source.refresh();
-    }
-
-export function addSez(item, source) {
-    source.add(item, 0);
-    sezon.add(item, 0);
-    }
-
-export function delSez(item_id, source) {
-    source.remove(item_id);
-    sezon.remove(item_id);
-    }
-
-export function updSez(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.sezon = item.value;
-    source.updateItem(cid, citem);
-    sezon.updateItem(cid, citem);
-    source.refresh();
-    }
+}
 
 export function addTGr(item, source) {
     item.c_tgroup = item.group;
@@ -251,46 +159,6 @@ export function updTGr(item, source) {
     source.refresh();
     }
 
-
-export function addGr(item, source) {
-    source.add(item,0);
-    group.add(item,0);
-    }
-
-export function delGr(item_id, source) {
-    source.remove(item_id);
-    group.remove(item_id);
-    }
-
-export function updGr(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.group = item.value;
-    group.updateItem(cid, citem);
-    source.updateItem(cid, citem);
-    source.refresh();
-    }
-
-export function addVendor(item, source) {
-    source.add(item, 0);
-    vendor.add(item, 0);
-    }
-
-export function delVendor(item_id, source) {
-    source.remove(item_id);
-    vendor.remove(item_id);
-    }
-
-export function updVendor(item, source) {
-    var cid = item.id; 
-    let citem = source.getItem(cid);
-    citem.c_zavod = item.value;
-    citem.website = item.website;
-    vendor.updateItem(cid, citem);
-    source.updateItem(cid, citem);
-    source.refresh();
-    }
-
 export function parseToLink(item){
     let suppl_dt = $$("_suppl").getList()
     let data = suppl_dt.data.order;
@@ -298,7 +166,7 @@ export function parseToLink(item){
     let app = $$("main_ui").$scope.app
     let url = app.config.r_url + "?setWork"
     let params = {"user": app.config.user, "sh_prc": item.sh_prc};
-    let res = checkVal(request(url, params, !0).response, 's');
+    checkVal(request(url, params, !0).response, 's');
     data.forEach(function(d_item, i, data) {
         if (suppl_dt.getItem(d_item).c_vnd === item.c_vnd) {
             cid = suppl_dt.getItem(d_item).id;
@@ -313,8 +181,6 @@ export function parseToLink(item){
                 prcs.add(item, 0);
                 let iid = prcs.data.order[0];
                 prcs.setCursor(iid);
-                //prcs.setCursor(cid);
-                //prcs.setCursor(item.id);
                 parse_unlinked_item(this, item);
             } else {
                 prcs.setCursor(item.id);
@@ -357,9 +223,7 @@ export function refLoad(app, type) {
     let data = [];
     let url = (type === 'gr') ? "?getGroupAll":
               (type === 'dv') ? "?getDvAll":
-              //(type === 'recipt') ? "q":
               (type === 'sezon') ? "?getSezonAll":
-              //(type === 'mandat') ? "q":
               (type === 'hran') ? "?getHranAll":
               (type === 'issue') ? "?getIssueAll":
               (type === 'nds') ? "?getNdsAll":
@@ -375,19 +239,16 @@ export function refLoad(app, type) {
     };
     if (data.length > 2) {
         data.forEach( function(item) {
-            let val = (type === 'gr') ? item.group:
+            item.value = (type === 'gr') ? item.group:
                       (type === 'dv') ? item.act_ingr:
                       (type === 'sezon') ? item.sezon:
                       (type === 'hran') ? item.usloviya:
                       (type === 'issue') ? item.c_issue:
                       (type === 'nds') ? item.nds:
                       undefined
-            item.value = val;
         })
     }
-
     return data
-
 }
 
 export function refReload(url, params, async) {
@@ -409,59 +270,11 @@ export function refReload(url, params, async) {
     }
 }
 
-export function vendorReload (app, async) {
-    let url = app.config.r_url + "?getVendorAll"
+export function singleRefReload(app, method, parent) {
+    let url = app.config.r_url + "?" + method;
     let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function dvReload (app, async) {
-    let url = app.config.r_url + "?getDvAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function ndsReload (app, async) {
-    let url = app.config.r_url + "?getNdsAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function sezonReload (app, async) {
-    let url = app.config.r_url + "?getSezonAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function issueReload (app, async) {
-    let url = app.config.r_url + "?getIssueAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function hranReload (app, async) {
-    let url = app.config.r_url + "?getHranAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function grReload (app, async) {
-    let url = app.config.r_url + "?getGroupAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function stranaReload (app, async) {
-    let url = app.config.r_url + "?getStranaAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
-
-export function tgReload (app, async) {
-    let url = app.config.r_url + "?getTgAll"
-    let params = {"user": app.config.user};
-    return refReload(url, params, async)
-};
+    return refReload(url, params, parent)
+}
 
 export function get_tg(app, id_spr) {
     let user = app.config.user;
@@ -470,14 +283,11 @@ export function get_tg(app, id_spr) {
     let res = request(url, params, !0).response;
     res = checkVal(res, 's');
     if (res) {
-        //$$("tg_dc").clearAll();
-        //$$("tg_dc").parse(res);
         return res;
     } else {
         return [];
     };
 }
-
 
 export function clear_obj(obj) {
     for (var k in obj) {
@@ -487,11 +297,11 @@ export function clear_obj(obj) {
         } else {
             if (val==undefined) {
                 delete obj[k];
-                }
             }
         }
-    return obj
     }
+    return obj
+}
 
 export function gen_params(inp_params) {
     let view = inp_params.view;
@@ -507,7 +317,7 @@ export function gen_params(inp_params) {
                   "field": field, "direction": direction, "c_filter": c_filter, "cbars": inp_params.cbars};
     params = clear_obj(params);
     return params
-    }
+}
 
 export function str_join(obj) {
     let ret = '';
@@ -517,16 +327,15 @@ export function str_join(obj) {
         for (var k in obj) {
             let val = obj[k];
             if (val && typeof(val) === 'object' && val.__proto__.hasOwnProperty('getDate')) {
-                let y = val.getFullYear();
-                let m = val.getMonth() + 1;
-                if (m < 10) m = '0' + m;
-                let d = val.getDate();
-                if (d < 10) d = '0' + d;
-                let h = val.getHours();
-                if (h < 10) h = '0' + h;
-                let mi = val.getMinutes()
-                if (mi < 10) mi = '0' + mi;
-                let q = y.toString() + "-" + m.toString() + "-" + d.toString() + " " + h.toString() + ":" + mi.toString();
+                var a = [val.getFullYear(), val.getMonth() + 1, val.getDate(), val.getHours(), val.getMinutes()];
+                for (var i=0; i<a.length; i++) {
+                    if (a[i]<10) {
+                        a[i]='0'+a[i]
+                    } else {
+                        a[i]=a[i].toString()
+                    } 
+                }
+                let q = a.slice(0,3).join('-') + " " + a[3] + ":" + a[4];
                 ret += q.toString();
             } else if (typeof(val) === 'object') {
                 // val = str_join(val);
@@ -537,7 +346,7 @@ export function str_join(obj) {
         }
     }
     return ret
-    }
+}
 
 export function get_data_test(inp_params) {
     let view = inp_params.view;
@@ -557,7 +366,6 @@ export function get_data_test(inp_params) {
             });
         var selected = webix.storage.session.get(view.config.name+"sel") || {};
         let old_p = selected.s_pars;
-
         if (view.bState && view.bState === 1) {
             let localStorage = webix.storage.session.get(view.config.name+"sel");
             params['id_sprs'] = [];
@@ -565,20 +373,10 @@ export function get_data_test(inp_params) {
                 if (localStorage[item]) params['id_sprs'].push(item);
             });
         };
-
         let n_p = JSON.parse(JSON.stringify(params));
         delete(n_p.start);
-        
-        // if (view.config.name === "__dt_as") {
-        //     console.log('new', n_p);
-        //     console.log('old', old_p);
-        // };
         let reset = false;
         if (str_join(n_p) === str_join(old_p)) {
-            // if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
-            // } else {
-            //     reset = true;
-            // };
         } else {
             if ((n_p.id_sprs && old_p && !old_p.id_sprs) || (!n_p.id_sprs && old_p && old_p.id_sprs)) {
             } else {
@@ -586,30 +384,23 @@ export function get_data_test(inp_params) {
                 webix.storage.session.put(view.config.name+"sel", selected);
                 reset = true;
             }
-
         };
-        // console.log('reset pager', reset);
-
-
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
             if (data) {
                 if (data.params) {
                     let d_params = JSON.parse(JSON.stringify(data['params']))
-
                     delete d_params.id_sprs;
-
                     let c_params = str_join(gen_params(inp_params));
                     let r_params = str_join(d_params);
                     if (r_params !== c_params) { 
                         view.hideProgress();
                         return
-                        }
                     }
+                }
                 view.parse(data.datas);
                 view.config.startPos = data.start;
                 view.config.totalPos = data.total;
-
                 let bar_view = view.getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1];
                 if (bar_view) {
                     let bar_view_node = bar_view.$view.childNodes[1].getElementsByClassName('webix_selected')[0]
@@ -620,8 +411,6 @@ export function get_data_test(inp_params) {
                 let pa = nav.getChildViews()[2]
                 let co = nav.getChildViews()[6]
                 webix.storage.session.put(view.config.name+'_pages', total_page);
-
-
                 if (reset === true) {
                     if (view.$scope.scroll) {
                         setTimeout( function() {
@@ -630,7 +419,6 @@ export function get_data_test(inp_params) {
                             let p = tp*h;
                             view.$scope.scroll.pageNumber = 1;
                             view.$scope.scroll.define("scrollHeight", p);
-                            // view.$scope.scroll.scrollTo(0);
                             view.$scope.scroll.reset();
                         }, 0)
                     }
@@ -638,11 +426,7 @@ export function get_data_test(inp_params) {
                 co.define('label', "Всего записей: " + view.config.totalPos);
                 co.refresh();
                 let old_p = nav.$scope.$$("__page").getValue()
-                try {
-                    old_p = +old_p;
-                } catch (ee) {
-                    };
-                if (old_p !==c_page) nav.$scope.$$("__page").config.manual = false;
+                if (+old_p !==c_page) nav.$scope.$$("__page").config.manual = false;
                 let pa1 = pa.getChildViews();
                 pa1[2].define('label', total_page);
                 pa1[2].refresh();
@@ -665,12 +449,10 @@ export function get_data_test(inp_params) {
     }
 
 export function parse_unlinked_item(th, c_item) {
-    //c_item = (c_item) ? c_item : $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     c_item = c_item || $$("prcs_dc").getItem($$("prcs_dc").getCursor());
     let n_item = {} 
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_blank' rel='noreferrer noopener' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
-    //let name = "<a target='_balnk' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
     let count = "<span style='color: #666666; text-decoration: underline;'>Осталось свести в текущей сессии:</span><span style='color: red; font-weight: bold;'>  "+ $$("prcs_dc").count() + "</span>";
     n_item['_name'] = name;
     n_item['_count'] = count;
@@ -687,13 +469,11 @@ export function parse_unlinked_item(th, c_item) {
     if (buf[sta].length < 4) sta += 1;
     let s_stri = buf[sta];
     for (var i = sta; i < buf.length; i++ ){
-        var tmp = buf[i];
-        for (var n=0; n < tmp.length; n++ ){
-            let ttt = parseInt(tmp[n], 10);
-            let q = !isNaN(tmp[n]);
-            if (q) s_stri += ' ' + tmp[n];
-            }
+        for (var n=0; n < buf[i].length; n++ ){
+            let q = !isNaN(buf[i][n]);
+            if (q) s_stri += ' ' + buf[i][n];
         }
+    }
     s_stri = s_stri.replace('"', " ");
     s_stri = s_stri.replace('!', " ");
     s_stri = s_stri.replace("-", " ");
@@ -705,13 +485,11 @@ export function parse_unlinked_item(th, c_item) {
     s_stri = s_stri.replace("\\", " ");
     $$("_spr_search").setValue(s_stri);
     let vv = $$('app-nav').getChildViews()[3].getChildViews(); //datatable form
-    //count = vv[0].config.posPpage //datatable
     let dtParams = getDtParams(vv[0]);
     get_data_test({
         view: vv[0],
         navBar: vv[1],
         start: 1,
-        //count: count,
         searchBar: vv[0].config.searchBar,
         method: vv[0].config.searchMethod,
         field: dtParams[2],
@@ -890,17 +668,14 @@ export function init_first(app) {
                             on: {
                                 onItemClick: function () {
                                     this.getTopParentView().hide();
-                                    },
+                                },
                             },
-                            // click: function () {
-                            //     this.getTopParentView().hide();
-                            //     }
-                            }
-                        ]
-                    }
-                })
-            }
-        }, webix.ui.window);
+                        }
+                    ]
+                }
+            })
+        }
+    }, webix.ui.window);
 
     webix.ui.datafilter.richFilt = Object.create(webix.ui.datafilter.richSelectFilter);
     webix.ui.datafilter.richFilt.refresh = function(master, node, value){
@@ -924,7 +699,6 @@ export function init_first(app) {
             if (addEmpty) {
                 list.add({"id": "-100", "value": addEmpty}, 0);
             };
-    
             if ((!this.$noEmptyOption && value.emptyOption !== false) || value.emptyOption){
                 var emptyOption = { id:"-1", value: value.emptyOption||"", $empty: true };
                 list.add(emptyOption,0);
@@ -933,7 +707,7 @@ export function init_first(app) {
         if (value.value) this.setValue(node, value.value);
         select.render();
         webix.delay(select.resize, select);
-        };
+    };
 
     webix.ui.datafilter.richFilt.render = function(master, config){
         if (!config.richselect){
@@ -972,7 +746,7 @@ export function init_first(app) {
             };
         config.css = "webix_div_filter";
         return " ";
-        }
+    }
 
     webix.ui.datafilter.cFilt = Object.create(webix.ui.datafilter.textFilter);
     webix.ui.datafilter.cFilt.on_key_down = function(e, node, value){
@@ -984,11 +758,8 @@ export function init_first(app) {
             var pager_num = this._pager || 1; //номер элемента на вкладке, где находится пейджер
             var scrollView = this._scrollView;
             this._filter_timer=window.setTimeout(function(){
-                //let pager_view = vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
                 let pager_view = (scrollView) ? vi.getParentView().getParentView().getChildViews()[pager_num].$scope.$$("__page")
                                                               : vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
-                // let pager_view = (config.inputConfig.pagerView) ? config.inputConfig.pagerView
-                //                                                 : vi.getParentView().getChildViews()[pager_num].$scope.$$("__page");
                 let old_v = pager_view.getValue();
                 pager_view.setValue((+old_v ===0) ? '1' : "0");
                 pager_view.refresh();
@@ -1001,17 +772,17 @@ export function init_first(app) {
         if (value.inputConfig) {
             node._pager = value.inputConfig.pager;
             node._scrollView = value.inputConfig.scrollView;
-            }
-        // node._scrollView = (value.inputConfig && value.inputConfig.scrollView) ? value.inputConfig.scrollView : undefined;
+        };
         if (value.value && this.getValue(node) != value.value) this.setValue(node, value.value);
         node.onclick = webix.html.preventEvent;
         cEvent(node, "keydown", this.on_key_down);
-        };
+    };
+
     webix.ui.datafilter.cFilt.render = function(master, config){
         if (this.init) this.init(config);
         config.css = "my_filter";
         return "<input "+(config.placeholder?('placeholder="'+config.placeholder+'" '):"")+"type='text'>";
-        };
+    };
 
     webix.ui.datafilter.threeStCh = {
         getValue:function(){},
@@ -1031,8 +802,8 @@ export function init_first(app) {
             else node.button = "<button class='header-button fa-" + config.inputConfig.buttonIcon + "' title='Показать выделенные'></button>";
             node.counter = master.getHeaderNode(config.inputConfig.counter);
             node.storageName = master.config.name + "sel";
-            node.repaint = function () {
 
+            node.repaint = function () {
                 if (config.indeter) {
                     node.children[0].children[0].innerHTML = "<span class='threeSt-indeterminate'></span>" + node.button;
                 } else {
@@ -1081,15 +852,14 @@ export function init_first(app) {
                                         })
                                         webix.storage.session.put(node.storageName, selected);
                                         node.recount(data.length);
-                                        };
-                                    }
-                                }, 
-                                function() {
-                                    node.disabled = 0;
-                                })
+                                    };
+                                }
+                            },
+                            function() {
+                                node.disabled = 0;
+                            })
                         }
                     }
-                    
                     var column = master.getColumnConfig(config.columnId);
                     var checked = config.checked ? column.checkValue : column.uncheckValue;
                     master.data.each(function(obj){
@@ -1111,18 +881,14 @@ export function init_first(app) {
                         master.bState = 1;
                     }
                     node.button = e.target.outerHTML;
-
                     let pager = master.$scope.getRoot().getChildViews()[2].$scope.$$("__page");
                     let old_v = pager.getValue();
-                    pager.setValue((+old_v ===0) ? '1' : "0");
-                    // console.log('refreshing_page')
+                    pager.setValue((+old_v === 0) ? '1' : "0");
                     pager.refresh()
-
-                    
-
                 }
             };
         },
+
         render:function(master, config){
             let b = "<button class='header-button fa-" + config.inputConfig.buttonIcon + "' title='Показать выделенные'></button>";
             return  "<div style='width: 100%; height: 100%; display: flex; flex-direction: row; '>" +
@@ -1134,54 +900,40 @@ export function init_first(app) {
 
     let delay = app.config.searchDelay;
     setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
-    getRefs(app);
-    
-    }
+    getRefs(app); 
+}
+
+export function setRefs(data) {
+    if (data) {
+        $$("strana_dc").clearAll();
+        $$("strana_dc").parse(data.strana);
+        $$("vendor_dc").clearAll();
+        $$("vendor_dc").parse(data.vendor);
+        $$("dv_dc").clearAll();
+        $$("dv_dc").parse(data.dv);
+        $$("nds_dc").clearAll();
+        $$("nds_dc").parse(data.nds);
+        $$("hran_dc").clearAll();
+        $$("hran_dc").parse(data.hran);
+        $$("sezon_dc").clearAll();
+        $$("sezon_dc").parse(data.sezon);
+        $$("group_dc").clearAll();
+        $$("group_dc").parse(data.group);
+        $$("allIs_dc").clearAll();
+        $$("allIs_dc").parse(data.issue);
+    };
+}
 
 export function getRefs(app, sync) {
     let url = app.config.r_url + "?getRefs"
     let params = {"user": app.config.user};
     if (sync) {
         let data = checkVal(request(url, params, !0).response, 's');
-        if (data) {
-            $$("strana_dc").clearAll();
-            $$("strana_dc").parse(data.strana);
-            $$("vendor_dc").clearAll();
-            $$("vendor_dc").parse(data.vendor);
-            $$("dv_dc").clearAll();
-            $$("dv_dc").parse(data.dv);
-            $$("nds_dc").clearAll();
-            $$("nds_dc").parse(data.nds);
-            $$("hran_dc").clearAll();
-            $$("hran_dc").parse(data.hran);
-            $$("sezon_dc").clearAll();
-            $$("sezon_dc").parse(data.sezon);
-            $$("group_dc").clearAll();
-            $$("group_dc").parse(data.group);
-            $$("allIs_dc").clearAll();
-            $$("allIs_dc").parse(data.issue);
-        };
+        setRefs(data);
     } else {
         request(url, params).then(function(data) {
             data = checkVal(data, 'a');
-            if (data) {
-                $$("strana_dc").clearAll();
-                $$("strana_dc").parse(data.strana);
-                $$("vendor_dc").clearAll();
-                $$("vendor_dc").parse(data.vendor);
-                $$("dv_dc").clearAll();
-                $$("dv_dc").parse(data.dv);
-                $$("nds_dc").clearAll();
-                $$("nds_dc").parse(data.nds);
-                $$("hran_dc").clearAll();
-                $$("hran_dc").parse(data.hran);
-                $$("sezon_dc").clearAll();
-                $$("sezon_dc").parse(data.sezon);
-                $$("group_dc").clearAll();
-                $$("group_dc").parse(data.group);
-                $$("allIs_dc").clearAll();
-                $$("allIs_dc").parse(data.issue);
-            };
+            setRefs(data);
         })
     }
 }
@@ -1189,14 +941,12 @@ export function getRefs(app, sync) {
 export function clear_names_bar(th, on_error_text) {
     let vv = th.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
     vv[0].clearAll() //clear datatable
-    //th.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
     let n_item = {'_name': "", '_count': "", '_vendor': on_error_text || "", 'p_name': ""};
     if (th.$$("_local_add")) th.$$("_local_add").hide();
     th.$$("_local_left").hide();
     th.$$("_local_skip").hide();
     th.$$("_local_right").hide();
     th.$$('_local_link').hide();
-    //this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[1].parse(n_item); //_names_bar
     th.$$("_local_names_bar").parse(n_item);
     th.$$("_local_spr_search").setValue(''); //search bar
     let pager = vv[1]; //pager
@@ -1216,7 +966,6 @@ export function get_prcs(th, id_vnd) {
     request(url, params).then(function(data) {
         data = checkVal(data, 'a');
         if (data) {
-            //data = data.data;
             $$("prcs_dc").clearAll();
             if (data.length > 0) {
                 $$("prcs_dc").parse(data);
@@ -1236,7 +985,6 @@ export function get_prcs_source(th, source) {
     request(url, params).then(function(data) {
         data = checkVal(data, 'a');
         if (data) {
-            //data = data.data;
             $$("prcs_dc").clearAll();
             if (data.length > 0) {
                 $$("prcs_dc").parse(data);
@@ -1256,7 +1004,6 @@ export function get_prcs_date(th,da) {
     request(url, params).then(function(data) {
         data = checkVal(data, 'a');
         if (data) {
-            //data = data.data;
             $$("prcs_dc").clearAll();
             if (data.length > 0) {
                 $$("prcs_dc").parse(data);
@@ -1286,17 +1033,17 @@ export function get_refs(inp_params){
                 $$(store).parse(data);
             } else {
                 webix.message('error');
-                };
-            })
+            };
+        })
     } else {
         let res = request(url, params, !0).response;
         res = checkVal(res, 's');
         if (res) {
             $$(store).clearAll();
             $$(store).parse(res);
-            };
         };
-    }
+    };
+}
 
 export function get_suppl(view, th, method) {
     let user = th.app.config.user;
@@ -1311,10 +1058,9 @@ export function get_suppl(view, th, method) {
             $$(view).setValue(fid);
             $$(view).refresh();
         } else {
-            //webix.message('error');
-            };
-        })
-    }
+        };
+    })
+}
 
 export function delPrc(inp_data, th) {
     let cursor = prcs.getCursor();
@@ -1322,7 +1068,7 @@ export function delPrc(inp_data, th) {
     let _c;
     data.forEach(function(item, i, data) {
         if (item === cursor) _c = i
-        });
+    });
     if (_c === $$("prcs_dc").count()-1) _c = 0;
     else _c += 1
     let new_cursor = $$("prcs_dc").data.order[+_c]
@@ -1332,7 +1078,6 @@ export function delPrc(inp_data, th) {
         (+$$("_link_by").getValue() === 3) ? get_suppl("_suppl", th, "?getSourceUnlnk") :
                                              get_suppl("_suppl", th, "?getSupplUnlnk");
     } else {
-        //cursor = prcs.data.order[0];
         prcs.setCursor(new_cursor);
         parse_unlinked_item(th);
         let ll = $$("_suppl").getList();
@@ -1341,35 +1086,28 @@ export function delPrc(inp_data, th) {
         iti.count = iti.count - 1;
         ll.updateItem(cc, iti);
         $$("_suppl").refresh();
-        };
-    }
+    };
+}
 
 export function after_call(text, data, XmlHttpRequest) {
     if (XmlHttpRequest.status == 403) {
         deleteCookie("linker-app");
-        //Удалить то что ниже в понедельник 1 октября после обновления
-        deleteCookie('linker_user');
-        deleteCookie('linker_auth_key');
-        deleteCookie('linker_role');
-        /////////////////
-        //alert('Требуется войти в систему');
         location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
-        };
-
-    }
+    };
+}
 
 export function request (url, params, mode) {
     var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
                         : webix.ajax().timeout(90000).headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
-    }
+}
 
 export function getCookie(name) {
     var matches = document.cookie.match(new RegExp(
         "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
     ));
     return matches ? decodeURIComponent(matches[1]) : NaN;
-    };
+};
 
 export function setCookie(name, value, options) {
     options = options || {};
@@ -1392,44 +1130,41 @@ export function setCookie(name, value, options) {
         };
     };
     document.cookie = updatedCookie;
-    }
+}
 
 export function deleteCookie (name) {
     setCookie(name, "", {
         'expires': -1, 'path': '/'
-        })
-    }
+    })
+}
 
 export function checkSSE(view) {
     // проверяем есть ли SSE соединение
     let eventS = view.$scope.app.config.eventS;
     if (eventS && eventS.readyState===1) {
         return true
-        }
+    }
     try {
         eventS.close()
     } catch (e) {
         };
     return false
-        
-
-    //return false
-    }
+}
 
 export function spinIconEnable(view) {
     if (view.config.label.indexOf("fa-spin") === -1) {
         let l = view.config.label.replace("webix_icon", "webix_icon fa-spin");
         view.define({"label": l});
         view.refresh();
-        }
     }
+}
 
 export function spinIconDisable(view) {
     let l = view.config.label.replace(" fa-spin", "");
     view.define({"label": l});
     view.refresh();
     clearTimeout(view.config.qw);
-    }
+}
 
 export function setButtons(app, buttons_list) {
     buttons_list.forEach( (item) => {
@@ -1467,7 +1202,6 @@ export function refTemplate(obj, common, value) {
 
 export function recalcRowsRet(table) {
     let q = table.$view.getElementsByClassName('webix_ss_body')[0];
-    // let totalHeight = table.$view.children[1].clientHeight;
     let totalHeight = q.clientHeight;
     let rows = Math.floor(totalHeight/table.config.rowHeight);
     if (table.config.name === "1__dt_as") {
@@ -1496,130 +1230,40 @@ export function fillFilterOptions(app) {
     var options = {"sezonList": [], "tgList": [], "ndsList": [], "hranList": [], "stranaList": [], "dvList":[], "vList": []};
     let tList;
     tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
-    // tList = [];
-    // var sezonList = [], tgList = [], ndsList = [], hranList = [], stranaList = [], dvList = [], vList = [];
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.sezon};
-            options.sezonList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getSezonAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
-    // tList = [];
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.sezon};
+        options.sezonList.push(tt);
+    });
     tList = $$("hran_dc").data.getRange($$("hran_dc").data.getFirstId(), $$("hran_dc").data.getLastId());
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.usloviya};
-            options.hranList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getHranAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
-    // tList = [];
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.usloviya};
+        options.hranList.push(tt);
+    });
     tList = $$("nds_dc").data.getRange($$("nds_dc").data.getFirstId(), $$("nds_dc").data.getLastId());
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.nds};
-            options.ndsList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getNdsAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
-    // tList = [];
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.nds};
+        options.ndsList.push(tt);
+    });
     tList = $$("group_dc").data.getRange($$("group_dc").data.getFirstId(), $$("group_dc").data.getLastId());
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.group};
-            options.tgList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getGroupAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
-    // tList = [];
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.group};
+        options.tgList.push(tt);
+    });
     tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.c_strana};
-            options.stranaList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getStranaAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.c_strana};
+        options.stranaList.push(tt);
+    });
     tList = $$("dv_dc").data.getRange($$("dv_dc").data.getFirstId(), $$("dv_dc").data.getLastId());
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.act_ingr};
-            options.dvList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getDvAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.act_ingr};
+        options.dvList.push(tt);
+    });
     tList = $$("vendor_dc").data.getRange($$("vendor_dc").data.getFirstId(), $$("vendor_dc").data.getLastId());
-    if (tList.length > 1) {
-        tList.forEach(function(it, i, tList) {
-            let tt = {'id': it.id, 'value': it.c_zavod};
-            options.vList.push(tt);
-            });
-    } else {
-        let url = app.config.r_url + "?getVendorAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
-        if (res) {
-            res.forEach(function(it, i, res) {
-                let tt = {'id': it.id, 'value': it.c_zavod};
-                options.vList.push(tt);
-                });
-            };
-    };
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.c_zavod};
+        options.vList.push(tt);
+    });
     return options
 }
 
@@ -1627,7 +1271,6 @@ export function addScrollTooltip(view){
     var tooltip = document.createElement('div');
     tooltip.classList.add('scroll-tooltip');
     document.body.appendChild(tooltip);
-
     var thisView = view;
     var w = view.scroll.config.container;
     thisView.scroll.mouseIsDown = false;
@@ -1641,8 +1284,6 @@ export function addScrollTooltip(view){
             tooltip.style.display = 'block';
             thisView.scroll.displayed = true;
         }
-
-
     });
     w.addEventListener('mouseup', function() {
         thisView.scroll.mouseIsDown = false;

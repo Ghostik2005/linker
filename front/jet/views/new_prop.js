@@ -35,8 +35,7 @@ export default class NewPropView extends JetView{
                 _params: {},
                 margin: 0,
                 rules:{
-                    //"id": check_s,
-                    "text": check_s, //webix.rules.isNotEmpty,
+                    "text": check_s,
                     },
                 elements: [
                     {view: "text", localId: "_id",label: "ID", value: "", width: 380, name: "id", placeholder: "Введите значение", readonly: false,
@@ -45,8 +44,7 @@ export default class NewPropView extends JetView{
                     {view: "text", label: "Название", value: "", width: 380, name: "text", placeholder: "Введите значение",
                         required: true, invalidMessage: "Неверное название", localId: "_text"
                     },
-                    {view: "text", label: "Веб-сайт", value: "", width: 380, name: "website", //placeholder: "Введите значение",
-                        //required: true, invalidMessage: "Неверное название", 
+                    {view: "text", label: "Веб-сайт", value: "", width: 380, name: "website", 
                         hidden: true,
                         localId: "_web"
                     },
@@ -75,18 +73,26 @@ export default class NewPropView extends JetView{
                                     let res = request(url, params, !0).response;
                                     res = checkVal(res, 's');
                                     if (res) {
-                                        para.callback(res, para.source);
+                                        if (para.type==='Issue') {
+                                            para.callback('AllIs', res, para.source);
+                                        } else if (para.type==='Sez') {
+                                            para.callback('Sezon', res, para.source);
+                                        } else if (para.type==='Gr') {
+                                            para.callback('Group', res, para.source);
+                                        } else {
+                                            para.callback(para.type, res, para.source);
                                         };
+                                    };
                                     this.hide();
                                 } else {
-                                    }
                                 }
                             }
-                        ]}
-                    ],
-                }
+                        }
+                    ]}
+                ],
             }
         }
+    }
         
     show(new_head, params, genid){
         
