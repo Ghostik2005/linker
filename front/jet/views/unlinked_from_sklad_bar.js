@@ -429,6 +429,8 @@ export default class SkladUnlinked extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
         });
+        if (this.$$("__table").isColumnVisible('status')) this.$$("__table").getFilter('status').setValue(1);
+        // console.log(this.$$("__table").getFilter('status'));
         // table.getFilter('dt').setValue(new Date());
         // table.callEvent('onresize');
         // table.getFilter('dt').blockEvent();

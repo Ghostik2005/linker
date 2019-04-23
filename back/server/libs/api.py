@@ -27,15 +27,17 @@ class API:
     x_hash - API key
     """
 
-    def __init__(self, log, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k', pg=False, production=False):
+    def __init__(self, app_conf, w_path = '/ms71/data/linker', p_path='/ms71/data/linker/api-k', pg=False, production=False):
+
         self.methods = []
         self.path = w_path
         self.p_path = p_path
+        self.app_conf = app_conf
         if not os.path.exists(self.path):
              os.makedirs(self.path, mode=0o777)
         if not os.path.exists(self.p_path):
              os.makedirs(self.p_path, mode=0o777)
-        self.log = log
+        self.log = self.app_conf["log"]
         #################################
         if pg:
             self.port = pg
@@ -43,15 +45,71 @@ class API:
         else:
             self.port = 5432
             self.log("FORCE PG STARTING on %s port" % self.port)
-        self.db = pg_local(self.log, udp=sys.APPCONF["udpsock"], port = self.port, production=production)
+        self.db = pg_local(self.log, udp=self.app_conf["udpsock"], port = self.port, production=production)
         self.start = 1
         self.count = 20
+        self._insLimit = lambda start_p, end_p: f""" limit {end_p - start_p + 1} offset {start_p-1}"""
 
     def _print(self, t):
         if self.db.production == False:
             print("-"*20)
             print(t)
             print("-"*20)
+
+    def _setStr(self, opt=None, type=str):
+        return type(opt) if opt else ('' if type==str else 0)
+
+
+    def setSkladErrorLnk(self, params=None, x_hash=None):
+      
+        try:
+            inserts = []
+            s = params.get("sh_prc")
+            inserts.append(self._setStr(s))
+            s = params.get("sklad_name")
+            inserts.append(self._setStr(s))
+            s = params.get("sklad_user")
+            inserts.append(self._setStr(s))
+            s = params.get("id_spr")
+            inserts.append(self._setStr(s, int))
+            s = params.get("sklad_c_tovar")
+            inserts.append(self._setStr(s))
+            s = params.get("sklad_id_tovar")
+            inserts.append(self._setStr(s))
+            s = params.get("sklad_c_zavod")
+            inserts.append(self._setStr(s))
+            s = params.get("sklad_c_strana")
+            inserts.append(self._setStr(s))
+            s = params.get("id_vnd")
+            inserts.append(self._setStr(s, int))
+            s = params.get("vnd_c_tovar")
+            inserts.append(self._setStr(s))
+            s = params.get("vnd_id_tovar")
+            inserts.append(self._setStr(s))
+            s = params.get("vnd_c_zavod")
+            inserts.append(self._setStr(s))
+            s = params.get("vnd_c_strana")
+            inserts.append(self._setStr(s))
+            s = params.get("id_user", 0)
+            inserts.append(self._setStr(s, int))
+            s = params.get("nakl")
+            inserts.append(self._setStr(s))
+        except:
+            self.log(f"{traceback.format_exc()}")
+            ret = {"result": False, "ret_val": "Non-correct data"}
+        else:
+            inserts = tuple(inserts)
+            sql = f"""insert into lnk_errors_from_sklad (sh_prc, sklad_name, sklad_user, id_spr,
+sklad_c_tovar, sklad_id_tovar, sklad_c_zavod, sklad_c_strana, id_vnd, vnd_c_tovar, vnd_id_tovar, 
+vnd_c_zavod, vnd_c_strana, user_id, nakl) values {str(inserts)} returning id; """
+            self._print(sql)
+            result = self.db.execute({"sql": sql, "options": None})
+            if result:
+                ret = {"result": True, "ret_val": "Inserted"}
+            else:
+                ret = {"result": False, "ret_val": "Not inserted"}
+        finally:
+            return json.dumps(ret, ensure_ascii=False)
 
     def setExit(self, params=None, x_hash=None):
         user = params.get('user')
@@ -338,47 +396,66 @@ WHERE r.SH_PRC = %s
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
-    def setSkladErrorLnk(self, params=None, x_hash=None):
-        
-        try:
-            inserts = []
-            inserts.append(str(params.get("sh_prc", '-1')))
-            inserts.append(str(params.get("sklad_name", '-1')))
-            inserts.append(str(params.get("sklad_user", '-1')))
-            inserts.append(int(params.get("id_spr", '-1')))
-            inserts.append(str(params.get("sklad_c_tovar", '-1')))
-            inserts.append(str(params.get("sklad_id_tovar", '-1')))
-            inserts.append(str(params.get("sklad_c_zavod", '-1')))
-            inserts.append(str(params.get("sklad_c_strana", '-1')))
-            inserts.append(int(params.get("id_vnd", '-1')))
-            inserts.append(str(params.get("vnd_c_tovar", '-1')))
-            inserts.append(str(params.get("vnd_id_tovar", '-1')))
-            inserts.append(str(params.get("vnd_c_zavod", '-1')))
-            inserts.append(str(params.get("vnd_c_strana", '-1')))
-            inserts.append(int(params.get("id_user", -1)))
-            for i in inserts:
-                if str(i) == '-1':
-                    raise ValueError
-        except:
-            ret = {"result": False, "ret_val": "Non-correct data"}
-        else:
-#             sql = """insert into lnk_errors_from_sklad (sh_prc, sklad_name, sklad_user, id_spr,
-# sklad_c_tovar, sklad_id_tovar, sklad_c_zavod, sklad_c_strana, id_vnd, vnd_c_tovar, vnd_id_tovar, 
-# vnd_c_zavod, vnd_c_strana) values (%, %, %, %, %, %, %, %, %, %, %, %, %) returning id;"""
-            # print(inserts)
-            # print(len(inserts))
-            inserts = tuple(inserts)
-            sql = f"""insert into lnk_errors_from_sklad (sh_prc, sklad_name, sklad_user, id_spr,
-sklad_c_tovar, sklad_id_tovar, sklad_c_zavod, sklad_c_strana, id_vnd, vnd_c_tovar, vnd_id_tovar, 
-vnd_c_zavod, vnd_c_strana, user_id) values {str(inserts)} returning id; """
-            self._print(sql)
-            result = self.db.execute({"sql": sql, "options": None})
-            if result:
-                ret = {"result": True, "ret_val": "Inserted"}
+    def copyPrc(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            value = params.get('value')
+            sh_prc = params.get('sh_prc')
+            series = None
+            if value and sh_prc:
+                sql = f"""select r.sh_prc, r.id_vnd, r.id_tovar, r.n_fg, r.n_cena, r.c_tovar, r.c_zavod, r.id_org, r.c_index, 
+r.dt, r.in_work, r.source, r.uin
+from prc r
+WHERE r.SH_PRC = %s"""
+                opt = (sh_prc,)
+                row = None
+                result = self.db.request({"sql": sql, "options": opt})
+                row = result[0]
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8],
+                    "dt"      : row[9],
+                    "in_work" : row[10],
+                    "source"  : row[11],
+                    "uin"     : row[12]
+                }
+                if row:
+                    if r['id_vnd'] == 10000:
+                        sql = f"select series, dt from brak where sh_prc = '{sh_prc}';"
+                        series, dt = self.db.request({"sql": sql, "options": ()})[0]
+                    row = tuple(row)
+                    opts = []
+                    new_brak = []
+                    for i in range(value):
+                        new_opt = list(row)
+                        new_opt[5] = new_opt[5] + f'_дубль_{i+1}'
+                        new_opt[0] = self._genHash(new_opt[1], new_opt[5], new_opt[6])
+                        opts.append(tuple(new_opt))
+                        if series:
+                            new_brak.append((series, new_opt[0], dt))
+                    sql = """insert into prc (sh_prc, id_vnd, id_tovar, n_fg, n_cena, c_tovar, c_zavod, id_org, c_index, 
+dt, in_work, source, uin, change_dt) values 
+(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, current_timestamp);"""
+                    self.db.executemany({"sql": sql, "options": opts})
+                    if series:
+                        print(new_brak)
+                        sql_s = """insert into brak (series, sh_prc, dt) values (%s, %s, %s)"""
+                        self.db.executemany({"sql": sql_s, "options": new_brak})
+
+                    ret = {"result": True, "ret_val": "applied"}
+                else:
+                    ret = {"result": False, "ret_val": "no data with this sh_prc"}        
             else:
-                ret = {"result": False, "ret_val": "Not inserted"}
-        finally:
-            return json.dumps(ret, ensure_ascii=False)
+                ret = {"result": False, "ret_val": "no parameters"}    
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
 
     def updErrorFromSkladStatus(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -5201,9 +5278,6 @@ order by barcod, sb.id_spr;"""
     def _updValue(self, field_name, table_name='classifier', column_name='cd_group'):
         sql = f"""update {table_name} set gr_count = gr_count + 1 where {column_name} = '{field_name}' returning gr_count;"""
         self.db.execute({"sql": sql, "options": ()})
-
-    def _insLimit(self, start_p, end_p):
-        return f""" limit {end_p - start_p + 1} offset {start_p-1}"""
 
     def _setUnwork(self, user):
         sql = f"""UPDATE PRC SET IN_WORK = -1 

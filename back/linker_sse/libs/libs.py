@@ -55,11 +55,12 @@ class API:
                         except:
                             dt = 0
                         c += 1
-                        if dt > dt_old:
-                            params = ['badgeErr', cou, c]
-                            sys._SSE[v] = [_q, dt]
-                        else:
-                            params = ['info', f'U->{user}, dt-> {dt}, c-> {c}', c]
+                        params = ['badgeErr', cou, c]
+                        # if dt > dt_old:
+                            # params = ['badgeErr', cou, c]
+                            # sys._SSE[v] = [_q, dt]
+                        # else:
+                            # params = ['info', f'U->{user}, dt-> {dt}, c-> {c}', c]
                         _q.put(params)
                 try:
                     con.close()

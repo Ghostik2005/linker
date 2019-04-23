@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '19.099.1710' #небольшой рефакторинг кода JS
+__version__ = '19.102.1435' #можно дублировать товары в prc
+# __version__ = '19.100.0955' #исправлен метод на вставку данных по ошибкам из склада
 # __version__ = '19.094.1700' #исправлена оштибка при назначении свойства для одного товара, добавленно поле user_id в ошибках из склада
 # __version__ = '19.093.1700' #добавлен поиск по производителю в сведении РЛС
 #__version__ = '19.093.1500' #исправленна сортировка в справочнике эталонов
@@ -142,7 +143,7 @@ def main():
     sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg, production, sys.APPCONF["udp"] = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
-    sys.APPCONF["api"] = app_api.API(log = sys.APPCONF["log"], w_path = w_path, p_path=p_path, pg=pg, production=production)
+    sys.APPCONF["api"] = app_api.API(app_conf = sys.APPCONF, w_path = w_path, p_path=p_path, pg=pg, production=production)
     rc = 0
     try:
         server = libs.SCGIServer(sys.APPCONF["log"], hostname=None, version=__version__,

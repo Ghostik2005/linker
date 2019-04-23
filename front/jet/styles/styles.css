@@ -344,8 +344,6 @@ div.webix_item_tab {
     text-transform: uppercase;
     }
 
-.check{
-}
 .check:hover{
     color:red !important;
 }
@@ -545,3 +543,22 @@ div.webix_item_tab {
 .darklighted {
     color: grey;
 }
+
+.info>div>input {
+    border: none;
+    background-color: #f8fafc !important;
+}
+
+.info>.webix_el_box input:focus {
+    border: None;
+
+}
+
+
+.address_book_icon {
+    /*color: var(--sides-color) !important;*/
+    color: #3498db;
+    font-size: larger;
+}
+
+

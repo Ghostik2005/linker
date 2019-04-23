@@ -10,12 +10,12 @@ import AdmBarView from "../views/adm-bar";
 import NewReportView from "../views/new_report";
 import PropView from "../views/prop_window";
 import BrakBarView from "../views/brak_bar";
-// import RefView from "../views/adm-references";
 import RefPopView from "../views/references_pop";
 import {screens} from "../models/variables";
 import LinkerView from "../views/linker_bar";
 import SprView from "../views/adm-spr";
 import SkladUnlinked from "../views/unlinked_from_sklad_bar";
+import caller from "../views/call_center";
 
 export default class SideButtonsBar extends JetView{
     config(){
@@ -42,13 +42,10 @@ export default class SideButtonsBar extends JetView{
                 id: uid,
                 $subview: view
                 };
-            // console.log('header', header);
             parent.config.b_id = uid;
             parent.$scope.tabView.getChildViews()[2].addView(formConfig);
             parent.$scope.tabView.getChildViews()[1].addOption(tabConfig, true);
             }
-
-
 
         function getTable(v_list) {
             let v_id = undefined;
@@ -161,6 +158,8 @@ export default class SideButtonsBar extends JetView{
                         onAfterRender: function() {
                         },
                         onItemClick: function () {
+                            (this.$scope.callpop.isVisible()) ? this.$scope.callpop.hide_w() :
+                                                               this.$scope.callpop.show_w('Звонилка');
                         },
                     }
                 },
@@ -542,6 +541,7 @@ export default class SideButtonsBar extends JetView{
         this.popprop = this.ui(PropView);
         this.popref = this.ui(RefPopView);
         this.skladErr = this.ui(SkladUnlinked);
+        this.callpop = this.ui(caller);
         this.tabView = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
         }
     }

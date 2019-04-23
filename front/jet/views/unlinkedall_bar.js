@@ -6,6 +6,7 @@ import {parseToLink, recalcRowsRet} from "../views/globals";
 import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter} from "../views/globals";
 import PagerView from "../views/pager_view";
 import {buttons, options} from "../models/variables";
+import popCount from "../views/pop-counter";
 
 export default class AllUnlinkedBarView extends JetView{
     config(){
@@ -168,6 +169,17 @@ export default class AllUnlinkedBarView extends JetView{
 
                     }, app.config.searchDelay)                 
                 },
+                onAfterSelect: (item) => {
+                    if (item) {
+                        if (app.config.roles[app.config.role].adm) this.$$("_double").show();
+                    } else {
+                        this.$$("_double").hide();
+                    }
+                },
+                onAfterUnSelect: function() {
+                    let selected = this.getSelectedItem();
+                    if (!selected) this.$scope.$$("_double").hide()
+                },
                 onItemDblClick: (clickItem) => {
                     let item = this.$$("__table").getSelectedItem();
                     if (!item) return;
@@ -213,7 +225,6 @@ export default class AllUnlinkedBarView extends JetView{
                 height: 40,
                 cols: [
                     {},
-                    // {view: "label", template: "Для ускорения ограничивайте поиск названием"},
                     {view: "button", type: "htmlbutton", tooltip: "Обновить", 
                         localId: "_renew",
                         resizable: true,
@@ -227,6 +238,30 @@ export default class AllUnlinkedBarView extends JetView{
                             this.startSearch();
                             }
                         },
+                    {view: "button", type: "htmlbutton", tooltip: "Размножить позицию", 
+                        hidden: true,
+                        localId: "_double",
+                        resizable: true,
+                        sWidth: 136,
+                        eWidth: 40,
+                        label: "",
+                        width: 40,
+                        extLabel: "<span class='button_label'>Размножить</span>", 
+                        // oldLabel: "<span class='webix_icon fa-object-ungroup'></span>",
+                        oldLabel: "<span class='webix_icon fa-sitemap'></span>",
+                        on: {
+                            onItemClick: function() {
+                                let item = this.$scope.$$("__table").getSelectedItem();
+                                if (!item) return false;
+                                if (this.$scope.popcount.isVisible()) {
+                                    this.$scope.popcount.hideM();
+                                } else {
+                                    this.$scope.popcount.showM(this.getNode(), this.$scope);   
+                                }
+                            }
+                        }
+                    },
+
                     {view:"button",  tooltip: "Сбросить фильтры",type:"imageButton", image: buttons.unFilter.icon,
                         width: 40,
                         localId: "_unfilt",
@@ -265,6 +300,7 @@ export default class AllUnlinkedBarView extends JetView{
 
     init() {
         webix.extend(this.$$("__table"), webix.ProgressBar);
+        this.popcount =  this.ui(popCount);
     }
 
     ready() {
