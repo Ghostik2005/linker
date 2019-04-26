@@ -579,6 +579,7 @@ export function getDtParams(ui) {
             'id_strana' : ($$(ui).isColumnVisible('id_strana')) ? $$(ui).getFilter('id_strana').getValue() : undefined,
             'c_dv'      : ($$(ui).isColumnVisible('c_dv')) ? $$(ui).getFilter('c_dv').getValue() : undefined,
             'c_group'   : ($$(ui).isColumnVisible('c_group')) ? $$(ui).getFilter('c_group').getValue() : undefined,
+            't_group'   : ($$(ui).isColumnVisible('t_group')) ? $$(ui).getFilter('t_group').getValue() : undefined,
             'c_nds'     : ($$(ui).isColumnVisible('c_nds')) ? $$(ui).getFilter('c_nds').getValue() : undefined,
             'c_hran'    : ($$(ui).isColumnVisible('c_hran')) ? $$(ui).getFilter('c_hran').getValue() : undefined,
             'c_sezon'   : ($$(ui).isColumnVisible('c_sezon')) ? $$(ui).getFilter('c_sezon').getValue() : undefined,
@@ -1227,7 +1228,7 @@ export function setRows(view){
 
 export function fillFilterOptions(app) {
     getRefs(app, true);
-    var options = {"sezonList": [], "tgList": [], "ndsList": [], "hranList": [], "stranaList": [], "dvList":[], "vList": []};
+    var options = {"sezonList": [], "tgList": [], "ndsList": [], "hranList": [], "stranaList": [], "dvList":[], "vList": [], "tovGList": []};
     let tList;
     tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());
     tList.forEach(function(it) {
@@ -1249,6 +1250,11 @@ export function fillFilterOptions(app) {
         let tt = {'id': it.id, 'value': it.group};
         options.tgList.push(tt);
     });
+    tList = singleRefReload(app, "getTgAll");
+    tList.forEach(function(it) {
+        let tt = {'id': it.id, 'value': it.c_tgroup};
+        options.tovGList.push(tt);
+    });    
     tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
     tList.forEach(function(it) {
         let tt = {'id': it.id, 'value': it.c_strana};

@@ -199,11 +199,26 @@ export default class SprView extends JetView{
                                 emptyRow: "Не назначенно",
                                 options: {
                                     data: vi.options.tgList,
-                                    },
                                 },
-                            }
-                        ]
-                    },
+                            },
+                        }
+                    ]
+                },
+                { id: "t_group", hidden: true, //sort: "server",
+                    width: 300,
+                    header: [{text: "T. группа"},
+                        {content: "richFilt", compare: compareTrue,
+                            inputConfig : {
+                                scrollView: true,
+                                inputtype: "combo",
+                                // emptyRow: "Не назначенно",
+                                options: {
+                                    data: vi.options.tovGList,
+                                },
+                            },
+                        }
+                    ]
+                },
                 { id: "c_nds", hidden: true,
                     width: 150,
                     header: [{text: "НДС"},

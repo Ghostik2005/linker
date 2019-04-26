@@ -71,6 +71,15 @@
     color: #e77816;
     }
 
+.side_icon.alert_b {
+    color: red;
+}
+
+span > .alert_b {
+    color: red;
+}
+
+
 .button_label {
     line-height: 20px; 
     padding-left: 5px;

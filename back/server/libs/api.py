@@ -3579,6 +3579,7 @@ WHERE {stri} ORDER by {field} {direction}
             pars['price'] = filt.get('price')
             pars['prescr'] = filt.get('prescr')
             pars['dt_ins'] = filt.get('dt_ins')
+            pars['t_group'] = filt.get('t_group')
             dt = filt.get('dt')
             ssss = []
             if dt:
@@ -3593,7 +3594,8 @@ WHERE {stri} ORDER by {field} {direction}
                     s = """and (r.DT >= CAST('{0}' as TIMESTAMP) AND r.DT <= cast((CAST('{1}' as TIMESTAMP) + interval'1 day') as timestamp))"""
                     ssss.append(s.format(pars['start_dt'], pars['end_dt']))
             in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
-            in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice 
+            in_st.insert(0, f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, 
+nds, uhran, sezon, mandat, presc, r.DT, r.inprice, {'gr1' if pars['t_group'] else "'_'"}
 FROM SPR r
 join groups grr on r.id_spr = grr.cd_code and grr.cd_group = 'ZakMedCtg.1114'
 and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and llo.id_vnd = 51078) """)
@@ -3646,7 +3648,8 @@ ORDER by {1} {2}
                     "c_prescr"      : row[11],
                     "dt"            : str(row[12]),
                     "dt_ins"        : "", #str(row[13]),
-                    "price"         : row[13]
+                    "price"         : row[13],
+                    "t_group"       : "" if row[14] == '_' else row[14]
                 }
                 _return.append(r)
 
@@ -3750,6 +3753,35 @@ ORDER by {1} {2}
                 inner join CLASSIFIER c5 on (c5.CD_GROUP = g5.CD_GROUP) where c5.IDX_GROUP = 5
                 ) as eee7 on (cc5 = r.ID_SPR)"""
             in_st.append(s)
+
+        # //////////edit
+        if pars['t_group']:
+            if pars['t_group'] != "-100":
+                s = """join 
+            (select g.CD_CODE ccc, c.NM_GROUP gr1
+            from GROUPS g
+            inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 7 and c.CD_GROUP = '%s'
+            ) as eee10 on (ccc = r.ID_SPR)""" % pars['t_group']
+                in_c.insert(0, s)
+                in_st.insert(0, s)
+        #     else: 
+        #         s = """left join 
+        #     (select g.CD_CODE ccc, c.NM_GROUP gr1
+        #     from GROUPS g
+        #     inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 7
+        #     ) as eee10 on (ccc = r.ID_SPR)"""
+        #         in_st.append(s)
+        #         in_c.append(s)
+        #         ssss.append("and gr1 is null")
+        # else:
+        #     s = """LEFT join 
+        #     (select g.CD_CODE ccc, c.NM_GROUP gr1
+        #     from GROUPS g
+        #     inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 7
+        #     ) as eee10 on (ccc = r.ID_SPR)"""
+        #     in_st.append(s)
+
+
         if pars['c_group']:
             if pars['c_group'] != "-100":
                 s = """join 
@@ -3913,6 +3945,7 @@ ORDER by {1} {2}
         pars['price'] = filt.get('price')
         pars['prescr'] = filt.get('prescr')
         pars['dt_ins'] = filt.get('dt_ins')
+        pars['t_group'] = filt.get('t_group')
         dt = filt.get('dt')
         ssss = []
         if dt:
@@ -3929,7 +3962,8 @@ ORDER by {1} {2}
 
         in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
 
-        in_st.insert(0, """SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, r.DT, r.inprice
+        in_st.insert(0, f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, 
+sezon, mandat, presc, r.DT, r.inprice, {'gr1' if pars['t_group'] else "'_'"}
 FROM SPR r""")
         sql = '\n'.join(in_st)
         in_c.insert(0, """select count(*) from spr r""")
@@ -4003,7 +4037,8 @@ ORDER by {1} {2}"""
                     "c_prescr"      : row[11],
                     "dt"            : str(row[12]),
                     "dt_ins"        : "",#str(row[13])
-                    "price"         : row[13]
+                    "price"         : row[13],
+                    "t_group"       : "" if row[14] == '_' else row[14]
                 }
                 _return.append(r)
             if params.get('count', 0) < 100000000:

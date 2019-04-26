@@ -63,6 +63,12 @@
   /*color: var(--sides-color) !important;*/
   color: #e77816;
 }
+.side_icon.alert_b {
+  color: red;
+}
+span > .alert_b {
+  color: red;
+}
 .button_label {
   line-height: 20px;
   padding-left: 5px;
@@ -452,6 +458,18 @@ div.webix_item_tab {
 }
 .darklighted {
   color: grey;
+}
+.info > div > input {
+  border: none;
+  background-color: #f8fafc !important;
+}
+.info > .webix_el_box input:focus {
+  border: None;
+}
+.address_book_icon {
+  /*color: var(--sides-color) !important;*/
+  color: #3498db;
+  font-size: larger;
 }
 
 @charset "UTF-8";

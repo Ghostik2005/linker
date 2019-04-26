@@ -31,18 +31,24 @@ export default class HeaderView extends JetView{
 
             });
 
-            setTimeout( () => {
-                let b = th.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[0].$scope.$$("_errorbut");
-                app.config.eventS.addEventListener("badgeErr", function(e) {
-                    if (+e.data > 0) {
-                        b.define({badge: "*"});
-                        b.refresh();
-                    } else {
-                        b.define({badge: undefined});
-                        b.refresh();
-                    }
-                })
-            }, 200)
+            if (+app.config.role === 34 || +app.config.role === 10) {
+                setTimeout( () => {
+                    let b = th.getRoot().getParentView().getChildViews()[1].getChildViews()[0].getChildViews()[0].$scope.$$("_errorbut");
+                    function badge(e) {
+
+                        if (+e.data > 0) {
+                            if (app.config.expert) b.$view.childNodes[0].childNodes[0].childNodes[0].classList.add('alert_b');
+                            else b.$view.childNodes[0].childNodes[0].childNodes[0].childNodes[0].classList.add('alert_b');
+                        } else {
+                            if (app.config.expert) b.$view.childNodes[0].childNodes[0].childNodes[0].classList.remove('alert_b');
+                            else b.$view.childNodes[0].childNodes[0].childNodes[0].childNodes[0].classList.remove('alert_b');
+                        }
+                        // app.config.eventS.removeEventListener('badgeErr', badge);
+                    };
+
+                    app.config.eventS.addEventListener("badgeErr", badge);
+                }, 200)
+            }
 
             app.config.eventS.addEventListener('update', function(e) {
                 webix.message({'type': 'event', 'text': e.data, 'expire': app.config.nDelay});
