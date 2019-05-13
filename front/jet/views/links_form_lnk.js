@@ -42,33 +42,41 @@ export default class LinksViewLnk extends JetView{
             //old_stri: " ",
             searchBar: undefined,
             searchMethod: "getLnkSprs",
+            tooltip: true,
             columns: [
                 {id: "id", width: 270, hidden: true,
+                    tooltip: false,
                     header: [{text: "Хэш"},
                     {content: "cFilt"},
                     ]
-                    },
+                },
                 {id: "id_tovar", width: 100, hidden: true, 
+                    tooltip: false,                
                     header: [{text: "Код"},
                     {content: "cFilt"},
                     ]
-                    },
-                {id: "c_tovar", fillspace: true, sort: 'server',
+                },
+                {id: "c_tovar", 
+                    fillspace: true, sort: 'server', css: "overflow",
+                    // tooltip: "#c_tovar#",
                     header: [{text: "Наименование"}
                     ],
                     headermenu:false,
                     },
-                {id: "c_zavod", width: 200, hidden: true,
+                {id: "c_zavod", width: 200, hidden: true, css: "overflow",
+                    // tooltip: "#c_zavod#",
                     header: [{text: "Производитель"},
                     {content: "cFilt"},
                     ]
                     },
                 {id: "id_spr", width: 150, hidden: true, sort: 'server',
+                    tooltip: false,
                     header: [{text: "id_spr"},
                     {content: "cFilt"},
                     ]
                     },
-                {id: "spr", width: 350,
+                {id: "spr", width: 350, css: "overflow",
+                    // tooltip: "#spr#",
                     header: [{text: "Эталон"},
                     {content: "cFilt", placeholder: "!слово - исключить из поиска",
                         inputConfig : {
@@ -77,11 +85,13 @@ export default class LinksViewLnk extends JetView{
                         },
                     ]
                     },
-                {id: "e_zavod", width: 300, hidden: true,
+                {id: "e_zavod", width: 300, hidden: true,  css: "overflow",
+                    // tooltip: "#e_zavod#",
                     header: [{text: "Производитель эталона"},
                     ]
                     },
-                {id: "c_vnd", width: 300,
+                {id: "c_vnd", width: 300,  css: "overflow",
+                    // tooltip: "#c_vnd#",
                     header: [
                         {text: "Поставщик"},
                         {content: "richFilt", compare: compareTrue,  //height: 60, 
@@ -101,6 +111,7 @@ export default class LinksViewLnk extends JetView{
                         ]
                     },
                 {id: "dt", width: 200, sort: 'server',
+                    tooltip: false,
                     format: dt_formating_sec,
                     css: 'center_p',
                     header: [{text: "Дата изменения"},
@@ -113,11 +124,13 @@ export default class LinksViewLnk extends JetView{
                     ]
                     },
                 {id: "owner", width: 100, sort: 'server',
+                    tooltip: false,
                     header: [{text: "Создал"}, 
                         {content: "cFilt"},
                         ]
                     },
                 {id: "source", width: 150, hidden: true,
+                    tooltip: false,
                     header: [{text: "Источник"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
@@ -142,7 +155,7 @@ export default class LinksViewLnk extends JetView{
                 "data->onParse":function(i, data){
                     this.clearAll();
                     },
-                onBeforeRender: function() {
+                onBeforeRender: function(d) {
                     webix.extend(this, webix.ProgressBar);
                     },
                 onBeforeSort: function(field, direction) {
@@ -172,18 +185,19 @@ export default class LinksViewLnk extends JetView{
                 onKeyPress: function(code, e){
                     if (13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
-                        }
-                    },
+                    }
+                },
                 onAfterSelect: function (item) {
                     this.$scope._break.show();
-                    },
+                },
                 onAfterLoad: function() {
+                    
                     let filter = this.getFilter('c_vnd');
                     let filtering_value = filter.$getValue()
                     $$(filter.config.popup).getList().filter("#value#", filtering_value);
-                    },
                 },
-            } 
+            },
+        } 
 
         return {view: "layout",
             css: {'border-left': "1px solid #dddddd !important"},
@@ -223,6 +237,7 @@ export default class LinksViewLnk extends JetView{
         this._search = this.getRoot().getParentView().$scope.$$("_ls")
         table.config.searchBar = this._search.config.id;
         this._break.hide();
+
         table.getFilter('dt').setValue(new Date());
 
         table.callEvent('onresize');

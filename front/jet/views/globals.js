@@ -550,6 +550,7 @@ export function getDtParams(ui) {
     } else if (ui.config.name === "__dt_a") {
         c_filter = {
             //'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
+            'id_tovar'   : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined,
             'c_zavod'   : ($$(ui).isColumnVisible('c_zavod')) ? $$(ui).getFilter('c_zavod').value : undefined,
             'id_org'    : ($$(ui).isColumnVisible('id_org')) ? $$(ui).getFilter('id_org').value : undefined,
@@ -561,6 +562,7 @@ export function getDtParams(ui) {
             };
     } else if (ui.config.name === "__dt_s") {
         c_filter = {
+            'id_tovar'   : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
             'c_tovar'   : ($$(ui).isColumnVisible('c_tovar')) ? $$(ui).getFilter('c_tovar').value : undefined,
             'sh_prc'   : ($$(ui).isColumnVisible('sh_prc')) ? $$(ui).getFilter('sh_prc').value : undefined,
             //'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
@@ -1380,4 +1382,82 @@ export function getHeaderLength(header) {
     h_length += 75;
     testDiv.remove()
     return h_length
+}
+
+export function setMouseEvents(table) {
+    table.getNode().onmouseover =  (ev) => {
+        if ((ev.buttons===1 && 
+             ev.target.getAttribute('role')==='gridcell' && 
+             ev.target.children.length > 0 && 
+             ev.target.firstChild.classList.contains('webix_table_checkbox')) ||
+           ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
+        ) {
+            ev.target.classList.add('cell-highlighted');
+            let row = ev.target.getAttribute('aria-rowindex');
+            let item_id = table.data.order[row-1];
+            let item = table.getItem(item_id);
+            if (table.$scope.checked_id !== item.id) {
+                table.$scope.checked_id = item.id;
+                item.checkbox = (!item.checkbox) ? 1 : 0;
+                table.updateItem(item.id, item); 
+                table.callEvent('onCheck', [item.id, undefined, item.checkbox]);
+            };
+        }
+    };
+    table.getNode().onmouseout =  (ev) => {
+        if ((ev.buttons===1 && 
+             ev.target.getAttribute('role')==='gridcell' && 
+             ev.target.children.length > 0 && 
+             ev.target.firstChild.classList.contains('webix_table_checkbox')) ||
+           ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
+        ) {
+            ev.target.classList.remove('cell-highlighted');
+        }
+    };
+}
+
+export function onKeyPressAction(th, code, e){
+    if (e.code === "End" && e.shiftKey === true) {
+        th.$scope.pager.$scope.$$("_lastPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.getNode().focus();
+    } else if (e.code === "PageDown" && e.shiftKey === true) {
+        th.$scope.pager.$scope.$$("_nextPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.getNode().focus();
+    } else if (e.code === "PageUp" && e.shiftKey === true) {
+        th.$scope.pager.$scope.$$("_prevPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.getNode().focus();
+    } else if (e.code === "Home" && e.shiftKey === true) {
+        th.$scope.pager.$scope.$$("_firstPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.getNode().focus();
+    } else if (e.code === "PageDown" && th.getSelectedId() && th.data.getLastId().toString()===th.getSelectedId().id.toString()) {
+        th.$scope.pager.$scope.$$("_nextPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.setRow = 'last';
+    } else if (e.code === "PageUp" && th.getSelectedId() && th.data.getFirstId().toString()===th.getSelectedId().id.toString()) {
+        th.$scope.pager.$scope.$$("_prevPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.getNode().focus();
+        th.setRow = 'first';
+    } else if (e.code === "ArrowDown" && th.getSelectedId() && th.data.getLastId().toString()===th.getSelectedId().id.toString()) {
+        th.$scope.pager.$scope.$$("_nextPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.setRow = 'first';
+    } else if (e.code === "ArrowUp" && th.getSelectedId() && th.data.getFirstId().toString()===th.getSelectedId().id.toString()) {
+        th.$scope.pager.$scope.$$("_prevPB").callEvent("onItemClick");
+        th.$scope.setScroll();
+        th.setRow = 'last';
+    } else if (13 === code) {
+        if (th.getSelectedItem()) th.callEvent("onItemDblClick");
+    } else if (e.code === "Space") {
+        let item = th.getItem(th.getSelectedId().id);
+        item.checkbox = (!item.checkbox) ? 1 : 0;
+        th.updateItem(item.id, item); 
+        th.callEvent('onCheck', [item.id, undefined, item.checkbox]);
+    } else  {
+    };
+
 }

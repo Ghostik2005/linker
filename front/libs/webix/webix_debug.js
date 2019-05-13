@@ -34046,7 +34046,8 @@ webix.protoUI({
                     /*stick position*/
                     this._resizeStick._dragobj.style[(dir=="y"?"top":"left")] = this._rs_progress[3] + limitSizes[0]+"px";
                     return;
-                }else if(sizes[i]<3){/*cells size can not be less than 1*/
+                }else if(sizes[i]<3){
+
                     this._resizeStick._dragobj.style[(dir=="y"?"top":"left")] = this._rs_progress[3] + i*totalSize+1+"px";
                 }else{
                     this._rsLimit[i] = null;

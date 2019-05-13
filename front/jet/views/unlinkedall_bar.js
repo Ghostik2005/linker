@@ -39,14 +39,22 @@ export default class AllUnlinkedBarView extends JetView{
             searchBar: undefined,
             searchMethod: "getPrcsAll",
             old_stri: "",
+            tooltip: true,
             columns: [
                 {id: "id_tovar", width: 80, //sort: "server",
                     hidden: true,
+                    tooltip: false,
                     header: [{text: "ID товара"},
-                        ],
+                    {content: "cFilt",
+                        inputConfig : {
+                            pager: 2
+                        },
                     },
+                    ],
+                },
                 {id: "sh_prc", width: 280, 
                     hidden: true,
+                    css: "overflow",
                     header: [{text: "sh_prc"},
                         {content: "cFilt",
                             inputConfig : {
@@ -57,16 +65,18 @@ export default class AllUnlinkedBarView extends JetView{
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
+                    css: "overflow",
                     header: [{text: "Название"},
                         {content: "cFilt",
                             inputConfig : {
-                                    pager: 2
-                                    },
+                                pager: 2
                             },
-                        ]
-                    },
+                        },
+                    ]
+                },
                 { id: "c_vnd", sort: "server",
                     width: 200,
+                    css: "overflow",
                     header: [{text: "Поставщик"},
                         {content: "richFilt",
                             compare: compareTrue,
@@ -83,6 +93,7 @@ export default class AllUnlinkedBarView extends JetView{
                     },
                 { id: "c_zavod", sort: "server",
                     width: 200,
+                    css: "overflow",
                     header: [{text: "Производитель"},
                         {content: "cFilt",
                             inputConfig : {
@@ -93,6 +104,7 @@ export default class AllUnlinkedBarView extends JetView{
                     },
                 { id: "c_user", sort: "server",
                     width: 160,
+                    tooltip: false,
                     header: [{text: "Группа пользователей"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
@@ -104,6 +116,7 @@ export default class AllUnlinkedBarView extends JetView{
                 {id: "dt", width: 200, sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
+                    tooltip: false,
                     header: [{text: "Дата добавления"}, 
                         {content: "dateRangeFilter", compare: compareTrue,
                             inputConfig:{format:dt_formating, width: 180,},
@@ -114,6 +127,7 @@ export default class AllUnlinkedBarView extends JetView{
                         ]
                     },
                 {id: "source", width: 150, hidden: true,
+                    tooltip: false,
                     header: [{text: "Источник"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
@@ -122,12 +136,13 @@ export default class AllUnlinkedBarView extends JetView{
                             }
                         ]
                     },
-                {id: "in_work", width: 5, hidden: true, headermenu: false},
-                {id: "in_work_name", width: 100, hidden: true,
+                {id: "in_work", width: 5, hidden: true, headermenu: false, tooltip: false,},
+                {id: "in_work_name", width: 100, hidden: true, tooltip: false,
                     header: [{text: "В работе"},
                         ]
                     },
                 {id: "id_org", width: 100, hidden: true,
+                    tooltip: false,
                     header: [{text: "id_org"},
                         {content: "cFilt",
                             inputConfig : {

@@ -593,6 +593,8 @@ WHERE {' '.join(stri)}"""
                 pars['source'] = filt.get('source')
                 pars['id_org'] = filt.get('id_org')
                 pars['sh_prc'] = filt.get('sh_prc')
+                pars['id_tovar'] = filt.get('id_tovar')
+                
                 ssss = []
                 us_s = ''
                 v_s = ''
@@ -616,6 +618,13 @@ WHERE {' '.join(stri)}"""
                         else:
                             s.append('and %s' % ts1)
                     s = ' '.join(s)
+                    ssss.append('and %s' % s)
+                if pars['id_tovar']:
+                    if pars['id_tovar'].endswith(' '):
+                        pars['id_tovar'] = pars['id_tovar'].strip()
+                        s = f"lower(r.id_tovar)  = lower('{pars['id_tovar']}')"
+                    else:
+                        s = "lower(r.id_tovar) like lower('%" + pars['id_tovar'] + "%')"
                     ssss.append('and %s' % s)
                 if pars['sh_prc']:
                     s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
@@ -773,6 +782,7 @@ WHERE {' '.join(stri)}"""
                 pars['source'] = filt.get('source')
                 pars['id_org'] = filt.get('id_org')
                 pars['sh_prc'] = filt.get('sh_prc')
+                pars['id_tovar'] = filt.get('id_tovar')
                 ssss = []
                 if pars['c_vnd']:
                     #s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
@@ -781,6 +791,13 @@ WHERE {' '.join(stri)}"""
                 if pars['c_user']:
                     s = "lower(u.\"USER\") like lower('%" + pars['c_user'] + "%')"
                     ssss.append(pref % s)
+                if pars['id_tovar']:
+                    if pars['id_tovar'].endswith(' '):
+                        pars['id_tovar'] = pars['id_tovar'].strip()
+                        s = f"lower(r.id_tovar)  = lower('{pars['id_tovar']}')"
+                    else:
+                        s = "lower(r.id_tovar) like lower('%" + pars['id_tovar'] + "%')"
+                    ssss.append('and %s' % s)
                 if pars['c_tovar']:
                     sti = "lower(r.C_TOVAR) like lower('%%')"
                     exclude, pars['c_tovar'] = self._form_exclude(pars['c_tovar'])

@@ -268,16 +268,16 @@ export default class BrakBarView extends JetView{
                     header: [{text: "Хэш"},
                     ]
                     },
-                {id: "series", width: 100, hidden: !true, sort: 'server',
+                {id: "series", width: 100, hidden: !true, sort: 'server', css: "overflow",
                     header: [{text: "Серия"},
                     ]
                     },
-                {id: "c_name", fillspace: true, sort: 'server',
+                {id: "c_name", fillspace: true, sort: 'server', css: "overflow",
                     header: [{text: "Наименование"},
                     ],
                     headermenu:false,
                     },
-                {id: "c_zavod", width: 200, hidden: !true, sort: 'server',
+                {id: "c_zavod", width: 200, hidden: !true, sort: 'server', css: "overflow",
                     header: [{text: "Производитель"},
                     ]
                     },

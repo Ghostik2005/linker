@@ -47,13 +47,20 @@ export default class SkippedBarView extends JetView{
             searchMethod: "getPrcsSkip",
             fi: 'c_tovar',
             di: 'asc',
+            tooltip: true,
             columns: [
                 {id: "id_tovar", width: 80, //sort: "server",
                     hidden: true,
+                    tooltip: false,
                     header: [{text: "ID товара"},
-                        ],
-                    },
-                {id: "sh_prc", width: 280, 
+                        {content: "cFilt",
+                            inputConfig : {
+                                pager: 2
+                            },
+                        }
+                    ],
+                },
+                {id: "sh_prc", width: 280,  css: "overflow",
                     hidden: true,
                     header: [{text: "sh_prc"},
                         {content: "cFilt",
@@ -65,6 +72,7 @@ export default class SkippedBarView extends JetView{
                     },
                 { id: "c_tovar", fillspace: 1, sort: "server",
                     headermenu:false,
+                    css: "overflow",
                     header: [{text: "Название"},
                         {content: "cFilt",
                             inputConfig : {
@@ -75,6 +83,7 @@ export default class SkippedBarView extends JetView{
                     },
                 { id: "c_vnd", sort: "server",
                     width: 200,
+                    css: "overflow",
                     header: [{text: "Поставщик"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
@@ -89,6 +98,7 @@ export default class SkippedBarView extends JetView{
                     },
                 { id: "c_zavod", sort: "server",
                     width: 200,
+                    css: "overflow",
                     header: [{text: "Производитель"},
                         {content: "cFilt",
                             inputConfig : {
@@ -100,6 +110,7 @@ export default class SkippedBarView extends JetView{
                 {id: "dt", width: 200, sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
+                    tooltip: false,
                     header: [{text: "Дата изменения"}, 
                         {content: "dateRangeFilter", compare: compareTrue,
                             inputConfig:{format:dt_formating, width: 180,},
@@ -110,6 +121,7 @@ export default class SkippedBarView extends JetView{
                         ]
                     },
                 {id: "source", width: 150, hidden: true,
+                    tooltip: false,
                     header: [{text: "Источник"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
@@ -120,6 +132,7 @@ export default class SkippedBarView extends JetView{
                         ]
                     },
                 {id: "id_org", width: 100, hidden: true,
+                    tooltip: false,
                     header: [{text: "id_org"},
                         {content: "cFilt",
                             inputConfig : {

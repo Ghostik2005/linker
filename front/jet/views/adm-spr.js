@@ -5,7 +5,7 @@ import NewformView from "../views/new_form";
 import History from "../views/history";
 import {get_spr, recalcRowsRet, fillFilterOptions, addScrollTooltip, getPNumber, unFilter} from "../views/globals";
 import {DelEdIcons, checkKey, setButtons, dt_formating_sec, dt_formating, setApplyButton, setRows} from "../views/globals";
-import {refTemplate, toolTipAssign} from "../views/globals";
+import {refTemplate, toolTipAssign, setMouseEvents, onKeyPressAction} from "../views/globals";
 import {compareTrue, save_storage, del_storage} from "../views/globals";
 import PagerView from "../views/pager_view";
 import SubRow from "../views/sub_row";
@@ -85,12 +85,14 @@ export default class SprView extends JetView{
             searchMethod: "getSprSearchAdm",
             old_stri: "",
             css: 'adm-spr',
-            tooltip:function(obj, common){
-                return "<i>" + obj.c_tovar + "</i>";
-            },
+            // tooltip:function(obj, common){
+            //     return "<i>" + obj.c_tovar + "</i>";
+            // },
+            tooltip: true,
             columns: [
                 {id: "checkbox", css: "center_p", 
                     width: 75,
+                    tooltip: false,
                     header: [{text: "", css: "counter-dt"},
                         {content: "threeStCh", css: "center_p", contentId: "ch1",
                             inputConfig: {
@@ -110,6 +112,7 @@ export default class SprView extends JetView{
                                                   : "<span class='webix_icon fa-times-circle', style='color: red'></span>";
                         },
                     css: "center_p",
+                    tooltip: false,
                     header: [{text: "В прайсе", css: "center_p"},
                     {content: "richFilt", compare: compareTrue,
                         inputConfig : {
@@ -120,6 +123,7 @@ export default class SprView extends JetView{
                     ],
                 },
                 {id: "id_mnn", width: 75,
+                    tooltip: false,
                     template: function (obj) {
                         //return (+obj.id_dv !== 0) ? "<div> <span style='color: green'>есть</span></div>" : "<div> <span style='color: red'>нет</span></div>";
                         return (+obj.id_dv !== 0) ? "<span class='webix_icon fa-check-circle', style='color: green'></span>" :
@@ -129,7 +133,7 @@ export default class SprView extends JetView{
                     header: [{text: "МНН", css: "center_p"},
                     ],
                 },
-                {id: "id_spr", width: 80, sort: "server",
+                {id: "id_spr", width: 80, sort: "server", tooltip: false,
                     header: [{text: "IDSPR"},
                         {content: "cFilt",
                             inputConfig : {
@@ -140,13 +144,14 @@ export default class SprView extends JetView{
                         ],
                     headermenu:false,
                     },
-                { id: "c_tovar", fillspace: 1, sort: "server",
+                { id: "c_tovar", fillspace: 1, sort: "server", css: "overflow",
+                    tooltip: "#c_tovar#",
                     header: [{text: "Наименование"},
-                        ],
+                    ],
                     headermenu:false,
                     template: refTemplate,
-                    },
-                { id: "id_zavod", sort: "server",
+                },
+                { id: "id_zavod", sort: "server",  css: "overflow",
                     width: 300,
                     header: [{text: "Производитель"},
                         {content: "richFilt", compare: compareTrue,
@@ -160,7 +165,7 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                { id: "id_strana", sort: "server",
+                { id: "id_strana", sort: "server", css: "overflow",
                     width: 200,
                     header: [{text: "Страна"},
                         {content: "richFilt", compare: compareTrue,
@@ -174,7 +179,7 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                { id: "c_dv", hidden: true, sort: "server",
+                { id: "c_dv", hidden: true, sort: "server", css: "overflow",
                     width: 300,
                     header: [{text: "Д. в-во"},
                         {content: "richFilt", compare: compareTrue,
@@ -189,7 +194,7 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                { id: "c_group", hidden: true, sort: "server",
+                { id: "c_group", hidden: true, sort: "server", css: "overflow",
                     width: 300,
                     header: [{text: "Группа"},
                         {content: "richFilt", compare: compareTrue,
@@ -205,7 +210,7 @@ export default class SprView extends JetView{
                     ]
                 },
                 { id: "t_group", hidden: true, //sort: "server",
-                    width: 300,
+                    width: 300, css: "overflow",
                     header: [{text: "T. группа"},
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
@@ -219,7 +224,7 @@ export default class SprView extends JetView{
                         }
                     ]
                 },
-                { id: "c_nds", hidden: true,
+                { id: "c_nds", hidden: true, tooltip: false,
                     width: 150,
                     header: [{text: "НДС"},
                         {content: "richFilt", compare: compareTrue,
@@ -231,7 +236,7 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                { id: "c_hran", hidden: true,
+                { id: "c_hran", hidden: true, tooltip: false,
                     width: 150,
                     header: [{text: "Условия хранения"},
                         {content: "richFilt", compare: compareTrue,
@@ -243,7 +248,7 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                { id: "c_sezon", hidden: true,
+                { id: "c_sezon", hidden: true, tooltip: false,
                     width: 180,
                     header: [{text: "Сезонность"},
                         {content: "richFilt", compare: compareTrue,
@@ -255,7 +260,7 @@ export default class SprView extends JetView{
                             }
                         ]
                     },
-                {id: "mandat", width:100,
+                {id: "mandat", width:100, tooltip: false,
                     template: function (obj) {
                         return (obj.c_mandat) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
                         },
@@ -269,7 +274,7 @@ export default class SprView extends JetView{
                             }
                         ],
                     },
-                {id: "prescr", width:100, hidden: true, css: 'center_p',
+                {id: "prescr", width:100, hidden: true, css: 'center_p', tooltip: false,
                     template: function (obj) {
                         return (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
                         },
@@ -282,7 +287,7 @@ export default class SprView extends JetView{
                             }
                         ],
                     },
-                {id: "dt", width: 200, sort: 'server',
+                {id: "dt", width: 200, sort: 'server', tooltip: false,
                     format: dt_formating_sec,
                     css: 'center_p',
                     hidden: !true,
@@ -294,7 +299,7 @@ export default class SprView extends JetView{
                             },
                         },
                     ]},
-                {id: "dt_ins", width: 200, //sort: 'server',
+                {id: "dt_ins", width: 200, tooltip: false, //sort: 'server', 
                     format: dt_formating_sec,
                     css: 'center_p',
                     hidden: true,
@@ -411,48 +416,7 @@ export default class SprView extends JetView{
                     });
                 },
                 onKeyPress: function(code, e){
-                    if (e.code === "End" && e.shiftKey === true) {
-                        this.$scope.pager.$scope.$$("_lastPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.getNode().focus();
-                    } else if (e.code === "PageDown" && e.shiftKey === true) {
-                        this.$scope.pager.$scope.$$("_nextPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.getNode().focus();
-                    } else if (e.code === "PageUp" && e.shiftKey === true) {
-                        this.$scope.pager.$scope.$$("_prevPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.getNode().focus();
-                    } else if (e.code === "Home" && e.shiftKey === true) {
-                        this.$scope.pager.$scope.$$("_firstPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.getNode().focus();
-                    } else if (e.code === "PageDown" && this.getSelectedId() && this.data.getLastId().toString()===this.getSelectedId().id.toString()) {
-                        this.$scope.pager.$scope.$$("_nextPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.setRow = 'last';
-                    } else if (e.code === "PageUp" && this.getSelectedId() && this.data.getFirstId().toString()===this.getSelectedId().id.toString()) {
-                        this.$scope.pager.$scope.$$("_prevPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.getNode().focus();
-                        this.setRow = 'first';
-                    } else if (e.code === "ArrowDown" && this.getSelectedId() && this.data.getLastId().toString()===this.getSelectedId().id.toString()) {
-                        this.$scope.pager.$scope.$$("_nextPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.setRow = 'first';
-                    } else if (e.code === "ArrowUp" && this.getSelectedId() && this.data.getFirstId().toString()===this.getSelectedId().id.toString()) {
-                        this.$scope.pager.$scope.$$("_prevPB").callEvent("onItemClick");
-                        this.$scope.setScroll();
-                        this.setRow = 'last';
-                    } else if (13 === code) {
-                        if (this.getSelectedItem()) this.callEvent("onItemDblClick");
-                    } else if (e.code === "Space") {
-                        let item = this.getItem(this.getSelectedId().id);
-                        item.checkbox = (!item.checkbox) ? 1 : 0;
-                        this.updateItem(item.id, item); 
-                        this.callEvent('onCheck', [item.id, undefined, item.checkbox]);
-                    } else  {
-                    };
+                    onKeyPressAction(this, code, e);
                 },
             }
         }
@@ -645,42 +609,8 @@ export default class SprView extends JetView{
         addScrollTooltip(this);
         setApplyButton(this, 2);
         setButtons(this.app, this.app.config.getButt(this.getRoot()));
-        table.getNode().onmouseover =  (ev) => {
-            if ((ev.buttons===1 && 
-                 ev.target.getAttribute('role')==='gridcell' && 
-                 ev.target.children.length > 0 && 
-                 ev.target.firstChild.classList.contains('webix_table_checkbox')) ||
-               ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
-            ) {
-                ev.target.classList.add('cell-highlighted');
-                let row = ev.target.getAttribute('aria-rowindex');
-                let item_id = table.data.order[row-1];
-                let item = table.getItem(item_id);
-                    if (this.checked_id !== item.id) {
-                        this.checked_id = item.id;
-                        item.checkbox = (!item.checkbox) ? 1 : 0;
-                        table.updateItem(item.id, item); 
-                        table.callEvent('onCheck', [item.id, undefined, item.checkbox]);
-                    };
-            }
-        };
-        table.getNode().onmouseout =  (ev) => {
-            if ((ev.buttons===1 && 
-                 ev.target.getAttribute('role')==='gridcell' && 
-                 ev.target.children.length > 0 && 
-                 ev.target.firstChild.classList.contains('webix_table_checkbox')) ||
-               ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
-            ) {
-                ev.target.classList.remove('cell-highlighted');
-            }
-        };
-        // setTimeout(() => {
-        //     table.config.posPpage = recalcRowsRet(table);
-        //     this.$$("_unfilt").callEvent('onItemClick');
-        // }, 200);
-        // table.config.posPpage = recalcRowsRet(table);
-        // this.$$("_unfilt").callEvent('onItemClick');
-        // this.startSearch();
+        setMouseEvents(table);
+
         table.callEvent('onresize');
         table.markSorting(table.config.fi,table.config.di);
         this.$$("_sb").focus();
