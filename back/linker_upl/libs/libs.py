@@ -280,6 +280,8 @@ ON CONFLICT (UIN) DO UPDATE
                     _id_vnd = 30178
                 elif id_vnd in [22078]:
                     _id_vnd = 22077
+                elif id_vnd in [40267, 40277, 40278]:
+                    _id_vnd = 40277
                 else:
                     _id_vnd = id_vnd
                 # Добавление забракованных серий
@@ -492,9 +494,38 @@ SET (barcode, id_spr) = (%s, %s);"""
         --and (select count(w.id_tovar) from prc w where w.id_vnd = p.id_vnd and w.id_tovar = p.id_tovar) = 1
     and p.id_vnd in (select q.id_vnd from vnd q where permit = 1);"""
         dbc.execute(sql)
+
         dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
         if callable(db.commit):
             db.commit()
+
+        self.log('PRCSYNC Сводим по кодам для Протека')
+        sql= """ insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
+    select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
+    from prc p 
+    join lnk l on (l.id_vnd > 20200 and l.id_vnd < 20299 ) and (p.id_vnd > 20200 and p.id_vnd < 20299 ) and 
+    l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' ' 
+        and p.n_fg != 12 and p.n_fg != 1
+        and (select count(distinct ll.id_spr)
+                from prc pp
+                join lnk ll on (pp.id_vnd > 20200 and pp.id_vnd < 20299 ) and (ll.id_vnd > 20200 and ll.id_vnd < 20299 ) and ll.id_tovar = pp.id_tovar
+                where (pp.id_vnd > 20200 and pp.id_vnd < 20299 ) and (p.id_vnd > 20200 and p.id_vnd < 20299 ) and pp.id_tovar = p.id_tovar
+                ) = 1
+    and p.id_vnd in (select q.id_vnd from vnd q where permit = 1 and (q.id_vnd > 20200 and q.id_vnd < 20299));"""
+        try:
+            pass
+            dbc.execute(sql)
+        except:
+            self.log(traceback.format_exc(), kind="ProtekInsertError")
+            self.log(sql, kind="ProtekInsertErrorSQL:")
+        else:
+            if callable(db.commit):
+                db.commit()    
+        
+        dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
+        if callable(db.commit):
+            db.commit()
+
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
         dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 

@@ -4403,8 +4403,16 @@ WHERE r.ID_SPR = {row[0]}"""
                     s = "cast(r.id_spr as text) like '" + str(pars['id_spr']) + "%'"
                     ssss.append('and %s' % s)
                 if pars['id_tovar']:
-                    s = f"r.ID_TOVAR like '{pars['id_tovar']}%'"
+                    if pars['id_tovar'].endswith(' '):
+                        pars['id_tovar'] = pars['id_tovar'].strip()
+                        s = f"lower(r.id_tovar)  = lower('{pars['id_tovar']}')"
+                    else:
+                        s = "lower(r.id_tovar) like lower('%" + pars['id_tovar'] + "%')"
                     ssss.append('and %s' % s)
+
+                # if pars['id_tovar']:
+                #     s = f"r.ID_TOVAR like '{pars['id_tovar']}%'"
+                #     ssss.append('and %s' % s)
                 if pars['owner']:
                     s = f"""lower(r.OWNER) like lower('%{pars['owner']}%')"""
                     ssss.append('and %s' % s)

@@ -1,7 +1,8 @@
 #coding: utf-8
 
 __appname__ = 'linker_sse'
-__version__ = '2019.82.1130' #send sklad err updates
+__version__ = '19.177.1140' #добавлен лог ошибки при потери коннекта
+# __version__ = '2019.82.1130' #send sklad err updates
 # __version__ = '2018.312.1100' #убраны некоторые ошибки
 #__version__ = '2018.177.1220' #переделаны типы сообщений клиентам
 #__version__ = '2018.176.1330' #start project

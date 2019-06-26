@@ -240,13 +240,13 @@ class sseHandler(BaseHTTPRequestHandler):
             sys._log(f'client: \'{cl_id}\' error ->> {traceback.format_exc()}')
 
     def do_GET(self):
-        sys._log(f"1: {self.path}")
+        # sys._log(f"1: {self.path}")
         try:
             self.path, cl_id = self.path.split('?')
             cl_id = unquote(cl_id)
         except:
             cl_id = None
-        sys._log(f"2: {self.path}")
+        # sys._log(f"2: {self.path}")
         if not self.path.endswith('/SSE') or not cl_id:
             self.send_err(cl_id)
         else:
@@ -256,7 +256,7 @@ class sseHandler(BaseHTTPRequestHandler):
             # new connect
             sys._SSE[cl_id] = [q, 0]
             d2 = 'welcome %s !' % (cl_id)
-            sys._log(f'{d2}')
+            # sys._log(f'{d2}')
             data = "event: greating\ndata: %s\n\n" % d2
             try:
                 self.wfile.write(data.encode())
@@ -277,6 +277,7 @@ class sseHandler(BaseHTTPRequestHandler):
                     self.wfile.flush()
                 except Exception:
                     sys._log('except while main writing')
+                    sys._log(traceback.format_exc(), kind='exception_text')
                     sys._log(f'client: \'{cl_id}\' error ->> connection lost')
                     break
             # close connect
