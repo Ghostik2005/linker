@@ -1890,6 +1890,8 @@ left join spr_zavod z on s.id_zavod = z.id_spr;"""
                     if inn != -1  and s !=-1:
                         opt = inn, s
                         options.append(opt)
+            if len(options) < 1:
+                continue
             params = json.dumps({"sql": sql, "options": options, "test": test})
             t_md5 = self._genHash(params)
             yield t_md5, params
@@ -1913,6 +1915,8 @@ set (updated, org_id, supplier_id, ref_id, expires, abso) = (current_timestamp, 
                             opt = (inn, v, s, expires, hard)
                             opt += opt
                             options.append(opt)
+                if len(options) < 1:
+                    continue
                 params = json.dumps({"sql": sql, "options": options, "test": test})
                 t_md5 = self._genHash(params)
                 yield t_md5, params
@@ -1927,6 +1931,8 @@ set (updated, org_id, supplier_id, ref_id, abso) = (current_timestamp, %s, %s, %
                             opt = (inn, v, s, hard)
                             opt += opt
                             options.append(opt)
+                if len(options) < 1:
+                    continue
                 params = json.dumps({"sql": sql, "options": options, "test": test})
                 t_md5 = self._genHash(params)
                 yield t_md5, params
