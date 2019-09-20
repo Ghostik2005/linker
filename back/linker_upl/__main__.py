@@ -1,7 +1,12 @@
 #coding: utf-8
 
 __appname__ = 'linker_uploader'
-__version__ = '19.176.1620' # добавлен поставщик 40278, теперь все поставщики с кодами 402** приводятся к 40277
+__version__ = '19.263.1200' # исправленна функция загрузки файлов .nolink
+# __version__ = '19.259.1200' # добавлен пул соединений с сервером
+# __version__ = '19.217.1000' # добавлен еще один протек 20237
+# __version__ = '19.212.1220' # замена кодов для м-аптеки
+# __version__ = '19.191.0940' # все переводится на Admin
+# __version__ = '19.176.1620' # добавлен поставщик 40278, теперь все поставщики с кодами 402** приводятся к 40277
 #__version__ = '19.153.0900' # введен дополнительный лог
 #__version__ = '19.150.1210' # добавленно сведение по кодам для протека
 # __version__ = '19.023.1635' # добавленно автоматическое направление на сведение для антея
@@ -64,7 +69,6 @@ def main():
 
     #import atexit
     #atexit.register(libs.shutdown, sys.APPCONF["log"])
-    #threading.Thread(target=s_send, args=(), daemon=True).start()
 
     threads, processes = prepare_server(Lock=sys.APPCONF['Lock'], api = sys.APPCONF["api"])
     rc = 0
@@ -152,7 +156,7 @@ def prepare_server(Lock=None, api = None):
     sys.APPCONF["log"](f'{__appname__} started.\tinternal ip-> {sys.intip}')
     sys.APPCONF["log"](f'\t\t\textrnal  ip-> {sys.extip}')
 
-    threads.append(threading.Thread(target=libs.guardian, args=(api,), daemon=True))
+    threads.append(threading.Thread(target=libs.guardian, args=(api,), daemon=True)) ########################
     
     #threads.append(threading.Thread(target=libs.monitor, args=(api,), daemon=True))
 
@@ -161,25 +165,6 @@ def prepare_server(Lock=None, api = None):
     for pr in processes:
         pr.start()
     return threads, processes
-
-def s_send():
-    import json
-
-    udpsock = libs.UDPSocket()
-    pid = os.getpid() #pid of service
-    uid = uuid.uuid4().hex #guid of service
-    a_path = f'https://online365.pro/linker' #path for access from outside
-    w_p = os.path.abspath(sys.argv[0])#full path to running script.
-    f_size = os.path.getsize(w_p) #size of running file
-    m_time = os.path.getmtime(w_p) #last modify time of running file
-    sys.argv[0] = w_p
-    argv = '%%'.join(m for m in sys.argv) #formated string from sys.argv
-    while True: #infinite loop for heart beating
-        p_d = {'appname': __appname__, 'version': __version__, 'profile': __profile__, 'index': __index__, 'pid': pid, 'uid': uid,
-               'extip': sys.extip, 'intip': sys.intip, 'nginx path': a_path, 'argv': argv, 'm_time': m_time, 'size': f_size}
-        payload = json.dumps(p_d, ensure_ascii=False) #heart beat message, it needs to discuss
-        print(payload, file=udpsock) #send to UDP socket our message
-        time.sleep(1.5 + random.random())
 
 
 ###############################################

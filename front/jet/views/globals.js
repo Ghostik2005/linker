@@ -314,7 +314,7 @@ export function gen_params(inp_params) {
     let user = app.config.user;
     let url = app.config.r_url + "?" + inp_params.method;
     let params = {"user": user, "search": search_str, "start": inp_params.start, "count": inp_params.count,
-                  "field": field, "direction": direction, "c_filter": c_filter, "cbars": inp_params.cbars};
+                  "field": field, "direction": direction, "c_filter": c_filter, "cbars": inp_params.cbars, "total": inp_params.total};
     params = clear_obj(params);
     return params
 }
@@ -901,9 +901,9 @@ export function init_first(app) {
         }
     }
 
-    let delay = app.config.searchDelay;
-    setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
-    getRefs(app); 
+    // let delay = app.config.searchDelay;
+    // setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
+    // getRefs(app); 
 }
 
 export function setRefs(data) {
@@ -942,7 +942,8 @@ export function getRefs(app, sync) {
 }
 
 export function clear_names_bar(th, on_error_text) {
-    let vv = th.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
+    let vv = th.getRoot().getChildViews()[3].getChildViews();
+    // let vv = th.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[3].getChildViews();
     vv[0].clearAll() //clear datatable
     let n_item = {'_name': "", '_count': "", '_vendor': on_error_text || "", 'p_name': ""};
     if (th.$$("_local_add")) th.$$("_local_add").hide();
@@ -951,6 +952,7 @@ export function clear_names_bar(th, on_error_text) {
     th.$$("_local_right").hide();
     th.$$('_local_link').hide();
     th.$$("_local_names_bar").parse(n_item);
+    // th.$$("_local_names_bar").refresh();
     th.$$("_local_spr_search").setValue(''); //search bar
     let pager = vv[1]; //pager
     pager.getChildViews()[6].define('label', "Всего записей: 0");
@@ -973,7 +975,7 @@ export function get_prcs(th, id_vnd) {
             if (data.length > 0) {
                 $$("prcs_dc").parse(data);
             } else {
-                clear_names_bar(th, "Товары у кого-то на сведении");
+                clear_names_bar(th, "записей нет");
             }
         } else {
             webix.message('error');
@@ -992,7 +994,7 @@ export function get_prcs_source(th, source) {
             if (data.length > 0) {
                 $$("prcs_dc").parse(data);
             } else {
-                clear_names_bar(th, "Товары у кого-то на сведении");
+                clear_names_bar(th, "записей нет");
                 }
         } else {
             webix.message('error');
@@ -1011,7 +1013,7 @@ export function get_prcs_date(th,da) {
             if (data.length > 0) {
                 $$("prcs_dc").parse(data);
             } else {
-                clear_names_bar(th, "Товары у кого-то на сведении");
+                clear_names_bar(th, "записей нет");
                 }
         } else {
             webix.message('error');
@@ -1058,10 +1060,19 @@ export function get_suppl(view, th, method) {
             $$(view).getList().clearAll();
             $$(view).getList().parse(data);
             let fid = $$(view).getList().getFirstId();
-            $$(view).setValue(fid);
+            if (fid) {
+                $$(view).setValue(fid);
+            } else {
+                $$(view).setValue()
+            }
             $$(view).refresh();
         } else {
+            clear_names_bar(th, 'записей нет');
         };
+    if ($$(view).getList().count() < 1) {
+        // если записей нет очищаем 
+        clear_names_bar(th, 'записей нет');
+    };
     })
 }
 
@@ -1090,6 +1101,7 @@ export function delPrc(inp_data, th) {
         ll.updateItem(cc, iti);
         $$("_suppl").refresh();
     };
+
 }
 
 export function after_call(text, data, XmlHttpRequest) {
@@ -1181,7 +1193,6 @@ export function setButtons(app, buttons_list) {
             width = item.config.sWidth;
             butt = "<span style='float: left; width:" + item.config.eWidth +"px'>" + item.config.oldLabel + "</span><span stile='width:";
             butt +=  + (item.config.sWidth-item.config.eWidth) +"px'>" + item.config.extLabel + "</span>";
-            // console.log('b', butt);
         }
         item.define({width: width, label: butt});
         item.resize();
@@ -1208,11 +1219,11 @@ export function recalcRowsRet(table) {
     let totalHeight = q.clientHeight;
     let rows = Math.floor(totalHeight/table.config.rowHeight);
     if (table.config.name === "1__dt_as") {
-        console.log('ppos', table.config.posPpage);
-        console.log('th', totalHeight);
-        console.log('r', rows);
-        console.log('q', q.clientHeight);
-        console.dir(q);
+        // console.log('ppos', table.config.posPpage);
+        // console.log('th', totalHeight);
+        // console.log('r', rows);
+        // console.log('q', q.clientHeight);
+        // console.dir(q);
     }
     if (rows === table.config.posPpage) return false;
     return rows

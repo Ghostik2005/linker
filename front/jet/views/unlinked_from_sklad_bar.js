@@ -93,6 +93,12 @@ export default class SkladUnlinked extends JetView{
                     header: [{text: "Склад"},
                     ]
                 },
+                { id: "nakl", //sort: "server",
+                    width: 100,
+                    hidden: !true,
+                    header: [{text: "Накладная"},
+                    ]
+                },
                 { id: "sklad_user", //sort: "server",
                     width: 100,
                     hidden: !true,

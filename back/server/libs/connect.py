@@ -1,42 +1,44 @@
 #coding: utf-8
+
+
 import sys
 import json
 import time
 import traceback
-import configparser
-try:
-    import libs.fdb as fdb
-except ImportError:
-    #traceback.print_exc()
-    import fdb
+# import psycopg2
+import libs.connect_pool as connect_pool
 
-import psycopg2
-
-
-class Connect(object):
+class Connect_proto(object):
 
     def __init__(self, *args, **kwargs):
-        #print('args', args, sep='\t')
-        #print('kwargs', kwargs, sep='\t')
         self.production = kwargs.get("production", False)
         self.udp = kwargs.get('udp')
 
-    def _print(self, msg=None):
+    def _print(self, msg=''):
         udp_msg = [sys.APPCONF["log"].appname, 'sql', '', msg, time.strftime("%Y-%m-%d %H:%M:%S")]
         print(json.dumps(udp_msg), file=self.udp or sys.stdout)
-        #print('xxxxxxxxxxxxxxxxxxxx')
-        
-    pass
 
-class pg_local(Connect):
+    def ch_log(self, user='', m_type='change', msg=''):
+        msg = json.dumps(msg, ensure_ascii=False)
+        udp_msg = [sys.APPCONF["log"].appname+'' if self.production else '_test', 
+                   m_type, user, msg, time.strftime("%Y-%m-%d %H:%M:%S")
+                  ]
+        if not self.production:
+            print(user, m_type, msg, sep='\n', flush=True, file=sys.stdout)
+        print(json.dumps(udp_msg), file=self.udp or sys.stdout)
+
+
+class pg_local(Connect_proto):
 
     def __init__(self, log, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log = log
         self.port = kwargs.get('port', 5432)
-        
         self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': int(self.port)}
         self._log("Production" if self.production else "Test")
+        
+        self.connection = connect_pool.ConectPool(connection_params=self.connect_params)
+
 
     def _log(self, message, kind='info'):
         if callable(self.log):
@@ -52,7 +54,8 @@ class pg_local(Connect):
         """
         ret = []
         try:
-            con = psycopg2.connect(**self.connect_params)
+            # con = psycopg2.connect(**self.connect_params)
+            con = self.connection.connect()
         except Exception as Err:
             self._log(traceback.format_exc(), kind="error:connection")
         else:
@@ -90,7 +93,8 @@ class pg_local(Connect):
         """
         ret = []
         try:
-            con = psycopg2.connect(**self.connect_params)
+            # con = psycopg2.connect(**self.connect_params)
+            con = self.connection.connect()
         except Exception as Err:
             self._log(traceback.format_exc(), kind="error:connection")
         else:
@@ -126,7 +130,8 @@ class pg_local(Connect):
         """
         ret = []
         try:
-            con = psycopg2.connect(**self.connect_params)
+            # con = psycopg2.connect(**self.connect_params)
+            con = self.connection.connect()
         except Exception as Err:
             self._log(traceback.format_exc(), kind="error:connection")
         else:

@@ -75,7 +75,8 @@ export default class PagerView extends JetView{
                                                 field: params[2],
                                                 direction: params[3],
                                                 filter: params[0],
-                                                cbars: cbars
+                                                cbars: cbars,
+                                                total: (start < 2) ? undefined : this.getRoot().config.parent.config.totalPos
                                                 });
                                             };
                                         };

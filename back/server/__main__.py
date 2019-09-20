@@ -1,7 +1,11 @@
 #coding: utf-8
 
 __appname__ = 'linker'
-__version__ = '19.134.1330' #добавлен фильтр по id_tovar в связках по точному соответсвию
+__version__ = '19.263.1100' # ускорили ответы при запросе следующих страниц во всех таблицах
+# __version__ = '19.262.1100' # добавили лог изменения связок в клик
+# __version__ = '19.255.1630' #добавлен пул соединений с сервером
+#__version__ = '19.233.1400' #добаленно поле накладная в ошибках
+# __version__ = '19.134.1330' #добавлен фильтр по id_tovar в связках по точному соответсвию
 # __version__ = '19.133.1717' #добавлен фильтр по id_tovar в пропущенных
 # __version__ = '19.133.1641' #добавлен фильтр по id_tovar в несвязанных
 # __version__ = '19.115.1400' #отбор по товарной группе
@@ -208,9 +212,7 @@ def application(env):
 
         try:
             _param = json.loads(_param)
-        except Exception as Err:
-            #traceback.print_exc()
-            #print('eeee')
+        except Exception:
             data = _param 
             _param = _p_http
             if fname:
@@ -228,7 +230,7 @@ def application(env):
         print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
     fileReturn = False
-    if arg == 'saveData' or arg == 'barcodeReport':
+    if arg in ['saveData', 'barcodeReport']:
         res = content.get('result')
         if res:
             ret_v = content.get('ret_val')

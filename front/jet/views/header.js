@@ -103,11 +103,13 @@ export default class HeaderView extends JetView{
 
         
         var si = setTimeout( function tick() {
-            if (!app.config.eventS || app.config.eventS.readyState !== 1) {
-                newSSE()
-                };
-            si = setTimeout(tick, 4000);
-            }, 50);
+            if (app.config.production) {
+                if (!app.config.eventS || app.config.eventS.readyState !== 1) {
+                    newSSE()
+                    };
+                si = setTimeout(tick, 4000);
+            };
+        }, 50);
 
 
             
@@ -150,11 +152,6 @@ export default class HeaderView extends JetView{
                         onItemClick: () => {
                             onExit();
                             deleteCookie("linker-app");
-                            //Удалить то что ниже в понедельник 1 октября после обновления
-                            //deleteCookie('linker_user');
-                            //deleteCookie('linker_auth_key');
-                            //deleteCookie('linker_role');
-                            //////////////
                             th.app.config.user = '';
                             th.app.config.role = '0';
                             th.app.config.x_api = 'x_login';

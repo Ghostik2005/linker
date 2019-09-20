@@ -3,6 +3,7 @@ import {JetView} from "webix-jet";
 import HeaderView from "../views/header";
 //import FooterView from "../views/footer";
 import {init_first, request, checkVal} from "../views/globals";
+import {getRefs, get_refs} from "../views/globals";
 
 export default class StartView extends JetView{
     config() {
@@ -13,11 +14,12 @@ export default class StartView extends JetView{
                 { $subview: HeaderView },
                 { $subview: true, borderless: true},
                 //{ $subview: FooterView },
-                ],
-            };
+            ],
+        };
         return ui;
-        }
-    init(){
+    }
+
+    get_ready() {
         let app = this.app;
         let url = app.config.r_url + "?getVersion";
         let params = {"user": app.config.user};
@@ -30,7 +32,6 @@ export default class StartView extends JetView{
         app.config.b_prod = info.prod;
         let pars = res.params;
         if (pars) {
-            //console.log('pp present', pars);
             pars = JSON.parse(pars);
             app.config.posPpage = ("posPpage" in pars) ? pars.posPpage: app.config.posPpage;
             app.config.notify = ("notify" in pars) ? pars.notify: app.config.notify;
@@ -39,9 +40,22 @@ export default class StartView extends JetView{
             app.config.dtParams = ("dtParams" in pars) ? pars.dtParams: app.config.dtParams;
             // app.config.link = ("link" in pars) ? pars.link: app.config.link;
             app.config.defaultView = ("default" in pars) ? pars.default: 'LinkerView';
-            
         } else {
-            };
+        };
+    }
+
+    init(){
+        let app = this.app;
         init_first(app);
-        }
+        this.get_ready();
+    }
+
+    ready() {
+        
+        let app = this.app;
+        let delay = app.config.searchDelay;
+        setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
+        getRefs(app); 
+    }
+
     }

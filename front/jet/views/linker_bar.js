@@ -55,7 +55,7 @@ export default class LinkerView extends JetView{
                                                 get_prcs_source(this.$scope, id_vnd);
                                                 };
                                         } else {
-                                            clear_names_bar(this);
+                                            // clear_names_bar(this);
                                             // this.getRoot().getChildViews()[1].getChildViews()[2].getChildViews()[0].getChildViews()[0].getChildViews()[0].setValue(''); //список поставщиков
                                             this.setValue('')
                                             };

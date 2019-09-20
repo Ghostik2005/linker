@@ -1,14 +1,11 @@
 import "./styles/styles.css";
 import "./styles/animate.css";
-//import "./libs/webix/webix.js";
 //import "./libs/webix/skin.js";
 import {JetApp, JetView} from "webix-jet";
 import {EmptyRouter} from "webix-jet";
 import "./locales/ru";
 
 webix.ready( () => {
-
-    //console.log('PROD', PRODUCTION);
 
     var app = new JetApp({
         production:     PRODUCTION,
@@ -31,7 +28,6 @@ webix.ready( () => {
         expert:         true,
         link:           false,
         defaultView:    "LinkerView",
-        // defaultView:    "AdmBarView",
         getButt:        (view, buttonsList) => {
                             let bList = [];
                             let views = view.getChildViews()

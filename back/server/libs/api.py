@@ -102,7 +102,7 @@ class API:
             sql = f"""insert into lnk_errors_from_sklad (sh_prc, sklad_name, sklad_user, id_spr,
 sklad_c_tovar, sklad_id_tovar, sklad_c_zavod, sklad_c_strana, id_vnd, vnd_c_tovar, vnd_id_tovar, 
 vnd_c_zavod, vnd_c_strana, user_id, nakl) values {str(inserts)} returning id; """
-            self._print(sql)
+            # self._print(sql)
             result = self.db.execute({"sql": sql, "options": None})
             if result:
                 ret = {"result": True, "ret_val": "Inserted"}
@@ -478,6 +478,7 @@ dt, in_work, source, uin, change_dt) values
 
     def getErrorsFromSklad(self, params=None, x_hash=None):
         if self._check(x_hash):
+            total_table = params.get('total')
             start_p = int(params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
@@ -519,7 +520,7 @@ dt, in_work, source, uin, change_dt) values
             sql = f"""select r.id, r.sh_prc, r.sklad_name, r.sklad_user, r.id_spr, r.sklad_c_tovar, r.sklad_id_tovar,
 r.sklad_c_zavod, r.sklad_c_strana, r.id_vnd, v.c_vnd,
 r.vnd_c_tovar, r.vnd_id_tovar, r.vnd_c_zavod,  r.vnd_c_strana,
-r.status, r.dt, r.change_dt 
+r.status, r.dt, r.change_dt, r.nakl
 from lnk_errors_from_sklad r
 left join vnd v on v.id_vnd = r.id_vnd
 WHERE {' '.join(stri)}
@@ -534,36 +535,43 @@ WHERE {' '.join(stri)}"""
             if len(stri) > 0:
                 sql = sql.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))", '')
                 sql_c = sql_c.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))", '')
-            self._print(sql)
-            self._print(sql_c)
-            p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            # self._print(sql)
+            # self._print(sql_c)
+            _return = []
+            p_list = [{'sql': sql, 'opt': ()},] if total_table else [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
-            _return = []
+            # count = results[1][0][0]
             for row in result:
                 r = {
-                    "id"  : row[0],
-                    "sh_prc"  : row[1],
+                    "id": row[0],
+                    "sh_prc": row[1],
                     "sklad_name": row[2],
-                    "sklad_user"    : row[3],
-                    "id_spr"  : row[4],
-                    "sklad_c_tovar" : row[5],
-                    "sklad_id_tovar" : row[6],
-                    "sklad_c_zavod"  : row[7],
-                    "sklad_c_strana" : row[8],
-                    "id_vnd"  : row[9],
-                    "c_vnd"  : row[10],
-                    "vnd_c_tovar" : row[11],
-                    "vnd_id_tovar" : row[12],
-                    "vnd_c_zavod"  : row[13],
-                    "vnd_c_strana" : row[14],
-                    "status"  : row[15],
-                    "dt"   : str(row[16]),
-                    "change_dt"      : str(row[17])
+                    "sklad_user": row[3],
+                    "id_spr": row[4],
+                    "sklad_c_tovar": row[5],
+                    "sklad_id_tovar": row[6],
+                    "sklad_c_zavod": row[7],
+                    "sklad_c_strana": row[8],
+                    "id_vnd": row[9],
+                    "c_vnd": row[10],
+                    "vnd_c_tovar": row[11],
+                    "vnd_id_tovar": row[12],
+                    "vnd_c_zavod": row[13],
+                    "vnd_c_strana": row[14],
+                    "status": row[15],
+                    "dt": str(row[16]),
+                    "change_dt": str(row[17]),
+                    "nakl": str(row[18])
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}
@@ -575,6 +583,7 @@ WHERE {' '.join(stri)}"""
 
     def getPrcsAll(self, params=None, x_hash=None):
         if self._check(x_hash):
+            total_table = params.get('total')
             filt = params.get('c_filter')
             stri = ""
             c_tov = params.get("search", '')
@@ -722,13 +731,19 @@ WHERE {' '.join(stri)}"""
     left join users uu on uu.id = r.in_work
     WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
             #self.log(sql)
-            p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': ()},] if total_table else [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             for row in result:
                 if str(row[13]) == '1':
                     sou = "PLExpert"
@@ -769,6 +784,7 @@ WHERE {' '.join(stri)}"""
 
     def getPrcsSkip(self, params=None, x_hash=None):
         if self._check(x_hash):
+            total_table = params.get('total')
             filt = params.get('c_filter')
             pref = 'and %s'
             stri = ""
@@ -882,13 +898,19 @@ order by {field} {direction}"""
             sql = sql + self._insLimit(start_p, end_p)
             opt = ()
             _return = []
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             for row in result:
                 if str(row[11]) == '1':
                     sou = "PLExpert"
@@ -2252,7 +2274,7 @@ and g.CD_CODE {insert}"""
             method = params.get('method')
             id_sprs = params.get('items', [])
             prop_id = params.get('prop_id')
-            self._print(id_sprs)
+            # self._print(id_sprs)
             if prop_id:
                 prop_id = prop_id.get('id')
             if id_sprs and prop_id and method:
@@ -2651,6 +2673,7 @@ INNER JOIN ROLES a on (a.ID = r.ID_ROLE) WHERE r.ID = %s"""
     def getBarsSpr(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            total_table = params.get('total')
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
@@ -2665,13 +2688,19 @@ INNER JOIN ROLES a on (a.ID = r.ID_ROLE) WHERE r.ID = %s"""
             sql = f"""select distinct r.barcode from spr_barcode r where {stri} order by r.{field} {direction} """ 
             sql = sql + self._insLimit(start_p, end_p)
             sql = sql.replace("WHERE lower(r.barcode) like lower('%%%%')", '')
-            p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': ()},] if total_table else [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             t1 = time.time() - st_t
             _return = []
             st_t = time.time()
@@ -2715,6 +2744,7 @@ where r.barcode = %s order by s.id_spr ASC"""
     def getSprBars(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            total_table = params.get('total')
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
@@ -2782,13 +2812,19 @@ order by {3} {4}
             t1 = time.time() - st_t
             opt = ()
             _return = []
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             st_t = time.time()
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
@@ -3332,6 +3368,7 @@ order by id asc; """
                  "dt": "t2.DT",
                  "razbr": "t2.RAZBRAK"}
         if self._check(x_hash):
+            total_table = params.get('total')
             nomail = params.get("nomail")
             mail_join = ''
             mail_condition = ''
@@ -3381,12 +3418,18 @@ WHERE {' '.join(stri)} {mail_condition}"""
             order = f""" ORDER by {field} {direction}, t1.c_tovar"""
             sql = sql + order
             sql = sql + self._insLimit(start_p, end_p)
-            p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': ()},] if total_table else [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
-            count = results[1][0][0]
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
+            # count = results[1][0][0]
             _return = []
             p_list = []
             for row in results[0]:
@@ -3422,6 +3465,7 @@ WHERE {' '.join(stri)} {mail_condition}"""
     def getSprSearch(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            total_table = params.get('total')
             filt = params.get('c_filter')
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
@@ -3516,17 +3560,16 @@ WHERE {stri} ORDER by {field} {direction}
             if len(ssss) > 1:
                 sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
                 sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
-            t1 = time.time() - st_t
             opt = ()
             _return = []
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            t2 = time.time() - st_t
             result = results[0]
-            count = results[1][0][0]
-            st_t = time.time()
             for row in result:
                 r = {
                     "id_spr"        : row[0],
@@ -3544,8 +3587,8 @@ WHERE {stri} ORDER by {field} {direction}
                     "search"        : params.get('search')
                 }
                 _return.append(r)
-            t2 = time.time() - st_t
-            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": (t1, t2), 'params': params}}
+
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, "time": t2, 'params': params}}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -3553,6 +3596,7 @@ WHERE {stri} ORDER by {field} {direction}
     def getSprSearchAdmRls(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            total_table = params.get('total')
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
@@ -3582,7 +3626,7 @@ WHERE {stri} ORDER by {field} {direction}
                     ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
-            self._print(filt)
+            # self._print(filt)
             pars = {}
             pars['id_spr'] = filt.get('id_spr')
             pars['id_zavod'] = filt.get('id_zavod')
@@ -3640,14 +3684,20 @@ ORDER by {1} {2}
             opt = ()
             _return = []
             st_t = time.time()
-            self._print(sql)
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            # self._print(sql)
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             t2 = time.time() - t1 - st_t
             for row in result:
                 r = {
@@ -3907,7 +3957,7 @@ ORDER by {1} {2}
         start_p = 1 if start_p < 1 else start_p
         end_p = int(params.get('count', self.count)) + start_p - 1
         field = params.get('field', 'c_tovar')
-        self._print(field)
+        # self._print(field)
         if field == "c_group":
             field = 'gr'
         elif field == 'id_zavod':
@@ -4000,7 +4050,7 @@ ORDER by {1} {2}"""
         sql = sql.format(stri, field, direction)
         sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
         sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
-        self._print(sql)
+        # self._print(sql)
         return [sql, sql_c]
 
     def getIdSprSearchAdm(self, params=None, x_hash=None):
@@ -4022,6 +4072,7 @@ ORDER by {1} {2}"""
     def getSprSearchAdm(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            total_table = params.get('total')
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             sql, sql_c = self._createSqlGetSprSearchAdm(params)
@@ -4029,14 +4080,20 @@ ORDER by {1} {2}"""
             opt = ()
             _return = []
             st_t = time.time()
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            # print(sql)
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            # print(sql)
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             t2 = time.time() - t1 - st_t
             for row in result:
                 r = {
@@ -4195,6 +4252,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = %s )"""
     def getSprLnks(self, params=None, x_hash=None):
         st_t = time.time()
         if self._check(x_hash):
+            total_table = params.get('total')
             start_p = int( params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
             end_p = int(params.get('count', self.count)) + start_p - 1
@@ -4281,15 +4339,19 @@ order by r.{1} {2}
             opt = ()
             _return = []
             st_t = time.time()
-            #self.log(sql, clear=True)
-            #self.log(sql_c, clear=True)
-            p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
                 r = {
@@ -4340,6 +4402,7 @@ WHERE r.ID_SPR = {row[0]}"""
     def getLnkSprs(self, params=None, x_hash=None):
         sort_replace = {"dt": "ch_date", "c_tovar": "rct", "id_spr": "rids", "owner": "ro"}
         if self._check(x_hash):
+            total_table = params.get('total')
             user = params.get('user')
             start_p = int(params.get('start', self.start))
             start_p = 1 if start_p < 1 else start_p
@@ -4483,13 +4546,19 @@ from (
             sql_m = sql_m.format(stri, field, direction)
             sql_m = sql_m + self._insLimit(start_p, end_p)
             _return = []
-            p_list = [{'sql': sql_m, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            pool = ThreadPool(2)
+            p_list = [{'sql': sql_m, 'opt': ()},] if total_table else [{'sql': sql_m, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
+            count = total_table or results[1][0][0]
+            # p_list = [{'sql': sql_m, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
+            # pool = ThreadPool(2)
+            # results = pool.map(self._make_sql, p_list)
+            # pool.close()
+            # pool.join()
             result = results[0]
-            count = results[1][0][0]
+            # count = results[1][0][0]
             for row in result:
                 if str(row[12]) == '1':
                     sou = "PLExpert"
@@ -4534,6 +4603,9 @@ values (%s, %s, %s,
 %s, %s, %s, CAST('NOW' AS TIMESTAMP), %s, %s) """
                 opt = (result[0], id_spr, result[1], result[2], result[3], result[4], user, result[6])
                 self.db.execute({"sql": sql, "options": opt})
+                msg = {"sh_prc": opt[0], "id_spr": opt[1], "id_vnd": opt[2], "id_tovar": opt[3],
+                       "c_tovar": opt[4], "c_zavod": opt[5], "source": opt[6]}
+                self.db.ch_log(user=user, m_type='insert_lnk', msg=msg)
                 ret = {"result": True, "ret_val": result[0]}
             else:
                 ret = {"result": False, "ret_val": "hash absent"}
@@ -4550,6 +4622,8 @@ values (%s, %s, %s,
                 sql = f"""delete from lnk r WHERE sh_prc = %s returning r.SH_PRC, r.ID_SPR, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.OWNER, r.SOURCE"""
                 opt = (sh_prc,)
                 result = self.db.execute({"sql": sql, "options": opt})[0]
+                msg = {"sh_prc": result[0], "id_spr": result[1], "id_vnd": result[2], "id_tovar": result[3],
+                       "c_tovar": result[4], "c_zavod": result[5], "owner":result[7], "source": result[8]}
                 if action == 'return':
                     sql = f"""insert into PRC
 (SH_PRC, ID_VND, ID_TOVAR, N_FG, N_CENA, C_TOVAR, C_ZAVOD, ID_ORG, C_INDEX, DT, IN_WORK, SOURCE)
@@ -4558,6 +4632,7 @@ values (%s, %s, %s,
 %s, %s, %s, CAST('NOW' AS TIMESTAMP),
 %s, %s)"""
                     opt = (result[0], result[2], result[3], 12, 0, result[4], result[5], 0, 0, -1, result[8])
+                    m_type = "return_lnk"
                 else:
                     sql = f"""insert into R_LNK
 (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, DT_R, USER_R)
@@ -4566,7 +4641,9 @@ values (%s, %s, %s,
 %s,  CAST('NOW' AS TIMESTAMP),
 (select ID from USERS where "USER" = %s) )"""
                     opt = (result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7], user)
+                    m_type = "delete_lnk"
                 self.db.execute({"sql": sql, "options": opt})
+                self.db.ch_log(user=user, m_type=m_type, msg=msg)
                 ret = {"result": True, "ret_val": result[0]}
             else:
                 ret = {"result": False, "ret_val": "hash absent"}

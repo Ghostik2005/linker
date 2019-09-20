@@ -7,7 +7,7 @@ import LinkSupplView from "../views/adm-linker-suppliers";
 import LinkExclView from "../views/adm-linker-excludes";
 import LinkFilesView from "../views/adm-linker-files";
 
-export default class LinkerView extends JetView{
+export default class LinkerViewAdm extends JetView{
     config(){
         let app = this.app;
 

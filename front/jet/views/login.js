@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import {request, checkVal, getCookie, setCookie, deleteCookie} from "../views/globals";
 import md5 from "../views/md5";
+import bcrypt from  "../models/bcrypt";
 
 export default class loginView extends JetView{
     config(){
@@ -10,7 +11,10 @@ export default class loginView extends JetView{
         
         function validate_user(th) {
             let item = th.$scope.$$("auth_box").getValues();
+            let h = bcrypt.hashSync(item.pass, bcrypt.genSaltSync(10));
+            // console.log('h', h);
             item.pass = md5(item.pass);
+            // console.log('p', item.pass);
             var ret = false;
             let url = app.config.r_url + "?login"
             let res = request(url, item, !0).response;
@@ -22,10 +26,6 @@ export default class loginView extends JetView{
                 app.config.x_api = res.key;
                 var opt = {'path': '/'};
                 setCookie('linker-app', [res.user, res.key, res.role].join('::'), opt)
-                //Удалить то что ниже в понедельник 1 октября после обновления
-                //setCookie('linker_user', res.user, opt);
-                //setCookie('linker_auth_key', res.key, opt);
-                //setCookie('linker_role', res.role, opt);
                 };
             return ret;
             }
@@ -49,10 +49,6 @@ export default class loginView extends JetView{
                             } else {
                                 webix.message({'text': 'не авторизованно', "type" : "debug"});
                                 deleteCookie('linker-app');
-                                //Удалить то что ниже в понедельник 1 октября после обновления
-                                deleteCookie('linker_user');
-                                deleteCookie('linker_auth_key');
-                                deleteCookie('linker_role');
                                 }
                             }
                         },
@@ -84,22 +80,14 @@ export default class loginView extends JetView{
             cook = getCookie('linker-app');
             [u, x, r] = cook.split('::');
         } catch (e){
-        //Удалить то что ниже в понедельник 1 октября после обновления и заменить буковки на такие же с q
-            //u = getCookie('linker_user');
-            //x = getCookie('linker_auth_key');
-            //r = getCookie('linker_role');
             };
         if (u && x && r) {
             this.app.config.user = u;
             this.app.config.role = r;
             this.app.config.x_api = x;
             this.show("/start/body");
-            //this.show("/start/top-menu");
         } else {
             deleteCookie("linker-app");
-            deleteCookie('linker_user');
-            deleteCookie('linker_auth_key');
-            deleteCookie('linker_role');
             };
         }
     }

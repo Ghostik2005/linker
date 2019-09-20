@@ -15,11 +15,12 @@ import hashlib
 import threading
 import traceback
 import requests
-import psycopg2
+# import psycopg2
 import subprocess
 import configparser
 from urllib.parse import unquote
 from libs.lockfile import LockWait
+import libs.connect_pool as connect_pool
 
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -63,6 +64,8 @@ class API:
             self.log("Production" if self.production else "Test")
         else:
             print("Production" if self.production else "Test", flush=True)
+
+        self.connection = connect_pool.ConectPool(connection_params=self.pg_connect_params) #пул коннектов
 
     def _connect(self):
         con = None
@@ -117,7 +120,11 @@ class API:
                 self.log('UPLOAD| %s' % value)
             else:
                 self.log('UPLOAD| %s' % 'слишком много значений для вывода')
-            con, cur = self._connect()
+            con = self.connection.connect()
+            cur = con.cursor()
+
+            # con, cur = self._connect()
+
             h_name = self._get_checksum((str(name) + str(time.time())).encode())
             c_sum = self._get_checksum(value.encode())
             self.log('UPLOAD| file: %s, h_name: %s, c_summ: %s' % (name.encode(), h_name, c_sum))
@@ -156,11 +163,11 @@ ON CONFLICT (UIN) DO UPDATE
         return json.dumps(ret, ensure_ascii=False)
 
     def upload_file(self, filename, data, source=0, callback=None, x_hash=None):
-        print('sou', source)
         if source == 'linker':
             f_data = data.split(b'\r\n')
-            f_data = f_data[4:-2]
-            f_data = b'\r\n'.join([i.strip() for i in f_data])
+            # f_data = f_data[4:-2]
+            f_data = f_data[4]
+            # f_data = b'\r\n'.join([i.strip() for i in f_data])
             source = 2
         else:
             f_data = data
@@ -168,13 +175,10 @@ ON CONFLICT (UIN) DO UPDATE
             f_data = f_data.decode()
         except:
             pass
-        #f_data = f_data.split('\n')
-        
-        print(filename, len(f_data), type(f_data))
-
+        # print(filename, len(f_data), type(f_data))
         params = {filename: f_data}
+        # ret = {"result": True, "ret_val": "accepted"}
         ret = self.upload_nolinks(params, x_hash)
-
         return json.dumps(ret, ensure_ascii=False)
 
     def _calculate_checksum(self, ean12):
@@ -272,7 +276,7 @@ ON CONFLICT (UIN) DO UPDATE
                     _id_vnd = 20171
                 elif id_vnd in [45835,51066]:
                     _id_vnd = 44735
-                elif id_vnd in [20276,20229,20269]:
+                elif id_vnd in [20276,20229,20269, 20237]:
                     _id_vnd = 20277
                 elif id_vnd in [20378]:
                     _id_vnd = 20377
@@ -282,6 +286,8 @@ ON CONFLICT (UIN) DO UPDATE
                     _id_vnd = 22077
                 elif id_vnd in [40267, 40277, 40278]:
                     _id_vnd = 40277
+                elif id_vnd in [19973,19972,19971]:
+                    _id_vnd = 19987
                 else:
                     _id_vnd = id_vnd
                 # Добавление забракованных серий
@@ -528,16 +534,20 @@ SET (barcode, id_spr) = (%s, %s);"""
 
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
+        # this row for admin instead of stasya
+        # dbc.execute(f"""update prc set id_org = 0, N_FG = 12 where id_org = 0 and n_fg = 0 {con_ins} 
         dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
-    and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987)""")
+    and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
+    and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)""")
         #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to stasya')
-        #f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        # this row for admin instead of stasya
+        # sql_upd_u = f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
         sql_upd_u = f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
 and  id_vnd in (10001,19990,19992,19996,20123,20129,20153,20171,20176,20177,
-                20229,20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
+                20229,20237, 20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
                 20677,20871,20977,21271,22077,22078,22240,23478,24477,28132,28162,
                 28176,28177,28178,29271,29977,30144,30178,30371,33771,34071,34157,
                 34168,37471,40267,40277,40550,40552,40677,41177,44677,44735,44877,
@@ -563,7 +573,9 @@ and  id_vnd in (10001,19990,19992,19996,20123,20129,20153,20171,20176,20177,
 
         vnd_name = None
         try:
-            con, cur = self._connect()
+            con = self.connection.connect()
+            cur = con.cursor()
+            # con, cur = self._connect()
         except Exception as Err:
             self.log(Err, kind="SQLError")
         else:
@@ -1085,6 +1097,7 @@ def guardian(api):
     time.sleep(2)
     work_dir = api.path
     log = api.log
+    c_pool = connect_pool.ConectPool(pool_size=2, connection_params=api.pg_connect_params)
     while True:
         try:
             f_mask = os.path.join(work_dir, "*")
@@ -1096,7 +1109,8 @@ def guardian(api):
                 with open(path, 'rb') as f_obj:
                     row = f_obj.readline()
                 if row:
-                    db = psycopg2.connect(**api.pg_connect_params)
+                    db = c_pool.connect()
+                    # db = psycopg2.connect(**api.pg_connect_params)
                     dbc = db.cursor()
                     row = row.decode('utf8')
                     id_vnd = int(row.split('\t')[0])
@@ -1152,49 +1166,16 @@ def guardian(api):
                                 count_insert = dbc.fetchone()[0]
                     api.log(f'GUARDIAN| Добавленно к сведению: {count_insert}')
                     db.close()
-            db = psycopg2.connect(**api.pg_connect_params)
+            # db = psycopg2.connect(**api.pg_connect_params)
+            db = c_pool.connect()
             dbc = db.cursor()
             api.log('GUARDIAN| ---***---принудительный запуск')
             api.prc_sync_lnk(db, dbc)
             db.close()
         except Exception:
             api.log("GUARDIAN| %s" % traceback.format_exc(), kind="error:monitor")
-        #спим 5 секунд перед тем, как продолжить опрос папки
-        time.sleep(55) 
+        #спим 30 секунд перед тем, как продолжить опрос папки
+        time.sleep(30) 
 
-class UDPSocket(socket.socket):
-
-    def __init__(self, bind_addr=('127.0.0.1', 0), std_addr=('127.0.0.1', 4222),
-                 family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=0, _sock=None):
-        super(UDPSocket, self).__init__(family=family, type=type, proto=proto)
-        try: self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except: pass
-        try: self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        except: pass
-        self.bind(bind_addr)
-        self._buf = []
-        self._std_addr = std_addr
-
-    def write(self, text):
-        fg = False
-        if isinstance(text, str):
-            self._buf.append(text.encode())
-            fg = text.rfind('\n') > -1
-        else:
-            self._buf.append(text)
-            fg =  text.rfind(b'\n') > -1
-        if fg:
-            data = b''.join(self._buf)[:8192]
-            self._buf.clear()
-            return self.sendto(data, self._std_addr)
-
-    def flush(self):
-        pass
-
-    def readlines(self):
-        return self.recv(8192)
-
-    def read(self, n=8192):
-        return self.recv(n)
 
 
