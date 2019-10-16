@@ -4656,7 +4656,7 @@ values (%s, %s, %s,
             sh_prc = params.get('sh_prc')
             #user = params.get('user')
             if sh_prc:
-                sql = f"""update PRC set N_FG = 0, IN_WORK = -1, DT = current_timestamp where SH_PRC = %s returning SH_PRC, N_FG"""
+                sql = f"""update PRC set N_FG = 0, ID_ORG = 0, IN_WORK = -1, DT = current_timestamp where SH_PRC = %s returning SH_PRC, N_FG"""
                 opt = (sh_prc,)
                 _return = []
                 result = self.db.execute({"sql": sql, "options": opt})
@@ -5000,7 +5000,7 @@ SET (PROCESS, NAME, OPTIONS, OWNER) = (%s, %s, %s, %s);"""
                 result = self.db.request({"sql": sql, "options": opt})
                 if result:
                     for row in result:
-                        sql = f"""insert into SPR_BARCODE (ID_SPR, BARCODE) values (%s, %s)"""
+                        sql = f"""insert into SPR_BARCODE (ID_SPR, BARCODE) values (%s, %s) on conflict do nothing"""
                         opt = (new_spr, row[0])
                         self.db.execute({"sql": sql, "options": opt})
                     sql = f"""delete from SPR_BARCODE where ID_SPR = %s"""
