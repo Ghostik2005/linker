@@ -18,9 +18,16 @@ import io
 from multiprocessing.dummy import Pool as ThreadPool
 
 
-import libs.xlsx as xlsx
-from libs.connect import pg_local
-import ms71lib
+try:
+    import libs.xlsx as xlsx
+    from libs.connect import pg_local
+    import ms71lib
+except ImportError:
+    pass
+
+
+
+
 
 class API:
     """
@@ -221,7 +228,7 @@ returning id, firsttime"""
             server('close')
             ret_val = []
             ii = set()
-            vn = []
+            vn = set()
             vendors = {}
             companies = {}
             for row in result:
@@ -236,7 +243,8 @@ returning id, firsttime"""
                     continue
                 for i in inns:
                     ii.add(i)
-                vn.append(vnd)
+                for v in vnd:
+                    vn.add(v)
                 hard = pl.get("abso", "")
                 if hard == "True":
                     hard = True
@@ -252,7 +260,10 @@ returning id, firsttime"""
                     "dt": row[2]
                 }
                 ret_val.append(r)
+            if len(ret_val) < 1:
+                ret_val, ii, vn = self.getH(str(id_spr), con_params=self.ch_connect_params)
             ii = list(ii)
+            vn = list(vn)
             sql_inns = f"""select inn, c_inn from companies where inn in ({','.join(["'%s'"%i for i in ii])});"""
             sql_vnd = f"""select id_vnd, c_vnd, merge3 from vnd where id_vnd in ({','.join(["%s"%i for i in vn])});"""
             p_list = [{'sql': sql_inns, 'opt': ()}, {'sql': sql_vnd, 'opt': ()}]
@@ -2040,4 +2051,73 @@ set (updated, org_id, supplier_id, ref_id, abso) = (current_timestamp, %s, %s, %
                 complete = True
         if breaked:
             return json.dumps({"result": False, "reason": "timeout_occured_request_still_processing", "code": 524})
-        return json.dumps({"result": True, "reason": "request_done", "code": 200})        
+        return json.dumps({"result": True, "reason": "request_done", "code": 200})
+
+    @staticmethod
+    def getH(id_spr:str, con_params:dict):
+        sql = "select user, payload, dt from udp_logs.logs where application='merge3' and user='setReferenceLinks' %s FORMAT TabSeparatedRaw;"
+        if id_spr:
+            sql = sql % f"""and payload like '%{str(id_spr)}%\'"""
+        else:
+            return ''
+        server = ms71lib.ServerProxy(**con_params)
+        request = server("request")
+        result = request(sql.encode())
+        server('close')
+        ret_val = []
+        ii = set()
+        vn = set()
+        for row in result:
+            row = row.decode()
+            row = row.split("\t")
+            payload = row[1]
+            if not '7107516993' in payload:
+                continue
+            payload = payload.replace('True', '"True"')
+            payload = payload.replace('False', '"False"')
+            payload = payload.replace(', None', '')
+            try:
+                pl = json.loads(payload)
+            except:
+                continue
+            user = pl.get('user', '')
+            inns = pl.get('inn', -1)
+            vnd = pl.get('vnd')
+            if inns == -1:
+                continue
+            for i in inns:
+                ii.add(i)
+            for v in vnd:
+                vn.add(v)
+            hard = pl.get("hard", "")
+            if hard == "True":
+                hard = True
+            elif hard == "False":
+                hard = ''
+            for vvv in vnd:
+                r = {
+                    "user": user,
+                    "remove": pl.get('delete', ""),
+                    "expires": pl.get("expires", ""),
+                    "hard": hard,
+                    "inns": inns,
+                    "c_inns": [],
+                    "id_vnd": vvv,
+                    "c_vnd": "",
+                    "dt": row[2]
+                }
+                ret_val.append(r)
+        return ret_val, ii, vn
+
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, '/data/projects/saas/merge3/')
+    import ms71lib
+    with open('/data/projects/saas/merge3/ch.key', 'r') as _f:
+        a_k = _f.read().strip()
+    c = {"uri":"https://online365.pro/ch/", "verbose":False, "api_key":a_k}
+    r = API.getH(id_spr='55333', con_params=c)
+    for i in r:
+        print(i)
+    pass

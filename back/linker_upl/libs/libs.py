@@ -264,19 +264,19 @@ ON CONFLICT (UIN) DO UPDATE
                     cena = 0    
                                     
                 # Формируем хеш                 
-                if id_vnd in [28177,28132,28176,28178]:
+                if id_vnd in [28177,28132,28176,28178]: #пульс
                     _id_vnd = 28162
-                elif id_vnd in [20577,20576]:
+                elif id_vnd in [20577,20576]: #катрен
                     _id_vnd = 20557
                 elif id_vnd in [20662]:
                     _id_vnd = 20677
                 elif id_vnd in [20477]:
                     _id_vnd = 20471
-                elif id_vnd in [20177,20153,20176,20129,20123]:
+                elif id_vnd in [20177,20153,20176,20129,20123]: #сиа
                     _id_vnd = 20171
                 elif id_vnd in [45835,51066]:
                     _id_vnd = 44735
-                elif id_vnd in [20276,20229,20269, 20237]:
+                elif id_vnd in [20276,20229,20269, 20237, 20216]: #протек
                     _id_vnd = 20277
                 elif id_vnd in [20378]:
                     _id_vnd = 20377
@@ -288,6 +288,8 @@ ON CONFLICT (UIN) DO UPDATE
                     _id_vnd = 40277
                 elif id_vnd in [19973,19972,19971]:
                     _id_vnd = 19987
+                elif id_vnd in [34157, 34168]: #Надежда-Ф
+                    _id_vnd = 34157
                 else:
                     _id_vnd = id_vnd
                 # Добавление забракованных серий

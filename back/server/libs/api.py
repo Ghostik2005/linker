@@ -782,6 +782,117 @@ WHERE {' '.join(stri)}"""
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
 
+    def getPrcsProcess(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            total_table = params.get('total')
+            start_p = int(params.get('start', self.start))
+            start_p = 1 if start_p < 1 else start_p
+            end_p = int(params.get('count', self.count)) + start_p - 1
+            field = params.get('field', 'c_tovar')
+            direction = params.get('direction', 'asc')
+            user = params.get('user')
+            sql = f"""SELECT r.ID, r."USER", r.ID_ROLE FROM USERS r WHERE r."USER" = %s"""
+            opt = (user,)
+            id_role = int(self.db.request({"sql": sql, "options": opt})[0][2])
+            us_stri = '' if id_role in [10, 34] else """and u."USER" = '%s'""" % user
+            table = 'r.'
+            if field == 'c_vnd':
+                table = 'v.'
+            elif field == 'c_user':
+                table = 'u.'
+                field = '"USER"'
+            elif field == "dt":
+                table = ''
+                field = "ch_date"
+            field = ''.join([table, field])
+            sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX, v.C_VND,
+CASE 
+    WHEN r.CHANGE_DT is null THEN r.DT
+    ELSE r.CHANGE_DT
+END as ch_date,
+r.SOURCE
+from prc r
+join 
+	(select p.SH_PRC
+	from prc p
+	where left(p.c_tovar, 1) >= 'А' and p.n_fg = 1
+	and (lower(p.c_tovar) not like '%акция%' 
+		and lower(p.c_tovar) not like '%упаковк%' 
+		and lower(p.c_tovar) not like '%\\!до%' 
+		and lower(p.c_tovar) not like '%партия%' 
+		and lower(p.c_tovar) not like '%пакет%' 
+		and lower(p.c_tovar) not like '%уценка%' 
+		and lower(p.c_tovar) not like '%срок%' 
+		and lower(p.c_tovar) not like '%кратно%' 
+		)
+	) as q
+on q.sh_prc = r.sh_prc
+{'inner join USERS u on (u."GROUP" = r.ID_ORG)' if us_stri != '' else ''}
+INNER JOIN VND v on (r.ID_VND = v.ID_VND)
+    and (lower(v.c_vnd) like '%авеста%'
+        or lower(v.c_vnd) like '%акцентмед%'
+        or lower(v.c_vnd) like '%арал%'
+        or lower(v.c_vnd) like '%асна%'
+        or lower(v.c_vnd) like '%бсс%'
+        or lower(v.c_vnd) like '%витта%'
+        or lower(v.c_vnd) like '%грандкапитал%'
+        or lower(v.c_vnd) like '%здравсервис%'
+        or lower(v.c_vnd) like '%катрен%'
+        or lower(v.c_vnd) like '%надежда%'
+        or lower(v.c_vnd) like '%норман%'
+        or lower(v.c_vnd) like '%протек%'
+        or lower(v.c_vnd) like '%профитмед%'
+        or lower(v.c_vnd) like '%пульс%'
+        or lower(v.c_vnd) like '%регионв%'
+        or lower(v.c_vnd) like '%сиа%'
+        or lower(v.c_vnd) like '%фармкомплект%'
+        or lower(v.c_vnd) like '%фармпартнер%'
+        or lower(v.c_vnd) like '%фора-фарм%'
+        or lower(v.c_vnd) like '%хэлс%'
+	)
+order by {field} {direction}"""
+            sql_c = "select count(*) from ( " + sql + ") as foobar"
+            sql = sql + self._insLimit(start_p, end_p)
+            opt = ()
+            _return = []
+            p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
+            pool = ThreadPool(len(p_list))
+            results = pool.map(self._make_sql, p_list)
+            pool.close()
+            pool.join()
+            count = total_table or results[1][0][0]
+            result = results[0]
+            for row in result:
+                if str(row[11]) == '1':
+                    sou = "PLExpert"
+                elif str(row[11]) == '2':
+                    sou = "Склад"
+                elif str(row[11]) == '3':
+                    sou = "Агент"
+                elif str(row[11]) == '4':
+                    sou = "edocs"
+                else:
+                    sou = "Без источника"
+                r = {
+                    "sh_prc"  : row[0],
+                    "id_vnd"  : row[1],
+                    "id_tovar": row[2],
+                    "n_fg"    : row[3],
+                    "n_cena"  : row[4],
+                    "c_tovar" : row[5],
+                    "c_zavod" : row[6],
+                    "id_org"  : row[7],
+                    "c_index" : row[8],
+                    "c_vnd"   : row[9],
+                    "dt"      : str(row[10]),
+                    "source"  : sou
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": {"datas": _return, "total": count, "start": start_p, 'params': params}}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
     def getPrcsSkip(self, params=None, x_hash=None):
         if self._check(x_hash):
             total_table = params.get('total')
