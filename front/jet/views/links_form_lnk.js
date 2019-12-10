@@ -135,7 +135,7 @@ export default class LinksViewLnk extends JetView{
                         {content: "richFilt", compare: compareTrue,
                             inputConfig : {
                                 pager: 1,
-                                options: options.users,
+                                options: options.sources,
                                 },
                             }
                         ]
@@ -189,6 +189,11 @@ export default class LinksViewLnk extends JetView{
                 },
                 onAfterSelect: function (item) {
                     this.$scope._break.show();
+                    this.$scope._history.show();
+                },
+                onAfterUnselect: function () {
+                    this.$scope._break.hide();
+                    this.$scope._history.hide();
                 },
                 onAfterLoad: function() {
                     
@@ -235,8 +240,10 @@ export default class LinksViewLnk extends JetView{
             }
         this._break = this.getRoot().getParentView().$scope.$$("_br")
         this._search = this.getRoot().getParentView().$scope.$$("_ls")
+        this._history = this.getRoot().getParentView().$scope.$$("_hist")
         table.config.searchBar = this._search.config.id;
         this._break.hide();
+        this._history.hide();
 
         table.getFilter('dt').setValue(new Date());
 

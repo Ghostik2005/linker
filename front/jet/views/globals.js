@@ -966,8 +966,9 @@ export function clear_names_bar(th, on_error_text) {
 
 export function get_prcs(th, id_vnd) {
     let user = th.app.config.user;
-    let url = th.app.config.r_url + "?getPrcs"
-    let params = {"user": user, "id_vnd": +id_vnd};
+    let url = th.app.config.r_url + "?getPrcs";
+    let val_s = th.$$("_value_search").getValue();
+    let params = {"user": user, "id_vnd": +id_vnd, "value_search": val_s};
     request(url, params).then(function(data) {
         data = checkVal(data, 'a');
         if (data) {
@@ -1051,9 +1052,10 @@ export function get_refs(inp_params){
 }
 
 export function get_suppl(view, th, method) {
+    let val_s = th.$$("_value_search").getValue();
     let user = th.app.config.user;
     let url = th.app.config.r_url + method
-    let params = {"user": user};
+    let params = {"user": user, "value_search": val_s};
     request(url, params).then(function(data) {
         data = checkVal(data, 'a');
         if (data) {

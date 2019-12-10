@@ -15,7 +15,6 @@ import {screens} from "../models/variables";
 import LinkerView from "../views/linker_bar";
 import SprView from "../views/adm-spr";
 import SkladUnlinked from "../views/unlinked_from_sklad_bar";
-import caller from "../views/call_center";
 
 export default class SideButtonsBar extends JetView{
     config(){
@@ -158,8 +157,6 @@ export default class SideButtonsBar extends JetView{
                         onAfterRender: function() {
                         },
                         onItemClick: function () {
-                            (this.$scope.callpop.isVisible()) ? this.$scope.callpop.hide_w() :
-                                                               this.$scope.callpop.show_w('Звонилка');
                         },
                     }
                 },
@@ -541,7 +538,6 @@ export default class SideButtonsBar extends JetView{
         this.popprop = this.ui(PropView);
         this.popref = this.ui(RefPopView);
         this.skladErr = this.ui(SkladUnlinked);
-        this.callpop = this.ui(caller);
         this.tabView = this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1];
         }
     }

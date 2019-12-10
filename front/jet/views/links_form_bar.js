@@ -61,22 +61,23 @@ export default class LinksBarView extends JetView{
                         } else if (value===1) {
                             this.lch = 1;
                             header_val = screens.LinksSprBarView;
-                            };
+                        };
                         hh.forEach((item, i, hh) => {
                             if (+item.id === +h_id) {
                                 item.value = header_val;
                                 item.width = getHeaderLength(header_val);
                                 this.getRoot().getParentView().getParentView().getChildViews()[1].refresh();
-                                }
-                            });
+                            }
+                        });
                         let q = (this.lch===1) ? 'links_form_spr' : 'links_form_lnk'
                         this.show(q);
                         //this.$$("_ls").callEvent("onKeyPress", [13,]);
-                        }
                     }
-                },
+                }
+            },
             {view:"button", width: 40,
-                tooltip: "Сбросить фильтры", type:"imageButton", image: buttons.unFilter.icon,
+                tooltip: "Сбросить фильтры", 
+                type:"imageButton", image: buttons.unFilter.icon,
                 localId: "_unfilt",
                 resizable: true,
                 sWidth: 180,
@@ -91,9 +92,10 @@ export default class LinksBarView extends JetView{
                     var cv = getActDt();
                     unFilter(cv);
                     this.seachPress();
-                    }
-                },
+                }
+            },
             {view:"button", type: 'htmlbutton', hidden: !true, localId: "_br", 
+                tooltip: "Удаить связку",
                 resizable: true,
                 sWidth: 140,
                 eWidth: 40,
@@ -103,9 +105,28 @@ export default class LinksBarView extends JetView{
                 oldLabel: "<span style='color: red', class='webix_icon fa-unlink'></span>",
                 click: () => {
                     getActDt().callEvent("onItemDblClick");
+                }
+            },
+            {view:"button", type: 'htmlbutton', hidden: !true, localId: "_hist", 
+                tooltip: "История связки",
+                resizable: true,
+                sWidth: 140,
+                eWidth: 40,
+                label: "",
+                width: 40,
+                extLabel: "<span class='button_label'>История</span>",
+                oldLabel: "<span class='webix_icon fa-unlink'></span>",
+                on: {
+                    onItemClick: function() {
+                        let sh_prc = getActDt().getSelectedItem().id;
+                        console.log('sh_prc', sh_prc);
+                        // getActDt().callEvent("onItemDblClick");
                     }
-                },
-            ]}
+                }
+            },
+        ]}
+
+
 
         var _view = {
             view: "layout", type: "clean",
@@ -137,7 +158,8 @@ export default class LinksBarView extends JetView{
     }
 
     ready() {
-        let r_but = [this.$$("_history"), this.$$("_br"), this.$$("_unfilt")]
+        // let r_but = [this.$$("_history"), this.$$("_br"), this.$$("_unfilt")]
+        let r_but = this.app.config.getButt(this.getRoot());
         setButtons(this.app, r_but);
         let show_t = (this.app.config.lch===1) ? 'links_form_spr' : 'links_form_lnk';
         this.show(show_t);

@@ -2,8 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {request, checkVal, getCookie, setCookie, deleteCookie} from "../views/globals";
-import md5 from "../views/md5";
-import bcrypt from  "../models/bcrypt";
+// import md5 from "../views/md5";
 
 export default class loginView extends JetView{
     config(){
@@ -11,7 +10,6 @@ export default class loginView extends JetView{
         
         function validate_user(th) {
             let item = th.$scope.$$("auth_box").getValues();
-            let h = bcrypt.hashSync(item.pass, bcrypt.genSaltSync(10));
             // console.log('h', h);
             item.pass = md5(item.pass);
             // console.log('p', item.pass);

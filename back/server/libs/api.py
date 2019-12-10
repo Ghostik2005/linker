@@ -1057,12 +1057,19 @@ order by {field} {direction}"""
     def getSupplUnlnk(self, params=None, x_hash=None):
         if self._check(x_hash):
             user = params.get('user')
-            opt = (user,)
+            val_s = params.get('value_search')
+            if val_s:
+                v_ins = f"and lower(p.c_tovar) like lower('%{val_s}%')"
+            else:
+                v_ins = None
+            # opt = (user,)
+            opt = ()
             self._setUnwork(user)
             sql = f"""select r1, v.C_VND, r2 from (
     select p.ID_VND as r1, count(p.ID_VND) as r2 from PRC p 
     inner join USERS u on (u."GROUP" = p.ID_ORG)
-    WHERE p.N_FG <> 1 and u."USER" = %s
+    WHERE p.N_FG <> 1 and u."USER" = '{user}'
+    {v_ins if v_ins else ''}
     GROUP BY p.ID_VND
     ) rr1
 inner join VND v on (v.ID_VND = r1)
@@ -1144,16 +1151,23 @@ GROUP BY r3"""
         st_t = time.time()
         if self._check(x_hash):
             id_vnd = params.get('id_vnd')
+            val_s = params.get('value_search')
+            if val_s:
+                v_ins = f"and lower(r.c_tovar) like lower('%{val_s}%')"
+            else:
+                v_ins = None
             user = params.get('user')
             self._setUnwork(user)
             t1 = time.time() - st_t
             sql = f"""select r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.N_FG, r.N_CENA, r.C_TOVAR, r.C_ZAVOD, r.ID_ORG, r.C_INDEX
 from prc r
 inner join USERS u on (u."GROUP" = r.ID_ORG)
-WHERE r.id_vnd = %s and r.n_fg <> 1 and u."USER" = %s and r.IN_WORK = -1
+WHERE r.id_vnd = {int(id_vnd)} and r.n_fg <> 1 and u."USER" = '{user}' and r.IN_WORK = -1
+{v_ins if v_ins else ''}
 """
             sql = sql + self._insLimit(1, 20)
-            opt = (id_vnd, user)
+            # opt = (id_vnd, user)
+            opt = ()
             result = self.db.request({"sql": sql, "options": opt})
             t2 = time.time() - st_t
             _return = []

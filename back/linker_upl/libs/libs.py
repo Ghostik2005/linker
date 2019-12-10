@@ -511,15 +511,17 @@ SET (barcode, id_spr) = (%s, %s);"""
         sql= """ insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
     from prc p 
-    join lnk l on (l.id_vnd > 20200 and l.id_vnd < 20299 ) and (p.id_vnd > 20200 and p.id_vnd < 20299 ) and 
+    join lnk l on (l.id_vnd > 20200 and l.id_vnd < 20299 and l.id_vnd != 20271) and (p.id_vnd > 20200 and p.id_vnd < 20299 and p.id_vnd != 20271) and 
     l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' ' 
         and p.n_fg != 12 and p.n_fg != 1
         and (select count(distinct ll.id_spr)
                 from prc pp
-                join lnk ll on (pp.id_vnd > 20200 and pp.id_vnd < 20299 ) and (ll.id_vnd > 20200 and ll.id_vnd < 20299 ) and ll.id_tovar = pp.id_tovar
-                where (pp.id_vnd > 20200 and pp.id_vnd < 20299 ) and (p.id_vnd > 20200 and p.id_vnd < 20299 ) and pp.id_tovar = p.id_tovar
+                join lnk ll on (pp.id_vnd > 20200 and pp.id_vnd < 20299  and pp.id_vnd != 20271) and (ll.id_vnd > 20200 and ll.id_vnd < 20299  and ll.id_vnd != 20271) 
+                                and ll.id_tovar = pp.id_tovar
+                where (pp.id_vnd > 20200 and pp.id_vnd < 20299  and pp.id_vnd != 20271) and (p.id_vnd > 20200 and p.id_vnd < 20299  and p.id_vnd != 20271) 
+                       and pp.id_tovar = p.id_tovar
                 ) = 1
-    and p.id_vnd in (select q.id_vnd from vnd q where permit = 1 and (q.id_vnd > 20200 and q.id_vnd < 20299));"""
+    and p.id_vnd in (select q.id_vnd from vnd q where permit = 1 and (q.id_vnd > 20200 and q.id_vnd < 20299 and q.id_vnd != 20271));"""
         try:
             pass
             dbc.execute(sql)
@@ -537,8 +539,8 @@ SET (barcode, id_spr) = (%s, %s);"""
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
         # this row for admin instead of stasya
-        # dbc.execute(f"""update prc set id_org = 0, N_FG = 12 where id_org = 0 and n_fg = 0 {con_ins} 
-        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
+        # dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
+        dbc.execute(f"""update prc set id_org = 0, N_FG = 12 where id_org = 0 and n_fg = 0 {con_ins} 
     and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
     and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)""")
         #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
@@ -546,8 +548,8 @@ SET (barcode, id_spr) = (%s, %s);"""
             db.commit()
         #self.log('assign to stasya')
         # this row for admin instead of stasya
-        # sql_upd_u = f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
-        sql_upd_u = f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        # sql_upd_u = f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
+        sql_upd_u = f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
 and  id_vnd in (10001,19990,19992,19996,20123,20129,20153,20171,20176,20177,
                 20229,20237, 20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
                 20677,20871,20977,21271,22077,22078,22240,23478,24477,28132,28162,

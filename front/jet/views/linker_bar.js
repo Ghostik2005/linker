@@ -84,10 +84,31 @@ export default class LinkerView extends JetView{
                                         get_suppl("_suppl", this.$scope, "?getSourceUnlnk")
                                     } else {
                                         webix.message({type: "error", text: 'не сводим'});
-                                        };
+                                    };
+                                    console.log('this.$sc', this.$scope)
+                                    this.$scope.ready()
+                                }
+                            }
+                        },
+                        {view: "text", 
+                            localId: "_value_search",
+                            width: 350, 
+                            label: "Фильтр по значению", 
+                            labelWidth: 140,
+                            value: '',
+                            _keytimed: undefined,
+                            on: {
+                                onKeyPress: function(code, event) {
+                                    clearTimeout(this.config._keytimed);
+                                    if (checkKey(code)) {
+                                        this.config._keytimed = setTimeout(() => {
+                                            get_suppl("_suppl", this.$scope, "?getSupplUnlnk");
+                                        }, this.$scope.app.config.searchDelay);
                                     }
                                 }
-                            },
+                            }
+
+                        },
                         {},
                         {view: "button", type: "htmlbutton", tooltip: "Обновить",
                             hidden: app.config.link,
@@ -301,7 +322,16 @@ export default class LinkerView extends JetView{
         this.table = this.getRoot().getChildViews()[3].getChildViews()[0]
         this.nav = this.getRoot().getChildViews()[3].getChildViews()[1];
         let r_but = this.app.config.getButt(this.getRoot().getTopParentView());
+
         setButtons(this.app, r_but);
+        if (+this.$$('_local_link_by').getValue() === 1) {
+            this.$$("_value_search").show();
+        } else {
+            this.$$("_value_search").hide();
+        };
+        // let table = this.$$("__table");
+        this.table.callEvent('onresize');
+        this.$$("_local_spr_search").focus();
     }
 
     init() {

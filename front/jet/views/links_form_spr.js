@@ -142,8 +142,10 @@ export default class LinksViewSpr extends JetView{
                     let level = this.getSelectedItem().$level;
                     if (level === 1) {
                         this.$scope._break.hide();
+                        this.$scope._history.hide();
                     } else if (level === 2) {
                         this.$scope._break.show();
+                        this.$scope._history.show();
                         
                         };
                     }
@@ -174,8 +176,10 @@ export default class LinksViewSpr extends JetView{
         let table = this.$$("__table");
         this._break = this.getRoot().getParentView().$scope.$$("_br");
         this._search = this.getRoot().getParentView().$scope.$$("_ls");
+        this._history = this.getRoot().getParentView().$scope.$$("_hist");
         table.config.searchBar = this._search.config.id;
         this._break.hide();
+        this._history.hide();
         table.markSorting(table.config.fi,table.config.di);
         // table.callEvent('onresize');
         // console.log(table.config.searchBar);

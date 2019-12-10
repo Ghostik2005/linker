@@ -197,6 +197,20 @@ export default class SkippedBarView extends JetView{
                 height: 40,
                 cols: [
                     {},
+                    {view: "checkbox", localId: "_process",
+                        hidden: !app.config.roles[app.config.role].lnkdel,
+                        value: 0,
+                        labelRight: "<span style='color: white; font-weight: 600'>спец.обработка</span>",
+                        width: 200,
+                        on: {
+                            onChange: function() {
+                                this.$scope.setSearchMethod(this.getValue())
+                            },
+                        },
+                        click: () => {
+                            // this.$$("__table").callEvent("onBeforeSort");
+                            }
+                        },
                     {view: "button", type: "htmlbutton", tooltip: "Обновить", localId: "_renew",
                         resizable: true,
                         sWidth: 136,
@@ -239,6 +253,19 @@ export default class SkippedBarView extends JetView{
                 {$subview: PagerView},
             ]}
         return _view
+    }
+
+    setSearchMethod(val){
+        console.log(val, typeof val)
+        if (val == 1) {
+            // применяем  особые условия
+            this.$$("__table").config.searchMethod = 'getPrcsProcess'
+        } else if (val == 0) {
+            //обычные условия
+            this.$$("__table").config.searchMethod = 'getPrcsSkip'
+        }
+        this.startSearch()
+
     }
 
     startSearch() {
