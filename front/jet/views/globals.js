@@ -1052,7 +1052,8 @@ export function get_refs(inp_params){
 }
 
 export function get_suppl(view, th, method) {
-    let val_s = th.$$("_value_search").getValue();
+    let val_s;
+    if (th.$$("_value_search") ) val_s = th.$$("_value_search").getValue();
     let user = th.app.config.user;
     let url = th.app.config.r_url + method
     let params = {"user": user, "value_search": val_s};
