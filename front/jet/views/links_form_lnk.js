@@ -247,7 +247,8 @@ export default class LinksViewLnk extends JetView{
 
         table.getFilter('dt').setValue(new Date());
 
-        table.callEvent('onresize');
+        // table.callEvent('onresize');
+        this.startSearch();
 
         table.getFilter('dt').blockEvent();
         setTimeout( () => {
@@ -255,7 +256,10 @@ export default class LinksViewLnk extends JetView{
             table.getFilter('dt').unblockEvent();
         }, 150);
         table.markSorting(table.config.fi,table.config.di);
-        $$(table.config.searchBar).focus();
+        setTimeout(() => {
+            $$(table.config.searchBar).focus();    
+        }, 50);
+        
     }
 
     init() {

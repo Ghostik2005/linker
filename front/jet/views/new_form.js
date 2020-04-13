@@ -7,10 +7,13 @@ import NewtgView from "../views/new_tg";
 import NewIssueView from "../views/new_issue";
 import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
+import {permited_add} from "../models/variables";
 
 export default class NewformView extends JetView{
     config(){
+        
         let app = this.app;
+
         function strana_filter(item, value) {
             value = value.toString().toLowerCase()
             value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
@@ -227,6 +230,7 @@ export default class NewformView extends JetView{
                                                 },
                                             },
                                         {view:"combo", label: "Группа:", labelPosition:"top", value: "", name: "id_group", css: "small",
+                                            localId: "_local_id_group",
                                             options:  {
                                                 filter: gr_filter,
                                                 body: {
@@ -241,10 +245,20 @@ export default class NewformView extends JetView{
                                                 },
                                             on: {
                                                 onAfterRender: function() {
-                                                    this.getList().sync(group);
+                                                    if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 45835) {
+                                                        this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
+                                                    } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
+                                                        group.serialize().forEach((it) => {
+                                                            if (it.id != 'ZakMedCtg.1114') {
+                                                                this.getList().add(it)
+                                                            }
+                                                        })
+                                                    } else {
+                                                        this.getList().parse(group);
                                                     }
-                                                },
+                                                }
                                             },
+                                        },
                                         {view:"combo", label: "НДС:", labelPosition:"top", value: "", name: "id_nds", css: "small",
                                             options:  {
                                                 body: {
@@ -269,7 +283,9 @@ export default class NewformView extends JetView{
                                     }
                                 },
                             {},
-                            (app.config.roles[app.config.role].spredit) ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].spredit,
+                            (app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)) 
+                            ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
+                                hidden: !(app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)),
                                 click: () => {
                                     let valid = this.$$("new_form").validate({hidden:false, disabled:false});
                                     if (valid) {
@@ -322,6 +338,13 @@ export default class NewformView extends JetView{
             this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
             }
+        if (search_bar.config.localId !== '_sb') {
+            this._id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd;
+            if (permited_add.users.includes(this.app.config.user) && this._id_vnd == 45835) {
+                this.$$("_local_id_group").setValue('ZakMedCtg.18');
+                this.$$("_local_id_group").disable();
+            }
+        }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show()
         this.$$("inputTxt").focus();

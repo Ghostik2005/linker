@@ -42,6 +42,7 @@ export default class SkladUnlinked extends JetView{
             old_stri: "",
             editable: true,
             editaction: "click",
+            tooltip: true,
             columns: [
                 {id: "id", width : 20, hidden: true, headermenu: false},
                 {id: "status", width: 150, hidden: !true,

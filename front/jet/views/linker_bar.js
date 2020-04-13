@@ -40,6 +40,7 @@ export default class LinkerView extends JetView{
                                 },
                             on: {
                                 onChange: function () {
+                                    this.$scope.$$("_local_add").hide();
                                     if ($$("_suppl").config.manual) {
                                         $$("_suppl").config.manual = false;
                                     } else {

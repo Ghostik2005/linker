@@ -341,14 +341,18 @@ export default class AllUnlinkedBarView extends JetView{
             });
 
         table.getFilter('dt').setValue(new Date());
-        table.callEvent('onresize');
+        this.startSearch();
+        // table.callEvent('onresize');
 
         table.getFilter('dt').blockEvent();
         setTimeout( () => {
             table.getFilter('dt').setValue(null);
             table.getFilter('dt').unblockEvent();
         }, 150);
-        table.getFilter("c_tovar").focus();
+        setTimeout(() => {
+            table.getFilter("c_tovar").focus();    
+        }, 50);
+
         table.markSorting(table.config.fi,table.config.di);
 
     }

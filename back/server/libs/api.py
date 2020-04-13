@@ -12,7 +12,8 @@ import io
 import requests
 import subprocess
 import traceback
-from multiprocessing.dummy import Pool as ThreadPool
+# from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing import Pool as ThreadPool
 import xlrd
 
 from libs.connect import pg_local
@@ -535,8 +536,6 @@ WHERE {' '.join(stri)}"""
             if len(stri) > 0:
                 sql = sql.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))", '')
                 sql_c = sql_c.replace("WHERE (lower(r.sklad_c_tovar) like lower('%%') or lower(r.vnd_c_tovar) like lower('%%'))", '')
-            # self._print(sql)
-            # self._print(sql_c)
             _return = []
             p_list = [{'sql': sql, 'opt': ()},] if total_table else [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(len(p_list))
@@ -544,13 +543,7 @@ WHERE {' '.join(stri)}"""
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             for row in result:
                 r = {
                     "id": row[0],
@@ -592,7 +585,6 @@ WHERE {' '.join(stri)}"""
                 s = c_tov.split('+')
                 c_tov = s[0]
                 zavod = s[1]
-            # self._print('zavod', zavod)
             if filt:
                 pars = {}
                 pars['c_vnd'] = filt.get('c_vnd')
@@ -636,7 +628,7 @@ WHERE {' '.join(stri)}"""
                         s = "lower(r.id_tovar) like lower('%" + pars['id_tovar'] + "%')"
                     ssss.append('and %s' % s)
                 if pars['sh_prc']:
-                    s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
+                    s = "r.sh_prc like lower('%" + pars['sh_prc'] + "%')"
                     ssss.append('and %s' % s)
                 if pars['id_org']:
                     s = f"""cast(r.id_org as text) like ('{pars['id_org']}%')"""
@@ -668,12 +660,6 @@ WHERE {' '.join(stri)}"""
             end_p = int(params.get('count', self.count)) + start_p - 1
             field = params.get('field', 'dt')
             direction = params.get('direction', 'desc')
-            #search_re = params.get('search')
-            #search_field = params.get('s_field')
-            #user = params.get('user')
-            #sql = f"""SELECT r.ID, r."USER", r.ID_ROLE FROM USERS r WHERE r."USER" = %s"""
-            #opt = (user,)
-            #id_role = int(self.db.request({"sql": sql, "options": opt})[0][2])
             us_stri = ''
             table = 'r.'
             if field == 'c_vnd':
@@ -737,13 +723,7 @@ WHERE {' '.join(stri)}"""
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             for row in result:
                 if str(row[13]) == '1':
                     sou = "PLExpert"
@@ -816,14 +796,14 @@ join
 	(select p.SH_PRC
 	from prc p
 	where left(p.c_tovar, 1) >= 'А' and p.n_fg = 1
-	and (lower(p.c_tovar) not like '%акция%' 
-		and lower(p.c_tovar) not like '%упаковк%' 
-		and lower(p.c_tovar) not like '%\\!до%' 
-		and lower(p.c_tovar) not like '%партия%' 
-		and lower(p.c_tovar) not like '%пакет%' 
-		and lower(p.c_tovar) not like '%уценка%' 
-		and lower(p.c_tovar) not like '%срок%' 
-		and lower(p.c_tovar) not like '%кратно%' 
+	and (upper(p.c_tovar) not like upper('%акция%')
+		and upper(p.c_tovar) not like upper('%упаковк%')
+		and upper(p.c_tovar) not like upper('%\\!до%')
+		and upper(p.c_tovar) not like upper('%партия%')
+		and upper(p.c_tovar) not like upper('%пакет%')
+		and upper(p.c_tovar) not like upper('%уценка%')
+		and upper(p.c_tovar) not like upper('%срок%')
+		and upper(p.c_tovar) not like upper('%кратно%')
 		)
 	) as q
 on q.sh_prc = r.sh_prc
@@ -912,7 +892,6 @@ order by {field} {direction}"""
                 pars['id_tovar'] = filt.get('id_tovar')
                 ssss = []
                 if pars['c_vnd']:
-                    #s = "lower(v.C_VND) like lower('%" + pars['c_vnd'] + "%')"
                     s = "v.ID_VND in ({0})".format(pars['c_vnd'])
                     ssss.append(pref % s)
                 if pars['c_user']:
@@ -946,7 +925,7 @@ order by {field} {direction}"""
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
                     ssss.append(pref % s)
                 if pars['sh_prc']:
-                    s = "lower(r.sh_prc) like lower('%" + pars['sh_prc'] + "%')"
+                    s = "r.sh_prc like lower('%" + pars['sh_prc'] + "%')"
                     ssss.append(pref % s)
                 if pars['id_org']:
                     s = f"""cast(r.id_org as text) like ('{pars['id_org']}%')"""
@@ -1015,13 +994,7 @@ order by {field} {direction}"""
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             for row in result:
                 if str(row[11]) == '1':
                     sou = "PLExpert"
@@ -1065,7 +1038,7 @@ order by {field} {direction}"""
             # opt = (user,)
             opt = ()
             self._setUnwork(user)
-            sql = f"""select r1, v.C_VND, r2 from (
+            sql = f"""select r1, coalesce(v.C_VND, 'имя не задано'), r2 from (
     select p.ID_VND as r1, count(p.ID_VND) as r2 from PRC p 
     inner join USERS u on (u."GROUP" = p.ID_ORG)
     WHERE p.N_FG <> 1 and u."USER" = '{user}'
@@ -2351,9 +2324,6 @@ on conflict do nothing;"""
 
     def _updateSprGroups(self, idx, id_sprs, prop_id):
         sprs = [int(i) for i in id_sprs]
-        # sql_get_prop_id = """SELECT c.CD_GROUP FROM CLASSIFIER as c WHERE c.IDX_GROUP  = %s """
-        # opt = (idx,)
-        # res = self.db.execute({"sql": sql_get_prop_id, "options": opt})[0][0]
         if len(sprs) == 1:
             insert = f" = {int(sprs[0])}"
         else:
@@ -2366,30 +2336,14 @@ WHERE g.CD_GROUP in
 and g.CD_CODE {insert}"""
         opt = (idx,)
 
-#         sql_del = f"""delete FROM GROUPS as g
-# WHERE g.CD_GROUP =  %s
-# and g.CD_CODE in {str(tuple(sprs))}"""
-#         opt = (res,)
         self.db.execute({"sql": sql_del, "options": opt})
-#         opts = []
-#         sql_del = """delete FROM GROUPS as g WHERE g.CD_GROUP =  %s
-# and g.CD_CODE = %s"""
-#         for id_spr in sprs:
-#             opts.append((res, id_spr))
-#         if len(opts) > 0:
-#             self.db.executemany({"sql": sql_del, "options": opts})
         if prop_id:
             opts = []
             sql_ins = f"""insert into groups (cd_code, cd_group) values (%s, %s) on conflict do nothing;"""
             for id_spr in sprs:
                 opts.append((id_spr, prop_id))
             if len(opts) > 0:
-                # self.db.execute({"sql": "drop index groups_idx1;", "options": ()})
-                # self.db.execute({"sql": "drop index groups_idx2;", "options": ()})
                 self.db.executemany({"sql": sql_ins, "options": opts})
-                # self.db.execute({"sql": "CREATE UNIQUE INDEX groups_idx1 ON groups USING btree (cd_code, cd_group);", "options": ()})
-                # self.db.execute({"sql": "CREATE UNIQUE INDEX groups_idx2 ON groups USING btree (cd_group, cd_code);", "options": ()})
-                # print(f'iiiiiiii: {time.time()-t1} sec.')
                 return True
             return False
         return True
@@ -2622,8 +2576,8 @@ values (%s, %s, 2) returning cd_group"""
             _return = []
             if id_spr > 0:
                 sql = f"""update SPR set C_TOVAR = %s, DT = CAST('NOW' AS TIMESTAMP),
-ID_DV = %s, ID_ZAVOD = %s, ID_STRANA = %s where ID_SPR = %s"""
-                opt = (c_tovar, id_dv, id_zavod, id_strana, id_spr)
+ID_DV = %s, ID_ZAVOD = %s, ID_STRANA = %s, ID_OWNER = (select id from users where "USER" = %s) where ID_SPR = %s"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana, user, id_spr)
                 self.db.execute({"sql": sql, "options": opt})
                 sql = f"""delete FROM GROUPS as g
 WHERE g.CD_GROUP in 
@@ -2640,9 +2594,9 @@ and g.CD_CODE = %s"""
                 ret = id_spr
                 new = False
             else:
-                sql = f"""insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA)
-values (%s, CAST('NOW' AS TIMESTAMP), %s, %s, %s) returning ID_SPR"""
-                opt = (c_tovar, id_dv, id_zavod, id_strana)
+                sql = f"""insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA, ID_OWNER)
+values (%s, CAST('NOW' AS TIMESTAMP), %s, %s, %s, (select id from users where "USER" = %s)) returning ID_SPR"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana, user)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 if result:
                     self._updValue(id_strana, 'spr_strana', 'id_spr')
@@ -2819,13 +2773,7 @@ INNER JOIN ROLES a on (a.ID = r.ID_ROLE) WHERE r.ID = %s"""
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             t1 = time.time() - st_t
             _return = []
             st_t = time.time()
@@ -2878,24 +2826,24 @@ where r.barcode = %s order by s.id_spr ASC"""
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-            sti = "lower(r.C_TOVAR) like lower('%%')"
+            sti = "r.C_TOVAR like upper('%%')"
             cbars = params.get('cbars')
             cbars = cbars.split(',')
             exclude, search_re = self._form_exclude(search_re)
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                ts1 = "r.C_TOVAR like upper('%" + search_re[i].strip() + "%')"
                 if i == 0:
                     stri.append(ts1)
                 else:
                     stri.append('and %s' % ts1)
             if len(exclude) > 0:
                 for i in range(len(exclude)):
-                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    ts3 = "r.C_TOVAR not like upper('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
+            stri = stri.replace("r.C_TOVAR like upper('%%%%') and", '')
             sql_c = """select count(*)
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
         CASE 
@@ -2913,7 +2861,7 @@ from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty,
     ) as fbar
 where quantity >= {1} AND quantity <= {2}
             """.format(stri, cbars[0], cbars[1])
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
             sql = """select id, c_tovar, quantity
 from (SELECT r.ID_SPR as id, idspr, r.c_tovar as c_tovar, qty, 
         CASE 
@@ -2933,7 +2881,7 @@ where quantity >= {1} AND quantity <= {2}
 order by {3} {4}
 """.format(stri, cbars[0], cbars[1], field, direction)
             sql = sql + self._insLimit(start_p, end_p)
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            sql = sql.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
             t1 = time.time() - st_t
             opt = ()
             _return = []
@@ -2943,13 +2891,7 @@ order by {3} {4}
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             st_t = time.time()
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
@@ -3344,7 +3286,6 @@ where id = %s returning id;"""
 
     def setBrakMail(self, params=None, x_hash=None):
         if self._check(x_hash):
-            #user = params.get("user")
             item  = params.get("item")
             series = item.get("series") #"seriya"
             sh_prc = item.get("sh_prc")
@@ -3549,12 +3490,6 @@ WHERE {' '.join(stri)} {mail_condition}"""
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
-            # count = results[1][0][0]
             _return = []
             p_list = []
             for row in results[0]:
@@ -3602,7 +3537,7 @@ WHERE {' '.join(stri)} {mail_condition}"""
             direction = params.get('direction', 'asc')
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-            sti = "lower(r.C_TOVAR) like lower('%%')"
+            sti = "r.C_TOVAR like upper('%%')"
             zavod = []
             exclude, search_re = self._form_exclude(search_re)
             if '+' in search_re:
@@ -3611,7 +3546,7 @@ WHERE {' '.join(stri)} {mail_condition}"""
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                ts1 = "r.C_TOVAR like upper('%" + search_re[i].strip() + "%')"
                 if i == 0:
                     stri.append(ts1)
                 else:
@@ -3622,7 +3557,7 @@ WHERE {' '.join(stri)} {mail_condition}"""
                     stri.append('and %s' % ts2)
             if len(exclude) > 0:
                 for i in range(len(exclude)):
-                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    ts3 = "r.C_TOVAR not like upper('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
             if filt:
@@ -3642,9 +3577,10 @@ FROM SPR r
 WHERE {2}
             """.format("LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)" if "z.C_ZAVOD" in stri else '',
             "join dv d on (d.ID = r.ID_DV) and d.ID = {0}".format(pars['c_dv']) if pars['c_dv'] else "", stri)
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc
+            sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
+            sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, sezon, mandat, presc, u."USER"
 FROM SPR r
+left join users u on (u.id = r.ID_OWNER)
 LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
 LEFT OUTER join 
     (select g1.CD_CODE cc1, g1.CD_GROUP cg1, c1.NM_GROUP nds
@@ -3681,10 +3617,10 @@ LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
 WHERE {stri} ORDER by {field} {direction}
 """
             sql = sql + self._insLimit(start_p, end_p)
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            sql = sql.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
             if len(ssss) > 1:
-                sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
-                sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
+                sql = sql.replace("WHERE r.C_TOVAR like upper('%%')", '')
+                sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%')", '')
             opt = ()
             _return = []
             p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
@@ -3709,6 +3645,7 @@ WHERE {stri} ORDER by {field} {direction}
                     "c_sezon"       : row[9],
                     "c_mandat"      : row[10],
                     "c_prescr"      : row[11],
+                    "owner"         : row[12] or '',
                     "search"        : params.get('search')
                 }
                 _return.append(r)
@@ -3739,16 +3676,16 @@ WHERE {stri} ORDER by {field} {direction}
             in_c_w = []
             exclude, search_re = self._form_exclude(search_re)
             search_re = search_re.split()
-            stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
+            stri = [] if len(search_re) > 0 else ["r.C_TOVAR like upper('%%')",]
             for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                ts1 = "r.C_TOVAR like upper('%" + search_re[i].strip() + "%')"
                 if i == 0:
                     stri.append(ts1)
                 else:
                     stri.append('and %s' % ts1)
             if len(exclude) > 0:
                 for i in range(len(exclude)):
-                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    ts3 = "r.C_TOVAR not like upper('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
             # self._print(filt)
@@ -3795,34 +3732,27 @@ and not exists (select llo.sh_prc from lnk llo where r.id_spr = llo.id_spr and l
 ORDER by {1} {2}
 """
             sql = sql + self._insLimit(start_p, end_p)
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%') and", ' ')
+            stri = stri.replace("r.C_TOVAR like upper('%%%%') and", '')
+            stri = stri.replace("r.C_TOVAR like upper('%%') and", ' ')
             sql_c += """ WHERE {0}""".format(stri)
             if in_c_w:
                 sql_c = sql_c + " and " + ' and '.join(in_c_w)
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
+            sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
+            sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%')", '')
             sql = sql.format(stri, field, direction)
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
+            sql = sql.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
+            sql = sql.replace("WHERE r.C_TOVAR like upper('%%')", '')
             t1 = time.time() - st_t
             opt = ()
             _return = []
             st_t = time.time()
-            # self._print(sql)
             p_list = [{'sql': sql, 'opt': opt},] if total_table else [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             t2 = time.time() - t1 - st_t
             for row in result:
                 r = {
@@ -3956,22 +3886,6 @@ ORDER by {1} {2}
             ) as eee10 on (ccc = r.ID_SPR)""" % pars['t_group']
                 in_c.insert(0, s)
                 in_st.insert(0, s)
-        #     else: 
-        #         s = """left join 
-        #     (select g.CD_CODE ccc, c.NM_GROUP gr1
-        #     from GROUPS g
-        #     inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 7
-        #     ) as eee10 on (ccc = r.ID_SPR)"""
-        #         in_st.append(s)
-        #         in_c.append(s)
-        #         ssss.append("and gr1 is null")
-        # else:
-        #     s = """LEFT join 
-        #     (select g.CD_CODE ccc, c.NM_GROUP gr1
-        #     from GROUPS g
-        #     inner join CLASSIFIER c on (c.CD_GROUP = g.CD_GROUP) where c.IDX_GROUP = 7
-        #     ) as eee10 on (ccc = r.ID_SPR)"""
-        #     in_st.append(s)
 
 
         if pars['c_group']:
@@ -4100,16 +4014,16 @@ ORDER by {1} {2}
         in_c_w = []
         exclude, search_re = self._form_exclude(search_re)
         search_re = search_re.split()
-        stri = [] if len(search_re) > 0 else ["lower(r.C_TOVAR) like lower('%%')",]
+        stri = [] if len(search_re) > 0 else ["r.C_TOVAR like upper('%%')",]
         for i in range(len(search_re)):
-            ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+            ts1 = "r.C_TOVAR like upper('%" + search_re[i].strip() + "%')"
             if i == 0:
                 stri.append(ts1)
             else:
                 stri.append('and %s' % ts1)
         if len(exclude) > 0:
             for i in range(len(exclude)):
-                ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                ts3 = "r.C_TOVAR not like upper('%" + exclude[i].strip() + "%')"
                 stri.append('and %s' % ts3)
         if id_sprs:
             id_sprs_tuple = []
@@ -4155,8 +4069,9 @@ ORDER by {1} {2}
         in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
 
         in_st.insert(0, f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, 
-sezon, mandat, presc, r.DT, r.inprice, {'gr1' if pars['t_group'] else "'_'"}
-FROM SPR r""")
+sezon, mandat, presc, r.DT, r.inprice, {'gr1' if pars['t_group'] else "'_'"}, u."USER"
+FROM SPR r
+left join users u on (r.ID_OWNER=u.id)""")
         sql = '\n'.join(in_st)
         in_c.insert(0, """select count(*) from spr r""")
         sql_c = '\n'.join(in_c)
@@ -4165,17 +4080,16 @@ FROM SPR r""")
         sql += """\nWHERE {0}
 ORDER by {1} {2}"""
         sql = sql + self._insLimit(start_p, end_p)
-        stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and", '')
-        stri = stri.replace("lower(r.C_TOVAR) like lower('%%') and", '')
+        stri = stri.replace("r.C_TOVAR like upper('%%%%') and", '')
+        stri = stri.replace("r.C_TOVAR like upper('%%') and", '')
         sql_c += """ WHERE {0}""".format(stri)
         if in_c_w:
             sql_c = sql_c + " and " + ' and '.join(in_c_w)
-        sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-        sql_c = sql_c.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
+        sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
+        sql_c = sql_c.replace("WHERE r.C_TOVAR like upper('%%')", '')
         sql = sql.format(stri, field, direction)
-        sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
-        sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%')", '')
-        # self._print(sql)
+        sql = sql.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
+        sql = sql.replace("WHERE r.C_TOVAR like upper('%%')", '')
         return [sql, sql_c]
 
     def getIdSprSearchAdm(self, params=None, x_hash=None):
@@ -4211,14 +4125,7 @@ ORDER by {1} {2}"""
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            # print(sql)
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             t2 = time.time() - t1 - st_t
             for row in result:
                 r = {
@@ -4237,7 +4144,8 @@ ORDER by {1} {2}"""
                     "dt"            : str(row[12]),
                     "dt_ins"        : "",#str(row[13])
                     "price"         : row[13],
-                    "t_group"       : "" if row[14] == '_' else row[14]
+                    "t_group"       : "" if row[14] == '_' else row[14],
+                    "owner"         : row[15] or ''
                 }
                 _return.append(r)
             if params.get('count', 0) < 100000000:
@@ -4271,8 +4179,10 @@ group by s.id_spr;"""
         if self._check(x_hash):
             id_spr = int(params.get('id_spr'))
             if id_spr:
-                sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc, issue1
+                sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV, z.C_ZAVOD, s.C_STRANA,
+d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc, issue1, u."USER"
 FROM SPR r
+left join users u on (u.ID=r.ID_OWNER)
 LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
 LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
 LEFT OUTER join dv d on (r.ID_DV = d.ID)
@@ -4338,7 +4248,8 @@ WHERE r.id_spr = %s"""
                         "id_nds"        : row[11],
                         "nds"           : row[10],
                         "c_tgroup"      : "",
-                        "id_tgroup"     : ""
+                        "id_tgroup"     : "",
+                        "owner"         : row[19] or ''
                     }
                     sql = f"""select r.barcode from spr_barcode r where r.id_spr = %s"""
                     t = self.db.request({"sql": sql, "options": opt})
@@ -4392,7 +4303,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = %s )"""
                 direction = 'asc'
             search_re = params.get('search')
             search_re = search_re.replace("'", "").replace('"', "")
-            sti = "lower(r.C_TOVAR) like lower('%%')"
+            sti = "r.C_TOVAR like upper('%%')"
             filt = params.get('c_filter')
             pref = 'and %s'
             stri_1 = ""
@@ -4424,7 +4335,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = %s )"""
                     s = "lower(r.owner) like lower('%" + pars['owner'] + "%')"
                     ssss.append(pref % s)
                 if pars['c_tovar']:
-                    s = "lower(r.C_TOVAR) like lower('%" + pars['c_tovar'] + "%')"
+                    s = "r.C_TOVAR like upper('%" + pars['c_tovar'] + "%')"
                     ssss.append(pref % s)
                 if pars['c_zavod']:
                     s = "lower(r.C_ZAVOD) like lower('%" + pars['c_zavod'] + "%')"
@@ -4437,17 +4348,17 @@ where ( classifier.idx_group = 7 and groups.cd_code = %s )"""
             search_re = search_re.split()
             stri = [] if len(search_re) > 0 else [sti,]
             for i in range(len(search_re)):
-                ts1 = "lower(r.C_TOVAR) like lower('%" + search_re[i].strip() + "%')"
+                ts1 = "r.C_TOVAR like upper('%" + search_re[i].strip() + "%')"
                 if i == 0:
                     stri.append(ts1)
                 else:
                     stri.append('and %s' % ts1)
             if len(exclude) > 0:
                 for i in range(len(exclude)):
-                    ts3 = "lower(r.C_TOVAR) not like lower('%" + exclude[i].strip() + "%')"
+                    ts3 = "r.C_TOVAR not like upper('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri) + ' ' + s_1
-            stri = stri.replace("lower(r.C_TOVAR) like lower('%%%%') and","")
+            stri = stri.replace("r.C_TOVAR like upper('%%%%') and","")
             sql = """select r.id_spr, r.c_tovar, z.c_zavod, s.c_strana
 from spr r
 LEFT join spr_strana s on (s.ID_SPR = r.ID_STRANA)
@@ -4459,7 +4370,7 @@ order by r.{1} {2}
                 sql = "select * from (" + sql + ins_ch_date
             sql_c = "select count(*) from ( " + sql + ") as foobar"
             sql = sql + self._insLimit(start_p, end_p)
-            sql = sql.replace("WHERE lower(r.C_TOVAR) like lower('%%%%')", '')
+            sql = sql.replace("WHERE r.C_TOVAR like upper('%%%%')", '')
             t1 = time.time() - st_t
             opt = ()
             _return = []
@@ -4470,13 +4381,7 @@ order by r.{1} {2}
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql, 'opt': opt}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             for row in result:
                 st1 = ' | '.join([str(row[0]), row[1]])
                 r = {
@@ -4677,13 +4582,7 @@ from (
             pool.close()
             pool.join()
             count = total_table or results[1][0][0]
-            # p_list = [{'sql': sql_m, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
-            # pool = ThreadPool(2)
-            # results = pool.map(self._make_sql, p_list)
-            # pool.close()
-            # pool.join()
             result = results[0]
-            # count = results[1][0][0]
             for row in result:
                 if str(row[12]) == '1':
                     sou = "PLExpert"

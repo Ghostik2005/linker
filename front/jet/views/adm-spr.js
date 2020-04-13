@@ -311,6 +311,10 @@ export default class SprView extends JetView{
                            // },
                         //},
                     ]},
+                {id: "owner", width: 200, tooltip: false, //sort: 'server', 
+                    hidden: true,
+                    header: [{text: "Кто изменил"}, 
+                    ]},
                 ],
             on: {
                 'onresize': function() {
@@ -611,9 +615,13 @@ export default class SprView extends JetView{
         setButtons(this.app, this.app.config.getButt(this.getRoot()));
         setMouseEvents(table);
 
-        table.callEvent('onresize');
+        // table.callEvent('onresize');
+        this.startSearch();
         table.markSorting(table.config.fi,table.config.di);
-        this.$$("_sb").focus();
+        setTimeout(() => {
+            this.$$("_sb").focus();    
+        }, 50);
+        
     }
     
     init() {

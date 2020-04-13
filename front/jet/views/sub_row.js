@@ -7,6 +7,7 @@ import NewtgView from "../views/new_tg";
 import NewIssueView from "../views/new_issue";
 import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
+import {permited_add} from "../models/variables";
 
 export default class SubRow extends JetView{
     constructor(app, data){
@@ -15,7 +16,7 @@ export default class SubRow extends JetView{
         }
 
     config(){
-
+        let th = this;
         let app = this.app;
         function strana_filter(item, value) {
             value = value.toString().toLowerCase()
@@ -67,6 +68,11 @@ export default class SubRow extends JetView{
                 "id_zavod": webix.rules.isNotEmpty,
                 "id_dv": webix.rules.isNotEmpty
                 },
+            on: {
+                onViewShow: () => {
+
+                }
+            },
             elements: [
                 {view: "label", label: "", name: "idspr", css: {"margin-top": "0px !important"}},
                 {rows: [
@@ -236,6 +242,7 @@ export default class SubRow extends JetView{
                                             },
                                         },
                                     {view:"combo", label: "Группа:", labelPosition:"top", value: "", name: "id_group", css: "small",
+                                        localId: '_local_id_group',
                                         options:  {
                                             filter: gr_filter,
                                             body: {
@@ -250,7 +257,12 @@ export default class SubRow extends JetView{
                                             },
                                         on: {
                                             onAfterRender: function() {
-                                                this.getList().sync(group);
+                                                if (this.$scope.savePermitted) {
+                                                    this.getList().add({id: 'ZakMedCtg.18', group: "Товары для животных"})
+                                                } else {
+                                                    this.getList().sync(group);
+                                                }
+                                                // this.getList().sync(group);
                                                 }
                                             },
                                         },
@@ -280,7 +292,10 @@ export default class SubRow extends JetView{
                                 }
                             },
                         {},
-                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, hidden: !app.config.roles[app.config.role].spredit,
+                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
+                        hidden: !th.savePermitted,
+                        localId: '_save',
+                        // hidden: !(app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)),
                             click: () => {
                                 let valid = this.$$("new_form").validate({hidden:false, disabled:false});
                                 if (valid) {
@@ -352,8 +367,17 @@ export default class SubRow extends JetView{
             this.$$("new_form").parse(item);
             //this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
-            }
         }
+        // if (permited_add.users.includes(this.app.config.user)) {
+            // this.$$("_local_id_group").setValue('ZakMedCtg.18');
+            // this.$$("_local_id_group").disable();
+        // }
+        if ((permited_add.users.includes(this.app.config.user) && item.id_group == 'ZakMedCtg.18') 
+            || this.app.config.roles[this.app.config.role].spredit) {
+            this.savePermitted = true;
+            this.$$("_save").show();
+        } //else {this.savePermitted = false;}
+    }
     
     init() {
         this.popstri = this.ui(NewstriView);

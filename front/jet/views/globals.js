@@ -1,5 +1,7 @@
 "use strict";
 
+import {permited_add} from "../models/variables";
+
 export var u_roles = new webix.DataCollection({
         id: "roles_dc",
         });
@@ -460,6 +462,11 @@ export function parse_unlinked_item(th, c_item) {
     n_item['p_name'] = c_item.c_tovar;
     let app_c = $$("main_ui").$scope.app.config;
     if (app_c.roles[app_c.role].spradd) $$("_add").show();
+
+    // console.log("c_item", permited_add);
+
+    if (permited_add.id_vnds.includes(c_item.id_vnd) && permited_add.users.includes(app_c.user)) $$("_add").show();
+
     $$("_left").show();
     $$("_skip").show();
     $$("_right").show();
@@ -1233,12 +1240,14 @@ export function recalcRowsRet(table) {
 }
 
 export function setRows(view){
-    let table = view.$$("__table");
-    let q = table.$view.getElementsByClassName('webix_ss_body')[0];
-    let totalHeight = q.clientHeight;
-    let rows = Math.floor(totalHeight/table.config.rowHeight);
-    // console.log('rows', rows)
-    table.config.posPpage = rows;
+    setTimeout( () => {
+        let table = view.$$("__table");
+        // let q = table.$view.getElementsByClassName('webix_ss_body')[0];
+        let q = table.$view.getElementsByClassName('webix_ss_center_scroll')[0];
+        let totalHeight = q.clientHeight;
+        let rows = Math.floor(totalHeight/table.config.rowHeight);
+        table.config.posPpage = rows;
+    }, 10)
 }
 
 

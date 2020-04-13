@@ -183,7 +183,8 @@ export default class LinksViewSpr extends JetView{
         table.markSorting(table.config.fi,table.config.di);
         // table.callEvent('onresize');
         // console.log(table.config.searchBar);
-        setRows(this);
+        // setRows(this);
+        this.startSearch()
         setTimeout( () => {
             $$(table.config.searchBar).focus();
         }, 50)

@@ -151,6 +151,10 @@ export default class SprView extends JetView{
                     header: [{text: "Рецептурный"},
                         ],
                     },
+                {id: "owner", width: 200, tooltip: false, //sort: 'server', 
+                    hidden: true,
+                    header: [{text: "Кто изменил"}, 
+                    ]},
                 ],
             on: {
                 'onresize': function() {
@@ -262,9 +266,17 @@ export default class SprView extends JetView{
     }
 
     ready() {
-        this.$$("__table").callEvent('onResize');
+        // this.$$("__table").callEvent('onResize');
         // setRows(this);
+        
+        this.startSearch();
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
+        setTimeout(() => {
+            $$("_spr_search").focus();    
+        }, 50);
+        
+        
+        
     }
 
     init() {
