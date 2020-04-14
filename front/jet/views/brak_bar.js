@@ -305,8 +305,8 @@ export default class BrakBarView extends JetView{
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
+                        this.config.posPpage = rows;
                         this.delayResize = setTimeout( () => {
-                            this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 250)
                     }
@@ -402,9 +402,16 @@ export default class BrakBarView extends JetView{
         table.config.searchBar = this._search.config.id;
         this.sideView = this.getRoot().getChildViews()[2].getChildViews()[1]
 
-        this.$$("__table").callEvent('onresize');
-        this._search.focus()
-        }
+        setTimeout(() => {
+            let rows = recalcRowsRet(table);
+            if (rows) table.config.posPpage = rows;
+            this.startSearch();
+        }, 10);
+        // this.$$("__table").callEvent('onresize');
+        setTimeout(() => {
+            this._search.focus()
+        }, 10);
+    }
 
     init() {
         this.pophistory = this.ui(History);

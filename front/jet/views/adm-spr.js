@@ -321,11 +321,11 @@ export default class SprView extends JetView{
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
+                        this.config.posPpage = rows;
                         this.delayResize = setTimeout( () => {
-                            this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 150)
-                    }
+                    };
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
@@ -615,8 +615,14 @@ export default class SprView extends JetView{
         setButtons(this.app, this.app.config.getButt(this.getRoot()));
         setMouseEvents(table);
 
+        setTimeout(() => {
+            let rows = recalcRowsRet(table);
+            // console.log("rrr_rows", rows);
+            if (rows) table.config.posPpage = rows;
+            this.startSearch();
+        }, 10);
         // table.callEvent('onresize');
-        this.startSearch();
+        // this.startSearch();
         table.markSorting(table.config.fi,table.config.di);
         setTimeout(() => {
             this.$$("_sb").focus();    

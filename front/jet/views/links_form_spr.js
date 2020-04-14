@@ -88,8 +88,8 @@ export default class LinksViewSpr extends JetView{
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
+                        this.config.posPpage = rows;
                         this.delayResize = setTimeout( () => {
-                            this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 150)
                     }
@@ -184,7 +184,13 @@ export default class LinksViewSpr extends JetView{
         // table.callEvent('onresize');
         // console.log(table.config.searchBar);
         // setRows(this);
-        this.startSearch()
+        setTimeout(() => {
+            let rows = recalcRowsRet(table);
+            if (rows) table.config.posPpage = rows;
+            this.startSearch();
+        }, 10);
+
+        // this.startSearch()
         setTimeout( () => {
             $$(table.config.searchBar).focus();
         }, 50)

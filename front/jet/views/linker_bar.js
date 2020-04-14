@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {get_suppl, get_prcs, get_prcs_source, get_prcs_date} from "../views/globals";
-import {parse_unlinked_item, get_data_test, setButtons} from "../views/globals";
+import {parse_unlinked_item, get_data_test, setButtons, recalcRowsRet} from "../views/globals";
 import {prcs, delPrc, checkKey, get_spr, getDtParams, clear_names_bar} from "../views/globals";
 import UnlinkedView from "../views/unlinked";
 import History from "../views/history";
@@ -330,7 +330,6 @@ export default class LinkerView extends JetView{
         } else {
             this.$$("_value_search").hide();
         };
-        // let table = this.$$("__table");
         this.table.callEvent('onresize');
         this.$$("_local_spr_search").focus();
     }

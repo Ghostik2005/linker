@@ -145,9 +145,10 @@ export default class LinksViewLnk extends JetView{
                 'onresize': function() {
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
+                    // console.log('rows', rows);
                     if (rows) {
+                        this.config.posPpage = rows;
                         this.delayResize = setTimeout( () => {
-                            this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 150)
                     }
@@ -247,8 +248,14 @@ export default class LinksViewLnk extends JetView{
 
         table.getFilter('dt').setValue(new Date());
 
+        setTimeout(() => {
+            let rows = recalcRowsRet(table);
+            if (rows) table.config.posPpage = rows;
+            this.startSearch();
+        }, 10);
+
         // table.callEvent('onresize');
-        this.startSearch();
+        // this.startSearch();
 
         table.getFilter('dt').blockEvent();
         setTimeout( () => {

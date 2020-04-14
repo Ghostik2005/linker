@@ -161,8 +161,8 @@ export default class SprView extends JetView{
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
+                        this.config.posPpage = rows;
                         this.delayResize = setTimeout( () => {
-                            this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 150)
                     }
@@ -268,8 +268,15 @@ export default class SprView extends JetView{
     ready() {
         // this.$$("__table").callEvent('onResize');
         // setRows(this);
+        let table = this.$$("__table");
         
-        this.startSearch();
+        setTimeout(() => {
+            let rows = recalcRowsRet(table);
+            if (rows) table.config.posPpage = rows;
+            this.startSearch();
+        }, 10);
+
+        // this.startSearch();
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         setTimeout(() => {
             $$("_spr_search").focus();    

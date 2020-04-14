@@ -1225,18 +1225,16 @@ export function refTemplate(obj, common, value) {
 }
 
 export function recalcRowsRet(table) {
-    let q = table.$view.getElementsByClassName('webix_ss_body')[0];
-    let totalHeight = q.clientHeight;
-    let rows = Math.floor(totalHeight/table.config.rowHeight);
-    if (table.config.name === "1__dt_as") {
-        // console.log('ppos', table.config.posPpage);
-        // console.log('th', totalHeight);
-        // console.log('r', rows);
-        // console.log('q', q.clientHeight);
-        // console.dir(q);
-    }
-    if (rows === table.config.posPpage) return false;
-    return rows
+    // let q = table.$view.getElementsByClassName('webix_ss_body')[0];
+    // setTimeout( () => {
+        let q = table.$view.getElementsByClassName('webix_ss_center_scroll')[0];
+        let totalHeight = q.clientHeight;
+        console.log('total_h', totalHeight);
+        let rows = Math.floor(totalHeight/table.config.rowHeight);
+        console.log('r_rows', rows);
+        if (rows == table.config.posPpage) return false;
+        return rows
+    // }, 0)
 }
 
 export function setRows(view){

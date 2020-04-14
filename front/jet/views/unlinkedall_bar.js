@@ -157,8 +157,8 @@ export default class AllUnlinkedBarView extends JetView{
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
+                        this.config.posPpage = rows;
                         this.delayResize = setTimeout( () => {
-                            this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 150)
                     }
@@ -339,19 +339,26 @@ export default class AllUnlinkedBarView extends JetView{
                 },webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
             });
-
         table.getFilter('dt').setValue(new Date());
-        this.startSearch();
+
+
+        setTimeout(() => {
+            let rows = recalcRowsRet(table);
+            if (rows) table.config.posPpage = rows;
+            this.startSearch();
+        }, 10);
+
+        // this.startSearch();
         // table.callEvent('onresize');
 
         table.getFilter('dt').blockEvent();
         setTimeout( () => {
             table.getFilter('dt').setValue(null);
             table.getFilter('dt').unblockEvent();
-        }, 150);
+        }, 100);
         setTimeout(() => {
             table.getFilter("c_tovar").focus();    
-        }, 50);
+        }, 150);
 
         table.markSorting(table.config.fi,table.config.di);
 
