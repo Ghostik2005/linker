@@ -245,7 +245,9 @@ export default class NewformView extends JetView{
                                                 },
                                             on: {
                                                 onAfterRender: function() {
-                                                    if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 45835) {
+                                                    if ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
+                                                        (permited_add.users.includes(this.$scope.app.config.user) ))
+                                                    {
                                                         this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
                                                     } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
                                                         group.serialize().forEach((it) => {
@@ -284,7 +286,7 @@ export default class NewformView extends JetView{
                                 },
                             {},
                             (app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)) 
-                            ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
+                            ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, localId: "_save",
                                 hidden: !(app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)),
                                 click: () => {
                                     let valid = this.$$("new_form").validate({hidden:false, disabled:false});
@@ -331,6 +333,7 @@ export default class NewformView extends JetView{
                 }
             }
         }
+
     show(new_head, search_bar, item){
         this.$$("new_form").config.search_bar = search_bar;
         if (item) {
@@ -340,13 +343,27 @@ export default class NewformView extends JetView{
             }
         if (search_bar.config.localId !== '_sb') {
             this._id_vnd = $$("_suppl").getList().getItem($$("_suppl").getValue()).id_vnd;
-            if (permited_add.users.includes(this.app.config.user) && this._id_vnd == 45835) {
+            if ((permited_add.users.includes(this.app.config.user) && this._id_vnd == 45835) ||
+                permited_add.users.includes(this.app.config.user)) {
                 this.$$("_local_id_group").setValue('ZakMedCtg.18');
                 this.$$("_local_id_group").disable();
             }
         }
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
-        this.getRoot().show()
+        this.getRoot().show();
+
+
+        // if (permited_add.users.includes(this.app.config.user)) {
+        //     this.$$("_local_id_group").setValue('ZakMedCtg.18');
+        //     this.$$("_local_id_group").disable();
+        // }
+
+        // if ((permited_add.users.includes(this.app.config.user) && item.id_group === 'ZakMedCtg.18') 
+        //     || this.app.config.roles[this.app.config.role].spredit) {
+        //     this.savePermitted = true;
+        //     this.$$("_save").show();
+        // } else {this.savePermitted = false;}
+
         this.$$("inputTxt").focus();
         }
     hide(){

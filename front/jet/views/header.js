@@ -155,13 +155,15 @@ export default class HeaderView extends JetView{
                             th.app.config.user = '';
                             th.app.config.role = '0';
                             th.app.config.x_api = 'x_login';
-                            location.href = (location.hostname === 'localhost') ? "http://localhost:8080" : "/linker/";
+                            location.href = (location.hostname === 'localhost') ? location.href : "/linker/";
                             }
                         },
                     },
             ]}
         }
     ready() {
+        // console.log('loc', location)
+        //anc 40369
 
         }
     }

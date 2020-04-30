@@ -1,5 +1,9 @@
 "use strict";
 
+export const permited_add = {
+    users: ['antey', 'antey1', 'antey2', 'antey3', 'antey4'],
+    id_vnds: [45835, 51066]
+}
 
 export const screens = {
     LinkerView: "<span class='webix_icon fa-link'></span><span class='multiview-header'>Линкер</span>",

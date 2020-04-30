@@ -257,11 +257,25 @@ export default class SubRow extends JetView{
                                             },
                                         on: {
                                             onAfterRender: function() {
-                                                if (this.$scope.savePermitted) {
-                                                    this.getList().add({id: 'ZakMedCtg.18', group: "Товары для животных"})
+                                                if ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
+                                                    (permited_add.users.includes(this.$scope.app.config.user) ))
+                                                {
+                                                    this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
+                                                } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
+                                                    group.serialize().forEach((it) => {
+                                                        if (it.id != 'ZakMedCtg.1114') {
+                                                            this.getList().add(it)
+                                                        }
+                                                    })
                                                 } else {
-                                                    this.getList().sync(group);
+                                                    this.getList().parse(group);
                                                 }
+
+                                                // if (this.$scope.savePermitted) {
+                                                //     this.getList().add({id: 'ZakMedCtg.18', group: "Товары для животных"})
+                                                // } else {
+                                                //     this.getList().parse(group);
+                                                // }
                                                 // this.getList().sync(group);
                                                 }
                                             },

@@ -12,8 +12,8 @@ import io
 import requests
 import subprocess
 import traceback
-# from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing import Pool as ThreadPool
+from multiprocessing.dummy import Pool as ThreadPool
+# from multiprocessing import Pool as ThreadPool
 import xlrd
 
 from libs.connect import pg_local
@@ -5618,6 +5618,84 @@ where seriya = '%s'"""
                 pass
 
             ret = {"result": True, "ret_val": series}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def updatePrcNewUsers(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            self._print('set new user for prc')
+
+            ret = {"result": True, "ret_val": True}
+
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+
+    def setVndsUsers(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            group = params.get('group')
+            rows = params.get('rows')
+            old_value = params.get('old_value')
+            new_value = params.get('new_value')
+            if group and rows:
+                self._print('update item')
+                ret = {"result": True, "ret_val": True}
+            else: 
+                ret = {"result": False, "ret_val": "no data"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getVndsUsers(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = f"""select v.id_vnd, v.c_vnd, 
+coalesce(v.website, ''), 
+v.users_group,
+coalesce(u.c_group, 'не назначено'), 
+coalesce(u.c_description, 'нет описания')
+from vnd v 
+left join users_groups u on (v.users_group = u.id_group)
+order by id_vnd;
+            """
+            _return = []
+            result = self.db.request({"sql": sql, "options": ()})
+            # print(result)
+            for row in result:
+                r = {
+                    "id_vnd": row[0],
+                    "c_vnd": row[1],
+                    "website": row[2],
+                    "users_group": row[3],
+                    "c_group": row[4],
+                    "c_description": row[5]
+                }
+                # print(r)
+                _return.append(r)
+
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def getUsersGroups(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            self._print(params)
+            sql = """select c_group
+from users_groups
+order by c_group"""
+            _return = ["не назначено"]
+            result = self.db.request({"sql": sql, "options": ()})
+            for row in result:
+                # r = {
+                #     "id": row[0],
+                #     "value": row[1],
+                # }
+                _return.append(row[0])
+
+
+            ret = {"result": True, "ret_val": _return}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)

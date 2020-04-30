@@ -461,7 +461,10 @@ export function parse_unlinked_item(th, c_item) {
     n_item['_vendor'] = c_item.c_zavod;
     n_item['p_name'] = c_item.c_tovar;
     let app_c = $$("main_ui").$scope.app.config;
-    if (app_c.roles[app_c.role].spradd) $$("_add").show();
+    if (app_c.roles[app_c.role].spradd || permited_add.users.includes($$("main_ui").$scope.app.config.user)) {
+        $$("_add").show();
+    }
+    // $$("_add").show();
 
     // console.log("c_item", permited_add);
 
@@ -1229,9 +1232,9 @@ export function recalcRowsRet(table) {
     // setTimeout( () => {
         let q = table.$view.getElementsByClassName('webix_ss_center_scroll')[0];
         let totalHeight = q.clientHeight;
-        console.log('total_h', totalHeight);
+        // console.log('total_h', totalHeight);
         let rows = Math.floor(totalHeight/table.config.rowHeight);
-        console.log('r_rows', rows);
+        // console.log('r_rows', rows);
         if (rows == table.config.posPpage) return false;
         return rows
     // }, 0)

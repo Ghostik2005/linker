@@ -495,11 +495,11 @@ where  lnk.sh_prc = prc.sh_prc""")
             ap.append(st)
         ap = ' \nor '.join(ap)
         sql = """update PRC set n_fg=1, id_org=0 where n_fg!=1 and id_vnd != 45835 and id_vnd != 51066 and source != 2 %s and (%s)""" % (con_ins, ap)
-        self.log("PRCSYNC Удаляем по признаку")
+        self.log("PRCSYNC пропускаем по признаку")
         dbc.execute(sql)
         if callable(db.commit):
             db.commit()
-        self.log("PRCSYNC ---Удалили по признаку")
+        self.log("PRCSYNC ---Пропустили по признаку")
         self.log('PRCSYNC Сводим по кодам')
         #sql_old = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     #select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
@@ -578,47 +578,48 @@ using lnk
 where  lnk.sh_prc = prc.sh_prc""")
         if callable(db.commit):
             db.commit()
-
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
         # this row for admin instead of stasya
         # dbc.execute(f"""update prc set id_org = 0, N_FG = 12 where id_org = 0 and n_fg = 0 {con_ins} 
+        #если назначено на админа, но это не пропущенное - переназначаем на сводильщика
         dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
     and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
     and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)""")
-        #dbc.execute(f"""update prc set id_org = 0 where id_org = 0 and n_fg = 12 {con_ins} and (id_vnd <> 19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136)""")
         if callable(db.commit):
             db.commit()
         #self.log('assign to stasya')
         # this row for admin instead of stasya
         # sql_upd_u = f"""update prc set id_org = 0 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
-        sql_upd_u = f"""update prc set id_org = 12 where id_org<>12 and  id_org <> 0 and n_fg <> 1 and  n_fg= 0 and n_fg<> 12 and in_work = -1 {con_ins}
-and  id_vnd in (10001,19990,19992,19996,20123,20129,20153,20171,20176,20177,
-                20229,20237, 20269,20271,20276,20277,20377,20378,20471,20557,20576,20577,20657,
-                20677,20871,20977,21271,22077,22078,22240,23478,24477,28132,28162,
-                28176,28177,28178,29271,29977,30144,30178,30371,33771,34071,34157,
-                34168,37471,40267,40277,40550,40552,40677,41177,44677,44735,44877,
-                45177,45277,46676,46769,46869,47369,48761,51072,51078,10000,48736,
-                52083)"""
+        #назначаем на сводильщиков тех поставщиков, которые за ними закреплены
+        sql_upd_u = f"""update prc set id_org = 12 where (id_org<>12 and id_org <> 0) and n_fg= 0 and in_work = -1 {con_ins}
+and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group=12)"""
+        # """
+        # and  id_vnd in (10000,10001,19990,19992,20123,20129,20153,20171,20176,20177,
+        #         20229,20237,20269,20271,20276,20277,20377,20378,20471,20557,
+        #         20576,20577,20657,20677,20871,20977,21271,22077,22078,22240,
+        #         23478,24477,28132,28162,28176,28177,28178,29271,29977,30144,
+        #         30178,30371,33771,34071,34157,34168,37471,40267,40277,40550,
+        #         40552,40677,41177,44677,44735,44877,45177,45277,46676,46769,
+        #         46869,47369,48736,48761,51072,51078,52083)"""
         #было еще 51066,45835, но временно убрали
         #self.log(sql_upd_u)
         dbc.execute(sql_upd_u)
-        #self.log('assign to stasya 2')
+        # self.log('PRCSYNC -Назначенно сводильщикам')
         if callable(db.commit):
             db.commit()
+
         #назначаем на АНЦ
-        dbc.execute(f"""update prc set id_org=40369 where (id_org=12 or id_org = 0) and (n_fg = 0) {con_ins} 
-and id_vnd in (19965);""")
-        #назначаем на антей - разобраться
-        dbc.execute(f"""update prc set id_org=40035 where (id_org=12 or id_org = 0) and (n_fg = 0) {con_ins} 
-and id_vnd in (19994, 19985, 19976, 19987, 45835, 51066);""")
-# and id_vnd in (19994, 19985, 19976, 19987) and n_fg = 0;""")
+        dbc.execute(f"""update prc set id_org=40369 where (id_org=12) and (n_fg = 0) {con_ins} 
+and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group=40369)""")
+        # """and id_vnd in (19965, 19996);""")
+        #назначаем на антей
+        dbc.execute(f"""update prc set id_org=40035 where (id_org=12) and (n_fg = 0) {con_ins} 
+and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group=40035)""")
+        # """and id_vnd in (19994, 19985, 19976, 19987, 45835, 51066);""")
+        # and id_vnd in (19994, 19985, 19976, 19987);""")
         if callable(db.commit):
             db.commit()
-        self.log('assigned to 40035')
-        #dbc.execute(f"""update prc set id_org=40035 where id_vnd=19985 and id_org=12 {con_ins}""")
-        #if callable(db.commit):
-            #db.commit()
         self.log('PRCSYNC ---Назначили пользователям на сведение')
 
     def getNameByCode(self, id_vnd):

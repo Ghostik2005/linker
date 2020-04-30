@@ -494,7 +494,7 @@ export default class SprView extends JetView{
                     eWidth: 40,
                     label: "",
                     width: 40,
-                    hidden: !(app.config.roles[app.config.role].skipped),
+                    // hidden: !(app.config.roles[app.config.role].skipped),
                     extLabel: "<span class='button_label'>Добавить эталон</span>",
                     oldLabel: "<span class='webix_icon fa-plus'></span>",
                     click: () => {
