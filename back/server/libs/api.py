@@ -5624,10 +5624,22 @@ where seriya = '%s'"""
 
     def updatePrcNewUsers(self, params=None, x_hash=None):
         if self._check(x_hash):
-            self._print('set new user for prc')
-
-            ret = {"result": True, "ret_val": True}
-
+            group = params.get('group')
+            rows = params.get('rows')
+            if group and rows:
+                i = len(rows)
+                sql = f"""update prc 
+set id_org = coalesce((select ug.id_group as q
+             from users_groups ug where c_group = '{group}'), -1)
+where id_vnd in ({', '.join(['%s' for q in range(i)])})"""
+                opt = [int(k['id_vnd']) for k in rows]
+                result = self.db.execute({"sql": sql, "options": opt})
+                if result:
+                    ret = {"result": True, "ret_val": True}
+                else:
+                    ret = {"result": False, "ret_val": "sql error"}
+            else: 
+                ret = {"result": False, "ret_val": "no data"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -5635,13 +5647,25 @@ where seriya = '%s'"""
 
     def setVndsUsers(self, params=None, x_hash=None):
         if self._check(x_hash):
+            # self._print('setVndsUsers')
+            # self._print(params)
             group = params.get('group')
             rows = params.get('rows')
-            old_value = params.get('old_value')
-            new_value = params.get('new_value')
             if group and rows:
-                self._print('update item')
-                ret = {"result": True, "ret_val": True}
+                i = len(rows)
+                sql = f"""update vnd 
+set users_group = (select ug.id_group from users_groups ug where c_group = '{group}')
+where id_vnd in ({', '.join(['%s' for q in range(i)])})
+returning users_group"""
+                opt = [int(k['id_vnd']) for k in rows]
+                # self._print(sql)
+                # self._print(opt)
+                result = self.db.execute({"sql": sql, "options": opt})
+                # self._print(result)
+                if result:
+                    ret = {"result": True, "ret_val": True}
+                else:
+                    ret = {"result": False, "ret_val": "sql error"}
             else: 
                 ret = {"result": False, "ret_val": "no data"}
         else:
@@ -5688,10 +5712,6 @@ order by c_group"""
             _return = ["не назначено"]
             result = self.db.request({"sql": sql, "options": ()})
             for row in result:
-                # r = {
-                #     "id": row[0],
-                #     "value": row[1],
-                # }
                 _return.append(row[0])
 
 

@@ -221,19 +221,22 @@ export default class LinkVendorsView extends JetView{
         let vnd = (new_value.c_vnd) ? new_value.c_vnd : ''
         let group = (new_value.c_group) ? new_value.c_group : new_value;
         webix.confirm({
+            width: 300,
             type:"confirm-warning",
             ok: "Да", 
             cancel: "Нет",
-            text:`<span style='font-size: 14px; line-height: 20px'>Переназначить ВСЕ позиции ${vnd} на группу ${group}?</span>`,
+            text:`<span style='font-size: 14px; line-height: 20px'>Позиции` + 
+                 `${vnd} за последние три дня будут АВТОМАТИЧЕСКИ назначенны на группу ${group}.` + 
+                 `Переназначить ВСЕ СТАРЫЕ позиции на ${group}?</span>`,
             callback: function(result) {
                 if (result) {
                     let url = th.app.config.r_url + "?updatePrcNewUsers";
-                    let params = {"user": th.app.config.user};
+                    let params = {"user": th.app.config.user, "group": group, "rows": (new_value.c_group) ? [new_value,] : new_value};
                     request(url, params).then( (data) => {
-                        webix.message('updated')
+                        // webix.message('updated')
                     })
                 } else {
-                    webix.message('not updated')
+                    // webix.message('not updated')
                 }
             }
         })
