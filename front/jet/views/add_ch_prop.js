@@ -21,7 +21,6 @@ export default class addCGView extends JetView{
                     var qw = this.$$("e_list");
                     qw.clearAll(true);
                     qw.parse(refLoad(app, this.type));
-
                     this.$$("_filt").focus();
                     },
                 },

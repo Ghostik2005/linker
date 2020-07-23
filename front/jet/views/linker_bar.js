@@ -130,6 +130,7 @@ export default class LinkerView extends JetView{
                 {view: 'toolbar', id: "_names_bar", css: "header", localId: "_local_names_bar",
                     rows: [
                         {height: 32, cols: [
+                            {view: "text", name: "sh_prc", hidden: true},
                             {view: "label", label: "", name: "_name", fillspace: 1},
                             ]},
                         {height: 32, cols: [
@@ -200,7 +201,6 @@ export default class LinkerView extends JetView{
                             on: {
                                 onItemClick: () => {
                                     let item = {}
-                                    //let name = $$("_names_bar").getValues().p_name;
                                     let name = this.$$("_local_names_bar").getValues().p_name;
                                     item['t_name'] = "Название товара:   " + name;
                                     item['c_tovar'] = name.toUpperCase();
@@ -213,8 +213,10 @@ export default class LinkerView extends JetView{
                             hotkey: "home+ctrl", 
                             click: () => {
                                 $$("_link").hide();
-                                let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc;
-                                let id_spr = this.table.getSelectedItem().id_spr
+                                ////// was ERROR!!!
+                                // let sh_prc = prcs.getItem(prcs.getCursor()).sh_prc;
+                                let sh_prc = this.$$("_local_names_bar").getValues().sh_prc;
+                                let id_spr = this.table.getSelectedItem().id_spr;
                                 let params = {};
                                 params["th"] = this;
                                 params["command"] = "?setLnk";

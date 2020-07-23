@@ -206,6 +206,8 @@ ON CONFLICT (UIN) DO UPDATE
         try:
             ean = str(barcode).strip()
             ean = ean[:12]
+            if len(ean) < 12:
+                raise ValueError("non-valid barcode")
             if not ean.isdigit():
                 return None
             return '{0}{1}'.format(ean, self._calculate_checksum(ean))
@@ -581,12 +583,12 @@ where  lnk.sh_prc = prc.sh_prc""")
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
          
-    #     # если назначено на админа, но это не пропущенное - переназначаем на сводильщика
-    #     dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
-    # and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
-    # and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)""")
-    #     if callable(db.commit):
-    #         db.commit()
+        # если назначено на админа, но это не пропущенное - переназначаем на сводильщика
+        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
+    and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
+    and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)""")
+        if callable(db.commit):
+            db.commit()
 
         #self.log('assign to stasya')
 
@@ -632,7 +634,9 @@ where v.users_group is not null and v.users_group not in (12, 0)""") #не null,
         if rows:
             for row in rows:
                 self.log(f'PRCSYNC Назначаем на сведение {row[1]}')
-                dbc.execute(f"""update prc set id_org={row[0]} where (id_org=12) and (n_fg = 0) {con_ins} 
+                dbc.execute(f"""update prc set id_org={row[0]} where  (in_work = -1)
+                and (n_fg = 0) and (id_org != {row[0]})
+                {con_ins} 
 and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]})""")
                 if callable(db.commit):
                     db.commit()
@@ -650,6 +654,15 @@ and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_
 #         if callable(db.commit):
 #             db.commit()
 #         self.log('PRCSYNC ---Назначили пользователям на сведение')
+
+        try:
+            pass
+            dbc.execute("""update lnk set id_tovar = '' where id_tovar is null""")
+        except:
+            self.log(traceback.format_exc(), kind="LNKUpdErrr")
+        else:
+            if callable(db.commit):
+                db.commit()    
 
     def getNameByCode(self, id_vnd):
 

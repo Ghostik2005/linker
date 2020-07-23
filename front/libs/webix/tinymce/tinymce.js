@@ -25791,6 +25791,7 @@
           baseURL = src.substring(0, src.lastIndexOf('/'));
         }
       }
+      //console.log('b_url', baseURL);
       self$$1.baseURL = new URI(documentBaseURL).toAbsolute(baseURL);
       self$$1.documentBaseURL = documentBaseURL;
       self$$1.baseURI = new URI(self$$1.baseURL);

@@ -25,6 +25,7 @@ export default class StartView extends JetView{
         let params = {"user": app.config.user};
         let res = request(url, params, !0).response;
         res = checkVal(res, 's');
+        app.config.group = res.group;
         app.config.roles = res.cfg;
         app.config.expert = (+res.expert === 5) ? false : true;
         let info = res.info;

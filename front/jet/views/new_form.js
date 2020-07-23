@@ -5,45 +5,16 @@ import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
 import NewIssueView from "../views/new_issue";
-import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
+import {strana, vendor, dv, sezon, nds, group, hran, id521} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 import {permited_add} from "../models/variables";
+
+import {strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter} from "../views/globals";
 
 export default class NewformView extends JetView{
     config(){
         
         let app = this.app;
-
-        function strana_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.c_strana.toString().toLowerCase().search(value) != -1;
-            };
-        function zavod_filter(item, value) {
-            value = value.toString().toLowerCase()
-            //value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.c_zavod.toString().toLowerCase().search(value) != -1;
-            };
-        function dv_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.act_ingr.toString().toLowerCase().search(value) != -1;
-            };
-        function gr_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.group.toString().toLowerCase().search(value) != -1;
-            };
-        function sez_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.sezon.toString().toLowerCase().search(value) != -1;
-            };
-        function hran_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.usloviya.toString().toLowerCase().search(value) != -1;
-            };
 
         function check(item){
             if (item) {
@@ -263,6 +234,7 @@ export default class NewformView extends JetView{
                                         },
                                         {view:"combo", label: "НДС:", labelPosition:"top", value: "", name: "id_nds", css: "small",
                                             options:  {
+                                                filtre: nds_filter,
                                                 body: {
                                                     template:"#nds#",
                                                     yCount:5,
@@ -275,6 +247,21 @@ export default class NewformView extends JetView{
                                                     }
                                                 },
                                             },
+                                        {view:"combo", label: "Код ном.:", labelPosition:"top", value: "", name: "id_521", css: "small",
+                                            localId: "__id_521",
+                                            options:  {
+                                                filter: id521_filter,
+                                                body: {
+                                                    template:"#id_521#",
+                                                    yCount:5,
+                                                }
+                                            },
+                                            on: {
+                                                onAfterRender: function() {
+                                                    this.getList().sync(id521);
+                                                }
+                                            },
+                                        },
                                     ]}
                                 ]}
                             ]},
@@ -307,13 +294,14 @@ export default class NewformView extends JetView{
                                         params["id_sezon"] = right_f.id_sezon;
                                         params["id_usloviya"] = right_f.id_usloviya;
                                         params["id_group"] = right_f.id_group;
-                                        params["id_nds"] = right_f.id_nds;
+                                        params["id_521"] = this.$$("__id_521").getText();
                                         //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
                                         let t1 = $$("prcs_dc").getCursor();
                                         if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
                                         else params["sh_prc"] = undefined;
                                         params["c_tgroup"] = left_f.c_tgroup;
                                         params["user"] = this.app.config.user;
+                                        params["id_521"] = right_f.id_521
                                         let url = this.app.config.r_url + "?setSpr";
                                         let res = request(url, params, !0).response;
                                         res = checkVal(res, 's');

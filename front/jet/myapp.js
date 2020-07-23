@@ -17,6 +17,7 @@ webix.ready( () => {
         start:          "/login",
         user:           "",
         role:           "0",
+        group:          "-1",
         eventS:         undefined,
         r_url:          (!PRODUCTION) ? "http://saas.local/linker_logic" : "../linker_logic",
         router:         EmptyRouter,

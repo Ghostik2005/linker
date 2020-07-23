@@ -151,6 +151,15 @@ export default class SprView extends JetView{
                     headermenu:false,
                     template: refTemplate,
                 },
+                { id: "id_521", width: 160, //sort: "server", 
+                    css: "overflow",
+                    tooltip: "#id_521#",
+                    header: [{text: "Код ном."},
+                    ],
+                    headermenu:!false,
+                    hidden: !true,
+                    // template: refTemplate,
+                },
                 { id: "id_zavod", sort: "server",  css: "overflow",
                     width: 300,
                     header: [{text: "Производитель"},
@@ -329,11 +338,12 @@ export default class SprView extends JetView{
                 },
                 "data->onParse":function(i, data){
                     this.clearAll();
+                    // console.log('uuu', this.$scope.app.config.user);
                     let localStorage =  webix.storage.session.get(this.config.name+"sel");
                     localStorage = Object.keys(localStorage);
                     this.$scope.$$("_del").hide();
                     if (localStorage.length > 1) {
-                        if (app.config.roles[app.config.role].skipped) {
+                        if (app.config.roles[app.config.role].skipped || this.$scope.app.config.user === 'antey1') {
                         this.$scope.$$("_prop").show();
                         }
                     } else {
@@ -370,12 +380,18 @@ export default class SprView extends JetView{
                     delete this.getItem(id)["$subOpen"]
                 },
                 onItemDblClick: function(item) {
+                    let s_item = this.getSelectedId();
+                    let gr = this.getItem(s_item)
+                    // console.log('gr', gr);
                     if (this.$scope.$$("_rlscheck").getValue() === 1) {
                         let item = this.getSelectedItem();
                         this.$scope.popRls.show_w("Связка с РЛС. Выберите несвязанную позицию из справочника РЛС", item, this.$scope);
                     } else {
-                        if (app.config.roles[app.config.role].skipped) {
-                            this.openSub(this.getSelectedId());
+                        if (app.config.roles[app.config.role].skipped || 
+                            gr.c_group === 'Изделия медицинского назначения' || 
+                            gr.c_group==='Товары для животных/Ветеринария') 
+                        {
+                            this.openSub(s_item);
                         } else {
                             webix.message({type:"error", text: "Вам запрещено редактировать", expire: 3000})
                         };

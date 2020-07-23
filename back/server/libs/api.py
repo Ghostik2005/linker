@@ -180,8 +180,8 @@ vnd_c_zavod, vnd_c_strana, user_id, nakl) values {str(inserts)} returning id; ""
             opt = (user,)
             #сбрасываем все настройки в работе - заплатка, пока нет функции харт-бита в приложении
             self._setUnwork(user)
-            sql = f"""select r.EXPERT, r.PARAMS FROM USERS r where r."USER" = %s"""
-            expert, pars = self.db.request({"sql": sql, "options": opt})[0]
+            sql = f"""select r.EXPERT, r.PARAMS, r."GROUP" FROM USERS r where r."USER" = %s"""
+            expert, pars, gr = self.db.request({"sql": sql, "options": opt})[0]
             try:
                 pars = pars.tobytes()
                 pars = pars.decode()
@@ -208,7 +208,7 @@ vnd_c_zavod, vnd_c_strana, user_id, nakl) values {str(inserts)} returning id; ""
                     'userdel': row[7] == 1,
                     'lnkdel': row[8] == 1,
                     }
-            ret_v= {'info': prod, 'cfg': r, 'expert': expert, 'params': pars}
+            ret_v= {'info': prod, 'cfg': r, 'expert': expert, 'params': pars, "group": gr}
             ret = {"result": True, "ret_val": ret_v}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -581,6 +581,7 @@ WHERE {' '.join(stri)}"""
             stri = ""
             c_tov = params.get("search", '')
             zavod = None
+            user = params.get('user')
             if '+' in c_tov:
                 s = c_tov.split('+')
                 c_tov = s[0]
@@ -682,7 +683,8 @@ WHERE {' '.join(stri)}"""
         END ruu,
         r.SOURCE,
         r.in_work,
-        uu."USER"
+        uu."USER",
+        ru.id
     from (select r.sh_prc rsh from PRC r WHERE r.n_fg <> 1 {order if 'r.' in order else ''}) as sss1
     join prc r on r.SH_PRC = rsh
     {sql_2}
@@ -697,7 +699,8 @@ WHERE {' '.join(stri)}"""
         END ruu,
         r.SOURCE,
         r.in_work,
-        uu."USER"
+        uu."USER",
+        ru.id
     from prc r
     {sql_2}
     {sql_1}
@@ -716,7 +719,8 @@ WHERE {' '.join(stri)}"""
     {sql_3 if us_s else ''}
     left join users uu on uu.id = r.in_work
     WHERE r.n_fg <> 1 {stri} {us_s or ''}"""
-            #self.log(sql)
+
+            self.log(sql)
             p_list = [{'sql': sql, 'opt': ()},] if total_table else [{'sql': sql, 'opt': ()}, {'sql': sql_c, 'opt': ()}]
             pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
@@ -754,7 +758,8 @@ WHERE {' '.join(stri)}"""
                     "dt"      : str(row[11]),
                     "source"  : sou,
                     "in_work" : str(row[14]),
-                    "in_work_name": w_name
+                    "in_work_name": w_name,
+                    "role": str(row[16])
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": {"datas" :_return, "total": count, "start": start_p, 'params': params}}
@@ -1306,7 +1311,10 @@ join groups g on c.cd_group = g.cd_group and c.cd_group=cl.cd_group) THEN 0
 from classifier cl
 where cl.idx_group = 7
 order by cl.nm_group asc;""", 'opt': ()},
-                    {'sql': "select r.ID, r.C_ISSUE from ISSUE r where r.flag=1 order by r.C_ISSUE", 'opt': ()}
+                    {'sql': "select r.ID, r.C_ISSUE from ISSUE r where r.flag=1 order by r.C_ISSUE", 'opt': ()},
+                    {'sql': """select cl.code, cl.nom_name, cl.spr_name
+from nom_codes cl
+order by cl.code asc, cl.nom_name asc;""", 'opt': ()},
                     ]
             pool = ThreadPool(len(p_list))
             results = pool.map(self._make_sql, p_list)
@@ -1394,6 +1402,14 @@ order by cl.nm_group asc;""", 'opt': ()},
                     }
                     _return.append(r)
             re['issue'] = _return
+            _return = []
+            for row in results[9]:
+                r = {
+                    "id": ' - '.join([row[0], row[1]]),
+                    "id_521"      : ' - '.join([row[0], row[1]])
+                }
+                _return.append(r)
+            re['id_521'] = _return
             ret = {"result": True, "ret_val": re}
         else:
             ret = {"result": False, "ret_val": "access denied"}
@@ -2353,7 +2369,6 @@ and g.CD_CODE {insert}"""
             method = params.get('method')
             id_sprs = params.get('items', [])
             prop_id = params.get('prop_id')
-            # self._print(id_sprs)
             if prop_id:
                 prop_id = prop_id.get('id')
             if id_sprs and prop_id and method:
@@ -2381,6 +2396,34 @@ and g.CD_CODE {insert}"""
                     ret = {"result": False, "ret_val": "set_error"}    
             else:
                 ret = {"result": False, "ret_val": "no id_sprs or id_groups"}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
+    def setNCode(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            id_sprs = params.get('items')
+            prop = params.get('prop_id')
+            if prop:
+                id_521 = prop.get('id_521')
+            else:
+                id_521 = None
+            ret = {"result": True, "ret_val": 'jr'}
+            if id_sprs and id_521: 
+                sql_1 = f"""select cd_code from groups where groups.cd_group = 'ZakMedCtg.1115' and cd_code in ({','.join([str(i) for i in id_sprs])})"""
+                opt = ()
+                res_1 = self.db.execute({"sql": sql_1, "options": opt})
+                # self._print(res_1)
+                # res = 1
+                sql = f"""update spr set id_521 = {id_521}::text where id_spr in ({','.join([str(i[0]) for i in list(res_1)])}) returning id_spr"""
+                # self._print(sql)
+                res = self.db.execute({"sql": sql, "options": opt})
+                if res:
+                    ret = {"result": True, "ret_val": "_ret"}
+                else:
+                    ret = {"result": False, "ret_val": "upd error"}
+            else:
+                ret = {"result": False, "ret_val": "no id or value"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -2451,6 +2494,28 @@ values (%s, %s, %s) returning cd_group"""
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
+
+    def getNCodeAll(self, params=None, x_hash=None):
+        if self._check(x_hash):
+            sql = """select cl.code, cl.nom_name, cl.spr_name
+from nom_codes cl
+order by cl.code asc, cl.nom_name asc;
+            """
+            opt = ()
+            _return = []
+            result = self.db.request({"sql": sql, "options": opt})
+            for row in result:
+                r = {
+                    'id': ' - '.join(row[0:-1]),
+                    "id_521"         : row[0],
+                    "nom_name"       : row[1]
+                }
+                _return.append(r)
+            ret = {"result": True, "ret_val": _return}
+        else:
+            ret = {"result": False, "ret_val": "access denied"}
+        return json.dumps(ret, ensure_ascii=False)
+
 
     def getNdsAll(self, params=None, x_hash=None):
         if self._check(x_hash):
@@ -2573,11 +2638,14 @@ values (%s, %s, 2) returning cd_group"""
             #c_tgroup = params.get('c_tgroup')
             user = params.get("user")
             sh_prc = params.get("sh_prc")
+            id_521 = params.get("id_521", '')
+            if id_521:
+                id_521 = id_521.split('-')[0].strip()
             _return = []
             if id_spr > 0:
-                sql = f"""update SPR set C_TOVAR = %s, DT = CAST('NOW' AS TIMESTAMP),
+                sql = f"""update SPR set id_521 = %s, C_TOVAR = %s, DT = CAST('NOW' AS TIMESTAMP),
 ID_DV = %s, ID_ZAVOD = %s, ID_STRANA = %s, ID_OWNER = (select id from users where "USER" = %s) where ID_SPR = %s"""
-                opt = (c_tovar, id_dv, id_zavod, id_strana, user, id_spr)
+                opt = (id_521, c_tovar, id_dv, id_zavod, id_strana, user, id_spr)
                 self.db.execute({"sql": sql, "options": opt})
                 sql = f"""delete FROM GROUPS as g
 WHERE g.CD_GROUP in 
@@ -3688,7 +3756,6 @@ WHERE {stri} ORDER by {field} {direction}
                     ts3 = "r.C_TOVAR not like upper('%" + exclude[i].strip() + "%')"
                     stri.append('and %s' % ts3)
             stri = ' '.join(stri)
-            # self._print(filt)
             pars = {}
             pars['id_spr'] = filt.get('id_spr')
             pars['id_zavod'] = filt.get('id_zavod')
@@ -3996,7 +4063,6 @@ ORDER by {1} {2}
         start_p = 1 if start_p < 1 else start_p
         end_p = int(params.get('count', self.count)) + start_p - 1
         field = params.get('field', 'c_tovar')
-        # self._print(field)
         if field == "c_group":
             field = 'gr'
         elif field == 'id_zavod':
@@ -4069,8 +4135,13 @@ ORDER by {1} {2}
         in_st, in_c,in_c_w, ssss = self._gensSprJoins(pars, in_st, in_c,in_c_w, ssss)
 
         in_st.insert(0, f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_DV, z.C_ZAVOD, s.C_STRANA, d.ACT_INGR, gr, nds, uhran, 
-sezon, mandat, presc, r.DT, r.inprice, {'gr1' if pars['t_group'] else "'_'"}, u."USER"
+sezon, mandat, presc, r.DT, r.inprice, {'gr1' if pars['t_group'] else "'_'"}, u."USER",
+case 
+WHEN nc.nom_name is null or nc.nom_name = '' then ''
+else r.id_521 || ' - ' || nc.nom_name
+end
 FROM SPR r
+left join nom_codes nc on (nc.code = r.id_521)
 left join users u on (r.ID_OWNER=u.id)""")
         sql = '\n'.join(in_st)
         in_c.insert(0, """select count(*) from spr r""")
@@ -4145,7 +4216,8 @@ ORDER by {1} {2}"""
                     "dt_ins"        : "",#str(row[13])
                     "price"         : row[13],
                     "t_group"       : "" if row[14] == '_' else row[14],
-                    "owner"         : row[15] or ''
+                    "owner"         : row[15] or '',
+                    "id_521"        : row[16]
                 }
                 _return.append(r)
             if params.get('count', 0) < 100000000:
@@ -4180,8 +4252,13 @@ group by s.id_spr;"""
             id_spr = int(params.get('id_spr'))
             if id_spr:
                 sql = f"""SELECT r.ID_SPR, r.C_TOVAR, r.ID_STRANA, r.ID_ZAVOD, r.ID_DV, z.C_ZAVOD, s.C_STRANA,
-d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc, issue1, u."USER"
+d.ACT_INGR, gr, i_gr, nds, i_nds, uhran, i_uhran, sezon, i_sezon, mandat, presc, issue1, u."USER",
+case 
+WHEN nc.nom_name is null or nc.nom_name = '' then ''
+else r.id_521 || ' - ' || nc.nom_name
+end
 FROM SPR r
+left join nom_codes nc on (nc.code = r.id_521)
 left join users u on (u.ID=r.ID_OWNER)
 LEFT OUTER join spr_zavod z on (r.ID_ZAVOD = z.ID_SPR)
 LEFT OUTER join spr_strana s on (r.ID_STRANA = s.ID_SPR)
@@ -4249,7 +4326,8 @@ WHERE r.id_spr = %s"""
                         "nds"           : row[10],
                         "c_tgroup"      : "",
                         "id_tgroup"     : "",
-                        "owner"         : row[19] or ''
+                        "owner"         : row[19] or '',
+                        "id_521"        : row[20]
                     }
                     sql = f"""select r.barcode from spr_barcode r where r.id_spr = %s"""
                     t = self.db.request({"sql": sql, "options": opt})
@@ -4697,6 +4775,8 @@ values (%s, %s, %s,
         return json.dumps(ret, ensure_ascii=False)
 
     def skipLnk(self, params=None, x_hash=None):
+        # n_fg = 1 пропустить
+        # n_fg = users."GROUP", id_org = 0 на админа назначить
         if self._check(x_hash):
             sh_prc = params.get('sh_prc')
             user = params.get('user')
@@ -5647,8 +5727,6 @@ where id_vnd in ({', '.join(['%s' for q in range(i)])})"""
 
     def setVndsUsers(self, params=None, x_hash=None):
         if self._check(x_hash):
-            # self._print('setVndsUsers')
-            # self._print(params)
             group = params.get('group')
             rows = params.get('rows')
             if group and rows:
@@ -5658,10 +5736,7 @@ set users_group = (select ug.id_group from users_groups ug where c_group = '{gro
 where id_vnd in ({', '.join(['%s' for q in range(i)])})
 returning users_group"""
                 opt = [int(k['id_vnd']) for k in rows]
-                # self._print(sql)
-                # self._print(opt)
                 result = self.db.execute({"sql": sql, "options": opt})
-                # self._print(result)
                 if result:
                     ret = {"result": True, "ret_val": True}
                 else:
@@ -5705,7 +5780,6 @@ order by id_vnd;
 
     def getUsersGroups(self, params=None, x_hash=None):
         if self._check(x_hash):
-            self._print(params)
             sql = """select c_group
 from users_groups
 order by c_group"""
@@ -5719,3 +5793,78 @@ order by c_group"""
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
+
+
+
+
+"""
+CREATE TABLE public.nom_codes
+(
+    code text NOT NULL,
+    nom_name text COLLATE pg_catalog."default" NOT NULL,
+    spr_name text COLLATE pg_catalog."default",
+    gr_count integer DEFAULT 0,
+    CONSTRAINT nom_codes_pkey PRIMARY KEY (code, nom_name)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public.nom_codes
+    OWNER to postgres;
+
+ALTER TABLE public.spr
+    ADD COLUMN id_521 text;
+
+
+insert into nom_codes (code, nom_name, spr_name)
+values
+('2400001323807', 'маска для защиты дыхательных путей, многоразового использования', 'Маска для защиты дыхательных путей, одноразового(многоразового) использования'),
+('2400003675805', 'маска для защиты дыхательных путей, одноразового использования', 'Маска для защиты дыхательных путей, одноразового(многоразового) использования'),
+('2400001807703', 'респиратор общего применения', 'Респиратор общего применения'),
+('2400001818303', 'респиратор хирургический', 'Респиратор хирургический'),
+('2400002186203', 'респиратор хирургический антибактериальный', 'Респиратор хирургический'),
+('2400001368105', 'средство назальное для защиты от загрязненного воздуха, местного действия', 'Средство назальное для защиты от загрязненного воздуха, местного действия'),
+('2400001225408', 'перчатки смотровые (процедурные) из латекса гевеи, неопудренные, нестерильные', 'Перчатки смотровые (процедурные)'),
+('2400001225606', 'перчатки смотровые (процедурные) из латекса гевеи, опудренные', 'Перчатки смотровые (процедурные)'),
+('2400001226108', 'перчатки смотровые (процедурные) из латекса гевеи, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400001393503', 'перчатки смотровые (процедурные) из полихлоропрена, неопудренные', 'Перчатки смотровые (процедурные)'),
+('2400001858309', 'перчатки смотровые (процедурные) нитриловые, неопудренные, нестерильные', 'Перчатки смотровые (процедурные)'),
+('2400001858507', 'перчатки смотровые (процедурные) нитриловые, опудренные', 'Перчатки смотровые (процедурные)'),
+('2400002052805', 'перчатки смотровые (процедурные) виниловые, неопудренные', 'Перчатки смотровые (процедурные)'),
+('2400002052904', 'перчатки смотровые (процедурные) виниловые, опудренные', 'Перчатки смотровые (процедурные)'),
+('2400002984502', 'перчатки смотровые (процедурные) из гваюлового латекса, неопудренные', 'Перчатки смотровые (процедурные)'),
+('2400003117107', 'перчатки смотровые (процедурные) из этиленвинилацетата, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003117206', 'перчатки смотровые (процедурные) из этиленвинилацетата, неопудренные, нестерильные', 'Перчатки смотровые (процедурные)'),
+('2400003207907', 'перчатки смотровые (процедурные) нитриловые, неопудренные, антибактериальные', 'Перчатки смотровые (процедурные)'),
+('2400003215308', 'перчатки смотровые (процедурные) полиизопреновые, неопудренные', 'Перчатки смотровые (процедурные)'),
+('2400003297700', 'перчатки смотровые (процедурные) нитриловые, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003356704', 'перчатки смотровые (процедурные) виниловые, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003356803', 'перчатки смотровые (процедурные) виниловые, опудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003433108', 'перчатки смотровые (процедурные) из латекса гевеи, опудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003492303', 'перчатки смотровые (процедурные) полиизопреновые, опудренные', 'Перчатки смотровые (процедурные)'),
+('2400003495700', 'перчатки смотровые (процедурные) из полихлоропрена, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003495809', 'перчатки смотровые (процедурные) из полихлоропрена, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003495908', 'перчатки смотровые (процедурные) нитриловые, опудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003496004', 'перчатки смотровые (процедурные) полиизопреновые, неопудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400003496103', 'перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные', 'Перчатки смотровые (процедурные)'),
+('2400001226306', 'перчатки хирургические из латекса гевеи, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400001226405', 'перчатки хирургические из латекса гевеи, опудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400001393107', 'перчатки хирургические из полихлоропрена, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400001393602', 'перчатки смотровые (процедурные) из полихлоропрена, опудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400001565306', 'перчатки хирургические из блоксополимера стирола, неопудренные, антибактериальные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400001857203', 'перчатки хирургические нитриловые, опудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400001857005', 'перчатки хирургические нитриловые, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400002015909', 'перчатки хирургические полиизопреновые, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400002016005', 'перчатки хирургические полиизопреновые, неопудренные, антибактериальные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400002016104', 'перчатки хирургические полиизопреновые, опудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400003161209', 'перчатки хирургические из блоксополимера стирола, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400003227806', 'перчатки хирургические полимерно-композитные, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400003237409', 'перчатки хирургические полимерно-композитные, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400003263408', 'перчатки хирургические из латекса гевеи, неопудренные, антибактериальные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400003356902', 'перчатки хирургические из гваюлового латекса, неопудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400003356902', 'перчатки хирургические из гваюлового латекса, опудренные', 'Перчатки смотровые (процедурные) полиизопреновые, опудренные, стерильные'),
+('2400002886806', 'набор гигиенической одежды для посетителей', 'Набор гигиенической одежды для посетителей'),
+('2400002886707', 'комбинезон гигиенический для посетителей', 'Комбинезон гигиенический для посетителей')
+"""

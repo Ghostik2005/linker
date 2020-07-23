@@ -13,7 +13,11 @@ export default class PropSelectView extends JetView{
 
         var setProp = function(type, prop_id) {
             let user = app.config.user;
-            let url = app.config.r_url + ((type==="tgr") ? "?setTGrMass" : "?setPropMass");
+            let url = app.config.r_url + ((type==="tgr") ? "?setTGrMass" :
+                                          (type==="id_521") ? "?setNCode" :
+                                          "?setPropMass"
+                                         );
+
             let params = {"user": user, "method": type, "items": th.id_sprs, "prop_id": prop_id, "s_pars": th.s_pars};
             let res = request(url, params, !0).response;
             res = checkVal(res, 's');
@@ -27,11 +31,24 @@ export default class PropSelectView extends JetView{
         }
 
         let body = {
-            view: 'toolbar',  borderless: true, //css: 'side_tool_bar',           
+            view: 'toolbar',  borderless: true, //css: 'side_tool_bar',          
             rows:[
+                {view: "button", type: 'htmlbutton', height: 40, width: 150,
+                    resizable: !true,
+                    label:"<span class='', style='line-height: 20px'>Код номенкл.</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped || app.config.user === 'antey1'),
+                    on: {
+                        onItemClick: function() {
+                            this.$scope.hideM();
+                            let id_spr = this.$scope.pTable.getSelectedItem();
+                            this.$scope.popprop.showW("Изменение номенклатурного кода", "id_521", setProp);
+                        }
+                    }
+                },
                 {view: "button", type: 'htmlbutton', height: 40,
                     resizable: !true,
                     label: "<span class='', style='line-height: 20px'>Товарная группа</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     width: 150,
                     on: {
                         onItemClick: function() {
@@ -44,6 +61,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Группа товара</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -55,6 +73,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Д. вещество</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -66,6 +85,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Рецептурный</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -77,6 +97,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Обязательный</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -88,6 +109,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Сезон</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -99,6 +121,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Условия хранения</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -110,6 +133,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Форма выпуска</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -121,6 +145,7 @@ export default class PropSelectView extends JetView{
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>НДС</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -137,6 +162,7 @@ export default class PropSelectView extends JetView{
             relative: true,
             borderless: true,
             autofit: true,
+            height: (app.config.roles[app.config.role].skipped) ? 0 : 50,
             //height: 132,
             padding: 1,
             // css: {"border": "0px !important", "background-color": "#f8fafc !important"},

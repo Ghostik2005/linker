@@ -47,6 +47,10 @@ export var nds = new webix.DataCollection({
         id: "nds_dc",
         });
 
+export var id521 = new webix.DataCollection({
+    id: "id521_dc",
+    });
+
 export var sezon = new webix.DataCollection({
         id: "sezon_dc",
         });
@@ -85,6 +89,49 @@ export var unFilter = function(cv) {
         });
     }
         
+//filters for card
+export function strana_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.c_strana.toString().toLowerCase().search(value) != -1;
+};
+export function zavod_filter(item, value) {
+    value = value.toString().toLowerCase()
+    //value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.c_zavod.toString().toLowerCase().search(value) != -1;
+};
+export function dv_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.act_ingr.toString().toLowerCase().search(value) != -1;
+};
+export function gr_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.group.toString().toLowerCase().search(value) != -1;
+};
+export function sez_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.sezon.toString().toLowerCase().search(value) != -1;
+};
+export function hran_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.usloviya.toString().toLowerCase().search(value) != -1;
+};
+export function nds_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.nds.toString().toLowerCase().search(value) != -1;
+};
+export function id521_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.id_521.toString().toLowerCase().search(value) != -1;
+};
+
+
 export function checkKey(code) {
     return (code === 8 || code === 13 || code === 32 || code === 46 || (code > 47 && code < 91) || (code > 95 && code < 112) || (code > 185 && code < 193) || (code > 219 && code < 223)) ? true : false
     }
@@ -229,6 +276,7 @@ export function refLoad(app, type) {
               (type === 'hran') ? "?getHranAll":
               (type === 'issue') ? "?getIssueAll":
               (type === 'nds') ? "?getNdsAll":
+              (type === 'id_521') ? "?getNCodeAll":
               undefined
     if (url) {
         url = r_url + url;
@@ -247,6 +295,7 @@ export function refLoad(app, type) {
                       (type === 'hran') ? item.usloviya:
                       (type === 'issue') ? item.c_issue:
                       (type === 'nds') ? item.nds:
+                      (type === 'id_521') ? item.id_521 + ' - ' + item.nom_name:
                       undefined
         })
     }
@@ -460,6 +509,7 @@ export function parse_unlinked_item(th, c_item) {
     n_item['_count'] = count;
     n_item['_vendor'] = c_item.c_zavod;
     n_item['p_name'] = c_item.c_tovar;
+    n_item['sh_prc'] = c_item.sh_prc;
     let app_c = $$("main_ui").$scope.app.config;
     if (app_c.roles[app_c.role].spradd || permited_add.users.includes($$("main_ui").$scope.app.config.user)) {
         $$("_add").show();
@@ -474,6 +524,7 @@ export function parse_unlinked_item(th, c_item) {
     $$("_skip").show();
     $$("_right").show();
     $$("_names_bar").parse(n_item);
+    
     let buf = c_item.c_tovar.split(' ');
     let sta = 0;
     if (buf[sta].length < 4) sta += 1;
@@ -926,6 +977,8 @@ export function setRefs(data) {
         $$("dv_dc").parse(data.dv);
         $$("nds_dc").clearAll();
         $$("nds_dc").parse(data.nds);
+        $$("id521_dc").clearAll();
+        $$("id521_dc").parse(data.id_521);
         $$("hran_dc").clearAll();
         $$("hran_dc").parse(data.hran);
         $$("sezon_dc").clearAll();
@@ -1384,7 +1437,7 @@ export function toolTipAssign(view, prop_button) {
         if (localStorage[item]) count++;
     });
     if (count > 0) {
-        if (vi.app.config.roles[vi.app.config.role].skipped) {
+        if (vi.app.config.roles[vi.app.config.role].skipped || vi.app.config.user === 'antey1') {
             prop_button.define({"tooltip": "Назначить свойства эталону. Выделенно " + count + " товаров."});
             prop_button.show();
         }

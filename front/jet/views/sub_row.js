@@ -5,9 +5,10 @@ import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
 import NewIssueView from "../views/new_issue";
-import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
+import {strana, vendor, dv, sezon, nds, group, hran, id521} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
 import {permited_add} from "../models/variables";
+import {strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter} from "../views/globals";
 
 export default class SubRow extends JetView{
     constructor(app, data){
@@ -18,40 +19,10 @@ export default class SubRow extends JetView{
     config(){
         let th = this;
         let app = this.app;
-        function strana_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.c_strana.toString().toLowerCase().search(value) != -1;
-            };
-        function zavod_filter(item, value) {
-            value = value.toString().toLowerCase()
-            return item.c_zavod.toString().toLowerCase().search(value) != -1;
-            };
-        function dv_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.act_ingr.toString().toLowerCase().search(value) != -1;
-            };
-        function gr_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.group.toString().toLowerCase().search(value) != -1;
-            };
-        function sez_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.sezon.toString().toLowerCase().search(value) != -1;
-            };
-        function hran_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.usloviya.toString().toLowerCase().search(value) != -1;
-            };
 
         function addZavod(item) {
             vendor.add(item, 0);
-            }
-            
+            }            
         function addDv(item) {
             dv.add(item, 0);
             }
@@ -257,10 +228,14 @@ export default class SubRow extends JetView{
                                             },
                                         on: {
                                             onAfterRender: function() {
-                                                if ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
-                                                    (permited_add.users.includes(this.$scope.app.config.user) ))
-                                                {
+                                                // console.log('ii', this.$scope.customData.item.id_group);
+                                                // console.log('u', this.$scope.app.config.user);
+                                                if  (this.$scope.app.config.user === 'antey1' && this.$scope.customData.item.id_group === "ZakMedCtg.1115") {
+                                                    this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},])
+                                                } else if  ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
+                                                            (permited_add.users.includes(this.$scope.app.config.user) )){
                                                     this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
+                                                    
                                                 } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
                                                     group.serialize().forEach((it) => {
                                                         if (it.id != 'ZakMedCtg.1114') {
@@ -282,18 +257,37 @@ export default class SubRow extends JetView{
                                         },
                                     {view:"combo", label: "НДС:", labelPosition:"top", value: "", name: "id_nds", css: "small",
                                         options:  {
+                                            filter: nds_filter,
                                             body: {
                                                 template:"#nds#",
                                                 yCount:5,
                                                 //data: nds
-                                                }
-                                            },
+                                            }
+                                        },
                                         on: {
                                             onAfterRender: function() {
                                                 this.getList().sync(nds);
-                                                }
-                                            },
+                                            }
                                         },
+                                    },
+                                    {view:"combo", label: "Код ном.:", labelPosition:"top", value: "", name: "id_521", css: "small",
+                                        localId: "__id_521",
+                                        options:  {
+                                            tooltip: true,
+                                            filter: id521_filter,
+                                            body: {
+                                                template:"#id_521#",
+                                                tooltip: "#id_521#",
+                                                yCount:5,
+                                            }
+                                        },
+                                        on: {
+                                            onAfterRender: function() {
+                                                this.getList().sync(id521);
+                                            }
+                                        },
+                                    },
+
                                 ]}
                             ]}
                         ]},
@@ -335,6 +329,7 @@ export default class SubRow extends JetView{
                                     else params["sh_prc"] = undefined;
                                     params["c_tgroup"] = left_f.c_tgroup;
                                     params["user"] = this.app.config.user;
+                                    params["id_521"] = this.$$("__id_521").getText();
                                     let url = this.app.config.r_url + "?setSpr";
                                     let res = request(url, params, !0).response;
                                     res = checkVal(res, 's');
@@ -387,7 +382,7 @@ export default class SubRow extends JetView{
             // this.$$("_local_id_group").disable();
         // }
         if ((permited_add.users.includes(this.app.config.user) && item.id_group == 'ZakMedCtg.18') 
-            || this.app.config.roles[this.app.config.role].spredit) {
+            || this.app.config.roles[this.app.config.role].spredit || item.id_group === "ZakMedCtg.1115") {
             this.savePermitted = true;
             this.$$("_save").show();
         } //else {this.savePermitted = false;}

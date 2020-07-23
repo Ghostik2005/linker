@@ -1,41 +1,13 @@
 //"use strict";
 
 import {JetView} from "webix-jet";
-import {strana, vendor, dv, sezon, nds, group, hran} from "../views/globals";
+import {strana, vendor, dv, sezon, nds, group, hran, id521} from "../views/globals";
 import {request, checkVal, prcs, delPrc, barcodes} from "../views/globals";
+import {strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter} from "../views/globals";
 
 export default class SideFormView extends JetView{
     config(){
         let app = this.app;
-        function strana_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.c_strana.toString().toLowerCase().search(value) != -1;
-            };
-        function zavod_filter(item, value) {
-            value = value.toString().toLowerCase()
-            return item.c_zavod.toString().toLowerCase().search(value) != -1;
-            };
-        function dv_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.act_ingr.toString().toLowerCase().search(value) != -1;
-            };
-        function gr_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.group.toString().toLowerCase().search(value) != -1;
-            };
-        function sez_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.sezon.toString().toLowerCase().search(value) != -1;
-            };
-        function hran_filter(item, value) {
-            value = value.toString().toLowerCase()
-            value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
-            return item.usloviya.toString().toLowerCase().search(value) != -1;
-            };
 
         function check(item){
             if (item) {
@@ -205,6 +177,7 @@ export default class SideFormView extends JetView{
                                         },
                                     {view:"combo", label: "НДС:", labelPosition:"top", value: "", name: "id_nds", css: "small",
                                         options:  {
+                                            filter: nds_filter,
                                             body: {
                                                 template:"#nds#",
                                                 yCount:5,
@@ -217,6 +190,20 @@ export default class SideFormView extends JetView{
                                                 }
                                             },
                                         },
+                                    {view:"combo", label: "Код ном.:", labelPosition:"top", value: "", name: "id_521", css: "small",
+                                        options:  {
+                                            filter: id521_filter,
+                                            body: {
+                                                template:"#id_521#",
+                                                yCount:5,
+                                            }
+                                        },
+                                        on: {
+                                            onAfterRender: function() {
+                                                this.getList().sync(id521);
+                                            }
+                                        },
+                                    },
                                 ]}
                             ]}
                         ]},

@@ -151,6 +151,11 @@ export default class AllUnlinkedBarView extends JetView{
                             },
                         ]
                     },
+                {id: "n_fg", width: 70, hidden: true,
+                    tooltip: false,
+                    header: [{text: "n_fg"},
+                        ]
+                    },
                 ],
             on: {
                 'onresize': function() {
@@ -205,7 +210,7 @@ export default class AllUnlinkedBarView extends JetView{
                         return false;
                     }
                     if (+linkBy.getValue() === 1) {
-                        if (app.config.roles[app.config.role].lnkdel || item.c_user === this.app.config.user) {
+                        if (app.config.roles[app.config.role].lnkdel || item.id_org === this.app.config.group) {
                             $$("_suppl").config.state = true;
                             parseToLink(item);
                             setTimeout(()=> {
