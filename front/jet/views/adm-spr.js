@@ -144,7 +144,9 @@ export default class SprView extends JetView{
                         ],
                     headermenu:false,
                     },
-                { id: "c_tovar", fillspace: 1, sort: "server", css: "overflow",
+                { id: "c_tovar", fillspace: 1, 
+                    sort: "server", css: "overflow",
+                    minWidth: 600,
                     tooltip: "#c_tovar#",
                     header: [{text: "Наименование"},
                     ],
@@ -381,15 +383,18 @@ export default class SprView extends JetView{
                 },
                 onItemDblClick: function(item) {
                     let s_item = this.getSelectedId();
-                    let gr = this.getItem(s_item)
-                    // console.log('gr', gr);
+                    let gr = this.getItem(s_item);
+
+                    console.log('gr', gr);
                     if (this.$scope.$$("_rlscheck").getValue() === 1) {
                         let item = this.getSelectedItem();
                         this.$scope.popRls.show_w("Связка с РЛС. Выберите несвязанную позицию из справочника РЛС", item, this.$scope);
                     } else {
                         if (app.config.roles[app.config.role].skipped || 
                             gr.c_group === 'Изделия медицинского назначения' || 
-                            gr.c_group==='Товары для животных/Ветеринария') 
+                            gr.c_group==='Товары для животных/Ветеринария' || 
+                            !gr.c_group
+                            ) 
                         {
                             this.openSub(s_item);
                         } else {

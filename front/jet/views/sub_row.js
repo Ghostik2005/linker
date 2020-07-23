@@ -37,7 +37,8 @@ export default class SubRow extends JetView{
                 "c_tovar": webix.rules.isNotEmpty,
                 "id_strana": webix.rules.isNotEmpty,
                 "id_zavod": webix.rules.isNotEmpty,
-                "id_dv": webix.rules.isNotEmpty
+                "id_dv": webix.rules.isNotEmpty,
+                "id_group": webix.rules.isNotEmpty,
                 },
             on: {
                 onViewShow: () => {
@@ -214,6 +215,7 @@ export default class SubRow extends JetView{
                                         },
                                     {view:"combo", label: "Группа:", labelPosition:"top", value: "", name: "id_group", css: "small",
                                         localId: '_local_id_group',
+                                        required:true,
                                         options:  {
                                             filter: gr_filter,
                                             body: {
@@ -227,14 +229,23 @@ export default class SubRow extends JetView{
                                                 }
                                             },
                                         on: {
+                                            onChange: function() {
+                                                let item = this.getValue();
+                                                console.log('i1', item);
+                                                this.$scope.savePermitted = true;
+                                                this.$scope.$$("_save").show();
+                                            },
                                             onAfterRender: function() {
                                                 // console.log('ii', this.$scope.customData.item.id_group);
                                                 // console.log('u', this.$scope.app.config.user);
-                                                if  (this.$scope.app.config.user === 'antey1' && this.$scope.customData.item.id_group === "ZakMedCtg.1115") {
+                                                if (this.$scope.app.config.user === 'antey1' && !this.$scope.customData.item.id_group) {
+                                                    this.getList().parse(group);
+                                                } else if (this.$scope.app.config.user === 'antey1' && this.$scope.customData.item.id_group === "ZakMedCtg.1115") {
                                                     this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},])
                                                 } else if  ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
                                                             (permited_add.users.includes(this.$scope.app.config.user) )){
                                                     this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
+                                                    this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},])
                                                     
                                                 } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
                                                     group.serialize().forEach((it) => {
@@ -382,6 +393,7 @@ export default class SubRow extends JetView{
             // this.$$("_local_id_group").disable();
         // }
         if ((permited_add.users.includes(this.app.config.user) && item.id_group == 'ZakMedCtg.18') 
+            || (this.app.config.user === 'antey1' && !this.customData.item.id_group)
             || this.app.config.roles[this.app.config.role].spredit || item.id_group === "ZakMedCtg.1115") {
             this.savePermitted = true;
             this.$$("_save").show();
