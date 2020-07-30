@@ -335,9 +335,10 @@ export default class SubRow extends JetView{
                                     params["id_group"] = left_f.id_group;
                                     params["id_nds"] = left_f.id_nds;
                                     //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
-                                    let t1 = $$("prcs_dc").getCursor();
-                                    if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
-                                    else params["sh_prc"] = undefined;
+                                    // let t1 = $$("prcs_dc").getCursor();
+                                    // if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
+                                    // else params["sh_prc"] = undefined;
+                                    params["sh_prc"] = undefined;
                                     params["c_tgroup"] = left_f.c_tgroup;
                                     params["user"] = this.app.config.user;
                                     params["id_521"] = this.$$("__id_521").getText();
@@ -379,6 +380,7 @@ export default class SubRow extends JetView{
         this.$$("new_form").config.dt = this.customData.dt;
         this.$$("new_form").config.pag = this.customData.pager;
         let item = this.customData.item;
+        
         let new_head = this.customData.header;
         if (item) {
             if (new_head) {
@@ -398,6 +400,8 @@ export default class SubRow extends JetView{
             this.savePermitted = true;
             this.$$("_save").show();
         } //else {this.savePermitted = false;}
+
+
     }
     
     init() {

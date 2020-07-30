@@ -2662,9 +2662,9 @@ and g.CD_CODE = %s"""
                 ret = id_spr
                 new = False
             else:
-                sql = f"""insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA, ID_OWNER)
-values (%s, CAST('NOW' AS TIMESTAMP), %s, %s, %s, (select id from users where "USER" = %s)) returning ID_SPR"""
-                opt = (c_tovar, id_dv, id_zavod, id_strana, user)
+                sql = f"""insert into SPR (C_TOVAR, DT, ID_DV, ID_ZAVOD, ID_STRANA, ID_OWNER, ID_521)
+values (%s, CAST('NOW' AS TIMESTAMP), %s, %s, %s, (select id from users where "USER" = %s), %s) returning ID_SPR"""
+                opt = (c_tovar, id_dv, id_zavod, id_strana, user, id_521)
                 result = self.db.execute({"sql": sql, "options": opt})[0][0]
                 if result:
                     self._updValue(id_strana, 'spr_strana', 'id_spr')
@@ -4699,7 +4699,11 @@ from (
             if sh_prc and id_spr:
                 sql = f"""delete from PRC r WHERE r.sh_prc = %s returning r.SH_PRC, r.ID_VND, r.ID_TOVAR, r.C_TOVAR, r.C_ZAVOD, r.DT, r.SOURCE"""
                 opt = (sh_prc,)
-                result = self.db.execute({"sql": sql, "options": opt})[0]
+                result = self.db.execute({"sql": sql, "options": opt})
+                print("*"*20)
+                print(result)
+                print("*"*20)
+                result = result[0]
                 sql = f"""insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER, SOURCE)
 values (%s, %s, %s,
 %s, %s, %s, CAST('NOW' AS TIMESTAMP), %s, %s) """

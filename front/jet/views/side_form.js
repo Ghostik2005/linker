@@ -215,46 +215,9 @@ export default class SideFormView extends JetView{
                             },
                         {hidden: true},
                         {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
-                        //hidden: !app.config.roles[app.config.role].spredit, 
-                        hidden: true,
+                            //hidden: !app.config.roles[app.config.role].spredit, 
+                            hidden: true,
                             click: () => {
-                                let valid = this.$$("new_form").validate({hidden:false, disabled:false});
-                                if (valid) {
-                                    let left_f = this.$$("new_form").getValues();
-                                    let right_f = this.$$("new_f_right").getValues();
-                                    let params = {};
-                                    params["id_spr"] = (left_f.id_spr) ? left_f.id_spr : -1;
-                                    params["barcode"] = left_f.barcode;
-                                    params["c_tovar"] = left_f.c_tovar;
-                                    params["id_strana"] = left_f.id_strana;
-                                    params["id_zavod"] = left_f.id_zavod;
-                                    params["id_dv"] = left_f.id_dv;
-                                    params["c_opisanie"] = left_f.c_opisanie;
-                                    params["prescr"] = (right_f._prescr ===  1) ? true : false;
-                                    params["mandat"] = (right_f._mandat ===  1) ? true : false;
-                                    params["id_sezon"] = right_f.id_sezon;
-                                    params["id_usloviya"] = right_f.id_usloviya;
-                                    params["id_group"] = right_f.id_group;
-                                    params["id_nds"] = right_f.id_nds;
-                                    //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
-                                    let t1 = $$("prcs_dc").getCursor();
-                                    if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
-                                    else params["sh_prc"] = undefined;
-                                    params["c_tgroup"] = left_f.c_tgroup;
-                                    params["user"] = this.app.config.user;
-                                    let url = this.app.config.r_url + "?setSpr";
-                                    let res = request(url, params, !0).response;
-                                    res = checkVal(res, 's');
-                                    if (res && res.new && this.$$("new_form").config.spr) {
-                                        delPrc(params, this);
-                                    } else {
-                                        this.$$("new_form").config.search_bar.callEvent('onKeyPress', [13,]);
-                                        barcodes.clearAll();
-                                        this.$$("new_form").clear();
-                                        this.$$("new_form").reconstruct();
-                                        };
-                                    this.$$("new_form").config.spr = false;
-                                    };
                                 }
                             }
                         ]}
