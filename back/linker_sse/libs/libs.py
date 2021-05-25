@@ -20,9 +20,39 @@ class API:
     def __init__(self, log):
         self.log = log
 
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+        # wd = os.path.dirname(os.path.abspath(__file__))
+        # work_dir = wd if os.path.isdir(wd) else os.path.dirname(wd)
+        # pg = os.path.join(work_dir, "spr.postgres")
+        pg = '/ms71/saas/linker_sse/spr.postgres'
+        # print(work_dir)
+        print('='*20, flush=True)
+        print(pg, flush=True)
+        print('='*20, flush=True)
+        if not pg:
+            self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+        else:
+            if os.path.exists(pg):
+                conn = None
+                with open(pg, 'r') as _f:
+                    conn = _f.readlines()
+                if conn:
+                    self.connect_params = {}
+                    for x in conn:
+                        i = x.find('=')
+                        if i > -1:
+                            k, x  = x[:i].strip(), x[i+1:].strip()
+                        else:
+                            k = None
+                        if k:
+                            self.connect_params[unquote(k)] = _int(unquote(x))
+                        else:
+                            pass
+            else:
+                self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+        print(self.connect_params)
+        # self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
         self.production = True
-            
+
         if callable(self.log):
             self.log("Production" if self.production else "Test")
         else:
@@ -95,7 +125,7 @@ class API:
                             last_m = 0
                         params = ['disablespin', f'spr::{last_m or 0}', c]
                     _q.put(params)
-                    
+
                     if spr_roz_process:
                         user_r = ''
                         with open('/ms71/data/linker/spr_roz.pid', 'r') as f_obj:
@@ -159,12 +189,19 @@ limit 1"""
                     pass
             time.sleep(60)
 
+def _int(x):
+    try:
+        fx = float(x)
+        ix = int(fx)
+        return ix if ix == fx else fx
+    except:
+        return x
 
 def getip():
     """
     get ip's function
     """
-    
+
     import socket
     _urls = ('https://sklad71.org/consul/ip/', 'http://ip-address.ru/show','http://yandex.ru/internet',
         'http://ip-api.com/line/?fields=query', 'http://icanhazip.com', 'http://ipinfo.io/ip',
@@ -198,7 +235,7 @@ class sseServer (socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
     allow_reuse_address = True
     _send_traceback_header = False
-    
+
     def handle_error(self, request, client_address):
         pass
         return

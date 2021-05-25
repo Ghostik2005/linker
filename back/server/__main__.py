@@ -45,7 +45,7 @@ __version__ = '20.051.1230' # исправлен поиск по spr
 #__version__ = '18.320.1500' #сокращено время загрузки в забракованных, добавленна галочка 'без писем'
 #__version__ = '18.319.1535' #сокращено время загрузки приложения на 4 секунды, улучшения в админке
 #__version__ = '18.318.1735' #сделана сортировка по количеству вхождений в spr
-#__version__ = '18.317.1250' #подсчитыается количество групп при заведении новых позиций в справочнике, отрефаторен код  
+#__version__ = '18.317.1250' #подсчитыается количество групп при заведении новых позиций в справочнике, отрефаторен код
 #__version__ = '18.311.1417' #убрана ошибка в отборе по рецептурным и обязательным в админке
 #__version__ = '18.306.1200' #опция для того чтоб не сводить, убран алерт при 403 ошибке
 #__version__ = '18.302.1650' #добавлен метод getBrakMailApi
@@ -53,7 +53,7 @@ __version__ = '20.051.1230' # исправлен поиск по spr
 #__version__ = '18.299.1355' #улучшены кнопки выгрузки spr, подправлен фильтр по поставщику в связках
 #__version__ = '18.295.1700' #работаем с SSE, полностью реализованны выгрузки spr
 #__version__ = '18.291.1600' #исправлен отбор во всех несвязанных, добавлена возможность изменять поведение сведения по кодам
-#__version__ = '18.290.1500' #убраны (надеюсь все) проблемы с сортировками, работаем с базой pg, 
+#__version__ = '18.290.1500' #убраны (надеюсь все) проблемы с сортировками, работаем с базой pg,
 #__version__ = '18.288.1000' #добавлен выбор порта для pg
 #__version__ = '18.285.1800' #учтены некоторые пожелания
 #__version__ = '18.284.1600' #устранены ошибки в некоторых запросах, доработано удаление писем о браке
@@ -150,10 +150,13 @@ def main():
         "nginx": {
             "location": "/ms71/conf/location",
             "upstream": "/ms71/conf/upstream",
-            },
-        }
+        },
+    }
+    wd = os.path.dirname(os.path.abspath(__file__))
+    work_dir = wd if os.path.isdir(wd) else os.path.dirname(wd)
+    pg = os.path.join(work_dir, "spr.postgres")
     sys.APPCONF["udpsock"] = libs.UDPSocket()
-    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, pg, production, sys.APPCONF["udp"] = libs.handle_commandline(__profile__, __index__)
+    sys.APPCONF["params"], sys.APPCONF["kwargs"] , __profile__, __index__, production, sys.APPCONF["udp"] = libs.handle_commandline(__profile__, __index__)
     sys.APPCONF["addr"] = sys.APPCONF["kwargs"].pop("addr", sys.APPCONF["addr"])
     sys.APPCONF["log"] = libs.logs(hostname=None, version=__version__, appname=__appname__, profile=__profile__)
     sys.APPCONF["api"] = app_api.API(app_conf = sys.APPCONF, w_path = w_path, p_path=p_path, pg=pg, production=production)
@@ -218,7 +221,7 @@ def application(env):
         try:
             _param = json.loads(_param)
         except Exception:
-            data = _param 
+            data = _param
             _param = _p_http
             if fname:
                 _param.update({"data": data})
@@ -231,8 +234,8 @@ def application(env):
         sys.APPCONF["log"](t, kind='info:params:')
         udp_msg = [__appname__, 'info', arg, t, time.strftime("%Y-%m-%d %H:%M:%S")]
         #send to UDP socket our message:
-        #appname, kind of message('info', 'error', etc), called method, method's params, timestamp 
-        print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
+        # appname, kind of message('info', 'error', etc), called method, method's params, timestamp
+        print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"])
         content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
     fileReturn = False
     if arg in ['saveData', 'barcodeReport']:
@@ -244,8 +247,8 @@ def application(env):
             content_length = len(ret_value)
             header = libs.f_head(content_length, f_type)
             fileReturn = True
-        #else:
-            #ret_value = json.dumps(ret, ensure_ascii=False)
+        else:
+            ret_value = json.dumps(ret, ensure_ascii=False)
     if not fileReturn:
         ret_value = content.encode()
         content_length = len(ret_value)

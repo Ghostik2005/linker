@@ -1,12 +1,15 @@
 #coding: utf-8
 
-
+import os
 import sys
 import json
 import time
 import traceback
 # import psycopg2
 import libs.connect_pool as connect_pool
+from urllib.parse import unquote
+
+from libs.libs import _int
 
 class Connect_proto(object):
 
@@ -20,7 +23,7 @@ class Connect_proto(object):
 
     def ch_log(self, user='', m_type='change', msg=''):
         msg = json.dumps(msg, ensure_ascii=False)
-        udp_msg = [sys.APPCONF["log"].appname+'' if self.production else '_test', 
+        udp_msg = [sys.APPCONF["log"].appname+'' if self.production else '_test',
                    m_type, user, msg, time.strftime("%Y-%m-%d %H:%M:%S")
                   ]
         if not self.production:
@@ -33,10 +36,33 @@ class pg_local(Connect_proto):
     def __init__(self, log, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log = log
-        self.port = kwargs.get('port', 5432)
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': int(self.port)}
+        pg_conn = kwargs.get('pg_conn')
+        print("*"*10, pg_conn)
+        if not pg_conn:
+            self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+        else:
+            if os.path.exists(pg_conn):
+                conn = None
+                with open(pg_conn, 'r') as _f:
+                    conn = _f.readlines()
+                if conn:
+                    self.connect_params = {}
+                    for x in conn:
+                        i = x.find('=')
+                        if i > -1:
+                            k, x  = x[:i].strip(), x[i+1:].strip()
+                        else:
+                            k = None
+                        if k:
+                            self.connect_params[unquote(k)] = _int(unquote(x))
+                        else:
+                            pass
+            else:
+                self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+
         self._log("Production" if self.production else "Test")
-        
+        self._log(self.connect_params, kind='Connection')
+
         self.connection = connect_pool.ConectPool(connection_params=self.connect_params)
 
 

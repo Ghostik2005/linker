@@ -8,14 +8,36 @@ import uuid
 import psycopg2
 import traceback
 import subprocess
+from urllib.parse import unquote
 
 class PG:
     """
     класс для работы с postgres через with
     """
 
-    def __init__(self, port=5432):
-        self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': port}
+    def __init__(self):
+        wd = os.path.dirname(os.path.abspath(__file__))
+        work_dir = wd if os.path.isdir(wd) else os.path.dirname(wd)
+        pg = os.path.join(work_dir, "spr.postgres")
+        if os.path.exists(pg):
+            conn = None
+            with open(pg, 'r') as _f:
+                conn = _f.readlines()
+            if conn:
+                self.connect_params = {}
+                for x in conn:
+                    i = x.find('=')
+                    if i > -1:
+                        k, x  = x[:i].strip(), x[i+1:].strip()
+                    else:
+                        k = None
+                    if k:
+                        self.connect_params[unquote(k)] = _int(unquote(x))
+                    else:
+                        pass
+        else:
+            self.connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+
 
     def __enter__(self):
         self.connect = psycopg2.connect(**self.connect_params)
@@ -31,6 +53,14 @@ class PG:
             self.connect.close()
         except:
             pass
+
+def _int(x):
+    try:
+        fx = float(x)
+        ix = int(fx)
+        return ix if ix == fx else fx
+    except:
+        return x
 
 
 class API:
@@ -153,7 +183,7 @@ if req.status_code == '200':
             sql, opt = self._prepareForData(params)
             if sql:
                 ret = []
-                with PG(self.port) as pg:
+                with PG() as pg:
                     pg.execute(sql, opt)
                     self._print(msg=pg.query.decode())
                     ret = pg.fetchall()
@@ -200,7 +230,7 @@ if req.status_code == '200':
         else:
             ret = {"result": False, "value": "access denied"}
         return ret
-        
+
 
     def _createLink(self, f_name):
         folder_name = os.path.join("files", uuid.uuid4().hex)
@@ -241,12 +271,14 @@ if req.status_code == '200':
                 f_name = f"{self.prefix}/ms71/data/spr/{spr_type}.db3"
             else:
                 f_name = ""
+            print('ffff', f_name)
             if f_name:
                 #создаем папку с сгенерированным md5 именем, в папку кидаем симфолическую ссылку на запрашиваемый файл
                 #срок жизни папки  - до конца дня. в конце дня производим удаление папок по крону
                 url = self._createLink(f_name)
             if url:
                 #добавляем контрольную сумму файла - сделаем позже, если нужно
+                print(url)
                 ret = {"result": True, "value":  os.path.basename(f_name), 'url': url, "md5": "checksum will be here later"}
             else:
                 ret = {"result": False, "value": "no data"}

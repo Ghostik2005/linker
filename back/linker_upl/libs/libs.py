@@ -29,8 +29,8 @@ class API:
     API class for http post access
     x_hash - API key
     """
-    
-    def __init__(self, Lock, log, w_path = '/ms71/data/linker_upl', p_path='/ms71/data/linker_upl/restricted', 
+
+    def __init__(self, Lock, log, w_path = '/ms71/data/linker_upl', p_path='/ms71/data/linker_upl/restricted',
                  skip_path='/ms71/data/linker_upl/skipped'):
         self.methods = []
         self.path = w_path
@@ -52,7 +52,38 @@ class API:
         config = configparser.ConfigParser()
         config.read('/ms71/saas/linker/conf.ini', encoding='UTF-8')
         self.nauth = config['nauth']
-        self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+
+        # wd = os.path.dirname(os.path.abspath(__file__))
+        # work_dir = wd if os.path.isdir(wd) else os.path.dirname(wd)
+        # pg = os.path.join(work_dir, "spr.postgres")
+        pg = '/ms71/saas/linker_upl/spr.postgres'
+        # print(work_dir)
+        print('='*20, flush=True)
+        print(pg, flush=True)
+        print('='*20, flush=True)
+        if not pg:
+            self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+        else:
+            if os.path.exists(pg):
+                conn = None
+                with open(pg, 'r') as _f:
+                    conn = _f.readlines()
+                if conn:
+                    self.pg_connect_params = {}
+                    for x in conn:
+                        i = x.find('=')
+                        if i > -1:
+                            k, x  = x[:i].strip(), x[i+1:].strip()
+                        else:
+                            k = None
+                        if k:
+                            self.pg_connect_params[unquote(k)] = _int(unquote(x))
+                        else:
+                            pass
+            else:
+                self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
+        print(self.pg_connect_params)
+        # self.pg_connect_params = {'dbname': 'spr', 'user': 'postgres', 'host': '127.0.0.1', 'port': 5432}
         #########################3
         self._pg = True
         self.production = True
@@ -60,6 +91,7 @@ class API:
         if self._pg:
             self.production = True
             print('-------POSTGRESQL--------')
+        self.log(str(self.pg_connect_params), kind="Connection")
         if callable(self.log):
             self.log("Production" if self.production else "Test")
         else:
@@ -227,6 +259,7 @@ ON CONFLICT (UIN) DO UPDATE
             rows = f.read()
         rows = rows.decode('utf8').splitlines()
         self.log(f"UPLOAD2DB - Всего в файле: {len(rows)}")
+
         count_all+=len(rows)
         ret = []
         if rows:
@@ -263,20 +296,29 @@ ON CONFLICT (UIN) DO UPDATE
                         zavod = zavod[z_ind+11:].strip()
                 except:
                     pass
-                if fgCont: 
+                if fgCont:
+                    if id_vnd == 40277:
+                        self.log('fgCont')
+                        self.log(tovar)
+                        self.log(zavod)
                     continue
-                if _re.search(tovar):
+                if not id_vnd == 40277 and  _re.search(tovar):
+                    self.log('rsearch')
+                    self.log(id_vnd)
+                    self.log(tovar)
+                    self.log(zavod)
                     continue
                 try:
                     cena = int(float(cena)*100)
                 except:
-                    cena = 0    
-                                    
-                # Формируем хеш                 
+                    cena = 0
+                # Формируем хеш
                 if id_vnd in [28177,28132,28176,28178]: #пульс
                     _id_vnd = 28162
                 elif id_vnd in [20577,20576]: #катрен
                     _id_vnd = 20557
+                elif id_vnd in [48347,48352]: #Алиди
+                    _id_vnd = 48347
                 elif id_vnd in [48736]: #Акцент-мед
                     _id_vnd = 48761
                 elif id_vnd in [20662]:
@@ -322,10 +364,18 @@ ON CONFLICT (SH_PRC, SERIES) DO UPDATE
                 try:
                     sh_prc = self._genHash(_id_vnd, tovar, zavod)
                 except Exception:
+                    self.log('hash_gen_error')
+                    self.log(sh_prc)
+                    self.log(tovar)
+                    self.log(zavod)
                     continue
+                if _id_vnd == 40277:
+                    self.log(sh_prc)
+                    self.log(tovar)
+                    self.log(zavod)
                 #barcode = barcode if barcode else None
                 #source = source#1 - прайслистэксперт, 2 - склад
-                instr = (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, source, barcode, uin) 
+                instr = (id_vnd, kod, cena, sh_prc, tovar.replace("'","''"), zavod.replace("'","''"), idorg, source, barcode, uin)
                 if len(tovar) > 255:
                     # with open("/ms71/data/linker_upl/skipped/error.txt", 'a') as ff:
                     #     ff.write('\t'.join(list(instr)) + '\n')
@@ -362,10 +412,10 @@ SET (barcode, id_spr) = (%s, %s);"""
                             sql = """UPDATE or INSERT INTO spr_barcode (barcode, id_spr) values (?, ?) MATCHING (barcode, id_spr)"""
                         dbc.execute(sql, oopt)
                 self.log('UPLOAD2DB - updated barcodes')
-    #             dbc.execute("""DELETE FROM A_TEMP_PRC WHERE sh_prc in 
+    #             dbc.execute("""DELETE FROM A_TEMP_PRC WHERE sh_prc in
     # (SELECT r.SH_PRC FROM A_TEMP_PRC r
     #     JOIN LNK l on l.SH_PRC = r.SH_PRC)""")
-                dbc.execute("""delete from A_TEMP_PRC 
+                dbc.execute("""delete from A_TEMP_PRC
 using lnk
 where  lnk.sh_prc = A_TEMP_PRC.sh_prc""")
                 self.log('UPLOAD2DB - sames with lnk deleted')
@@ -375,14 +425,14 @@ where  lnk.sh_prc = A_TEMP_PRC.sh_prc""")
     on conflict do nothing""")
     #             dbc.execute("""DELETE FROM A_TEMP_PRC a WHERE a.SH_PRC in (
     # select r.SH_PRC FROM A_TEMP_PRC r JOIN SPR_BARCODE s on s.BARCODE = r.BARCODE) """)
-                dbc.execute("""DELETE FROM A_TEMP_PRC 
+                dbc.execute("""DELETE FROM A_TEMP_PRC
 USING SPR_BARCODE
 WHERE SPR_BARCODE.BARCODE = A_TEMP_PRC.BARCODE""")
                 self.log('UPLOAD2DB - linked by barcode')
-    #             dbc.execute("""DELETE FROM A_TEMP_PRC WHERE sh_prc in 
+    #             dbc.execute("""DELETE FROM A_TEMP_PRC WHERE sh_prc in
     # (SELECT r.SH_PRC FROM A_TEMP_PRC r
     #     JOIN LNK l on l.SH_PRC = r.SH_PRC)""")
-                dbc.execute("""delete from A_TEMP_PRC 
+                dbc.execute("""delete from A_TEMP_PRC
 using lnk
 where  lnk.sh_prc = A_TEMP_PRC.sh_prc""")
                 self.log('UPLOAD2DB - sames with lnk deleted after barcodes')
@@ -398,13 +448,13 @@ WHERE r.SH_PRC = PRC.SH_PRC""")
     # SELECT r.SH_PRC FROM PRC r WHERE EXISTS (
     #     SELECT p.SH_PRC FROM A_TEMP_PRC p
     #     WHERE p.SH_PRC = r.SH_PRC))""")
-                dbc.execute("""DELETE FROM A_TEMP_PRC 
+                dbc.execute("""DELETE FROM A_TEMP_PRC
 USING PRC
 WHERE A_TEMP_PRC.SH_PRC = PRC.SH_PRC""")
                 self.log('UPLOAD2DB - doubles with prc deleted')
 
 
-                for row in self._getGen(dbc, """    SELECT r.sh_prc FROM A_TEMP_PRC r 
+                for row in self._getGen(dbc, """    SELECT r.sh_prc FROM A_TEMP_PRC r
     JOIN (select rr.BARCODE bc, count(rr.BARCODE) cbc FROM A_TEMP_PRC rr
         JOIN SPR_BARCODE s on s.BARCODE = rr.BARCODE
         where rr.BARCODE is NOT NULL GROUP by rr.BARCODE HAVING COUNT(rr.BARCODE) > 1) as ttt1 on bc = r.BARCODE"""):
@@ -474,7 +524,7 @@ WHERE A_TEMP_PRC.SH_PRC = PRC.SH_PRC""")
 
         self.log('PRCSYNC удаляем сущетсвующие линки')
         # dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
-        dbc.execute("""delete from prc 
+        dbc.execute("""delete from prc
 using lnk
 where  lnk.sh_prc = prc.sh_prc""")
         if callable(db.commit):
@@ -505,13 +555,13 @@ where  lnk.sh_prc = prc.sh_prc""")
         self.log('PRCSYNC Сводим по кодам')
         #sql_old = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     #select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
-    #from prc p 
+    #from prc p
     #join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar is not null and p.id_tovar<>' '
         #and (select count(distinct ll.id_spr) as ccc
             #from prc pp
             #join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
             #where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
-            #) = 1 
+            #) = 1
     #where p.id_vnd in (20123,20129,20153,20171,20176,20229,20269,20276,20277,
                        #20377,20378,20477,20557,20576,20577,20677,20871,20977,
                        #21271,22077,22078,22240,23478,24477,28132,28162,28176,
@@ -520,30 +570,30 @@ where  lnk.sh_prc = prc.sh_prc""")
         #"""
     #     sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     # select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
-    # from prc p 
-    # join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' ' 
+    # from prc p
+    # join lnk l on l.id_vnd = p.id_vnd and l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' '
     #     and p.n_fg != 12 and p.n_fg != 1
     #     and (select count(distinct ll.id_spr)
     #             from prc pp
     #             join lnk ll on ll.id_vnd = pp.id_vnd and ll.id_tovar = pp.id_tovar
     #             where pp.id_vnd = p.id_vnd and pp.id_tovar = p.id_tovar
-    #             ) = 1 
+    #             ) = 1
     # and p.id_vnd in (select q.id_vnd from vnd q where permit = 1);"""
         sql = """insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
 select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
-from prc p 
+from prc p
 join lnk l using (id_vnd, id_tovar)
-where p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' ' 
+where p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' '
     and p.n_fg != 12 and p.n_fg != 1
     and (select count(distinct ll.id_spr)
-            from lnk ll 
+            from lnk ll
             where ll.id_vnd = p.id_vnd and ll.id_tovar = p.id_tovar
             ) = 1
     and p.id_vnd in (select q.id_vnd from vnd q where permit = 1)"""
         dbc.execute(sql)
 
         # dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
-        dbc.execute("""delete from prc 
+        dbc.execute("""delete from prc
 using lnk
 where  lnk.sh_prc = prc.sh_prc""")
         if callable(db.commit):
@@ -552,15 +602,15 @@ where  lnk.sh_prc = prc.sh_prc""")
         self.log('PRCSYNC Сводим по кодам для Протека')
         sql= """ insert into lnk (SH_PRC, ID_SPR, ID_VND, ID_TOVAR, C_TOVAR, C_ZAVOD, DT, OWNER)
     select DISTINCT p.sh_prc, l.id_spr, p.id_vnd, p.id_tovar, p.c_tovar, p.c_zavod, current_timestamp, 'robot'
-    from prc p 
-    join lnk l on (l.id_vnd > 20200 and l.id_vnd < 20299 and l.id_vnd != 20271) and (p.id_vnd > 20200 and p.id_vnd < 20299 and p.id_vnd != 20271) and 
-    l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' ' 
+    from prc p
+    join lnk l on (l.id_vnd > 20200 and l.id_vnd < 20299 and l.id_vnd != 20271) and (p.id_vnd > 20200 and p.id_vnd < 20299 and p.id_vnd != 20271) and
+    l.id_tovar = p.id_tovar and p.id_tovar<>'' and p.id_tovar <> '0' and p.id_tovar is not null and p.id_tovar<>' '
         and p.n_fg != 12 and p.n_fg != 1
         and (select count(distinct ll.id_spr)
                 from prc pp
-                join lnk ll on (pp.id_vnd > 20200 and pp.id_vnd < 20299  and pp.id_vnd != 20271) and (ll.id_vnd > 20200 and ll.id_vnd < 20299  and ll.id_vnd != 20271) 
+                join lnk ll on (pp.id_vnd > 20200 and pp.id_vnd < 20299  and pp.id_vnd != 20271) and (ll.id_vnd > 20200 and ll.id_vnd < 20299  and ll.id_vnd != 20271)
                                 and ll.id_tovar = pp.id_tovar
-                where (pp.id_vnd > 20200 and pp.id_vnd < 20299  and pp.id_vnd != 20271) and (p.id_vnd > 20200 and p.id_vnd < 20299  and p.id_vnd != 20271) 
+                where (pp.id_vnd > 20200 and pp.id_vnd < 20299  and pp.id_vnd != 20271) and (p.id_vnd > 20200 and p.id_vnd < 20299  and p.id_vnd != 20271)
                        and pp.id_tovar = p.id_tovar
                 ) = 1
     and p.id_vnd in (select q.id_vnd from vnd q where permit = 1 and (q.id_vnd > 20200 and q.id_vnd < 20299 and q.id_vnd != 20271));"""
@@ -572,19 +622,19 @@ where  lnk.sh_prc = prc.sh_prc""")
             self.log(sql, kind="ProtekInsertErrorSQL:")
         else:
             if callable(db.commit):
-                db.commit()    
-        
+                db.commit()
+
         # dbc.execute(u"""delete from prc pp where pp.sh_prc in (select p.sh_prc from prc p join lnk ll on ll.sh_prc = p.sh_prc)""")
-        dbc.execute("""delete from prc 
+        dbc.execute("""delete from prc
 using lnk
 where  lnk.sh_prc = prc.sh_prc""")
         if callable(db.commit):
             db.commit()
         self.log('PRCSYNC ---Свели по кодам')
         self.log('PRCSYNC Назначаем пользователям на сведение')
-         
+
         # если назначено на админа, но это не пропущенное - переназначаем на сводильщика
-        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins} 
+        dbc.execute(f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins}
     and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
     and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)""")
         if callable(db.commit):
@@ -636,18 +686,18 @@ where v.users_group is not null and v.users_group not in (12, 0)""") #не null,
                 self.log(f'PRCSYNC Назначаем на сведение {row[1]}')
                 dbc.execute(f"""update prc set id_org={row[0]} where  (in_work = -1)
                 and (n_fg = 0) and (id_org != {row[0]})
-                {con_ins} 
+                {con_ins}
 and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]})""")
                 if callable(db.commit):
                     db.commit()
                 self.log(f'PRCSYNC ---Назначили на сведение {row[1]}')
 
-#         #назначаем на АНЦ        
-#         dbc.execute(f"""update prc set id_org=40369 where (id_org=12) and (n_fg = 0) {con_ins} 
+#         #назначаем на АНЦ
+#         dbc.execute(f"""update prc set id_org=40369 where (id_org=12) and (n_fg = 0) {con_ins}
 # and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group=40369)""")
 #         # """and id_vnd in (19965, 19996);""")
 #         #назначаем на антей
-#         dbc.execute(f"""update prc set id_org=40035 where (id_org=12) and (n_fg = 0) {con_ins} 
+#         dbc.execute(f"""update prc set id_org=40035 where (id_org=12) and (n_fg = 0) {con_ins}
 # and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group=40035)""")
 #         # """and id_vnd in (19994, 19985, 19976, 19987, 45835, 51066);""")
 #         # and id_vnd in (19994, 19985, 19976, 19987);""")
@@ -662,7 +712,7 @@ and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_
             self.log(traceback.format_exc(), kind="LNKUpdErrr")
         else:
             if callable(db.commit):
-                db.commit()    
+                db.commit()
 
     def getNameByCode(self, id_vnd):
 
@@ -675,23 +725,24 @@ and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_
             self.log(Err, kind="SQLError")
         else:
             try:
-                sql = f"""select count(*) from vnd where id_vnd = {'?' if not self._pg else '%s'}"""
+                sql = f"""select count(*) from vnd where id_vnd = {'%s'}"""
                 opt = (id_vnd,)
                 cur.execute(sql, opt)
                 res = int(cur.fetchone()[0])
                 if res == 0:
                     #если записи нет, то вычитываем название и апдейтим базу
                     code = [id_vnd,]
-                    res1 = requests.post(self.nauth['url'], auth=(self.nauth['login'], self.nauth['pwd']),  json={"method": "namepost", "params": [code,]})
-                    res1 = res1.json().get('result')[0]
+                    res1 = requests.post(self.nauth['url'], auth=(self.nauth['login'], self.nauth['pwd']),  json= [code,])
+                    res1 = res1.json()
                     vnd_name = res1.get(str(id_vnd))
-                    sql = f"""insert into VND (ID_VND, C_VND) values ({'?' if not self._pg else '%s'}, {'?' if not self._pg else '%s'})"""
-                    opt = (id_vnd, vnd_name)
-                    cur.execute(sql, opt)
-                    sql = f"""insert into USER_VND (ID_USER, ID_VND) values (12, {'?' if not self._pg else '%s'})"""
-                    opt = (id_vnd,)
-                    cur.execute(sql, opt)
-                    con.commit()
+                    if vnd_name:
+                        sql = f"""insert into VND (ID_VND, C_VND) values ({'%s'}, {'%s'})"""
+                        opt = (id_vnd, vnd_name)
+                        cur.execute(sql, opt)
+                        sql = f"""insert into USER_VND (ID_USER, ID_VND) values (12, {'%s'})"""
+                        opt = (id_vnd,)
+                        cur.execute(sql, opt)
+                        con.commit()
             except Exception as Err:
                 self.log(Err, kind="GetNameError")
                 self.log(traceback.format_exc(), kind="GetNameError")
@@ -938,7 +989,7 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
             add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin';
          }
-         
+
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
@@ -1162,7 +1213,7 @@ def handle_commandline(profile, index):
 #             result = dbc.fetchall()
 #             for row in result:
 #                 uin = row[0]
-#                 sql = f"""SELECT CASE 
+#                 sql = f"""SELECT CASE
 #         WHEN not EXISTS(select uin from PRC where uin = '{uin}' and n_fg != 1) THEN 0
 #         ELSE 1
 #         END
@@ -1241,7 +1292,7 @@ def guardian(api):
                         log('GUARDIAN| - начинаем сведение')
                         count_insert = 0
                         count_all = 0
-                        try: 
+                        try:
                             count_insert, count_all = api.upload_to_db(db, dbc, id_vnd, path, count_insert, count_all, int(source))
                         except:
                             log(f"GUARDIAN| CRITICAL | {h_name}")
@@ -1275,7 +1326,7 @@ def guardian(api):
         except Exception:
             api.log("GUARDIAN| %s" % traceback.format_exc(), kind="error:monitor")
         #спим 30 секунд перед тем, как продолжить опрос папки
-        time.sleep(30) 
+        time.sleep(30)
 
 
 

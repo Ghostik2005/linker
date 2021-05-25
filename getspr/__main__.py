@@ -102,10 +102,10 @@ def application(env):
         sys.APPCONF["log"](arg, kind='info:method:')
         sys.APPCONF["log"](_param, kind='info:params:')
         #send to UDP socket our message:
-        #appname, kind of message('info', 'error', etc), called method, method's params, timestamp 
+        #appname, kind of message('info', 'error', etc), called method, method's params, timestamp
         udp_msg = [__appname__, 'info', arg, _param, time.strftime("%Y-%m-%d %H:%M:%S")]
-        print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
-        content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])        
+        print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"])
+        content = libs.parse_args(arg, _param, env['X-API-KEY'], sys.APPCONF['api'])
         fileReturn = False
         # if arg == 'getSpr' or arg == 'genSpr':
         #     res = content.get('result')
@@ -123,7 +123,7 @@ def application(env):
                 ret_code = u"403"
                 ret_value = "Ups! Forbidden".encode()
                 header = libs.head(len(ret_value), False, True)
-            else:            
+            else:
                 content = json.dumps(content)
                 ret_value = content.encode()
                 header = libs.head(len(ret_value), False, True)
@@ -135,20 +135,20 @@ def application(env):
             arg = env.get('HTTP_PARAMS')[0]
         except:
             arg = None
-        if arg == "getZipSprRoz":
+        if arg == "getZipSprRoz" or arg=='getSpr':
             sys.APPCONF["log"](arg, kind='info:method:')
             _param = {}
             sys.APPCONF["log"](_param, kind='info:params:')
             #send to UDP socket our message:
-            #appname, kind of message('info', 'error', etc), called method, method's params, timestamp 
+            #appname, kind of message('info', 'error', etc), called method, method's params, timestamp
             udp_msg = [__appname__, 'info', arg, _param, time.strftime("%Y-%m-%d %H:%M:%S")]
-            print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"]) 
+            print(json.dumps(udp_msg), file=sys.APPCONF["udpsock"])
             content = libs.parse_args(arg, _param, 'test', sys.APPCONF['api'])
             if not content.get("result"):
                 ret_code = u"404"
                 ret_value = "Ups!".encode()
                 header = libs.head(len(ret_value), False, True)
-            else:            
+            else:
                 content = content.get('url')
                 ret_value = content.encode()
                 header = libs.head(len(ret_value), False, True)

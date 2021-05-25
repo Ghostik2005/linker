@@ -59,6 +59,7 @@ class logs:
 
     def __call__(self, msg, kind='info', begin='', end='\n', clear=False, flush=True):
         try:
+
             ts = "%Y-%m-%d %H:%M:%S"
             try: ts = time.strftime(ts)
             except: ts = time.strftime(ts)
@@ -244,7 +245,7 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
             add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
          }
-         
+
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
@@ -342,7 +343,7 @@ class SCGIServer:
 
     def _getfilename(self, name):
         filename = ""
-        
+
         if self.index > -1:
             if self.profile:
                 filename = os.path.join(self.config["nginx"][name], "%s-%s.%s" % (self.appname, self.index, self.profile))
@@ -376,7 +377,6 @@ def authHead(content, aContentLength):
     r.append(("Content-Length", "%i" % aContentLength))
     r.append(("X-Accel-Buffering", "no"))
     r.append(("Content-Type", "application/json"))
-    print(c)
     if c.get('result'):
         #r.append(("Set-Cookie", f"linker_auth_key={c.get('ret_val').get('key')};path=/"))
         #добавляем специальные заголовки
@@ -500,12 +500,6 @@ def handle_commandline(profile, index):
         profile = kwargs.pop("profile")
     if "index" in kwargs:
         index = kwargs.pop("index")
-    if "pg" in kwargs:
-        pg = kwargs.pop("pg")
-        if not pg:
-            pg = 5432
-    else:
-        pg = None
     if "udp" in kwargs:
         udp = kwargs.pop("udp")
         if not udp:
@@ -516,7 +510,7 @@ def handle_commandline(profile, index):
         production = True
     else:
         production = False
-    return args, kwargs, profile, index, pg, production, udp
+    return args, kwargs, profile, index, production, udp
 
 
 def udp_send(appname, version, udpport=9122):
@@ -555,7 +549,7 @@ class UDPSocket(socket.socket):
         if fg:
             data = b''.join(self._buf)[:65536]
             self._buf.clear()
-            try: 
+            try:
                 self.sendto(data, self._std_addr)
             except:
                 pass

@@ -243,7 +243,7 @@ class SCGIServer:
             add_header 'Access-Control-Allow-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
             add_header 'Access-Control-Expose-Headers' 'x-api-key,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Access-Control-Allow-Origin,Content-Disposition,b_size';
          }
-         
+
          if ($request_method = 'HEAD') {
             add_header 'Access-Control-Allow-Origin' '*';
             #add_header 'Access-Control-Allow-Credentials' 'true';
@@ -432,12 +432,14 @@ def _int(x):
 
 def parse_args(arg, _param, x_hash, api):
     try:
+        print('arg', arg)
         call = getattr(api, arg)
     except:
         content = {"result": False, "value": u'\'%s\' not implimented method' % arg}
     else:
         if x_hash:
             try:
+                print(call)
                 content = call(_param, x_hash)
             except:
                 err = traceback.format_exc()
