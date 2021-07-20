@@ -17,7 +17,7 @@ export default class LinkerView extends JetView{
     config(){
         let app = this.app;
         let c_th = this;
-        
+
         let tab_1 = {view: "layout", id: 'app-nav',
             type: 'clean',
             rows: [
@@ -64,7 +64,7 @@ export default class LinkerView extends JetView{
                                     }
                                 },
                             },
-                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by", 
+                        {view: "radio", label: "СВОДИТЬ ПО", value: 1, css: "c-radio", id: "_link_by",
                             labelWidth: 100, width: 405, localId: "_local_link_by",
                             hidden: app.config.link,
                             options: [
@@ -91,10 +91,10 @@ export default class LinkerView extends JetView{
                                 }
                             }
                         },
-                        {view: "text", 
+                        {view: "text",
                             localId: "_value_search",
-                            width: 350, 
-                            label: "Фильтр по значению", 
+                            width: 350,
+                            label: "Фильтр по значению",
                             labelWidth: 140,
                             value: '',
                             _keytimed: undefined,
@@ -146,7 +146,7 @@ export default class LinkerView extends JetView{
                                     }
                                 },
                             {width: 10},
-                            {view: "button", type: "htmlbutton", 
+                            {view: "button", type: "htmlbutton",
                                 hidden: app.config.link,
                                 label: "<span style='color: #3498db'>Обновить сессию</span>", width: 200, //height: 32,
                                 click: () => {
@@ -196,8 +196,8 @@ export default class LinkerView extends JetView{
                                 },
                             },
                         {view:"button", type: 'htmlbutton', id: "_add",  width: 140, hidden: true, localId: "_local_add",
-                            label: "Добавить (Ins)", 
-                            hotkey: "insert", 
+                            label: "Добавить (Ins)",
+                            hotkey: "insert",
                             on: {
                                 onItemClick: () => {
                                     let item = {}
@@ -210,7 +210,7 @@ export default class LinkerView extends JetView{
                             },
                         {view:"button", type: 'htmlbutton', id: "_link", localId: "_local_link",
                             label: "<span class='webix_icon fa-link'></span><span style='line-height: 20px;'>  Связать (Ctrl+Home)</span>", hidden: true, width: 200,
-                            hotkey: "home+ctrl", 
+                            hotkey: "home+ctrl",
                             click: () => {
                                 $$("_link").hide();
                                 ////// was ERROR!!!
@@ -275,7 +275,8 @@ export default class LinkerView extends JetView{
                                 parse_unlinked_item(this);
                                 }
                             },
-                        {view:"button", type: 'htmlbutton', hidden: !true, localId: "sideButton", tooltip: "Информация о товаре",
+                        {view:"button", type: 'htmlbutton', hidden: true,
+                            localId: "sideButton", tooltip: "Информация о товаре",
                             label: "<span class='webix_icon fa-caret-left'></span>",
                             resizable: !true,
                             sWidth: 136,

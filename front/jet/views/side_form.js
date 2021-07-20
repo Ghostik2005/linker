@@ -20,7 +20,7 @@ export default class SideFormView extends JetView{
         function addZavod(item) {
             vendor.add(item, 0);
             }
-            
+
         function addDv(item) {
             dv.add(item, 0);
             }
@@ -42,7 +42,7 @@ export default class SideFormView extends JetView{
                 {rows: [
                     {view: "label", label:"Название товара:", name: 't_name'},
                     {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text"},
-                    {height: 10, width: 700},
+                    {height: 10, width: 720},
                     {cols: [
                         {rows: [
                             {view: "label", label:"Страна:", name: "s_name"},
@@ -117,6 +117,7 @@ export default class SideFormView extends JetView{
                                     {cols: [
                                         {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
                                         {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                        {view: "checkbox", labelRight: "ЖВ", labelWidth: 0, align: "left", name: "id_jv"},
                                         ]},
                                     {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
                                         options:  {
@@ -214,8 +215,8 @@ export default class SideFormView extends JetView{
                                 }
                             },
                         {hidden: true},
-                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
-                            //hidden: !app.config.roles[app.config.role].spredit, 
+                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32,
+                            //hidden: !app.config.roles[app.config.role].spredit,
                             hidden: true,
                             click: () => {
                                 }
@@ -254,13 +255,14 @@ export default class SideFormView extends JetView{
     parse_f(new_head, search_bar, item){
         this.$$("new_form").config.search_bar = search_bar;
         if (item) {
+            console.log('item', item);
             item["idspr"] = new_head;
             this.$$("new_form").parse(item);
             //this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
             }
         }
-        
+
     show_f(parent, search_bar, item){
         this.$$("new_form").config.search_bar = search_bar;
         if (item) {

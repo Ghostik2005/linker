@@ -30,12 +30,12 @@ export default class SprView extends JetView{
             rowHeight:32,
             editable: false,
             headermenu:{
-                autowidth: true, 
+                autowidth: true,
                 },
             scroll: 'xy',
             type:{
                 itemIcon: DelEdIcons,
-            }, 
+            },
             onClick:{
                 delete_button:function(ev, id, html){
                     let item = this.getItem(id);
@@ -90,7 +90,7 @@ export default class SprView extends JetView{
             // },
             tooltip: true,
             columns: [
-                {id: "checkbox", css: "center_p", 
+                {id: "checkbox", css: "center_p",
                     width: 75,
                     tooltip: false,
                     header: [{text: "", css: "counter-dt"},
@@ -133,6 +133,23 @@ export default class SprView extends JetView{
                     header: [{text: "МНН", css: "center_p"},
                     ],
                 },
+                {id: "id_jv", width: 100,
+                    tooltip: false,
+                    template: function (obj) {
+                        return (+obj.id_jv !== 0) ? "<span class='webix_icon fa-check-circle', style='color: green'></span>"
+                                                  : "";
+                        },
+                    css: "center_p",
+                    header: [{text: "ЖВ", css: "center_p"},
+                        {content: "richFilt", compare: compareTrue,
+                            inputConfig : {
+                                options: [{id: 1, value: "Да"}, {id: 2, value: "Нет"}],
+                                scrollView: true,
+                                },
+                            }
+                        ],
+
+                },
                 {id: "id_spr", width: 80, sort: "server", tooltip: false,
                     header: [{text: "IDSPR"},
                         {content: "cFilt",
@@ -144,7 +161,7 @@ export default class SprView extends JetView{
                         ],
                     headermenu:false,
                     },
-                { id: "c_tovar", fillspace: 1, 
+                { id: "c_tovar", fillspace: 1,
                     sort: "server", css: "overflow",
                     minWidth: 600,
                     tooltip: "#c_tovar#",
@@ -153,7 +170,7 @@ export default class SprView extends JetView{
                     headermenu:false,
                     template: refTemplate,
                 },
-                { id: "id_521", width: 160, //sort: "server", 
+                { id: "id_521", width: 160, //sort: "server",
                     css: "overflow",
                     tooltip: "#id_521#",
                     header: [{text: "Код ном."},
@@ -201,7 +218,7 @@ export default class SprView extends JetView{
                                 options: {
                                     data: vi.options.dvList
                                     },
-                                },  
+                                },
                             }
                         ]
                     },
@@ -302,7 +319,7 @@ export default class SprView extends JetView{
                     format: dt_formating_sec,
                     css: 'center_p',
                     hidden: !true,
-                    header: [{text: "Дата изменения"}, 
+                    header: [{text: "Дата изменения"},
                     {content: "dateRangeFilter", compare: compareTrue,
                         inputConfig:{format:dt_formating, width: 180,},
                         suggest:{
@@ -310,11 +327,11 @@ export default class SprView extends JetView{
                             },
                         },
                     ]},
-                {id: "dt_ins", width: 200, tooltip: false, //sort: 'server', 
+                {id: "dt_ins", width: 200, tooltip: false, //sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
                     hidden: true,
-                    header: [{text: "Дата добавления"}, 
+                    header: [{text: "Дата добавления"},
                     //{content: "dateRangeFilter", compare: compareTrue,
                       //  inputConfig:{format:dt_formating, width: 180,},
                        // suggest:{
@@ -322,9 +339,9 @@ export default class SprView extends JetView{
                            // },
                         //},
                     ]},
-                {id: "owner", width: 200, tooltip: false, //sort: 'server', 
+                {id: "owner", width: 200, tooltip: false, //sort: 'server',
                     hidden: true,
-                    header: [{text: "Кто изменил"}, 
+                    header: [{text: "Кто изменил"},
                     ]},
                 ],
             on: {
@@ -345,7 +362,7 @@ export default class SprView extends JetView{
                     localStorage = Object.keys(localStorage);
                     this.$scope.$$("_del").hide();
                     if (localStorage.length > 1) {
-                        if (app.config.roles[app.config.role].skipped || this.$scope.app.config.user === 'antey1') {
+                        if (app.config.roles[app.config.role].skipped ||  ['antey1', 'antey2'].includes(this.$scope.app.config.user)) {
                         this.$scope.$$("_prop").show();
                         }
                     } else {
@@ -390,11 +407,14 @@ export default class SprView extends JetView{
                         let item = this.getSelectedItem();
                         this.$scope.popRls.show_w("Связка с РЛС. Выберите несвязанную позицию из справочника РЛС", item, this.$scope);
                     } else {
-                        if (app.config.roles[app.config.role].skipped || 
-                            gr.c_group === 'Изделия медицинского назначения' || 
-                            gr.c_group==='Товары для животных/Ветеринария' || 
+                        if (app.config.roles[app.config.role].skipped ||
+                            gr.c_group === 'Изделия медицинского назначения' ||
+                            gr.c_group === 'Ортопедия и средства реабилитации' ||
+                            gr.c_group === 'Парфюмерия/косметика/средства личной гигиены' ||
+                            gr.c_group === 'Медицинские приборы и оборудование' ||
+                            gr.c_group === 'Товары для животных/Ветеринария' ||
                             !gr.c_group
-                            ) 
+                            )
                         {
                             this.openSub(s_item);
                         } else {
@@ -489,7 +509,7 @@ export default class SprView extends JetView{
                         this.pophistory.show(hist, this.$$("_sb"));
                         },
                     },
-                {view:"button", 
+                {view:"button",
                     tooltip: "Сбросить фильтры",
                     type:"imageButton", image: buttons.unFilter.icon,
                     localId: "_unfilt",
@@ -558,13 +578,13 @@ export default class SprView extends JetView{
         var scroll = {localId: "scroll_view", width: 18};
 
         var dt = {
-            view: "layout", 
+            view: "layout",
             rows: [
                 top,
                 {cols:[
                     sprv,
                     scroll
-                    
+
                 ]},
                 {$subview: PagerView},
                 ]}
@@ -591,7 +611,7 @@ export default class SprView extends JetView{
         setTimeout( () => {
             scroll.unblockEvent();
         }, 250);
-        
+
 
     }
 
@@ -609,7 +629,7 @@ export default class SprView extends JetView{
         let table = this.$$("__table");
         table.config.searchBar = this.$$("_sb");
         this.scroll = new webix.ui.vscroll({
-            container:this.$$("scroll_view").$view, 
+            container:this.$$("scroll_view").$view,
             scroll:"y",
             scrollStep: 1,
             zoom: 1,
@@ -646,11 +666,11 @@ export default class SprView extends JetView{
         // this.startSearch();
         table.markSorting(table.config.fi,table.config.di);
         setTimeout(() => {
-            this.$$("_sb").focus();    
+            this.$$("_sb").focus();
         }, 50);
-        
+
     }
-    
+
     init() {
         setRows(this);
         this.popnew = this.ui(NewformView);

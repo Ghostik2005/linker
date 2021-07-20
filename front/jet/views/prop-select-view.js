@@ -31,12 +31,12 @@ export default class PropSelectView extends JetView{
         }
 
         let body = {
-            view: 'toolbar',  borderless: true, //css: 'side_tool_bar',          
+            view: 'toolbar',  borderless: true, //css: 'side_tool_bar',
             rows:[
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Код номенкл.</span>",
-                    hidden: !(app.config.roles[app.config.role].skipped || app.config.user === 'antey1'),
+                    hidden: !(app.config.roles[app.config.role].skipped || ['antey1', 'antey2'].includes(app.config.user)),
                     on: {
                         onItemClick: function() {
                             this.$scope.hideM();
@@ -57,7 +57,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.poptgnew.show("Добавление товарных групп", undefined, undefined, setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Группа товара</span>",
@@ -69,7 +69,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение группы товара", "gr", setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Д. вещество</span>",
@@ -93,7 +93,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение рецептурности", "recipt", setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Обязательный</span>",
@@ -105,7 +105,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение обязательного ассортимента", "mandat", setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Сезон</span>",
@@ -117,7 +117,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение сезона", "sezon", setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Условия хранения</span>",
@@ -129,7 +129,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение условий хранения", "hran", setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>Форма выпуска</span>",
@@ -141,7 +141,7 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение формы выпуска", "issue", setProp);
                         }
                     }
-                }, 
+                },
                 {view: "button", type: 'htmlbutton', height: 40, width: 150,
                     resizable: !true,
                     label:"<span class='', style='line-height: 20px'>НДС</span>",
@@ -153,7 +153,19 @@ export default class PropSelectView extends JetView{
                             this.$scope.popprop.showW("Изменение НДС", "nds", setProp);
                         }
                     }
-                }, 
+                },
+                {view: "button", type: 'htmlbutton', height: 40, width: 150,
+                    resizable: !true,
+                    label:"<span class='', style='line-height: 20px'>Признак ЖВ</span>",
+                    hidden: !(app.config.roles[app.config.role].skipped),
+                    on: {
+                        onItemClick: function() {
+                            this.$scope.hideM();
+                            let id_spr = this.$scope.pTable.getSelectedItem();
+                            this.$scope.popprop.showW("Изменение признака ЖВ", "jv", setProp);
+                        }
+                    }
+                },
             ],
             }
 

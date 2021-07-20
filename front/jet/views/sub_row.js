@@ -22,7 +22,7 @@ export default class SubRow extends JetView{
 
         function addZavod(item) {
             vendor.add(item, 0);
-            }            
+            }
         function addDv(item) {
             dv.add(item, 0);
             }
@@ -50,7 +50,7 @@ export default class SubRow extends JetView{
                 {rows: [
                     {view: "label", label:"Название товара:", name: 't_name'},
                     {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text"},
-                    {height: 10, width: 1000},
+                    {height: 10, width: 1050},
                     {cols: [
                         {rows: [
                             {cols: [
@@ -163,8 +163,9 @@ export default class SubRow extends JetView{
                                 ]},
                             ]},
                         {width: 5,},
-                        {rows: [
+                        {width: 400, rows: [
                             {//view: "form",
+
                                 type: "form",
                                 css: "borders",
                                 localId: "new_f_right",
@@ -174,6 +175,7 @@ export default class SubRow extends JetView{
                                     {css: {"margin-top": "0px !important;"}, cols: [
                                         {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
                                         {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                        {view: "checkbox", labelRight: "ЖВ", labelWidth: 0, align: "left", name: "id_jv"},
                                         ]},
                                     {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
                                         options:  {
@@ -229,30 +231,38 @@ export default class SubRow extends JetView{
                                                 }
                                             },
                                         on: {
-                                            onChange: function() {
+                                            onChange: function(new_val) {
                                                 let item = this.getValue();
                                                 console.log('i1', item);
                                                 this.$scope.savePermitted = true;
                                                 this.$scope.$$("_save").show();
+                                                let nds_c = this.$scope.$$('__nds');
+                                                if (new_val == 'ZakMedCtg.1114') {
+                                                    nds_c.setValue("ZakMedCtg.1358")
+                                                }
                                             },
                                             onAfterRender: function() {
+                                                // console.log('vnd', this.$scope._id_vnd);
                                                 // console.log('ii', this.$scope.customData.item.id_group);
                                                 // console.log('u', this.$scope.app.config.user);
-                                                if (this.$scope.app.config.user === 'antey1' && !this.$scope.customData.item.id_group) {
+                                                if (['antey1', 'antey2'].includes(this.$scope.app.config.user) && !this.$scope.customData.item.id_group) {
                                                     this.getList().parse(group);
-                                                } else if (this.$scope.app.config.user === 'antey1' && this.$scope.customData.item.id_group === "ZakMedCtg.1115") {
+                                                } else if (['antey1', 'antey2'].includes(this.$scope.app.config.user) && this.$scope.customData.item.id_group === "ZakMedCtg.1115") {
                                                     this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},])
-                                                } else if  ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
-                                                            (permited_add.users.includes(this.$scope.app.config.user) )){
-                                                    this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
-                                                    this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},])
-                                                    
                                                 } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
                                                     group.serialize().forEach((it) => {
                                                         if (it.id != 'ZakMedCtg.1114') {
                                                             this.getList().add(it)
                                                         }
                                                     })
+                                                } else if  ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
+                                                            (permited_add.users.includes(this.$scope.app.config.user) )){
+                                                    this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},]);
+                                                    this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},]);
+                                                    this.getList().parse([{id: 'OR', group: "Ортопедия и средства реабилитации"},]);
+                                                    this.getList().parse([{id: 'Z', group: "Парфюмерия/косметика/средства личной гигиены"},]);
+                                                    this.getList().parse([{id: 'ZakMedCtg.17', group: "Медицинские приборы и оборудование"},]);
+                                                    this.getList().parse([{id: 'Д', group: "Товары для детей"},]);
                                                 } else {
                                                     this.getList().parse(group);
                                                 }
@@ -267,6 +277,7 @@ export default class SubRow extends JetView{
                                             },
                                         },
                                     {view:"combo", label: "НДС:", labelPosition:"top", value: "", name: "id_nds", css: "small",
+                                        localId: '__nds',
                                         options:  {
                                             filter: nds_filter,
                                             body: {
@@ -311,7 +322,7 @@ export default class SubRow extends JetView{
                                 }
                             },
                         {},
-                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, 
+                        {view: "button", type: "base", label: "Сохранить", width: 120, height: 32,
                         hidden: !th.savePermitted,
                         localId: '_save',
                         // hidden: !(app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)),
@@ -330,6 +341,7 @@ export default class SubRow extends JetView{
                                     params["c_opisanie"] = left_f.c_opisanie;
                                     params["prescr"] = (left_f._prescr ===  1) ? true : false;
                                     params["mandat"] = (left_f._mandat ===  1) ? true : false;
+                                    params["id_jv"] = (left_f.id_jv ===  1) ? true : false;
                                     params["id_sezon"] = left_f.id_sezon;
                                     params["id_usloviya"] = left_f.id_usloviya;
                                     params["id_group"] = left_f.id_group;
@@ -368,7 +380,7 @@ export default class SubRow extends JetView{
             }
 
         return {cols: [
-            {width: 160}, 
+            {width: 160},
             m_body
             ]}
         }
@@ -380,13 +392,14 @@ export default class SubRow extends JetView{
         this.$$("new_form").config.dt = this.customData.dt;
         this.$$("new_form").config.pag = this.customData.pager;
         let item = this.customData.item;
-        
+
         let new_head = this.customData.header;
         if (item) {
             if (new_head) {
                 item["idspr"] = new_head;
                 }
             this.$$("new_form").parse(item);
+            console.log('item', item);
             //this.$$("new_f_right").parse(item);
             this.$$("new_form").config.spr = true;
         }
@@ -394,8 +407,8 @@ export default class SubRow extends JetView{
             // this.$$("_local_id_group").setValue('ZakMedCtg.18');
             // this.$$("_local_id_group").disable();
         // }
-        if ((permited_add.users.includes(this.app.config.user) && item.id_group == 'ZakMedCtg.18') 
-            || (this.app.config.user === 'antey1' && !this.customData.item.id_group)
+        if ((permited_add.users.includes(this.app.config.user) && item.id_group == 'ZakMedCtg.18')
+            || ( ['antey1', 'antey2'].includes(this.app.config.user) && !this.customData.item.id_group)
             || this.app.config.roles[this.app.config.role].spredit || item.id_group === "ZakMedCtg.1115") {
             this.savePermitted = true;
             this.$$("_save").show();
@@ -403,7 +416,7 @@ export default class SubRow extends JetView{
 
 
     }
-    
+
     init() {
         this.popstri = this.ui(NewstriView);
         this.popbar = this.ui(NewbarView);

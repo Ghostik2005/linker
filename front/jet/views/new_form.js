@@ -13,7 +13,7 @@ import {strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filt
 
 export default class NewformView extends JetView{
     config(){
-        
+
         let app = this.app;
 
         function check(item){
@@ -27,7 +27,7 @@ export default class NewformView extends JetView{
         function addZavod(item) {
             vendor.add(item, 0);
             }
-            
+
         function addDv(item) {
             dv.add(item, 0);
             }
@@ -57,7 +57,7 @@ export default class NewformView extends JetView{
                     {rows: [
                         {view: "label", label:"Название товара:", name: 't_name'},
                         {view: "text", label: "", value: "", name: "c_tovar", required: true, css: "raw_text", localId: "inputTxt"},
-                        {height: 10, width: 700},
+                        {height: 10, width: 750},
                         {cols: [
                             {rows: [
                                 {view: "label", label:"Страна:", name: "s_name"},
@@ -162,6 +162,7 @@ export default class NewformView extends JetView{
                                         {cols: [
                                             {view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr"},
                                             {view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat"},
+                                            {view: "checkbox", labelRight: "ЖВ", labelWidth: 0, align: "left", name: "id_jv"},
                                             ]},
                                         {view:"combo", label: "Сезон:", labelPosition:"top", value: "", name: "id_sezon", css: "small",
                                             options:  {
@@ -217,17 +218,31 @@ export default class NewformView extends JetView{
                                                     }
                                                 },
                                             on: {
+                                                onChange: function (new_val, ii, iii) {
+                                                    let nds_c = this.$scope.$$('__nds');
+                                                    if (new_val == 'ZakMedCtg.1114') {
+                                                        nds_c.setValue("ZakMedCtg.1358")
+                                                    } else {
+                                                        nds_c.setValue();
+                                                    }
+                                                },
                                                 onAfterRender: function() {
-                                                    if  ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
-                                                                (permited_add.users.includes(this.$scope.app.config.user) )){
-                                                        this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},])
-                                                        this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},])
-                                                    } else if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
+                                                    // console.log('vnd', this.$scope._id_vnd);
+                                                    // console.log('u', this.$scope.app.config.user);
+                                                    if (permited_add.users.includes(this.$scope.app.config.user)  && this.$scope._id_vnd == 51066) {
                                                         group.serialize().forEach((it) => {
                                                             if (it.id != 'ZakMedCtg.1114') {
                                                                 this.getList().add(it)
                                                             }
                                                         })
+                                                    } else if  ((permited_add.users.includes(this.$scope.app.config.user) && this.$scope._id_vnd == 45835) ||
+                                                    (permited_add.users.includes(this.$scope.app.config.user) )){
+                                                        this.getList().parse([{id: 'ZakMedCtg.18', group: "Товары для животных"},]);
+                                                        this.getList().parse([{id: 'ZakMedCtg.1115', group: "Изделия медицинского назначения"},]);
+                                                        this.getList().parse([{id: 'OR', group: "Ортопедия и средства реабилитации"},]);
+                                                        this.getList().parse([{id: 'Z', group: "Парфюмерия/косметика/средства личной гигиены"},]);
+                                                        this.getList().parse([{id: 'ZakMedCtg.17', group: "Медицинские приборы и оборудование"},]);
+                                                        this.getList().parse([{id: 'Д', group: "Товары для детей"},]);
                                                     } else {
                                                         this.getList().parse(group);
                                                     }
@@ -251,8 +266,9 @@ export default class NewformView extends JetView{
                                             },
                                         },
                                         {view:"combo", label: "НДС:", labelPosition:"top", value: "", name: "id_nds", css: "small",
+                                            localId: '__nds',
                                             options:  {
-                                                filtre: nds_filter,
+                                                filter: nds_filter,
                                                 body: {
                                                     template:"#nds#",
                                                     yCount:5,
@@ -290,7 +306,7 @@ export default class NewformView extends JetView{
                                     }
                                 },
                             {},
-                            (app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)) 
+                            (app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user))
                             ? {view: "button", type: "base", label: "Сохранить", width: 120, height: 32, localId: "_save",
                                 hidden: !(app.config.roles[app.config.role].spredit || permited_add.users.includes(app.config.user)),
                                 click: () => {
@@ -309,10 +325,12 @@ export default class NewformView extends JetView{
                                         params["c_opisanie"] = left_f.c_opisanie;
                                         params["prescr"] = (right_f._prescr ===  1) ? true : false;
                                         params["mandat"] = (right_f._mandat ===  1) ? true : false;
+                                        params["id_jv"] = (right_f.id_jv ===  1) ? true : false;
                                         params["id_sezon"] = right_f.id_sezon;
                                         params["id_usloviya"] = right_f.id_usloviya;
                                         params["id_group"] = right_f.id_group;
                                         params["id_521"] = this.$$("__id_521").getText();
+                                        params["id_nds"] = right_f.id_nds;
                                         //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
                                         if (this.p_item) {
                                             let t1 = $$("prcs_dc").getCursor();
@@ -368,7 +386,7 @@ export default class NewformView extends JetView{
         //     this.$$("_local_id_group").disable();
         // }
 
-        // if ((permited_add.users.includes(this.app.config.user) && item.id_group === 'ZakMedCtg.18') 
+        // if ((permited_add.users.includes(this.app.config.user) && item.id_group === 'ZakMedCtg.18')
         //     || this.app.config.roles[this.app.config.role].spredit) {
         //     this.savePermitted = true;
         //     this.$$("_save").show();

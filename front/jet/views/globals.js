@@ -66,7 +66,7 @@ export var group = new webix.DataCollection({
 export function compareTrue () {
     return true;
     }
-    
+
 export var cEvent = function(a,b,c,d){
     d = d || {};
     d.inner = true;
@@ -88,7 +88,7 @@ export var unFilter = function(cv) {
             }
         });
     }
-        
+
 //filters for card
 export function strana_filter(item, value) {
     value = value.toString().toLowerCase()
@@ -201,7 +201,7 @@ export function delTGr(item_id, source) {
     }
 
 export function updTGr(item, source) {
-    var cid = item.id; 
+    var cid = item.id;
     let citem = source.getItem(cid);
     citem.c_tgroup = item.value;
     source.updateItem(cid, citem);
@@ -384,7 +384,7 @@ export function str_join(obj) {
                         a[i]='0'+a[i]
                     } else {
                         a[i]=a[i].toString()
-                    } 
+                    }
                 }
                 let q = a.slice(0,3).join('-') + " " + a[3] + ":" + a[4];
                 ret += q.toString();
@@ -444,7 +444,7 @@ export function get_data_test(inp_params) {
                     delete d_params.id_sprs;
                     let c_params = str_join(gen_params(inp_params));
                     let r_params = str_join(d_params);
-                    if (r_params !== c_params) { 
+                    if (r_params !== c_params) {
                         view.hideProgress();
                         return
                     }
@@ -496,12 +496,12 @@ export function get_data_test(inp_params) {
             });
         } else {
             };
- 
+
     }
 
 export function parse_unlinked_item(th, c_item) {
     c_item = c_item || $$("prcs_dc").getItem($$("prcs_dc").getCursor());
-    let n_item = {} 
+    let n_item = {}
     let link = "https://www.google.ru/search?newwindow=1&q=" + c_item.c_tovar;
     let name = "<a target='_blank' rel='noreferrer noopener' href='" + link + "'><span>" + c_item.c_tovar + "</span></a>";
     let count = "<span style='color: #666666; text-decoration: underline;'>Осталось свести в текущей сессии:</span><span style='color: red; font-weight: bold;'>  "+ $$("prcs_dc").count() + "</span>";
@@ -524,7 +524,7 @@ export function parse_unlinked_item(th, c_item) {
     $$("_skip").show();
     $$("_right").show();
     $$("_names_bar").parse(n_item);
-    
+
     let buf = c_item.c_tovar.split(' ');
     let sta = 0;
     if (buf[sta].length < 4) sta += 1;
@@ -609,6 +609,8 @@ export function getDtParams(ui) {
             'dt'        : ($$(ui).isColumnVisible('dt')) ? $$(ui).getFilter('dt').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt_a") {
+        console.log('vnd', ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined);
+        // console.log('vnd', ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getValue() : undefined);
         c_filter = {
             //'c_vnd'     : ($$(ui).isColumnVisible('c_vnd')) ? $$(ui).getFilter('c_vnd').getText() : undefined,
             'id_tovar'   : ($$(ui).isColumnVisible('id_tovar')) ? $$(ui).getFilter('id_tovar').value : undefined,
@@ -648,6 +650,7 @@ export function getDtParams(ui) {
             'c_sezon'   : ($$(ui).isColumnVisible('c_sezon')) ? $$(ui).getFilter('c_sezon').getValue() : undefined,
             'mandat'    : ($$(ui).isColumnVisible('mandat')) ? $$(ui).getFilter('mandat').getValue() : undefined,
             'prescr'    : ($$(ui).isColumnVisible('prescr')) ? $$(ui).getFilter('prescr').getValue() : undefined,
+            'id_jv'    : ($$(ui).isColumnVisible('id_jv')) ? $$(ui).getFilter('id_jv').getValue() : undefined,
             };
     } else if (ui.config.name === "__dt") {
         c_filter = {
@@ -690,7 +693,7 @@ export function getDtParams(ui) {
 export function dt_formating_sec(d) {
     return webix.Date.dateToStr("%d-%m-%Y  %G:%i:%s")(d)
     };
-    
+
 export function dt_formating(d) {
     return webix.Date.dateToStr("%d-%m-%Y")(d)
     };
@@ -700,7 +703,7 @@ export function mcf_filter (obj, value){
     value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
     return obj.value.toString().toLowerCase().search(value) != -1;
     };
-    
+
 export function init_first(app) {
 
     webix.i18n.setLocale('ru-RU');
@@ -708,7 +711,7 @@ export function init_first(app) {
     webix.protoUI({
         name:"activeList"
         },webix.ui.list, webix.ActiveContent);
-        
+
     webix.protoUI({
         name: "cWindow",
         defaults: {
@@ -805,7 +808,7 @@ export function init_first(app) {
                     pager_view.refresh();
                     },app.config.searchDelay);
                 });
-                
+
             config.richselect = richselect.config.id;
             };
         config.css = "webix_div_filter";
@@ -906,8 +909,8 @@ export function init_first(app) {
                                 if (data) {
                                     if (data.length > (config.inputConfig.maxCount || 2500)) {
                                         webix.message({'text': "Слишком много выделяем, давайте так не делать.", 'type': 'error', 'expire': 3000});
-                                        config.checked = false; 
-                                        config.indeter = true; 
+                                        config.checked = false;
+                                        config.indeter = true;
                                         node.repaint();
                                     } else {
                                         var selected = webix.storage.session.get(node.storageName) || {};
@@ -957,14 +960,14 @@ export function init_first(app) {
             let b = "<button class='header-button fa-" + config.inputConfig.buttonIcon + "' title='Показать выделенные'></button>";
             return  "<div style='width: 100%; height: 100%; display: flex; flex-direction: row; '>" +
             "<input class='header-checkbox' type='checkbox'>" +
-            b + 
+            b +
             "</div";
         }
     }
 
     // let delay = app.config.searchDelay;
     // setTimeout(get_refs, 0*delay, {"app": app, "type": "sync", "method": "getRoles", "store": "roles_dc"});
-    // getRefs(app); 
+    // getRefs(app);
 }
 
 export function setRefs(data) {
@@ -1136,7 +1139,7 @@ export function get_suppl(view, th, method) {
             clear_names_bar(th, 'записей нет');
         };
     if ($$(view).getList().count() < 1) {
-        // если записей нет очищаем 
+        // если записей нет очищаем
         clear_names_bar(th, 'записей нет');
     };
     })
@@ -1333,7 +1336,7 @@ export function fillFilterOptions(app) {
     tList.forEach(function(it) {
         let tt = {'id': it.id, 'value': it.c_tgroup};
         options.tovGList.push(tt);
-    });    
+    });
     tList = $$("strana_dc").data.getRange($$("strana_dc").data.getFirstId(), $$("strana_dc").data.getLastId());
     tList.forEach(function(it) {
         let tt = {'id': it.id, 'value': it.c_strana};
@@ -1437,7 +1440,7 @@ export function toolTipAssign(view, prop_button) {
         if (localStorage[item]) count++;
     });
     if (count > 0) {
-        if (vi.app.config.roles[vi.app.config.role].skipped || vi.app.config.user === 'antey1') {
+        if (vi.app.config.roles[vi.app.config.role].skipped || ['antey1', 'antey2'].includes(vi.app.config.user)) {
             prop_button.define({"tooltip": "Назначить свойства эталону. Выделенно " + count + " товаров."});
             prop_button.show();
         }
@@ -1463,9 +1466,9 @@ export function getHeaderLength(header) {
 
 export function setMouseEvents(table) {
     table.getNode().onmouseover =  (ev) => {
-        if ((ev.buttons===1 && 
-             ev.target.getAttribute('role')==='gridcell' && 
-             ev.target.children.length > 0 && 
+        if ((ev.buttons===1 &&
+             ev.target.getAttribute('role')==='gridcell' &&
+             ev.target.children.length > 0 &&
              ev.target.firstChild.classList.contains('webix_table_checkbox')) ||
            ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
         ) {
@@ -1476,15 +1479,15 @@ export function setMouseEvents(table) {
             if (table.$scope.checked_id !== item.id) {
                 table.$scope.checked_id = item.id;
                 item.checkbox = (!item.checkbox) ? 1 : 0;
-                table.updateItem(item.id, item); 
+                table.updateItem(item.id, item);
                 table.callEvent('onCheck', [item.id, undefined, item.checkbox]);
             };
         }
     };
     table.getNode().onmouseout =  (ev) => {
-        if ((ev.buttons===1 && 
-             ev.target.getAttribute('role')==='gridcell' && 
-             ev.target.children.length > 0 && 
+        if ((ev.buttons===1 &&
+             ev.target.getAttribute('role')==='gridcell' &&
+             ev.target.children.length > 0 &&
              ev.target.firstChild.classList.contains('webix_table_checkbox')) ||
            ( ev.buttons===1 && ev.target.class === 'webix_table_checkbox' )
         ) {
@@ -1532,7 +1535,7 @@ export function onKeyPressAction(th, code, e){
     } else if (e.code === "Space") {
         let item = th.getItem(th.getSelectedId().id);
         item.checkbox = (!item.checkbox) ? 1 : 0;
-        th.updateItem(item.id, item); 
+        th.updateItem(item.id, item);
         th.callEvent('onCheck', [item.id, undefined, item.checkbox]);
     } else  {
     };

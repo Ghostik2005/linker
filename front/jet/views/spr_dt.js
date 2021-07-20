@@ -9,7 +9,7 @@ import SubRow from "../views/sub_row";
 export default class SprView extends JetView{
     config(){
         var app = this.app;
-        
+
         // let url = app.config.r_url + "?getDvAll";
         // let params = {"user": app.config.user};
         // let res = checkVal(request(url, params, !0).response, 's');
@@ -34,7 +34,7 @@ export default class SprView extends JetView{
             editable: false,
             //footer: true,
             headermenu:{
-                autowidth: true, 
+                autowidth: true,
                 },
             startPos: 1,
             posPpage: app.config.posPpage,
@@ -76,6 +76,16 @@ export default class SprView extends JetView{
                     header: [{text: "МНН"},
                         ],
                     },
+                {id: "id_jv", width: 75,
+                    tooltip: false,
+                    template: function (obj) {
+                        return (+obj.id_jv !== 0) ? "<span class='webix_icon fa-check-circle', style='color: green'></span>"
+                                                  : "";
+                        },
+                    css: "center_p",
+                    header: [{text: "ЖВ", css: "center_p"},
+                    ],
+                },
                 {id: "id_spr", width: 80, sort: "server",
                     header: [{text: "IDSPR"},
                         {content:"cFilt"}
@@ -151,9 +161,9 @@ export default class SprView extends JetView{
                     header: [{text: "Рецептурный"},
                         ],
                     },
-                {id: "owner", width: 200, tooltip: false, //sort: 'server', 
+                {id: "owner", width: 200, tooltip: false, //sort: 'server',
                     hidden: true,
-                    header: [{text: "Кто изменил"}, 
+                    header: [{text: "Кто изменил"},
                     ]},
                 ],
             on: {
@@ -269,7 +279,7 @@ export default class SprView extends JetView{
         // this.$$("__table").callEvent('onResize');
         // setRows(this);
         let table = this.$$("__table");
-        
+
         setTimeout(() => {
             let rows = recalcRowsRet(table);
             if (rows) table.config.posPpage = rows;
@@ -279,11 +289,11 @@ export default class SprView extends JetView{
         // this.startSearch();
         this.$$("__table").markSorting(this.$$("__table").config.fi,this.$$("__table").config.di);
         setTimeout(() => {
-            $$("_spr_search").focus();    
+            $$("_spr_search").focus();
         }, 50);
-        
-        
-        
+
+
+
     }
 
     init() {
