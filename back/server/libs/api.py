@@ -39,15 +39,18 @@ class API:
         pg=False,
         production=False,
     ):
-
         self.methods = []
         self.path = w_path
         self.p_path = p_path
         self.app_conf = app_conf
-        if not os.path.exists(self.path):
-            os.makedirs(self.path, mode=0o777)
-        if not os.path.exists(self.p_path):
-            os.makedirs(self.p_path, mode=0o777)
+        if (
+            not self.app_conf.get("debug")
+            or self.app_conf.get("debug") is False
+        ):
+            if not os.path.exists(self.path):
+                os.makedirs(self.path, mode=0o777)
+            if not os.path.exists(self.p_path):
+                os.makedirs(self.p_path, mode=0o777)
         self.log = self.app_conf["log"]
         self.db = pg_local(
             self.log,
@@ -3623,12 +3626,13 @@ where id = %s returning id;"""
                 action = json.loads(action)
             if isinstance(action, dict):
                 series, sh_prc = action.get("mass")
-                sql = """select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv,
+                sql = f"""select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv,
     bm.title_doc, bm.opis, bm.link_file, bm.id, bm.dt,
 CASE
     WHEN bmt.MAIL_TEXT is null THEN ''
     ELSE bmt.MAIL_TEXT
-END as m_text
+END as m_text,
+bm.external_mail_link
 from brak_mail bm
 LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE and bm.deleted = 0
 where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
@@ -3642,6 +3646,10 @@ order by id asc; """
                         pars = pars.decode()
                     except Exception:
                         pass
+                    external_link = row[15]
+                    has_link = False
+                    if external_link:
+                        has_link = True
                     r = {
                         "sh_prc": row[0],
                         "title": row[1],  # "title"
@@ -3658,6 +3666,8 @@ order by id asc; """
                         "id": row[12],  # "id"
                         "dt": str(row[13]),  # "dt"
                         "doc_text": pars,  # letter text
+                        "external_link": external_link,
+                        "has_link": has_link,
                     }
                     _return.append(r)
                 ret = {"results": _return, "success": True, "req": "getMail"}
@@ -3669,14 +3679,15 @@ order by id asc; """
 
     def getBrakMail(self, params=None, x_hash=None):
         if self._check(x_hash):
-            # series = params.get("series", "")
-            # sh_prc = params.get("sh_prc", "")
-            sql = """select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv,
+            series = params.get("series", "")
+            sh_prc = params.get("sh_prc", "")
+            sql = f"""select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv,
     bm.title_doc, bm.opis, bm.link_file, bm.id, bm.dt,
 CASE
     WHEN bmt.MAIL_TEXT is null THEN ''
     ELSE bmt.MAIL_TEXT
-END as m_text
+END as m_text,
+bm.external_mail_link
 from brak_mail bm
 LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE and bm.deleted = 0
 where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
@@ -3690,6 +3701,10 @@ order by id asc; """
                     pars = pars.decode()
                 except Exception:
                     pass
+                external_link = row[15]
+                has_link = False
+                if external_link:
+                    has_link = True
 
                 r = {
                     "sh_prc": row[0],
@@ -3707,6 +3722,8 @@ order by id asc; """
                     "id": row[12],  # "id"
                     "cre_date": str(row[13]),  # "dt"
                     "letter": pars,  # letter text
+                    "has_link": has_link,
+                    "external_link": external_link,
                 }
                 _return.append(r)
             ret = {"result": True, "ret_val": _return}

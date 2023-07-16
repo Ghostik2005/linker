@@ -1,44 +1,45 @@
 "use strict";
 
-import {JetView} from "webix-jet";
-import {checkVal, setButtons, request, recalcRowsRet} from "../views/globals";
+import { JetView } from "webix-jet";
+import { checkVal, setButtons, request, recalcRowsRet } from "../views/globals";
 import ConfirmView from "../views/yes-no";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter} from "../views/globals";
+import { dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter } from "../views/globals";
 import PagerView from "../views/pager_view";
-import {buttons} from "../models/variables";
-import {options} from "../models/variables";
+import { buttons } from "../models/variables";
+import { options } from "../models/variables";
 
 
-export default class SkippedBarView extends JetView{
-    config(){
+export default class SkippedBarView extends JetView {
+    config() {
 
         let app = this.app;
         var delSkip = () => {
             let item_id = this.$$("__table").getSelectedId()
             this.$$("__table").remove(item_id)
-            }
+        }
 
-        let url = app.config.r_url + "?getSupplAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
+        let url = "getSupplAll";
+        let params = { "user": app.config.user };
+        let res = checkVal(request(url, params, !0, app).response, 's');
         var rList = []
         if (res) {
             rList = res;
-            };
+        };
 
-        var sprv = {view: "datatable",
+        var sprv = {
+            view: "datatable",
             name: "__dt_s",
             localId: "__table",
             navigation: "row",
             select: true,
-            resizeColumn:true,
-            fixedRowHeight:false,
-            rowLineHeight:32,
-            rowHeight:32,
+            resizeColumn: true,
+            fixedRowHeight: false,
+            rowLineHeight: 32,
+            rowHeight: 32,
             editable: false,
-            headermenu:{
-                autowidth: true, 
-                },
+            headermenu: {
+                autowidth: true,
+            },
             startPos: 1,
             posPpage: app.config.posPpage,
             totalPos: 1250,
@@ -49,213 +50,236 @@ export default class SkippedBarView extends JetView{
             di: 'asc',
             tooltip: true,
             columns: [
-                {id: "id_tovar", width: 80, //sort: "server",
+                {
+                    id: "id_tovar", width: 80, //sort: "server",
                     hidden: true,
                     tooltip: false,
-                    header: [{text: "ID товара"},
-                        {content: "cFilt",
-                            inputConfig : {
-                                pager: 2
-                            },
-                        }
+                    header: [{ text: "ID товара" },
+                    {
+                        content: "cFilt",
+                        inputConfig: {
+                            pager: 2
+                        },
+                    }
                     ],
                 },
-                {id: "sh_prc", width: 280,  css: "overflow",
+                {
+                    id: "sh_prc", width: 280, css: "overflow",
                     hidden: true,
-                    header: [{text: "sh_prc"},
-                        {content: "cFilt",
-                            inputConfig : {
-                                    pager: 2
-                                    },
-                            },
-                        ],
+                    header: [{ text: "sh_prc" },
+                    {
+                        content: "cFilt",
+                        inputConfig: {
+                            pager: 2
+                        },
                     },
-                { id: "c_tovar", fillspace: 1, sort: "server",
-                    headermenu:false,
+                    ],
+                },
+                {
+                    id: "c_tovar", fillspace: 1, sort: "server",
+                    headermenu: false,
                     css: "overflow",
-                    header: [{text: "Название"},
-                        {content: "cFilt",
-                            inputConfig : {
-                                    pager: 2
-                                    },
-                            },
-                        ]
+                    header: [{ text: "Название" },
+                    {
+                        content: "cFilt",
+                        inputConfig: {
+                            pager: 2
+                        },
                     },
-                { id: "c_vnd", sort: "server",
+                    ]
+                },
+                {
+                    id: "c_vnd", sort: "server",
                     width: 200,
                     css: "overflow",
-                    header: [{text: "Поставщик"},
-                        {content: "richFilt", compare: compareTrue,
-                            inputConfig : {
-                                inputtype: "combo",
-                                options: {
-                                    filter: mcf_filter,
-                                    data: rList,
-                                    },
-                                },
-                            }
-                        ]
-                    },
-                { id: "c_zavod", sort: "server",
+                    header: [{ text: "Поставщик" },
+                    {
+                        content: "richFilt", compare: compareTrue,
+                        inputConfig: {
+                            inputtype: "combo",
+                            options: {
+                                filter: mcf_filter,
+                                data: rList,
+                            },
+                        },
+                    }
+                    ]
+                },
+                {
+                    id: "c_zavod", sort: "server",
                     width: 200,
                     css: "overflow",
-                    header: [{text: "Производитель"},
-                        {content: "cFilt",
-                            inputConfig : {
-                                    pager: 2
-                                    },
-                            },
-                        ]
+                    header: [{ text: "Производитель" },
+                    {
+                        content: "cFilt",
+                        inputConfig: {
+                            pager: 2
+                        },
                     },
-                {id: "dt", width: 200, sort: 'server',
+                    ]
+                },
+                {
+                    id: "dt", width: 200, sort: 'server',
                     format: dt_formating_sec,
                     css: 'center_p',
                     tooltip: false,
-                    header: [{text: "Дата изменения"}, 
-                        {content: "dateRangeFilter", compare: compareTrue,
-                            inputConfig:{format:dt_formating, width: 180,},
-                            suggest:{
-                                view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
-                                },
-                            },
-                        ]
+                    header: [{ text: "Дата изменения" },
+                    {
+                        content: "dateRangeFilter", compare: compareTrue,
+                        inputConfig: { format: dt_formating, width: 180, },
+                        suggest: {
+                            view: "daterangesuggest", body: { timepicker: false, calendarCount: 2 }
+                        },
                     },
-                {id: "source", width: 150, hidden: true,
+                    ]
+                },
+                {
+                    id: "source", width: 150, hidden: true,
                     tooltip: false,
-                    header: [{text: "Источник"},
-                        {content: "richFilt", compare: compareTrue,
-                            inputConfig : {
-                                pager: 2,
-                                options: options.sources,
-                                },
-                            }
-                        ]
-                    },
-                {id: "id_org", width: 100, hidden: true,
+                    header: [{ text: "Источник" },
+                    {
+                        content: "richFilt", compare: compareTrue,
+                        inputConfig: {
+                            pager: 2,
+                            options: options.sources,
+                        },
+                    }
+                    ]
+                },
+                {
+                    id: "id_org", width: 100, hidden: true,
                     tooltip: false,
-                    header: [{text: "id_org"},
-                        {content: "cFilt",
-                            inputConfig : {
-                                    pager: 2
-                                    },
-                            },
-                        ]
+                    header: [{ text: "id_org" },
+                    {
+                        content: "cFilt",
+                        inputConfig: {
+                            pager: 2
+                        },
                     },
-                ],
+                    ]
+                },
+            ],
             on: {
-                'onresize': function() {
+                'onresize': function () {
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
                         this.config.posPpage = rows;
-                        this.delayResize = setTimeout( () => {
+                        this.delayResize = setTimeout(() => {
                             this.$scope.startSearch();
                         }, 150)
                     };
                 },
-                "data->onParse":function(i, data){
+                "data->onParse": function (i, data) {
                     this.clearAll();
-                    },
-                onBeforeRender: function() {
+                },
+                onBeforeRender: function () {
                     webix.extend(this, webix.ProgressBar);
-                    },
+                },
                 onBeforeSort: (field, direction) => {
-                    setTimeout( () => {
+                    setTimeout(() => {
                         this.$$("__table").config.fi = field;
                         this.$$("__table").config.di = direction;
                         this.startSearch();
-                    }, app.config.searchDelay)                 
+                    }, app.config.searchDelay)
                 },
-                onItemDblClick: function(item) {
+                onItemDblClick: function (item) {
                     let user = this.$scope.app.config.user
                     let app = this.$scope.app;
                     if (app.config.roles[app.config.role].adm) {
                         let sh_prc = this.getSelectedItem().sh_prc
                         let params = {};
-                        params["command"] = "?returnLnk";
+                        params["command"] = "returnLnk";
                         params["sh_prc"] = sh_prc;
                         params["type"] = "async";
                         params["callback"] = delSkip;
                         this.$scope.popconfirm.show('Вернуть на сведение?', params);
-                        }
-                    },
-                onKeyPress: function(code, e){
+                    }
+                },
+                onKeyPress: function (code, e) {
                     var focused = document.activeElement;
                     if (focused.type !== 'text' && 13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
-                        }
-                    },
-                onAfterLoad: function() {
+                    }
+                },
+                onAfterLoad: function () {
                     this.hideProgress();
-                    },
-                }
+                },
             }
+        }
 
-        var top_menu = {rows: [
-            {view: 'toolbar',
-                css: {"border-top": "0px"},
-                height: 40,
-                cols: [
-                    {},
-                    {view: "checkbox", localId: "_process",
-                        hidden: !app.config.roles[app.config.role].lnkdel,
-                        value: 0,
-                        labelRight: "<span style='color: white; font-weight: 600'>спец.обработка</span>",
-                        width: 200,
-                        on: {
-                            onChange: function() {
-                                this.$scope.setSearchMethod(this.getValue())
+        var top_menu = {
+            rows: [
+                {
+                    view: 'toolbar',
+                    css: { "border-top": "0px" },
+                    height: 40,
+                    cols: [
+                        {},
+                        {
+                            view: "checkbox", localId: "_process",
+                            hidden: !app.config.roles[app.config.role].lnkdel,
+                            value: 0,
+                            labelRight: "<span style='color: white; font-weight: 600'>спец.обработка</span>",
+                            width: 200,
+                            on: {
+                                onChange: function () {
+                                    this.$scope.setSearchMethod(this.getValue())
+                                },
                             },
-                        },
-                        click: () => {
-                            // this.$$("__table").callEvent("onBeforeSort");
+                            click: () => {
+                                // this.$$("__table").callEvent("onBeforeSort");
                             }
                         },
-                    {view: "button", type: "htmlbutton", tooltip: "Обновить", localId: "_renew",
-                        resizable: true,
-                        sWidth: 136,
-                        eWidth: 40,
-                        label: "",
-                        width: 40,
-                        extLabel: "<span class='button_label'>Обновить</span>",
-                        oldLabel: "<span class='webix_icon fa-refresh'></span>",
-                        click: () => {
-                            this.$$("__table").callEvent("onBeforeSort");
+                        {
+                            view: "button", type: "htmlbutton", tooltip: "Обновить", localId: "_renew",
+                            resizable: true,
+                            sWidth: 136,
+                            eWidth: 40,
+                            label: "",
+                            width: 40,
+                            extLabel: "<span class='button_label'>Обновить</span>",
+                            oldLabel: "<span class='webix_icon fa-refresh'></span>",
+                            click: () => {
+                                this.$$("__table").callEvent("onBeforeSort");
                             }
                         },
-                    {view:"button",  tooltip: "Сбросить фильтры", 
-                        type:"imageButton", image: buttons.unFilter.icon, 
-                        width: 40,
-                        localId: "_unfilt",
-                        resizable: true,
-                        sWidth: 180,
-                        eWidth: 40,
-                        label: "",
-                        width: 40,
-                        extLabel: buttons.unFilter.label,
-                        oldLabel: "",
-                        click: () => {
-                            var cv = this.$$("__table");
-                            unFilter(cv);
-                            this.startSearch()
+                        {
+                            view: "button", tooltip: "Сбросить фильтры",
+                            type: "imageButton", image: buttons.unFilter.icon,
+                            width: 40,
+                            localId: "_unfilt",
+                            resizable: true,
+                            sWidth: 180,
+                            eWidth: 40,
+                            label: "",
+                            width: 40,
+                            extLabel: buttons.unFilter.label,
+                            oldLabel: "",
+                            click: () => {
+                                var cv = this.$$("__table");
+                                unFilter(cv);
+                                this.startSearch()
                             }
                         },
                     ]
                 },
-            {height: 3},
-            ]}
+                { height: 3 },
+            ]
+        }
 
         var _view = {
             view: "layout", type: "clean",
             rows: [
                 top_menu,
                 sprv,
-                {$subview: PagerView},
-            ]}
+                { $subview: PagerView },
+            ]
+        }
         return _view
     }
 
-    setSearchMethod(val){
+    setSearchMethod(val) {
         console.log(val, typeof val)
         if (val == 1) {
             // применяем  особые условия
@@ -270,7 +294,7 @@ export default class SkippedBarView extends JetView{
 
     startSearch() {
         let old_v = this.getRoot().getChildViews()[2].$scope.$$("__page").getValue();
-        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+        this.getRoot().getChildViews()[2].$scope.$$("__page").setValue((+old_v === 0) ? '1' : "0");
     }
 
     ready() {
@@ -279,13 +303,13 @@ export default class SkippedBarView extends JetView{
         let th = this;
         let u = webix.$$(table.getColumnConfig('dt').header[1].suggest.body.id)
         u.getChildViews()[1].getChildViews()[1].setValue('Применить');
-        u.getChildViews()[1].getChildViews()[1].define('click', function() {
+        u.getChildViews()[1].getChildViews()[1].define('click', function () {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout(function(){
+            this._filter_timer = window.setTimeout(function () {
                 th.startSearch();
-                },webix.ui.datafilter.textWaitDelay);
+            }, webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
-            });
+        });
         table.getFilter('dt').setValue(new Date());
 
         setTimeout(() => {
@@ -299,17 +323,17 @@ export default class SkippedBarView extends JetView{
 
 
         table.getFilter('dt').blockEvent();
-        setTimeout( () => {
+        setTimeout(() => {
             table.getFilter('dt').setValue(null);
             table.getFilter('dt').unblockEvent();
         }, 100);
         setTimeout(() => {
-            table.getFilter("c_tovar").focus();    
+            table.getFilter("c_tovar").focus();
         }, 150);
-        
-        table.markSorting(table.config.fi,table.config.di);
-        }
+
+        table.markSorting(table.config.fi, table.config.di);
+    }
     init() {
         this.popconfirm = this.ui(ConfirmView);
-        }
     }
+}

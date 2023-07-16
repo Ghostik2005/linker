@@ -1,37 +1,38 @@
 "use strict";
 
-import {JetView} from "webix-jet";
-import {setButtons,request, checkVal} from "../views/globals";
-import {checkKey, recalcRowsRet} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter} from "../views/globals";
+import { JetView } from "webix-jet";
+import { setButtons, request, checkVal } from "../views/globals";
+import { checkKey, recalcRowsRet } from "../views/globals";
+import { dt_formating_sec, dt_formating, compareTrue, mcf_filter, unFilter } from "../views/globals";
 import PagerView from "../views/pager_view";
-import {buttons, options} from "../models/variables";
+import { buttons, options } from "../models/variables";
 
-export default class SkladUnlinked extends JetView{
-    config(){
+export default class SkladUnlinked extends JetView {
+    config() {
         var vi = this;
         let app = this.app;
-        let url = app.config.r_url + "?getSupplAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
+        let url = "getSupplAll";
+        let params = { "user": app.config.user };
+        let res = checkVal(request(url, params, !0, app).response, 's');
         var rList = []
         if (res) {
             rList = res;
-            };
+        };
 
-        var sprv = {view: "datatable",
+        var sprv = {
+            view: "datatable",
             name: "__dt_sk",
             localId: "__table",
             // navigation: "row",
             // select: true,
-            resizeColumn:true,
-            fixedRowHeight:false,
-            rowLineHeight:32,
-            rowHeight:32,
+            resizeColumn: true,
+            fixedRowHeight: false,
+            rowLineHeight: 32,
+            rowHeight: 32,
             // editable: false,
-            headermenu:{
-                autowidth: true, 
-                },
+            headermenu: {
+                autowidth: true,
+            },
             startPos: 1,
             posPpage: app.config.posPpage,
             totalPos: 0,
@@ -44,43 +45,48 @@ export default class SkladUnlinked extends JetView{
             editaction: "click",
             tooltip: true,
             columns: [
-                {id: "id", width : 20, hidden: true, headermenu: false},
-                {id: "status", width: 150, hidden: !true,
+                { id: "id", width: 20, hidden: true, headermenu: false },
+                {
+                    id: "status", width: 150, hidden: !true,
                     css: 'center_p',
-                    editor:"select",
+                    editor: "select",
                     options: options.sklad_err_lnk_status,
-                    header: [{text: "Статус"},
-                        {content: "richFilt", compare: compareTrue,
-                            inputConfig : {
-                                options: options.sklad_err_lnk_status,
-                            },
-                        }
+                    header: [{ text: "Статус" },
+                    {
+                        content: "richFilt", compare: compareTrue,
+                        inputConfig: {
+                            options: options.sklad_err_lnk_status,
+                        },
+                    }
                     ],
-                    template: function(obj, type, value){
+                    template: function (obj, type, value) {
                         let status_name;
-                        options.sklad_err_lnk_status.forEach( (item) => {
+                        options.sklad_err_lnk_status.forEach((item) => {
                             if (+item.id === +value) status_name = item.value
 
                         })
-                        let t = "<span>" + status_name + "</span>" ;
+                        let t = "<span>" + status_name + "</span>";
                         return t
                     }
                 },
-                {id: "dt", width: 200, sort: 'server', hidden: !true,
+                {
+                    id: "dt", width: 200, sort: 'server', hidden: !true,
                     format: dt_formating_sec,
                     css: 'center_p',
-                    header: [{text: "Дата добавления"}, 
-                        {content: "dateRangeFilter", compare: compareTrue,
-                            inputConfig:{format:dt_formating, width: 180,},
-                            suggest:{
-                                view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
-                            },
+                    header: [{ text: "Дата добавления" },
+                    {
+                        content: "dateRangeFilter", compare: compareTrue,
+                        inputConfig: { format: dt_formating, width: 180, },
+                        suggest: {
+                            view: "daterangesuggest", body: { timepicker: false, calendarCount: 2 }
                         },
+                    },
                     ]
                 },
-                {id: "sh_prc", width: 280, 
+                {
+                    id: "sh_prc", width: 280,
                     hidden: true,
-                    header: [{text: "sh_prc"},
+                    header: [{ text: "sh_prc" },
                         // {content: "cFilt",
                         //     inputConfig : {
                         //             pager: 2
@@ -88,37 +94,43 @@ export default class SkladUnlinked extends JetView{
                         // },
                     ],
                 },
-                { id: "sklad_name", //sort: "server",
+                {
+                    id: "sklad_name", //sort: "server",
                     width: 100,
                     hidden: !true,
-                    header: [{text: "Склад"},
+                    header: [{ text: "Склад" },
                     ]
                 },
-                { id: "nakl", //sort: "server",
+                {
+                    id: "nakl", //sort: "server",
                     width: 100,
                     hidden: !true,
-                    header: [{text: "Накладная"},
+                    header: [{ text: "Накладная" },
                     ]
                 },
-                { id: "sklad_user", //sort: "server",
+                {
+                    id: "sklad_user", //sort: "server",
                     width: 100,
                     hidden: !true,
-                    header: [{text: "Пользователь"},
+                    header: [{ text: "Пользователь" },
                     ]
                 },
-                { id: "id_spr", //sort: "server",
+                {
+                    id: "id_spr", //sort: "server",
                     width: 80,
-                    header: [{text: "id_spr"},
+                    header: [{ text: "id_spr" },
                     ]
                 },
-                { id: "id_vnd", //sort: "server",
+                {
+                    id: "id_vnd", //sort: "server",
                     width: 50, hidden: true, headermenu: false,
-                    header: [{text: "id_vnd"},
+                    header: [{ text: "id_vnd" },
                     ]
                 },
-                { id: "c_vnd", sort: "server",
+                {
+                    id: "c_vnd", sort: "server",
                     width: 200,
-                    header: [{text: "Поставщик", },
+                    header: [{ text: "Поставщик", },
                         // {content: "richFilt",
                         //     compare: compareTrue,
                         //     inputConfig : {
@@ -132,54 +144,63 @@ export default class SkladUnlinked extends JetView{
                         // }
                     ]
                 },
-                {id: "sklad_id_tovar", 
+                {
+                    id: "sklad_id_tovar",
                     width: 100,
                     header: [
-                    {text: "Код товара", colspan:2, css: 'center_p',}, {text: "в складе", css: 'center_p',}
+                        { text: "Код товара", colspan: 2, css: 'center_p', }, { text: "в складе", css: 'center_p', }
                     ]
                 },
-                { id: "vnd_id_tovar", //sort: "server",
+                {
+                    id: "vnd_id_tovar", //sort: "server",
                     width: 100,
-                    header: ["", {text: "у поставщика", css: 'center_p'},
+                    header: ["", { text: "у поставщика", css: 'center_p' },
                     ]
                 },
-                {id: "sklad_c_tovar", 
+                {
+                    id: "sklad_c_tovar",
                     width: 350,
                     header: [
-                    {text: "Название", colspan:2, css: 'center_p'}, {text: "в складе", css: 'center_p',}
+                        { text: "Название", colspan: 2, css: 'center_p' }, { text: "в складе", css: 'center_p', }
                     ]
                 },
-                { id: "vnd_c_tovar", //sort: "server",
+                {
+                    id: "vnd_c_tovar", //sort: "server",
                     width: 350,
-                    header: ["", {text: "у поставщика", css: 'center_p'},
+                    header: ["", { text: "у поставщика", css: 'center_p' },
                     ]
                 },
-                {id: "sklad_c_zavod", 
+                {
+                    id: "sklad_c_zavod",
                     width: 150,
                     header: [
-                    {text: "Производитель", colspan:2, css: 'center_p'}, {text: "в складе", css: 'center_p',}
+                        { text: "Производитель", colspan: 2, css: 'center_p' }, { text: "в складе", css: 'center_p', }
                     ]
                 },
-                { id: "vnd_c_zavod", //sort: "server",
+                {
+                    id: "vnd_c_zavod", //sort: "server",
                     width: 150,
-                    header: ["", {text: "у поставщика", css: 'center_p'},
+                    header: ["", { text: "у поставщика", css: 'center_p' },
                     ]
                 },
-                {id: "sklad_c_strana", 
+                {
+                    id: "sklad_c_strana",
                     width: 100,
                     header: [
-                    {text: "Страна", colspan:2, css: 'center_p'}, {text: "в складе", css: 'center_p',}
+                        { text: "Страна", colspan: 2, css: 'center_p' }, { text: "в складе", css: 'center_p', }
                     ]
                 },
-                { id: "vnd_c_strana", //sort: "server",
+                {
+                    id: "vnd_c_strana", //sort: "server",
                     width: 100,
-                    header: ["", {text: "у поставщика", css: 'center_p'},
+                    header: ["", { text: "у поставщика", css: 'center_p' },
                     ]
                 },
-                {id: "change_dt", width: 200, sort: 'server', hidden: true,
+                {
+                    id: "change_dt", width: 200, sort: 'server', hidden: true,
                     format: dt_formating_sec,
                     css: 'center_p',
-                    header: [{text: "Дата изменения"}, 
+                    header: [{ text: "Дата изменения" },
                         // {content: "dateRangeFilter", compare: compareTrue,
                         //     inputConfig:{format:dt_formating, width: 180,},
                         //     suggest:{
@@ -190,63 +211,63 @@ export default class SkladUnlinked extends JetView{
                 },
             ],
             on: {
-                'onresize': function() {
+                'onresize': function () {
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     if (rows) {
-                        this.delayResize = setTimeout( () => {
+                        this.delayResize = setTimeout(() => {
                             this.config.posPpage = rows;
                             this.$scope.startSearch();
                         }, 150)
-                    }  
+                    }
                 },
-                "data->onParse":function(i, data){
+                "data->onParse": function (i, data) {
                     this.clearAll();
-                    },
-                onAfterColumnHide: function(id) {
-                    if (id==='sklad_c_tovar') {
+                },
+                onAfterColumnHide: function (id) {
+                    if (id === 'sklad_c_tovar') {
                         this.blockEvent();
                         this.hideColumn('vnd_c_tovar');
                         this.unblockEvent();
-                    } else if (id==='sklad_id_tovar') {
+                    } else if (id === 'sklad_id_tovar') {
                         this.blockEvent();
                         this.hideColumn('vnd_id_tovar');
                         this.unblockEvent();
-                    } else if (id==='sklad_c_zavod') {
+                    } else if (id === 'sklad_c_zavod') {
                         this.blockEvent();
                         this.hideColumn('vnd_c_zavod');
                         this.unblockEvent();
-                    } else if (id==='sklad_id_strana') {
+                    } else if (id === 'sklad_id_strana') {
                         this.blockEvent();
                         this.hideColumn('vnd_id_strana');
                         this.unblockEvent();
                     }
                 },
-                onAfterColumnShow: function(id) {
-                    if (id==='sklad_c_tovar') {
+                onAfterColumnShow: function (id) {
+                    if (id === 'sklad_c_tovar') {
                         this.blockEvent();
                         this.showColumn('vnd_c_tovar');
                         this.unblockEvent();
-                    } else if (id==='sklad_id_tovar') {
+                    } else if (id === 'sklad_id_tovar') {
                         this.blockEvent();
                         this.showColumn('vnd_id_tovar');
                         this.unblockEvent();
-                    } else if (id==='sklad_c_zavod') {
+                    } else if (id === 'sklad_c_zavod') {
                         this.blockEvent();
                         this.showColumn('vnd_c_zavod');
                         this.unblockEvent();
-                    } else if (id==='sklad_id_strana') {
+                    } else if (id === 'sklad_id_strana') {
                         this.blockEvent();
                         this.showColumn('vnd_id_strana');
                         this.unblockEvent();
                     }
                 },
-                onEditorChange: function(id, value) {
+                onEditorChange: function (id, value) {
                     if (id.column === 'status') {
                         // поменялся статус, делаем запрос на сервер, если ответ принят - меняем значения в таблицу
-                        let url = app.config.r_url + "?updErrorFromSkladStatus";
-                        params = {user: app.config.user, id: id.row, status: value};
-                        let res = checkVal(request(url, params, !0).response, 's');
+                        let url = "updErrorFromSkladStatus";
+                        params = { user: app.config.user, id: id.row, status: value };
+                        let res = checkVal(request(url, params, !0, app).response, 's');
                         if (res) {
                             let item = this.getItem(id.row);
                             item.change_dt = res;
@@ -255,18 +276,18 @@ export default class SkladUnlinked extends JetView{
                         } else {
                             this.editCancel();
                         }
-                        
+
                     }
                 },
                 onBeforeRender: (data) => {
                     this.data_formating(data);
                 },
                 onBeforeSort: (field, direction) => {
-                    setTimeout( () => {
+                    setTimeout(() => {
                         this.$$("__table").config.fi = field;
                         this.$$("__table").config.di = direction;
                         this.startSearch();
-                    }, app.config.searchDelay)                 
+                    }, app.config.searchDelay)
                 },
                 // onItemDblClick: (clickItem) => {
                 //     let item = this.$$("__table").getSelectedItem();
@@ -287,7 +308,7 @@ export default class SkladUnlinked extends JetView{
                 //             setTimeout(()=> {
                 //                 this.startSearch()
                 //                 }, 800);
-                                
+
                 //         } else {
                 //             webix.message({"text": "Упс. Нет доступа.", "type": "debug"});
                 //             }
@@ -301,111 +322,119 @@ export default class SkladUnlinked extends JetView{
                 //         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                 //         }
                 //     },
-                onAfterLoad: function() {
+                onAfterLoad: function () {
                     this.hideProgress();
-                    },
-                }
+                },
             }
+        }
 
-        var top_menu = {rows: [
-            {view: 'toolbar',
-                css: {"border-top": "0px"},
-                height: 40,
-                cols: [
-                    {view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите название", localId: "_sb",
-                    on: {
-                        onKeyPress: function(code, event) {
-                            clearTimeout(this.config._keytimed);
-                            if (checkKey(code)) {
-                                this.config._keytimed = setTimeout(function () {
-                                    vi.startSearch()
-                                    }, this.$scope.app.config.searchDelay);
+        var top_menu = {
+            rows: [
+                {
+                    view: 'toolbar',
+                    css: { "border-top": "0px" },
+                    height: 40,
+                    cols: [
+                        {
+                            view: "text", label: "", value: "", labelWidth: 1, placeholder: "Введите название", localId: "_sb",
+                            on: {
+                                onKeyPress: function (code, event) {
+                                    clearTimeout(this.config._keytimed);
+                                    if (checkKey(code)) {
+                                        this.config._keytimed = setTimeout(function () {
+                                            vi.startSearch()
+                                        }, this.$scope.app.config.searchDelay);
+                                    }
                                 }
+                            },
+                        },
+                        // {},
+                        // {view: "label", template: "Для ускорения ограничивайте поиск названием"},
+                        {
+                            view: "button", type: "htmlbutton", tooltip: "Обновить",
+                            localId: "_renew",
+                            resizable: true,
+                            sWidth: 136,
+                            eWidth: 40,
+                            label: "",
+                            width: 40,
+                            extLabel: "<span class='button_label'>Обновить</span>",
+                            oldLabel: "<span class='webix_icon fa-refresh'></span>",
+                            click: () => {
+                                this.startSearch();
                             }
                         },
-                    },
-                    // {},
-                    // {view: "label", template: "Для ускорения ограничивайте поиск названием"},
-                    {view: "button", type: "htmlbutton", tooltip: "Обновить", 
-                        localId: "_renew",
-                        resizable: true,
-                        sWidth: 136,
-                        eWidth: 40,
-                        label: "",
-                        width: 40,
-                        extLabel: "<span class='button_label'>Обновить</span>",
-                        oldLabel: "<span class='webix_icon fa-refresh'></span>",
-                        click: () => {
-                            this.startSearch();
-                            }
-                        },
-                    {view:"button",  tooltip: "Сбросить фильтры",type:"imageButton", image: buttons.unFilter.icon,
-                        width: 40,
-                        localId: "_unfilt",
-                        resizable: true,
-                        sWidth: 180,
-                        eWidth: 40,
-                        label: "",
-                        width: 40,
-                        extLabel: buttons.unFilter.label,
-                        oldLabel: "",
-                        click: () => {
-                            var cv = this.$$("__table");
-                            unFilter(cv);
-                            this.startSearch()
+                        {
+                            view: "button", tooltip: "Сбросить фильтры", type: "imageButton", image: buttons.unFilter.icon,
+                            width: 40,
+                            localId: "_unfilt",
+                            resizable: true,
+                            sWidth: 180,
+                            eWidth: 40,
+                            label: "",
+                            width: 40,
+                            extLabel: buttons.unFilter.label,
+                            oldLabel: "",
+                            click: () => {
+                                var cv = this.$$("__table");
+                                unFilter(cv);
+                                this.startSearch()
                             }
                         },
                     ]
                 },
-            {height: 3},
-            ]}
-        
+                { height: 3 },
+            ]
+        }
+
         var _view = {
             view: "layout", //type: "clean",
             rows: [
                 top_menu,
                 sprv,
-                {$subview: PagerView},
-                ]}
+                { $subview: PagerView },
+            ]
+        }
 
-        let pop_window = {view: "cWindow",
-        modal: !true,
-        width: document.documentElement.clientWidth * 0.90,
-        height: document.documentElement.clientHeight * 0.95,
-        on: {
-            // onHide: () => {
-            //     this.$$("_form").reconstruct();
+        let pop_window = {
+            view: "cWindow",
+            modal: !true,
+            width: document.documentElement.clientWidth * 0.90,
+            height: document.documentElement.clientHeight * 0.95,
+            on: {
+                // onHide: () => {
+                //     this.$$("_form").reconstruct();
                 // },
-            // onShow: () => {
-            //     },
+                // onShow: () => {
+                //     },
             },
-        body: _view
+            body: _view
         }
 
         return pop_window
-        }
+    }
 
     data_formating(data) {
-        data.order.forEach(function(item) {
+        data.order.forEach(function (item) {
             let obj = data.getItem(item);
-            obj.$css = (+obj.status === 10) ? "lowlighted":
-                       (+obj.status === 2 || +obj.status === 3) ? "darklighted":
-                        "nothing";
+            obj.$css = (+obj.status === 10) ? "lowlighted" :
+                (+obj.status === 2 || +obj.status === 3) ? "darklighted" :
+                    "nothing";
         });
 
     }
 
-    show_w(new_head){
+    show_w(new_head) {
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         let table = this.$$("__table")
         this.startSearch();
         this.$$("_sb").focus();
-        table.markSorting(table.config.fi,table.config.di);
+        table.markSorting(table.config.fi, table.config.di);
         this.getRoot().show();
     }
 
 
-    hide_w(){
+    hide_w() {
         this.getRoot().hide()
     }
 
@@ -415,7 +444,7 @@ export default class SkladUnlinked extends JetView{
 
     startSearch() {
         let old_v = this.getRoot().getBody().getChildViews()[2].$scope.$$("__page").getValue();
-        this.getRoot().getBody().getChildViews()[2].$scope.$$("__page").setValue((+old_v ===0) ? '1' : "0");
+        this.getRoot().getBody().getChildViews()[2].$scope.$$("__page").setValue((+old_v === 0) ? '1' : "0");
     }
 
     init() {
@@ -429,11 +458,11 @@ export default class SkladUnlinked extends JetView{
         var table = this.$$("__table");
         table.config.searchBar = this.$$("_sb");
         $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function () {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout(function(){
+            this._filter_timer = window.setTimeout(function () {
                 th.startSearch();
-                },webix.ui.datafilter.textWaitDelay);
+            }, webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
         });
         if (this.$$("__table").isColumnVisible('status')) this.$$("__table").getFilter('status').setValue(1);
@@ -447,7 +476,7 @@ export default class SkladUnlinked extends JetView{
         // }, 150);
         // this.$$("_sb").focus();
         // table.getFilter("sklad_c_tovar").focus();
-        table.markSorting(table.config.fi,table.config.di);
+        table.markSorting(table.config.fi, table.config.di);
 
     }
 

@@ -1,23 +1,24 @@
-#coding: utf-8
-
-import time
-import queue
+# coding: utf-8
 import atexit
-import psycopg2
+import queue
 import threading
+import time
+
+import psycopg2
 
 
 class Connect:
     """
     Connect class
     """
+
     def __init__(self, parent):
         self.parent = parent
         self.con_params = parent.connection_params
         try:
             self.con = psycopg2.connect(**self.con_params)
-        except:
-            print('not connected', flush=True)
+        except Exception as e:
+            print(f"not connected: {e}", flush=True)
             self.con = None
 
     def kill(self):
@@ -26,7 +27,7 @@ class Connect:
         """
         try:
             self.con.close()
-        except:
+        except Exception:
             pass
         else:
             pass
@@ -46,7 +47,7 @@ class Connect:
         if not self.con:
             print("p-> ", self.parent.connection_queue)
             self.con = psycopg2.connect(**self.con_params)
-        
+
         return self.con.cursor()
 
     def commit(self):
@@ -72,9 +73,10 @@ class ConectPool:
     """
     Pool connection class
     """
-    downtime = 30 #время простоя, после которого все соединения убиваются
 
-    def __init__(self, pool_size:int=5, connection_params:dict=None):
+    downtime = 30  # время простоя, после которого все соединения убиваются
+
+    def __init__(self, pool_size: int = 5, connection_params: dict = None):
         self.last_request = time.time()
         self.connection_params = connection_params
         self.psize = pool_size
@@ -106,13 +108,13 @@ class ConectPool:
         while True:
             dt = time.time() - self.last_request
             # print('dt:', dt, 'd:', self.downtime, 'size:', self.connection_queue.qsize(), flush=True)
-            if dt > self.downtime*20 and not self.connection_queue.empty():
-                #если разница между последним использованием соединния и текущим временм больше downtime то убиваем все лишние
+            if dt > self.downtime * 20 and not self.connection_queue.empty():
+                # если разница между последним использованием соединния и текущим временм больше downtime то убиваем все лишние
                 self._kill_all()
             if dt > self.downtime:
-                #если разница между последним использованием соединния и текущим временм больше downtime то убиваем все лишние
+                # если разница между последним использованием соединния и текущим временм больше downtime то убиваем все лишние
                 size = self.connection_queue.qsize()
-                dq = int(size-self.psize)
+                dq = int(size - self.psize)
                 for _ in range(dq):
                     try:
                         c = self.connection_queue.get_nowait()
@@ -149,7 +151,6 @@ class ConectPool:
         # connection.reset()
         self.connection_queue.put(connection)
 
-
     def _kill(self, connection):
         """
         закрываем соединение
@@ -171,8 +172,14 @@ class ConectPool:
                 self._kill(c)
         # self.connection_queue = queue.Queue()
 
+
 def test():
-    conn = {'dbname': 'spr', 'user': 'postgres', 'host': 'localhost', 'port': 5432}
+    conn = {
+        "dbname": "spr",
+        "user": "postgres",
+        "host": "localhost",
+        "port": 5432,
+    }
     c = ConectPool(connection_params=conn)
     con = c.connect()
     cur = con.cursor()
