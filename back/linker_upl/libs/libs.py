@@ -10,11 +10,13 @@ import os
 import re
 import shutil
 import socket
+import ssl
 import subprocess
 import sys
 import threading
 import time
 import traceback
+import urllib.request
 from urllib.parse import unquote
 
 import libs.connect_pool as connect_pool
@@ -248,7 +250,7 @@ ON CONFLICT (UIN) DO UPDATE
         uin = os.path.basename(path).split(".")[0]
         if uin.split(".")[0] != uin:
             uin = None
-        _re = re.compile("\(..\...\)")
+        _re = re.compile("\(..\...\)")  # noqa
         rows = []
         with open(path, "rb") as f:
             rows = f.read()
@@ -708,14 +710,15 @@ where  lnk.sh_prc = prc.sh_prc"""
 
         # если назначено на админа, но это не пропущенное - переназначаем на сводильщика
         # пропускаем когда работает админ
-
-        dbc.execute(
-            f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins}
-        and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
-        and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)"""
-        )
-        if callable(db.commit):
-            db.commit()
+        # на время отпуска сводильщика
+        # dbc.execute(
+        #     f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins}
+        # and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
+        # and id_vnd<>19973 and id_vnd<>19972 and id_vnd<>19971)"""
+        # )
+        # if callable(db.commit):
+        #     db.commit()
+        # на время отпуска сводильщика
 
         # назначаем на группы пользователей:
         dbc.execute(
@@ -750,15 +753,18 @@ where v.users_group is not null and v.users_group in (12, 0)"""
             for row in rows:
                 self.log(f"PRCSYNC Назначаем на сведение {row[1]}")
                 # назначем на админа
-                # dbc.execute(
-                #     f"""
-                # update prc set id_org = 0 where n_fg in (12,0) and in_work = -1 {con_ins}
-                # and exists (select vv.id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]}) """
-                # )
+                # на время отпуска сводильщика
                 dbc.execute(
-                    f"""update prc set id_org = {row[0]} where (id_org<>12 and id_org <> 0) and n_fg= 0 and in_work = -1 {con_ins}
-                and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]})"""
+                    f"""update prc set id_org = 0 where n_fg in (12,0) and in_work = -1 {con_ins}
+                and exists (
+                    select vv.id_vnd from vnd vv
+                    where vv.id_vnd = prc.id_vnd and (vv.users_group={row[0]} or vv.users_group is null)) """
                 )
+                # dbc.execute(
+                #     f"""update prc set id_org = {row[0]} where (id_org<>12 and id_org <> 0) and n_fg= 0 and in_work = -1 {con_ins}
+                # and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]})"""
+                # )
+                # на время отпуска сводильщика
                 if callable(db.commit):
                     db.commit()
                 self.log(f"PRCSYNC ---Назначили на сведение {row[1]}")
@@ -869,7 +875,6 @@ def getip(log):
             iip = se.getsockname()[0]
     except Exception as e:
         log(f"err:{str(e)}")
-    import ssl, re, urllib.request
 
     ssl._create_default_https_context = ssl._create_unverified_context
     for url in _urls:

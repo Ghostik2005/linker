@@ -11,7 +11,8 @@ export default class loginView extends JetView {
         function validate_user(th) {
             let item = th.$scope.$$("auth_box").getValues();
             // console.log('h', h);
-            item.pass = md5(item.pass);
+            item.pass = md5(item.pass.trim());
+            item.user = item.user.trim();
             // console.log('p', item.pass);
             var ret = false;
             let url = "login"

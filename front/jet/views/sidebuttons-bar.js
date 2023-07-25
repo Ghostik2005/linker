@@ -34,7 +34,9 @@ export default class SideButtonsBar extends JetView {
             let uid = (view === LinkerView) ? 'app-nav' : webix.uid();
             var tabConfig = {
                 id: uid,
-                value: header, width: getHeaderLength(header), close: true
+                value: header,
+                width: getHeaderLength(header),
+                close: true
             };
             let formConfig = {
                 $scope: parent.$scope,
@@ -526,7 +528,9 @@ export default class SideButtonsBar extends JetView {
         let uid = (app.config.defaultView === 'LinkerView') ? 'app-nav' : webix.uid();
         var tabConfig = {
             id: uid,
-            value: header, width: getHeaderLength(header), close: !true
+            value: header,
+            width: getHeaderLength(header),
+            close: !true
         };
         let formConfig = {
             $scope: this,

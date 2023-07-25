@@ -18,7 +18,7 @@ export default class UnlinkView extends JetView {
             if (pars.type === "sync") {
                 console.log('sync');
             } else {
-                request(url, params, 0,).then(function (data) {
+                request(url, params, 0, app).then(function (data) {
                     data = checkVal(data, 'a');
                     if (data) {
                         if (callback) callback(data);

@@ -221,6 +221,7 @@ export function parseToLink(item) {
             cid = suppl_dt.getItem(d_item).id;
         };
     });
+    console.log(cid)
     if (cid) {
         suppl_dt.getItem(cid).count += 1;
         $$("_suppl").setValue(cid);
@@ -1466,6 +1467,7 @@ export function getHeaderLength(header) {
     let h_length = testDiv.childNodes[1].offsetWidth;
     h_length += 75;
     testDiv.remove()
+    return 'auto'
     return h_length
 }
 

@@ -233,6 +233,7 @@ export default class AllUnlinkedBarView extends JetView {
                     if (+linkBy.getValue() === 1) {
                         if (app.config.roles[app.config.role].lnkdel || item.id_org === this.app.config.group) {
                             $$("_suppl").config.state = true;
+                            console.log(item);
                             parseToLink(item);
                             setTimeout(() => {
                                 this.getRoot().getTopParentView().getChildViews()[1].getChildViews()[0].getChildViews()[1].getChildViews()[1].setValue('app-nav');

@@ -3449,9 +3449,9 @@ where ( classifier.idx_group = 7 and groups.cd_code = %s )"""
             user = params.get("user")
             sh_prc = params.get("sh_prc")
             series = params.get("series")
-            # razbr = params.get("razbr")
+            razbr = params.get("razbr")
             if user and sh_prc and series:
-                sql = """update brak set razbrak = {razbr} where sh_prc = '{sh_prc}' and series = '{series}';"""
+                sql = f"""update brak set razbrak = {razbr} where sh_prc = '{sh_prc}' and series = '{series}';"""
                 self.db.execute({"sql": sql, "options": ()})
                 _return = "OK"
                 ret = {"result": True, "ret_val": _return}
@@ -3468,7 +3468,7 @@ where ( classifier.idx_group = 7 and groups.cd_code = %s )"""
         # если letter_number, то проверяем во всех письмах записях - придумать как выдергивать номер письма из названия
         # если нет, то только в тех, где отсуствует письмо
         if letter_number:
-            sql_check = """select distinct t1.sh_prc, t2.series from brak t2
+            sql_check = f"""select distinct t1.sh_prc, t2.series from brak t2
 left join brak_mail t3 on t3.SH_PRC = t2.SH_PRC and t3.SERIYA = t2.series and t3.deleted = 0
 join lnk t1 on ( t1.sh_prc = t2.sh_prc and t1.ID_VND = 10000)
 WHERE t1.sh_prc = '{sh_prc}' and
@@ -3601,12 +3601,12 @@ where id = %s returning id;"""
             # user = params.get("user")
             letter_id = params.get("id")
             f_name = params.get("f_name")
-            sql = """update BRAK_MAIL set deleted = 1 where id = %s returning sh_prc, seriya;"""
+            sql = """delete from BRAK_MAIL where id = %s returning sh_prc, seriya;"""
             opt = (letter_id,)
             _ = self.db.execute({"sql": sql, "options": opt})
             # sh_prc = res[0][0]
             # series = res[0][1]
-            sql = """update BRAK_MAIL_TEXT set deleted = 1 where LINK_FILE = %s """
+            sql = """delete from BRAK_MAIL_TEXT where LINK_FILE = %s """
             opt = (f_name,)
             _ = self.db.execute({"sql": sql, "options": opt})
             sql = """select count(*) from brak_mail where SH_PRC = '{sh_prc}' and SERIYA = '{series}' and DELETED = 0"""
@@ -3619,60 +3619,64 @@ where id = %s returning id;"""
 
     def getBrakMailApi(self, params=None, x_hash=None):
         if self._check(x_hash):
+            _return = []
             action = params.get("action")
-            if isinstance(action, list):
-                action = action[0]
-            if isinstance(action, str):
-                action = json.loads(action)
-            if isinstance(action, dict):
-                series, sh_prc = action.get("mass")
-                sql = f"""select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv,
-    bm.title_doc, bm.opis, bm.link_file, bm.id, bm.dt,
-CASE
-    WHEN bmt.MAIL_TEXT is null THEN ''
-    ELSE bmt.MAIL_TEXT
-END as m_text,
-bm.external_mail_link
-from brak_mail bm
-LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE and bm.deleted = 0
-where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
-order by id asc; """
-                res = self.db.request({"sql": sql, "options": ()})
-                _return = []
-                for row in res:
-                    pars = row[14]
-                    try:
-                        pars = pars.tobytes()
-                        pars = pars.decode()
-                    except Exception:
-                        pass
-                    external_link = row[15]
-                    has_link = False
-                    if external_link:
-                        has_link = True
-                    r = {
-                        "sh_prc": row[0],
-                        "title": row[1],  # "title"
-                        "title_torg": row[2],  # "title_torg"
-                        "seriya": row[3],  # "seriya"
-                        "fabricator": row[4],  # "fabricator"
-                        "region": row[5],  # "region"
-                        "n_rec": row[6],  # n_rec"
-                        "dt_edit": str(row[7]),  # "dt_edit"
-                        "gv": row[8],  # "gv"
-                        "title_doc": row[9],  # "title_doc"
-                        "opis": row[10],  # "opis"
-                        "link_file": row[11],  # "link_file"
-                        "id": row[12],  # "id"
-                        "dt": str(row[13]),  # "dt"
-                        "doc_text": pars,  # letter text
-                        "external_link": external_link,
-                        "has_link": has_link,
-                    }
-                    _return.append(r)
-                ret = {"results": _return, "success": True, "req": "getMail"}
-            else:
-                ret = {"result": False, "ret_val": "params missing"}
+            if not isinstance(action, list):
+                return json.dumps(
+                    {"result": False, "ret_val": "params missing"},
+                    ensure_ascii=False,
+                )
+
+            for action_row in action:
+                if isinstance(action_row, str):
+                    action_row = json.loads(action_row)
+                if isinstance(action_row, dict):
+                    series, sh_prc = action_row.get("mass")
+                    sql = f"""select bm.sh_prc, bm.title, bm.title_torg, bm.seriya, bm.fabricator, bm.region, bm.n_rec, bm.dt_edit, bm.gv,
+        bm.title_doc, bm.opis, bm.link_file, bm.id, bm.dt,
+    CASE
+        WHEN bmt.MAIL_TEXT is null THEN ''
+        ELSE bmt.MAIL_TEXT
+    END as m_text,
+    bm.external_mail_link
+    from brak_mail bm
+    LEFT JOIN BRAK_MAIL_TEXT bmt on bmt.LINK_FILE = bm.LINK_FILE and bm.deleted = 0
+    where bm.sh_prc = '{sh_prc}' and bm.seriya = '{series}' and bm.deleted != 1
+    order by id asc; """
+                    res = self.db.request({"sql": sql, "options": ()})
+
+                    for row in res:
+                        pars = row[14]
+                        try:
+                            pars = pars.tobytes()
+                            pars = pars.decode()
+                        except Exception:
+                            pass
+                        external_link = row[15]
+                        has_link = False
+                        if external_link:
+                            has_link = True
+                        r = {
+                            "sh_prc": row[0],
+                            "title": row[1],  # "title"
+                            "title_torg": row[2],  # "title_torg"
+                            "seriya": row[3],  # "seriya"
+                            "fabricator": row[4],  # "fabricator"
+                            "region": row[5],  # "region"
+                            "n_rec": row[6],  # n_rec"
+                            "dt_edit": str(row[7]),  # "dt_edit"
+                            "gv": row[8],  # "gv"
+                            "title_doc": row[9],  # "title_doc"
+                            "opis": row[10],  # "opis"
+                            "link_file": row[11],  # "link_file"
+                            "id": row[12],  # "id"
+                            "dt": str(row[13]),  # "dt"
+                            "doc_text": pars,  # letter text
+                            "external_link": external_link,
+                            "has_link": has_link,
+                        }
+                        _return.append(r)
+            ret = {"results": _return, "success": True, "req": "getMail"}
         else:
             ret = {"result": False, "ret_val": "access denied"}
         return json.dumps(ret, ensure_ascii=False)
@@ -3752,7 +3756,7 @@ order by id asc; """
             mail_condition = ""
             if nomail:
                 mail_join = "left join brak_mail t3 on t3.SH_PRC = t2.SH_PRC and t3.SERIYA = t2.series and t3.deleted = 0"
-                mail_condition = "and t3.link_file is null"
+                mail_condition = "and (t3.link_file is null or t3.external_mail_link is null)"
                 del params["nomail"]
             start_p = int(params.get("start", self.start))
             start_p = 1 if start_p < 1 else start_p
@@ -3802,6 +3806,8 @@ WHERE {' '.join(stri)} {mail_condition}"""
             order = f""" ORDER by {field} {direction}, t1.c_tovar"""
             sql = sql + order
             sql = sql + self._insLimit(start_p, end_p)
+            if nomail:
+                print(sql)
             p_list = (
                 [
                     {"sql": sql, "opt": ()},

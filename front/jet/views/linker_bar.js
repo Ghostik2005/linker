@@ -244,6 +244,7 @@ export default class LinkerView extends JetView {
                                 params["id_spr"] = id_spr;
                                 params["type"] = "async";
                                 params["callback"] = delPrc; //удаляем из базы, обновляем списки
+                                console.log(params);
                                 this.popconfirm.show('Связать?', params);
                             }
                         },
