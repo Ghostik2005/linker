@@ -1,29 +1,30 @@
 "use strict";
 
-import {JetView} from "webix-jet";
-import {request, checkVal, recalcRowsRet, setRows} from "../views/globals";
-import {dt_formating_sec, dt_formating, compareTrue, mcf_filter} from "../views/globals";
+import { JetView } from "webix-jet";
+import { request, checkVal, recalcRowsRet, setRows } from "../views/globals";
+import { dt_formating_sec, dt_formating, compareTrue, mcf_filter } from "../views/globals";
 import UnlinkView from "../views/unlink";
 import PagerView from "../views/pager_view";
-import {options} from "../models/variables";
+import { options } from "../models/variables";
 
-export default class LinksViewLnk extends JetView{
-    config(){
+export default class LinksViewLnk extends JetView {
+    config() {
         let app = this.app;
-        let url = app.config.r_url + "?getSupplAll";
-        let params = {"user": app.config.user};
-        let res = checkVal(request(url, params, !0).response, 's');
+        let url = "getSupplAll";
+        let params = { "user": app.config.user };
+        let res = checkVal(request(url, params, !0, app).response, 's');
         var rList = []
         if (res) {
             rList = res;
-            };
+        };
 
         var delLnk = () => {
             let cid = this.$$("__table").getSelectedItem().id;
             this.$$("__table").remove(cid);
-            }
+        }
 
-        var tt = {view: "datatable",
+        var tt = {
+            view: "datatable",
             name: "__ttl",
             localId: "__table",
             startPos: 1,
@@ -32,11 +33,11 @@ export default class LinksViewLnk extends JetView{
             select: true,
             borderless: true,
             rowHeight: 30,
-            fixedRowHeight:false,
-            headermenu:{
-                autowidth: true, 
-                },
-            resizeColumn:true,
+            fixedRowHeight: false,
+            headermenu: {
+                autowidth: true,
+            },
+            resizeColumn: true,
             fi: 'dt',
             di: 'desc',
             //old_stri: " ",
@@ -44,58 +45,68 @@ export default class LinksViewLnk extends JetView{
             searchMethod: "getLnkSprs",
             tooltip: true,
             columns: [
-                {id: "id", width: 270, hidden: true,
+                {
+                    id: "id", width: 270, hidden: true,
                     tooltip: false,
-                    header: [{text: "Хэш"},
-                    {content: "cFilt"},
+                    header: [{ text: "Хэш" },
+                    { content: "cFilt" },
                     ]
                 },
-                {id: "id_tovar", width: 100, hidden: true, 
-                    tooltip: false,                
-                    header: [{text: "Код"},
-                    {content: "cFilt"},
+                {
+                    id: "id_tovar", width: 100, hidden: true,
+                    tooltip: false,
+                    header: [{ text: "Код" },
+                    { content: "cFilt" },
                     ]
                 },
-                {id: "c_tovar", 
+                {
+                    id: "c_tovar",
                     fillspace: true, sort: 'server', css: "overflow",
                     // tooltip: "#c_tovar#",
-                    header: [{text: "Наименование"}
+                    header: [{ text: "Наименование" }
                     ],
-                    headermenu:false,
-                    },
-                {id: "c_zavod", width: 200, hidden: true, css: "overflow",
+                    headermenu: false,
+                },
+                {
+                    id: "c_zavod", width: 200, hidden: true, css: "overflow",
                     // tooltip: "#c_zavod#",
-                    header: [{text: "Производитель"},
-                    {content: "cFilt"},
+                    header: [{ text: "Производитель" },
+                    { content: "cFilt" },
                     ]
-                    },
-                {id: "id_spr", width: 150, hidden: true, sort: 'server',
+                },
+                {
+                    id: "id_spr", width: 150, hidden: true, sort: 'server',
                     tooltip: false,
-                    header: [{text: "id_spr"},
-                    {content: "cFilt"},
+                    header: [{ text: "id_spr" },
+                    { content: "cFilt" },
                     ]
-                    },
-                {id: "spr", width: 350, css: "overflow",
+                },
+                {
+                    id: "spr", width: 350, css: "overflow",
                     // tooltip: "#spr#",
-                    header: [{text: "Эталон"},
-                    {content: "cFilt", placeholder: "!слово - исключить из поиска",
-                        inputConfig : {
-                                height: 30
-                                },
+                    header: [{ text: "Эталон" },
+                    {
+                        content: "cFilt", placeholder: "!слово - исключить из поиска",
+                        inputConfig: {
+                            height: 30
                         },
-                    ]
                     },
-                {id: "e_zavod", width: 300, hidden: true,  css: "overflow",
+                    ]
+                },
+                {
+                    id: "e_zavod", width: 300, hidden: true, css: "overflow",
                     // tooltip: "#e_zavod#",
-                    header: [{text: "Производитель эталона"},
+                    header: [{ text: "Производитель эталона" },
                     ]
-                    },
-                {id: "c_vnd", width: 300,  css: "overflow",
+                },
+                {
+                    id: "c_vnd", width: 300, css: "overflow",
                     // tooltip: "#c_vnd#",
                     header: [
-                        {text: "Поставщик"},
-                        {content: "richFilt", compare: compareTrue,  //height: 60, 
-                            inputConfig : {
+                        { text: "Поставщик" },
+                        {
+                            content: "richFilt", compare: compareTrue,  //height: 60, 
+                            inputConfig: {
                                 inputtype: "multicombo",
                                 tagMode: false,
                                 keepText: true,
@@ -104,86 +115,91 @@ export default class LinksViewLnk extends JetView{
                                 options: {
                                     filter: mcf_filter,
                                     data: rList,
-                                    body: {yCount: 10},
-                                    },
+                                    body: { yCount: 10 },
                                 },
-                            }
-                        ]
-                    },
-                {id: "dt", width: 200, sort: 'server',
+                            },
+                        }
+                    ]
+                },
+                {
+                    id: "dt", width: 200, sort: 'server',
                     tooltip: false,
                     format: dt_formating_sec,
                     css: 'center_p',
-                    header: [{text: "Дата изменения"},
-                    {content: "dateRangeFilter", compare: compareTrue,
-                        inputConfig:{format:dt_formating, width: 180},
-                        suggest:{
-                            view:"daterangesuggest", body:{ timepicker:false, calendarCount:2}
-                            },
+                    header: [{ text: "Дата изменения" },
+                    {
+                        content: "dateRangeFilter", compare: compareTrue,
+                        inputConfig: { format: dt_formating, width: 180 },
+                        suggest: {
+                            view: "daterangesuggest", body: { timepicker: false, calendarCount: 2 }
                         },
+                    },
                     ]
-                    },
-                {id: "owner", width: 100, sort: 'server',
+                },
+                {
+                    id: "owner", width: 100, sort: 'server',
                     tooltip: false,
-                    header: [{text: "Создал"}, 
-                        {content: "cFilt"},
-                        ]
-                    },
-                {id: "source", width: 150, hidden: true,
+                    header: [{ text: "Создал" },
+                    { content: "cFilt" },
+                    ]
+                },
+                {
+                    id: "source", width: 150, hidden: true,
                     tooltip: false,
-                    header: [{text: "Источник"},
-                        {content: "richFilt", compare: compareTrue,
-                            inputConfig : {
-                                pager: 1,
-                                options: options.sources,
-                                },
-                            }
-                        ]
-                    },
-                ],
+                    header: [{ text: "Источник" },
+                    {
+                        content: "richFilt", compare: compareTrue,
+                        inputConfig: {
+                            pager: 1,
+                            options: options.sources,
+                        },
+                    }
+                    ]
+                },
+            ],
             on: {
-                'onresize': function() {
+                'onresize': function () {
                     clearTimeout(this.delayResize);
                     let rows = recalcRowsRet(this);
                     // console.log('rows', rows);
                     if (rows) {
                         this.config.posPpage = rows;
-                        this.delayResize = setTimeout( () => {
+                        this.delayResize = setTimeout(() => {
                             this.$scope.startSearch();
                         }, 150)
                     }
                 },
-                "data->onParse":function(i, data){
+                "data->onParse": function (i, data) {
                     this.clearAll();
-                    },
-                onBeforeRender: function(d) {
+                },
+                onBeforeRender: function (d) {
                     webix.extend(this, webix.ProgressBar);
-                    },
-                onBeforeSort: function(field, direction) {
+                },
+                onBeforeSort: function (field, direction) {
                     this.config.fi = field;
                     this.config.di = direction;
                     this.$scope.startSearch();
-                    },
+                },
                 onItemDblClick: (item) => {
                     let sh_prc = this.$$("__table").getSelectedItem().id;
                     let params = {};
-                    params["command"] = "?delLnk";
+                    params["command"] = "delLnk";
                     params["sh_prc"] = sh_prc;
                     params["type"] = "async";
                     params["callback"] = delLnk;
                     params["parent"] = this;
                     let linkBy = $$("_link_by");
                     if (!linkBy) {
-                        webix.message({text: "Для работы со связками откройте вкладку Линкер вначале.", type: "debug", expire: 4000});
+                        webix.message({ text: "Для работы со связками откройте вкладку Линкер вначале.", type: "debug", expire: 4000 });
                         return false;
                     }
                     if (+linkBy.getValue() === 1) {
                         this.popunlink.show("Причина разрыва связки?", params, this._break);
                     } else {
-                        webix.message({"text": "Выберите в параметрах сведение по поставщикам", "type": "debug"});
+                        webix.message({ "text": "Выберите в параметрах сведение по поставщикам", "type": "debug" });
                     }
                 },
-                onKeyPress: function(code, e){
+                onKeyPress: function (code, e) {
                     if (13 === code) {
                         if (this.getSelectedItem()) this.callEvent("onItemDblClick");
                     }
@@ -196,23 +212,24 @@ export default class LinksViewLnk extends JetView{
                     this.$scope._break.hide();
                     this.$scope._history.hide();
                 },
-                onAfterLoad: function() {
-                    
+                onAfterLoad: function () {
+
                     let filter = this.getFilter('c_vnd');
                     let filtering_value = filter.$getValue()
                     $$(filter.config.popup).getList().filter("#value#", filtering_value);
                 },
             },
-        } 
+        }
 
-        return {view: "layout",
-            css: {'border-left': "1px solid #dddddd !important"},
+        return {
+            view: "layout",
+            css: { 'border-left': "1px solid #dddddd !important" },
             rows: [
                 tt,
-                {$subview: PagerView},
-                ],
-            }
+                { $subview: PagerView },
+            ],
         }
+    }
 
     startSearch() {
         var pager = this.getRoot().getChildViews()[1].$scope.$$("__page")
@@ -224,21 +241,21 @@ export default class LinksViewLnk extends JetView{
         let th = this;
         let table = this.$$("__table");
         $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].setValue('Применить');
-        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function() {
+        $$(table.getColumnConfig('dt').header[1].suggest.body.id).getChildViews()[1].getChildViews()[1].define('click', function () {
             if (this._filter_timer) window.clearTimeout(this._filter_timer);
-            this._filter_timer=window.setTimeout(() => {
+            this._filter_timer = window.setTimeout(() => {
                 th.startSearch();
-                },webix.ui.datafilter.textWaitDelay);
+            }, webix.ui.datafilter.textWaitDelay);
             this.getParentView().getParentView().hide();
-            })
+        })
         if (table.isColumnVisible('owner')) {
-            if  (!app.config.roles[app.config.role].lnkdel) {
+            if (!app.config.roles[app.config.role].lnkdel) {
                 table.getFilter('owner').value = this.app.config.user;;
                 table.getFilter('owner').readOnly = true;
             } else {
                 table.getFilter('owner').readOnly = false;
-                }
             }
+        }
         this._break = this.getRoot().getParentView().$scope.$$("_br")
         this._search = this.getRoot().getParentView().$scope.$$("_ls")
         this._history = this.getRoot().getParentView().$scope.$$("_hist")
@@ -258,15 +275,15 @@ export default class LinksViewLnk extends JetView{
         // this.startSearch();
 
         table.getFilter('dt').blockEvent();
-        setTimeout( () => {
+        setTimeout(() => {
             table.getFilter('dt').setValue(null);
             table.getFilter('dt').unblockEvent();
         }, 150);
-        table.markSorting(table.config.fi,table.config.di);
+        table.markSorting(table.config.fi, table.config.di);
         setTimeout(() => {
-            $$(table.config.searchBar).focus();    
+            $$(table.config.searchBar).focus();
         }, 50);
-        
+
     }
 
     init() {

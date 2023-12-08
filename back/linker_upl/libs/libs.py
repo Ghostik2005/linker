@@ -10,11 +10,13 @@ import os
 import re
 import shutil
 import socket
+import ssl
 import subprocess
 import sys
 import threading
 import time
 import traceback
+import urllib.request
 from urllib.parse import unquote
 
 import libs.connect_pool as connect_pool
@@ -231,6 +233,7 @@ ON CONFLICT (UIN) DO UPDATE
 
     def _check_barcode(self, barcode):
         try:
+            barcode = barcode.split(",")[-1]
             ean = str(barcode).strip()
             ean = ean[:12]
             if len(ean) < 12:
@@ -248,7 +251,7 @@ ON CONFLICT (UIN) DO UPDATE
         uin = os.path.basename(path).split(".")[0]
         if uin.split(".")[0] != uin:
             uin = None
-        _re = re.compile("\(..\...\)")
+        _re = re.compile("\(..\...\)")  # noqa
         rows = []
         with open(path, "rb") as f:
             rows = f.read()
@@ -257,6 +260,7 @@ ON CONFLICT (UIN) DO UPDATE
 
         count_all += len(rows)
         ret = []
+        uniq_sh_prc = set()
         if rows:
             ins_params = []
             for row in rows:
@@ -396,6 +400,7 @@ ON CONFLICT (SH_PRC, SERIES) DO nothing;"""
                     self.log(tovar)
                     self.log(zavod)
                     continue
+                uniq_sh_prc.add(sh_prc)
                 if _id_vnd == 40277:
                     self.log(sh_prc)
                     self.log(tovar)
@@ -573,7 +578,7 @@ FROM A_TEMP_PRC r """
             if callable(db.commit):
                 db.commit()
             count_insert += count_i
-        return count_insert, count_all
+        return count_insert, count_all, len(uniq_sh_prc)
 
     def _getGen(self, dbc, sql):
         dbc.execute(sql)
@@ -708,7 +713,7 @@ where  lnk.sh_prc = prc.sh_prc"""
 
         # если назначено на админа, но это не пропущенное - переназначаем на сводильщика
         # пропускаем когда работает админ
-
+        # на время отпуска сводильщика
         dbc.execute(
             f"""update prc set id_org = 12 where id_org = 0 and n_fg = 0 {con_ins}
         and (id_vnd<>19977 and id_vnd<>30000 and id_vnd<>20271 and id_vnd<>44677 and id_vnd<>43136 and id_vnd<>19976 and id_vnd<>19987
@@ -716,6 +721,7 @@ where  lnk.sh_prc = prc.sh_prc"""
         )
         if callable(db.commit):
             db.commit()
+        # на время отпуска сводильщика
 
         # назначаем на группы пользователей:
         dbc.execute(
@@ -750,15 +756,19 @@ where v.users_group is not null and v.users_group in (12, 0)"""
             for row in rows:
                 self.log(f"PRCSYNC Назначаем на сведение {row[1]}")
                 # назначем на админа
+                # на время отпуска сводильщика
                 # dbc.execute(
-                #     f"""
-                # update prc set id_org = 0 where n_fg in (12,0) and in_work = -1 {con_ins}
-                # and exists (select vv.id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]}) """
+                #     f"""update prc set id_org = 0 where n_fg in (12,0) and in_work = -1 {con_ins}
+                # and exists (
+                #     select vv.id_vnd from vnd vv
+                #     where vv.id_vnd = prc.id_vnd and (vv.users_group={row[0]} or vv.users_group is null)) """
                 # )
+                # на время отпуска сводильщика
                 dbc.execute(
                     f"""update prc set id_org = {row[0]} where (id_org<>12 and id_org <> 0) and n_fg= 0 and in_work = -1 {con_ins}
                 and exists (select id_vnd from vnd vv where vv.id_vnd = prc.id_vnd and vv.users_group={row[0]})"""
                 )
+
                 if callable(db.commit):
                     db.commit()
                 self.log(f"PRCSYNC ---Назначили на сведение {row[1]}")
@@ -869,7 +879,6 @@ def getip(log):
             iip = se.getsockname()[0]
     except Exception as e:
         log(f"err:{str(e)}")
-    import ssl, re, urllib.request
 
     ssl._create_default_https_context = ssl._create_unverified_context
     for url in _urls:
@@ -1442,7 +1451,9 @@ FROM LNK_CODES r where r.PROCESS = 0 and r.CODE = {id_vnd}"""
                     # заплатка чтоб сводилось все
                     if list(dbc.fetchone())[0]:  # and int(source) != 2:
                         # if not list(dbc.fetchone())[0]:# and int(source) != 2:
-                        log("GUARDIAN| - пропускаем, сведение не разрешено")
+                        log(
+                            f"GUARDIAN| {h_name}|  пропускаем, сведение не разрешено"
+                        )
                         # переносим файл в несводимые, делаем запись
                         # в базе о том, что сведение не разрешено
                         sql = (
@@ -1453,11 +1464,15 @@ FROM LNK_CODES r where r.PROCESS = 0 and r.CODE = {id_vnd}"""
                         shutil.move(path, os.path.join(api.p_path, h_name))
                         continue
                     else:
-                        log("GUARDIAN| - начинаем сведение")
+                        log(f"GUARDIAN| {h_name}| начинаем сведение")
                         count_insert = 0
                         count_all = 0
                         try:
-                            count_insert, count_all = api.upload_to_db(
+                            (
+                                count_insert,
+                                count_all,
+                                uniq_sh_prc,
+                            ) = api.upload_to_db(
                                 db,
                                 dbc,
                                 id_vnd,
@@ -1476,21 +1491,30 @@ FROM LNK_CODES r where r.PROCESS = 0 and r.CODE = {id_vnd}"""
                             # отправляем куда-нибудь алерт
                             ##############################################
                         else:
-                            log("GUARDIAN| - удаляем файл:")
+                            log(f"GUARDIAN| {h_name}| удаляем файл:")
                             try:
                                 shutil.move(
                                     path, os.path.join(api.inw_path, h_name)
                                 )
-                                log("GUARDIAN| [ OK ]")
+                                log(f"GUARDIAN| {h_name}| [ OK ]")
                             except Exception as e:
-                                log("GUARDIAN| [FAIL]")
+                                log(f"GUARDIAN| {h_name}| [FAIL]")
                                 log("GUARDIAN| %s" % str(e), kind="error")
                             if count_insert > 0:
                                 api.prc_sync_lnk(db, dbc, h_name)
                                 sql = f"""select count(*) from PRC r where r.n_fg != 1 and r.UIN = '{h_name}'"""
                                 dbc.execute(sql)
                                 count_insert = dbc.fetchone()[0]
-                    api.log(f"GUARDIAN| Добавленно к сведению: {count_insert}")
+                            log(
+                                f"GUARDIAN| {h_name}| [insert]| {count_insert}"
+                            )
+                            log(f"GUARDIAN| {h_name}| [total]| {count_all}")
+                            log(
+                                f"GUARDIAN| {h_name}| [u_sh_prc]| {uniq_sh_prc}"
+                            )
+                    api.log(
+                        f"GUARDIAN| {h_name}| Добавленно к сведению: {count_insert}"
+                    )
                     db.close()
             # db = psycopg2.connect(**api.pg_connect_params)
             db = c_pool.connect()
