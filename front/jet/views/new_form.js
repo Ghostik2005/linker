@@ -5,11 +5,11 @@ import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
 import NewIssueView from "../views/new_issue";
-import { strana, vendor, dv, sezon, nds, group, hran, id521 } from "../views/globals";
+import { strana, vendor, dv, sezon, nds, group, hran, id521, prescr } from "../views/globals";
 import { request, checkVal, prcs, delPrc, barcodes } from "../views/globals";
 import { permited_add } from "../models/variables";
 
-import { strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter } from "../views/globals";
+import { strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter, prescr_filter } from "../views/globals";
 
 export default class NewformView extends JetView {
     config() {
@@ -181,10 +181,25 @@ export default class NewformView extends JetView {
                                                     { height: 5 },
                                                     {
                                                         cols: [
-                                                            { view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr" },
+                                                            // { view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr" },
                                                             { view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat" },
                                                             { view: "checkbox", labelRight: "ЖВ", labelWidth: 0, align: "left", name: "id_jv" },
                                                         ]
+                                                    },
+                                                    {
+                                                        view: "combo", label: "Рецептурный:", labelPosition: "top", value: "", name: "id_prescr", css: "small",
+                                                        options: {
+                                                            filter: prescr_filter,
+                                                            body: {
+                                                                template: "#prescr#",
+                                                                yCount: 3,
+                                                            }
+                                                        },
+                                                        on: {
+                                                            onAfterRender: function () {
+                                                                this.getList().sync(prescr);
+                                                            }
+                                                        },
                                                     },
                                                     {
                                                         view: "combo", label: "Сезон:", labelPosition: "top", value: "", name: "id_sezon", css: "small",
@@ -358,7 +373,9 @@ export default class NewformView extends JetView {
                                                     params["id_zavod"] = left_f.id_zavod;
                                                     params["id_dv"] = left_f.id_dv;
                                                     params["c_opisanie"] = left_f.c_opisanie;
-                                                    params["prescr"] = (right_f._prescr === 1) ? true : false;
+                                                    // params["prescr"] = (right_f._prescr === 1) ? true : false;
+                                                    params["id_prescr"] = left_f.id_prescr;
+                                                    params["prescr"] = left_f.prescr;
                                                     params["mandat"] = (right_f._mandat === 1) ? true : false;
                                                     params["id_jv"] = (right_f.id_jv === 1) ? true : false;
                                                     params["id_sezon"] = right_f.id_sezon;

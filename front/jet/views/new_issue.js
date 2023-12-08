@@ -92,22 +92,28 @@ export default class NewIssueView extends JetView {
                                             this.$$("__table").selectAll();
                                             let tgs = this.$$("__table").getSelectedItem();
                                             var p = '';
+                                            let ids = [];
                                             let th = this.$$("_n_is").config.th;
                                             let id_spr = this.$$("_n_is").config.id_spr;
                                             let callback = this.$$("_n_is").config.callback;
+                                            let vidget_name = this.$$("_n_is").config.vidget_name || "_issue"
                                             if (tgs) {
                                                 let t = typeof (tgs);
                                                 try {
                                                     tgs.forEach(function (item, i, tgs) {
                                                         p += item.c_issue + '; ';
+                                                        ids.push(item.id);
                                                     });
                                                 } catch (err) {
                                                     p = tgs.c_issue;
+                                                    ids.push(tgs.id)
                                                 }
                                             }
                                             if (th) {
-                                                th.$$("_issue").setValue(p);
-                                                th.$$("_issue").refresh();
+                                                th.$$(vidget_name).setValue(p);
+                                                th.$$(vidget_name).current_ids = ids;
+                                                th.$$(vidget_name).refresh();
+
                                             };
                                             if (callback) callback(id_spr, p);
                                             this.hide();
@@ -122,7 +128,7 @@ export default class NewIssueView extends JetView {
         }
     }
 
-    show(new_head, id_spr, th, callback) {
+    show(new_head, id_spr, th, callback, custom_url, vidget_name = "_issue") {
         this.$$("__e_table").clearAll();
         this.$$("_n_is").reconstruct();
         this.$$("__table").clearAll();
@@ -130,9 +136,11 @@ export default class NewIssueView extends JetView {
         this.$$("_n_is").config.id_spr = id_spr;
         this.$$("_n_is").config.th = th;
         this.$$("_n_is").config.callback = callback;
+        this.$$("_n_is").config.vidget_name = vidget_name;
         this.getRoot().getHead().getChildViews()[0].setValue(new_head);
         this.getRoot().show();
-        let url = "getIs"
+        let url = "getIs";
+        if (custom_url) url = custom_url;
         let params = { "user": this.app.config.user, "id_spr": id_spr };
         let res = request(url, params, !0, this.app).response;
         res = checkVal(res, 's');

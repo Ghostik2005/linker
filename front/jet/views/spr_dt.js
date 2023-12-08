@@ -155,11 +155,22 @@ export default class SprView extends JetView {
                     ],
                 },
                 {
-                    id: "prescr", width: 100,
+                    id: "prescr", width: 160,
                     template: function (obj) {
-                        let ret = (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
-                            : "<div><span></span></div>";
-                        return ret
+                        let ret_value;
+                        if (obj.c_prescr == "Рецептурный (148)") {
+                            // ret_value = "<div><span class='webix_icon'>148</span></div>";
+                            ret_value = obj.c_prescr;
+                        } else if (obj.c_prescr == "Рецептурный (107-1/у)") {
+                            // ret_value = "<div><span class='webix_icon'>107</span></div>";
+                            ret_value = obj.c_prescr;
+                        } else {
+                            ret_value = "<div><span class='webix_icon fa-times'></span></div>"
+                        }
+                        return ret_value
+                        // let ret = (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>"
+                        //     : "<div><span></span></div>";
+                        // return ret
                     },
                     hidden: true, css: "center_p",
                     header: [{ text: "Рецептурный" },

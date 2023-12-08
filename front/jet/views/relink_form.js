@@ -16,7 +16,19 @@ export default class RelinkFormView extends JetView {
         }
 
         function prescr_func(obj) {
-            return (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
+            let ret_value;
+            if (obj.c_prescr == "Рецептурный (148)") {
+                // ret_value = "<div><span class='webix_icon'>148</span></div>";
+                ret_value = obj.c_prescr;
+            } else if (obj.c_prescr == "Рецептурный (107-1/у)") {
+                // ret_value = "<div><span class='webix_icon'>107</span></div>";
+                ret_value = obj.c_prescr;
+            } else {
+                ret_value = "<div><span class='webix_icon fa-times'></span></div>"
+            }
+            return ret_value
+            // return (obj.c_prescr) ? "<div><span class='webix_icon fa-check-circle'></span></div>" : "<div><span class='webix_icon fa-times'></span></div>";
+
         }
 
         let tList = $$("sezon_dc").data.getRange($$("sezon_dc").data.getFirstId(), $$("sezon_dc").data.getLastId());

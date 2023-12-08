@@ -101,15 +101,21 @@ export default class HeaderView extends JetView {
             });
         }
 
-
-        var si = setTimeout(function tick() {
-            if (app.config.production) {
-                if (!app.config.eventS || app.config.eventS.readyState !== 1) {
-                    newSSE()
+        var connectCount = 0;
+        // console.log(app.config.roles[app.config.role].adm)
+        if (app.config.roles[app.config.role].adm) {
+            var si = setTimeout(function tick() {
+                if (app.config.production) {
+                    if (!app.config.eventS || app.config.eventS.readyState !== 1) {
+                        if (connectCount < 10) {
+                            connectCount += 1;
+                            newSSE();
+                        }
+                    };
+                    si = setTimeout(tick, 4000);
                 };
-                si = setTimeout(tick, 4000);
-            };
-        }, 50);
+            }, 50);
+        }
 
 
 

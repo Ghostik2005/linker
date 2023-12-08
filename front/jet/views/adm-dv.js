@@ -61,6 +61,47 @@ export default class DvView extends JetView {
                     ]
                 },
                 {
+                    id: "prod_forms",
+                    width: 200, hidden: true,
+                    headermenu: false,
+                    // sort: "text",
+                    header: [{ text: "Формы выпуска АО" },
+                        // { content: "selectFilter" }
+                    ]
+                },
+                {
+                    id: "prod_forms_text",
+                    width: 200,
+                    hidden: true,
+                    // sort: "text",
+                    header: [{ text: "Формы выпуска АО" },
+                        // { content: "selectFilter" }
+                    ]
+                },
+                {
+                    id: "compare_prod_forms",
+                    width: 30, hidden: true,
+                    headermenu: false,
+                    header: [{ text: "Cравнение форм выпуска" },
+                    ]
+                },
+                {
+                    id: "prod_forms_ap_text",
+                    width: 200,
+                    hidden: true,
+                    // sort: "text",
+                    header: [{ text: "Формы выпуска АО для АП" },
+                        // { content: "selectFilter" }
+                    ]
+                },
+                {
+                    id: "compare_prod_forms_ap",
+                    width: 30, hidden: true,
+                    headermenu: false,
+                    header: [{ text: "Cравнение форм выпуска для АП" },
+                    ]
+                },
+                {
                     id: "id",
                     width: 75, sort: "text",
                     header: [{ text: "ID" },
@@ -111,7 +152,14 @@ export default class DvView extends JetView {
                 },
                 onItemDblClick: function (item) {
                     item = this.getSelectedItem();
-                    let params = { 'text': item.act_ingr, 'id': item.id, "oa": item.oa, 'type': 'Dv', 'callback': updItem, 'mode': 'upd', 'source': this };
+                    let params = {
+                        'text': item.act_ingr, 'id': item.id, "oa": item.oa,
+                        "prod_forms_text": item.prod_forms_text,
+                        "compare_prod_forms": item.compare_prod_forms,
+                        "prod_forms_ap_text": item.prod_forms_ap_text,
+                        "compare_prod_forms_ap": item.compare_prod_forms_ap,
+                        'type': 'Dv', 'callback': updItem, 'mode': 'upd', 'source': this
+                    };
                     //console.log(params);
                     this.$scope.popnew.show('Редактирование действующего в-ва', params);
                 },

@@ -55,6 +55,10 @@ export var sezon = new webix.DataCollection({
     id: "sezon_dc",
 });
 
+export var prescr = new webix.DataCollection({
+    id: "prescr_dc",
+});
+
 export var hran = new webix.DataCollection({
     id: "hran_dc",
 });
@@ -65,6 +69,12 @@ export var group = new webix.DataCollection({
 
 export function compareTrue() {
     return true;
+}
+
+export function pluck(arr, key) {
+    return arr.map(function (obj) {
+        return obj[key];
+    });
 }
 
 export var cEvent = function (a, b, c, d) {
@@ -105,6 +115,11 @@ export function dv_filter(item, value) {
     value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
     return item.act_ingr.toString().toLowerCase().search(value) != -1;
 };
+export function oa_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.c_issue.toString().toLowerCase().search(value) != -1;
+};
 export function gr_filter(item, value) {
     value = value.toString().toLowerCase()
     value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
@@ -114,6 +129,11 @@ export function sez_filter(item, value) {
     value = value.toString().toLowerCase()
     value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
     return item.sezon.toString().toLowerCase().search(value) != -1;
+};
+export function prescr_filter(item, value) {
+    value = value.toString().toLowerCase()
+    value = new RegExp(".*" + value.replace(/ /g, ".*") + ".*");
+    return item.prescr.toString().toLowerCase().search(value) != -1;
 };
 export function hran_filter(item, value) {
     value = value.toString().toLowerCase()
@@ -176,7 +196,8 @@ export function getFieldFromName(name) {
                         (name === 'Sezon') ? 'sezon' :
                             (name === 'Strana') ? 'c_strana' :
                                 (name === 'Vendor') ? 'c_zavod' :
-                                    ""
+                                    (name === 'Prescr') ? 'prescr' :
+                                        ""
 }
 
 export function updItem(storage, item, source) {
@@ -184,7 +205,10 @@ export function updItem(storage, item, source) {
     storage = getStorageFromName(storage);
     var cid = item.id;
     let citem = source.getItem(cid);
+    Object.assign(citem, item)
     citem[field] = item.value;
+    console.log(cid);
+    console.log(citem);
     source.updateItem(cid, citem);
     storage.updateItem(cid, citem);
     source.refresh();
@@ -277,7 +301,8 @@ export function refLoad(app, type) {
                     (type === 'issue') ? "getIssueAll" :
                         (type === 'nds') ? "getNdsAll" :
                             (type === 'id_521') ? "getNCodeAll" :
-                                undefined
+                                (type === 'prescr') ? "getPrescrAll" :
+                                    undefined
     if (url) {
         data = refReload(url, params, !0, app)
     } else {
@@ -295,7 +320,8 @@ export function refLoad(app, type) {
                             (type === 'issue') ? item.c_issue :
                                 (type === 'nds') ? item.nds :
                                     (type === 'id_521') ? item.id_521 + ' - ' + item.nom_name :
-                                        undefined
+                                        (type === 'prescr') ? item.prescr :
+                                            undefined
         })
     }
     return data
@@ -652,6 +678,8 @@ export function getDtParams(ui) {
             'mandat': ($$(ui).isColumnVisible('mandat')) ? $$(ui).getFilter('mandat').getValue() : undefined,
             'prescr': ($$(ui).isColumnVisible('prescr')) ? $$(ui).getFilter('prescr').getValue() : undefined,
             'id_jv': ($$(ui).isColumnVisible('id_jv')) ? $$(ui).getFilter('id_jv').getValue() : undefined,
+            'id_jv_fp': ($$(ui).isColumnVisible('id_jv_fp')) ? $$(ui).getFilter('id_jv_fp').getValue() : undefined,
+            'c_issue': ($$(ui).isColumnVisible('c_issue')) ? $$(ui).getFilter('c_issue').getValue() : undefined,
         };
     } else if (ui.config.name === "__dt") {
         c_filter = {
@@ -736,7 +764,12 @@ export function init_first(app) {
                             width: 26,
                             on: {
                                 onItemClick: function () {
-                                    this.getTopParentView().hide();
+                                    var parent_view = this.getTopParentView();
+                                    if (parent_view.hasOwnProperty("$scope") && typeof parent_view.$scope.hide !== 'undefined') {
+                                        parent_view.$scope.hide();
+                                    } else {
+                                        parent_view.hide();
+                                    }
                                 },
                             },
                         }
@@ -995,6 +1028,8 @@ export function setRefs(data) {
         $$("group_dc").parse(data.group);
         $$("allIs_dc").clearAll();
         $$("allIs_dc").parse(data.issue);
+        $$("prescr_dc").clearAll();
+        $$("prescr_dc").parse(data.prescr);
     };
 }
 

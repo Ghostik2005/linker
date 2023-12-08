@@ -5,10 +5,10 @@ import NewstriView from "../views/new_stri";
 import NewbarView from "../views/new_bar";
 import NewtgView from "../views/new_tg";
 import NewIssueView from "../views/new_issue";
-import { strana, vendor, dv, sezon, nds, group, hran, id521 } from "../views/globals";
+import { strana, vendor, dv, sezon, nds, group, hran, id521, prescr } from "../views/globals";
 import { request, checkVal, prcs, delPrc, barcodes } from "../views/globals";
 import { permited_add } from "../models/variables";
-import { strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter } from "../views/globals";
+import { strana_filter, zavod_filter, dv_filter, gr_filter, sez_filter, hran_filter, nds_filter, id521_filter, prescr_filter } from "../views/globals";
 
 export default class SubRow extends JetView {
     constructor(app, data) {
@@ -208,10 +208,25 @@ export default class SubRow extends JetView {
                                                 //{height: 25},
                                                 {
                                                     css: { "margin-top": "0px !important;" }, cols: [
-                                                        { view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr" },
+                                                        // { view: "checkbox", labelRight: "Рецептурный", labelWidth: 0, align: "left", name: "_prescr" },
                                                         { view: "checkbox", labelRight: "Обязательный", labelWidth: 0, align: "left", name: "_mandat" },
                                                         { view: "checkbox", labelRight: "ЖВ", labelWidth: 0, align: "left", name: "id_jv" },
                                                     ]
+                                                },
+                                                {
+                                                    view: "combo", label: "Рецептурный:", labelPosition: "top", value: "", name: "id_prescr", css: "small",
+                                                    options: {
+                                                        filter: prescr_filter,
+                                                        body: {
+                                                            template: "#prescr#",
+                                                            yCount: 3,
+                                                        }
+                                                    },
+                                                    on: {
+                                                        onAfterRender: function () {
+                                                            this.getList().sync(prescr);
+                                                        }
+                                                    },
                                                 },
                                                 {
                                                     view: "combo", label: "Сезон:", labelPosition: "top", value: "", name: "id_sezon", css: "small",
@@ -397,17 +412,15 @@ export default class SubRow extends JetView {
                                             params["id_zavod"] = left_f.id_zavod;
                                             params["id_dv"] = left_f.id_dv;
                                             params["c_opisanie"] = left_f.c_opisanie;
-                                            params["prescr"] = (left_f._prescr === 1) ? true : false;
+                                            // params["prescr"] = (left_f._prescr === 1) ? true : false;
+                                            params["id_prescr"] = left_f.id_prescr;
+                                            params["prescr"] = left_f.prescr;
                                             params["mandat"] = (left_f._mandat === 1) ? true : false;
                                             params["id_jv"] = (left_f.id_jv === 1) ? true : false;
                                             params["id_sezon"] = left_f.id_sezon;
                                             params["id_usloviya"] = left_f.id_usloviya;
                                             params["id_group"] = left_f.id_group;
                                             params["id_nds"] = left_f.id_nds;
-                                            //params["sh_prc"] = (this.$$("new_form").config.spr) ? prcs.getItem(prcs.getCursor()).sh_prc : undefined;
-                                            // let t1 = $$("prcs_dc").getCursor();
-                                            // if (t1 && $$("prcs_dc").getItem(t1).sh_prc) params["sh_prc"] = $$("prcs_dc").getItem(t1).sh_prc || undefined;
-                                            // else params["sh_prc"] = undefined;
                                             params["sh_prc"] = undefined;
                                             params["c_tgroup"] = left_f.c_tgroup;
                                             params["user"] = this.app.config.user;

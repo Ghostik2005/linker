@@ -26,7 +26,7 @@ export default class StartView extends JetView {
         let res = request(url, params, !0, app).response;
 
         res = checkVal(res, 's');
-        console.log(res)
+        // console.log(res)
         if (res === undefined) {
             let x, r;
             let user = getCookie('linker-app');
